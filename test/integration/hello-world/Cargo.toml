@@ -1,0 +1,20 @@
+[package]
+name = "hello-world"
+version = "0.1.0-dev"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/incyashraj/layer6x6"
+rust-version = "1.91"
+
+[dependencies]
+wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
+
+[lib]
+crate-type = ["cdylib"]
+
+[package.metadata.component]
+package = "layer36:hello-world"
+
+[package.metadata.component.target]
+path = "../../../wit/layer36/phase1.wit"
+world = "app"

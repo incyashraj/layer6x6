@@ -1,10 +1,10 @@
-# OneOS — Phase 2 Detailed Plan: UAPI v0.1 (CLI)
+# Layer36 — Phase 2 Detailed Plan: UAPI v0.1 (CLI)
 
 > **Phase:** 2 of 8
 > **Duration:** Months 4–6 (90 calendar days, ~40–50 engineering days of work)
 > **Phase sentence:** *Ship the first useful cross-platform CLI app through our runtime.*
 > **Prerequisite:** Phase 1 complete — runtime + CLI + CI green on three desktop hosts.
-> **Supersedes:** `oneos:phase1/host` WIT interface.
+> **Supersedes:** `layer36:phase1/host` WIT interface.
 > **Superseded by:** nothing.
 
 ---
@@ -40,7 +40,7 @@
 
 ## 0. How to Use This Document
 
-Phase 2 is where OneOS becomes useful. Phase 1 proved we could run a WASM binary; Phase 2 proves we can run a WASM binary that *does something*. It is also the first phase where the decisions you make will live forever — WIT interfaces become ABI commitments, and breaking a v0.1 module costs you every app that ever depended on it.
+Phase 2 is where Layer36 becomes useful. Phase 1 proved we could run a WASM binary; Phase 2 proves we can run a WASM binary that *does something*. It is also the first phase where the decisions you make will live forever — WIT interfaces become ABI commitments, and breaking a v0.1 module costs you every app that ever depended on it.
 
 - Every task has an ID (`P2-UAPI-01`, etc.) matching §7 of the main Build Plan.
 - The WIT specs in §7 are the most important artifacts of this phase. They will be copied, pasted, generated from, and depended on by every future phase. Get them right, not fast.
@@ -53,19 +53,19 @@ Phase 2 is where OneOS becomes useful. Phase 1 proved we could run a WASM binary
 
 ### 1.1 One-sentence objective
 
-**A developer writes a CLI app in Rust, Go, or TypeScript against UAPI v0.1, compiles it to a `.wasm` component, and runs it through `oneos` on Linux, macOS, and Windows — where it reads files, makes HTTP calls, prints to stdout, and uses time/locale primitives correctly.**
+**A developer writes a CLI app in Rust, Go, or TypeScript against UAPI v0.1, compiles it to a `.wasm` component, and runs it through `layer36` on Linux, macOS, and Windows — where it reads files, makes HTTP calls, prints to stdout, and uses time/locale primitives correctly.**
 
 ### 1.2 Why this matters
 
-Phase 1 had one host import (`print`) and no real I/O. A runtime that cannot read a file or make a network request is not a runtime, it is a demo. Phase 2 is the first phase where an outside developer can reasonably attempt to build a real thing with OneOS. Everything after Phase 2 — GUI, mobile, marketplace — is an extension of primitives that must be correct here.
+Phase 1 had one host import (`print`) and no real I/O. A runtime that cannot read a file or make a network request is not a runtime, it is a demo. Phase 2 is the first phase where an outside developer can reasonably attempt to build a real thing with Layer36. Everything after Phase 2 — GUI, mobile, marketplace — is an extension of primitives that must be correct here.
 
 ### 1.3 The five deliverables of Phase 2
 
 1. **Five UAPI modules** — `io`, `fs`, `net`, `time`, `locale` — designed as WIT, implemented on three desktop hosts.
 2. **Language bindings** for Rust (first-class), Go via TinyGo, TypeScript via jco.
-3. **Three sample CLI apps** — `oneos-curl`, `oneos-cat`, `oneos-clock` — all passing cross-host identity tests.
+3. **Three sample CLI apps** — `layer36-curl`, `layer36-cat`, `layer36-clock` — all passing cross-host identity tests.
 4. **UCap v0.1 (soft enforcement)** — manifest-declared capabilities, runtime-checked at UAPI call sites, one-time grant at launch via terminal prompt.
-5. **An integration test harness** that builds each sample, runs it via `oneos run` on all three hosts, and asserts byte-identical stdout.
+5. **An integration test harness** that builds each sample, runs it via `layer36 run` on all three hosts, and asserts byte-identical stdout.
 
 ---
 
@@ -74,8 +74,8 @@ Phase 1 had one host import (`print`) and no real I/O. A runtime that cannot rea
 Before touching a single line of Phase 2 code, verify:
 
 - [ ] All Phase 1 exit criteria met (see Phase 1 Plan §15).
-- [ ] `oneos run hello.wasm` works on Linux, macOS, Windows.
-- [ ] `cargo build --release --workspace` produces `oneos` binary on all three hosts.
+- [ ] `layer36 run hello.wasm` works on Linux, macOS, Windows.
+- [ ] `cargo build --release --workspace` produces `layer36` binary on all three hosts.
 - [ ] Release artifacts have been cut at least once (`v0.1.0-rc1` or later).
 - [ ] Phase 1 benchmarks recorded and published.
 - [ ] Threat Model v0.1 published.
@@ -92,14 +92,14 @@ Phase 2 is **done** when, and only when, every row below is true.
 
 | # | Criterion | Measured How |
 |---|-----------|--------------|
-| 1 | All five UAPI modules defined as stable v0.1 WIT | `wit/oneos/*.wit` frozen |
+| 1 | All five UAPI modules defined as stable v0.1 WIT | `wit/layer36/*.wit` frozen |
 | 2 | Each module implemented in Linux, macOS, Windows host adapters | CI green on all hosts |
-| 3 | Rust bindings generated and usable | `cargo add oneos && use oneos::fs` works |
+| 3 | Rust bindings generated and usable | `cargo add layer36 && use layer36::fs` works |
 | 4 | Go bindings (TinyGo) generated and usable | Sample builds and runs |
 | 5 | TypeScript bindings (jco) generated and usable | Sample builds and runs |
-| 6 | `oneos-curl <url>` works identically on all three hosts | Integration test |
-| 7 | `oneos-cat <file>` works identically on all three hosts | Integration test |
-| 8 | `oneos-clock` prints time in user's locale on all three hosts | Integration test |
+| 6 | `layer36-curl <url>` works identically on all three hosts | Integration test |
+| 7 | `layer36-cat <file>` works identically on all three hosts | Integration test |
+| 8 | `layer36-clock` prints time in user's locale on all three hosts | Integration test |
 | 9 | UCap v0.1: manifest-declared caps enforced at UAPI boundary | Attempting unauthorized call traps cleanly |
 | 10 | Startup overhead for a UAPI-using app < 150 ms | Benchmark suite |
 | 11 | UAPI hot-path dispatch < 1 µs | Microbenchmark |
@@ -119,7 +119,7 @@ Phase 2 is **done** when, and only when, every row below is true.
 - Three language binding pipelines.
 - The beginning of UCap (soft enforcement, terminal prompts only).
 - Three sample CLI apps that prove the UAPI works end-to-end.
-- A capability-aware runtime: `oneos run --grant net,fs:./data/**` style.
+- A capability-aware runtime: `layer36 run --grant net,fs:./data/**` style.
 
 ### 4.2 Phase 2 is NOT
 
@@ -128,7 +128,7 @@ Phase 2 is **done** when, and only when, every row below is true.
 - Not a server. No HTTP server, no socket listeners. Phase 3+ (and even then, client-first).
 - Not the complete UAPI. Missing from v0.1: storage, crypto, sensors, UI, GPU, audio, IPC, notifications, accessibility, AI, identity. Those come later.
 - Not complete UCap. No user-facing grant UI (that is Phase 3), no policy DB (that is Phase 6), no revocation flow (Phase 6).
-- Not a bundle format. `.oneapp` is Phase 6. Phase 2 ships `.wasm` components with a sidecar `manifest.toml` consumed by the CLI.
+- Not a bundle format. `.l36app` is Phase 6. Phase 2 ships `.wasm` components with a sidecar `manifest.toml` consumed by the CLI.
 
 ### 4.3 The scope discipline
 
@@ -144,7 +144,7 @@ Every request during Phase 2 will sound like "can we also add X?" The answer is 
 flowchart TB
     subgraph Dev["Developer Side"]
         SRC["main.rs / main.go / main.ts"]
-        WIT["wit/oneos/*.wit"]
+        WIT["wit/layer36/*.wit"]
         WITG["wit-bindgen / jco / TinyGo"]
         CC["compile to component"]
         MANIFEST["manifest.toml"]
@@ -155,8 +155,8 @@ flowchart TB
         MANIFEST -.sidecar.-> COMP
     end
 
-    subgraph RT["OneOS Runtime"]
-        CLI["oneos CLI"]
+    subgraph RT["Layer36 Runtime"]
+        CLI["layer36 CLI"]
         LOAD["Loader + Manifest Parser"]
         UCAP["UCap Enforcer v0.1"]
         ENGINE["Wasmtime"]
@@ -171,7 +171,7 @@ flowchart TB
         WIN["Windows: Win32 + hyper + chrono + ICU"]
     end
 
-    COMP -->|oneos run| CLI
+    COMP -->|layer36 run| CLI
     MANIFEST -->|declared caps| LOAD
     DISP --> LINUX
     DISP --> MACOS
@@ -207,7 +207,7 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    A([oneos run app.wasm]) --> B{manifest.toml<br/>next to wasm?}
+    A([layer36 run app.wasm]) --> B{manifest.toml<br/>next to wasm?}
     B -- no --> C[No capabilities declared]
     B -- yes --> D[Parse manifest]
     D --> E[Extract capability list]
@@ -230,21 +230,21 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    CLI[oneos-cli] --> RT[oneos-runtime]
-    CLI --> MAN[oneos-manifest]
+    CLI[layer36-cli] --> RT[layer36-runtime]
+    CLI --> MAN[layer36-manifest]
     RT --> WT[wasmtime]
-    RT --> POL[oneos-policy]
-    RT --> AD_LINUX[oneos-adapter-linux]
-    RT --> AD_MAC[oneos-adapter-macos]
-    RT --> AD_WIN[oneos-adapter-windows]
+    RT --> POL[layer36-policy]
+    RT --> AD_LINUX[layer36-adapter-linux]
+    RT --> AD_MAC[layer36-adapter-macos]
+    RT --> AD_WIN[layer36-adapter-windows]
     AD_LINUX --> TOKIO[tokio, hyper, chrono, icu4x]
     AD_MAC --> TOKIO
     AD_WIN --> TOKIO
     POL --> MAN
 
-    BIND_RUST[oneos-bindings-rust] -.generated from.-> WIT[wit/oneos]
-    BIND_GO[oneos-bindings-go] -.generated from.-> WIT
-    BIND_TS[oneos-bindings-ts] -.generated from.-> WIT
+    BIND_RUST[layer36-bindings-rust] -.generated from.-> WIT[wit/layer36]
+    BIND_GO[layer36-bindings-go] -.generated from.-> WIT
+    BIND_TS[layer36-bindings-ts] -.generated from.-> WIT
 ```
 
 ### 5.5 Trust boundaries (Phase 2)
@@ -279,15 +279,15 @@ Every choice below is frozen for Phase 2. Changes require an ADR.
 
 ### 6.1 Interface definition: **WIT + Component Model** (continues from ADR-0003)
 
-All UAPI modules are WIT interfaces. Phase 2 produces `wit/oneos/*.wit` files that are *normative* — once published they cannot break in v0.1.x.
+All UAPI modules are WIT interfaces. Phase 2 produces `wit/layer36/*.wit` files that are *normative* — once published they cannot break in v0.1.x.
 
 ### 6.2 WIT package versioning: **semver per module**
 
-- `oneos:io@0.1.0`
-- `oneos:fs@0.1.0`
-- `oneos:net@0.1.0`
-- `oneos:time@0.1.0`
-- `oneos:locale@0.1.0`
+- `layer36:io@0.1.0`
+- `layer36:fs@0.1.0`
+- `layer36:net@0.1.0`
+- `layer36:time@0.1.0`
+- `layer36:locale@0.1.0`
 
 Every module versions independently. v0.1.0 is *pre-stable* — breaking changes allowed until v1.0.0. Bumping a module version requires an ADR.
 
@@ -338,7 +338,7 @@ Per ADR-0006 (see §19): UAPI functions appear synchronous from WASM's point of 
 ### 6.10 Manifest format: **TOML**
 
 - `manifest.toml` co-located with `.wasm` file (Phase 2 sidecar).
-- Parsed by `oneos-manifest` crate using `toml` + `serde`.
+- Parsed by `layer36-manifest` crate using `toml` + `serde`.
 - Schema validated on load.
 
 ### 6.11 Capability strings: **stable format from Phase 2**
@@ -369,7 +369,7 @@ Format `<module>.<action>[:<resource>]` is frozen in Phase 2 per Build Plan §10
 
 These five WIT files are the core deliverable of Phase 2. Each is presented with design rationale followed by the authoritative WIT text.
 
-### 7.1 `oneos:io@0.1.0`
+### 7.1 `layer36:io@0.1.0`
 
 **Purpose:** standard I/O, logging.
 
@@ -379,8 +379,8 @@ These five WIT files are the core deliverable of Phase 2. Each is presented with
 - `log` is structured: level + message + key-value pairs.
 
 ```wit
-// wit/oneos/io.wit
-package oneos:io@0.1.0;
+// wit/layer36/io.wit
+package layer36:io@0.1.0;
 
 interface types {
     enum log-level {
@@ -440,7 +440,7 @@ world consumer {
 }
 ```
 
-### 7.2 `oneos:fs@0.1.0`
+### 7.2 `layer36:fs@0.1.0`
 
 **Purpose:** filesystem access within granted paths.
 
@@ -451,8 +451,8 @@ world consumer {
 - No `O_DIRECTORY`, `O_APPEND`, symlink semantics, or permissions in v0.1.
 
 ```wit
-// wit/oneos/fs.wit
-package oneos:fs@0.1.0;
+// wit/layer36/fs.wit
+package layer36:fs@0.1.0;
 
 interface types {
     record file-stat {
@@ -504,7 +504,7 @@ world consumer {
 }
 ```
 
-### 7.3 `oneos:net@0.1.0`
+### 7.3 `layer36:net@0.1.0`
 
 **Purpose:** outbound HTTP client.
 
@@ -516,8 +516,8 @@ world consumer {
 - Connect-scoped caps: `net.connect:host:port` — wildcards allowed per Build Plan §10.2.
 
 ```wit
-// wit/oneos/net.wit
-package oneos:net@0.1.0;
+// wit/layer36/net.wit
+package layer36:net@0.1.0;
 
 interface types {
     enum http-method {
@@ -573,7 +573,7 @@ world consumer {
 }
 ```
 
-### 7.4 `oneos:time@0.1.0`
+### 7.4 `layer36:time@0.1.0`
 
 **Purpose:** clocks and sleeping.
 
@@ -583,8 +583,8 @@ world consumer {
 - No timers as resources in v0.1 (that is Phase 3 for UI loops).
 
 ```wit
-// wit/oneos/time.wit
-package oneos:time@0.1.0;
+// wit/layer36/time.wit
+package layer36:time@0.1.0;
 
 interface clock {
     /// Milliseconds since Unix epoch. Wall-clock; can jump.
@@ -606,7 +606,7 @@ world consumer {
 }
 ```
 
-### 7.5 `oneos:locale@0.1.0`
+### 7.5 `layer36:locale@0.1.0`
 
 **Purpose:** formatting, timezone, user locale.
 
@@ -616,8 +616,8 @@ world consumer {
 - Locale ID is BCP 47 (e.g. `en-US`, `de-DE`, `hi-IN`).
 
 ```wit
-// wit/oneos/locale.wit
-package oneos:locale@0.1.0;
+// wit/layer36/locale.wit
+package layer36:locale@0.1.0;
 
 interface types {
     record locale-id {
@@ -676,18 +676,18 @@ world consumer {
 Phase 2 apps target this composite world:
 
 ```wit
-// wit/oneos/app.wit
-package oneos:app@0.1.0;
+// wit/layer36/app.wit
+package layer36:app@0.1.0;
 
 world cli {
-    import oneos:io/stdio@0.1.0;
-    import oneos:io/log@0.1.0;
-    import oneos:fs/files@0.1.0;
-    import oneos:net/http-client@0.1.0;
-    import oneos:time/clock@0.1.0;
-    import oneos:time/sleep@0.1.0;
-    import oneos:locale/info@0.1.0;
-    import oneos:locale/format@0.1.0;
+    import layer36:io/stdio@0.1.0;
+    import layer36:io/log@0.1.0;
+    import layer36:fs/files@0.1.0;
+    import layer36:net/http-client@0.1.0;
+    import layer36:time/clock@0.1.0;
+    import layer36:time/sleep@0.1.0;
+    import layer36:locale/info@0.1.0;
+    import layer36:locale/format@0.1.0;
 
     export run: func() -> s32;
 }
@@ -747,9 +747,9 @@ Document each gotcha in `docs/book/src/phase2/adapter-notes-{linux,macos,windows
 
 Every app gets a per-app sandbox directory:
 
-- Linux: `~/.local/share/oneos/apps/<app-id>/`
-- macOS: `~/Library/Application Support/oneos/apps/<app-id>/`
-- Windows: `%LOCALAPPDATA%\oneos\apps\<app-id>\`
+- Linux: `~/.local/share/layer36/apps/<app-id>/`
+- macOS: `~/Library/Application Support/layer36/apps/<app-id>/`
+- Windows: `%LOCALAPPDATA%\layer36\apps\<app-id>\`
 
 Relative `fs` paths resolve inside the sandbox root. Absolute paths (or `~/`-prefixed) require explicit caps in the manifest.
 
@@ -759,16 +759,16 @@ Relative `fs` paths resolve inside the sandbox root. Absolute paths (or `~/`-pre
 
 ### 9.1 Rust (first-class)
 
-- `wit-bindgen` generates `oneos-bindings-rust` crate.
-- Published to crates.io as `oneos`.
-- Re-exports each module: `oneos::fs`, `oneos::net`, etc.
+- `wit-bindgen` generates `layer36-bindings-rust` crate.
+- Published to crates.io as `layer36`.
+- Re-exports each module: `layer36::fs`, `layer36::net`, etc.
 - Provides ergonomic `Result<T, Error>` wrappers around WIT-generated types.
 
 ```rust
 // Developer-visible API
-use oneos::fs::{open, OpenMode};
+use layer36::fs::{open, OpenMode};
 
-let mut file = oneos::fs::open("data.txt", OpenMode::Read)?;
+let mut file = layer36::fs::open("data.txt", OpenMode::Read)?;
 let contents = file.read_to_string()?;
 ```
 
@@ -776,10 +776,10 @@ let contents = file.read_to_string()?;
 
 - TinyGo project provides WASM component output (component-model support landed 2024).
 - Bindings generated via `wit-bindgen-go`.
-- Published as `github.com/oneos/oneos-go`.
+- Published as `github.com/layer36/layer36-go`.
 
 ```go
-import "github.com/oneos/oneos-go/fs"
+import "github.com/layer36/layer36-go/fs"
 
 file, err := fs.Open("data.txt", fs.OpenModeRead)
 if err != nil { ... }
@@ -797,7 +797,7 @@ contents, err := file.ReadToString()
 - Best DX of the three: fastest to prototype, familiar to web developers.
 
 ```typescript
-import { open, OpenMode } from 'oneos:fs/files';
+import { open, OpenMode } from 'layer36:fs/files';
 
 const file = open('data.txt', OpenMode.Read);
 const contents = new TextDecoder().decode(file.read(1_000_000));
@@ -826,14 +826,14 @@ Each of those deserves deliberate treatment — rushing them in Phase 2 dilutes 
 
 Three ways an app obtains capabilities:
 
-1. **`--grant` flag:** `oneos run --grant net,fs:./data/** app.wasm`.
+1. **`--grant` flag:** `layer36 run --grant net,fs:./data/** app.wasm`.
 2. **`--auto-grant` flag:** grants everything declared in the manifest.
 3. **Interactive prompt:** default mode; prompts once per unique cap per session.
 
 ### 10.3 Interactive prompt example
 
 ```
-oneos run hello.wasm
+layer36 run hello.wasm
 
 App: com.example.hello (v1.0.0)
 Publisher: unsigned — caution
@@ -873,7 +873,7 @@ id      = "com.example.hello"
 name    = "Hello"
 version = "1.0.0"
 entry   = "hello.wasm"
-world   = "oneos:app/cli@0.1.0"
+world   = "layer36:app/cli@0.1.0"
 
 [[capabilities]]
 cap       = "fs.read:~/Documents/notes/**"
@@ -921,12 +921,12 @@ Any UAPI call not covered by one of these caps — because someone added a new f
 
 The three sample apps drive the UAPI design backward: if a common CLI pattern is hard to write, the UAPI is wrong. Build them in parallel with the UAPI, not after.
 
-### 11.1 `oneos-curl`
+### 11.1 `layer36-curl`
 
-**Purpose:** minimal HTTP client — OneOS's version of curl.
+**Purpose:** minimal HTTP client — Layer36's version of curl.
 
 **Feature set (v0.1):**
-- `oneos-curl <url>` — GET, print body.
+- `layer36-curl <url>` — GET, print body.
 - `-X POST` — request method.
 - `-H "Name: value"` — custom headers (repeatable).
 - `-d @file` or `-d 'text'` — request body.
@@ -937,12 +937,12 @@ The three sample apps drive the UAPI design backward: if a common CLI pattern is
 **Caps required:** `net.connect:*:*`, plus `fs.write:<out>` if `-o`, plus `fs.read:<file>` if `-d @`.
 **LOC target:** < 300 lines including argument parsing.
 
-### 11.2 `oneos-cat`
+### 11.2 `layer36-cat`
 
-**Purpose:** minimal file reader — OneOS's version of cat.
+**Purpose:** minimal file reader — Layer36's version of cat.
 
 **Feature set (v0.1):**
-- `oneos-cat <file1> [file2 ...]` — concatenate and print to stdout.
+- `layer36-cat <file1> [file2 ...]` — concatenate and print to stdout.
 - `-n` — number lines.
 - `-b` — number non-blank lines only.
 - Reading `-` reads from stdin.
@@ -951,12 +951,12 @@ The three sample apps drive the UAPI design backward: if a common CLI pattern is
 **Caps required:** `fs.read:<each input path>`.
 **Reason Go:** tests the TinyGo pipeline on a real app; cat is small enough that TinyGo's subset is comfortable.
 
-### 11.3 `oneos-clock`
+### 11.3 `layer36-clock`
 
 **Purpose:** show current time in locale-aware format.
 
 **Feature set (v0.1):**
-- `oneos-clock` — print current date and time in user's locale.
+- `layer36-clock` — print current date and time in user's locale.
 - `--tz <iana>` — override timezone (e.g. `--tz Asia/Tokyo`).
 - `--format short|medium|long|full` — ICU style.
 - `--json` — machine-readable output.
@@ -971,9 +971,9 @@ All three samples have a property: **byte-identical stdout across hosts given by
 
 Where the property cannot hold by physics (timestamps differ across runs, DNS varies), tests use frozen inputs:
 
-- `oneos-curl http://localhost:PORT` against a test HTTP server with fixed responses.
-- `oneos-cat test-fixtures/*.txt` with checked-in fixtures.
-- `oneos-clock` tested with a frozen clock stub via `--test-time <millis>` flag (dev-only).
+- `layer36-curl http://localhost:PORT` against a test HTTP server with fixed responses.
+- `layer36-cat test-fixtures/*.txt` with checked-in fixtures.
+- `layer36-clock` tested with a frozen clock stub via `--test-time <millis>` flag (dev-only).
 
 ---
 
@@ -991,21 +991,21 @@ Phase 2 is 12 weeks of calendar time, scaled for ~20 hours/week of active develo
 
 - The easy three. Small adapters. Get the binding + dispatch pipeline working end-to-end on one module before tackling `fs` and `net`.
 - Rust bindings via wit-bindgen.
-- First sample: `oneos-clock` (TypeScript, jco) — also validates TS pipeline early.
+- First sample: `layer36-clock` (TypeScript, jco) — also validates TS pipeline early.
 
 ### Weeks 5–6: `fs`
 
 - Design doc for sandbox root (ADR-0009).
 - Linux/macOS/Windows adapter implementations.
 - Path canonicalization logic.
-- `oneos-cat` sample in Go via TinyGo (validates Go pipeline).
+- `layer36-cat` sample in Go via TinyGo (validates Go pipeline).
 
 ### Weeks 7–8: `net`
 
 - HTTP client adapter using hyper + rustls.
 - DNS resolver integration.
 - Timeout and error mapping.
-- `oneos-curl` sample in Rust.
+- `layer36-curl` sample in Rust.
 
 ### Week 9: UCap v0.1
 
@@ -1041,7 +1041,7 @@ Phase 2 is 12 weeks of calendar time, scaled for ~20 hours/week of active develo
 
 Each task targets approximately one engineer-week unless noted. Task IDs match Build Plan §7.3.
 
-### P2-UAPI-01 — `wit/oneos/io.wit`
+### P2-UAPI-01 — `wit/layer36/io.wit`
 
 **Branch:** `p2-uapi-01-io-wit`.
 
@@ -1050,7 +1050,7 @@ Each task targets approximately one engineer-week unless noted. Task IDs match B
 - Parses via `wasm-tools component wit`.
 - Style guide checked.
 
-### P2-UAPI-02 — `wit/oneos/fs.wit`
+### P2-UAPI-02 — `wit/layer36/fs.wit`
 
 **Branch:** `p2-uapi-02-fs-wit`.
 
@@ -1059,7 +1059,7 @@ Each task targets approximately one engineer-week unless noted. Task IDs match B
 - Parses via `wasm-tools`.
 - Sandbox root concept documented in companion markdown.
 
-### P2-UAPI-03 — `wit/oneos/net.wit`
+### P2-UAPI-03 — `wit/layer36/net.wit`
 
 **Branch:** `p2-uapi-03-net-wit`.
 
@@ -1068,7 +1068,7 @@ Each task targets approximately one engineer-week unless noted. Task IDs match B
 - HTTP/1.1 and HTTP/2 explicit in module README.
 - DNS error semantics documented.
 
-### P2-UAPI-04 — `wit/oneos/time.wit`
+### P2-UAPI-04 — `wit/layer36/time.wit`
 
 **Branch:** `p2-uapi-04-time-wit`.
 
@@ -1076,7 +1076,7 @@ Each task targets approximately one engineer-week unless noted. Task IDs match B
 - File matches §7.4.
 - Wall vs monotonic distinction documented.
 
-### P2-UAPI-05 — `wit/oneos/locale.wit`
+### P2-UAPI-05 — `wit/layer36/locale.wit`
 
 **Branch:** `p2-uapi-05-locale-wit`.
 
@@ -1092,7 +1092,7 @@ Each task targets approximately one engineer-week unless noted. Task IDs match B
 **Acceptance:**
 - `crates/adapter-linux/` implements all five UAPI modules.
 - Sandbox root created on first run.
-- Unit tests per module, integration tests run under `oneos run` on Ubuntu in CI.
+- Unit tests per module, integration tests run under `layer36 run` on Ubuntu in CI.
 
 ### P2-ADPT-02 — macOS adapters
 
@@ -1120,7 +1120,7 @@ Each task targets approximately one engineer-week unless noted. Task IDs match B
 **Branch:** `p2-bind-01-rust`.
 
 **Acceptance:**
-- `crates/bindings-rust/` (published as `oneos` on crates.io) re-exports each module.
+- `crates/bindings-rust/` (published as `layer36` on crates.io) re-exports each module.
 - Generated via `wit-bindgen` with additional ergonomic wrappers.
 - `cargo doc` generates clean reference.
 
@@ -1130,7 +1130,7 @@ Each task targets approximately one engineer-week unless noted. Task IDs match B
 **Branch:** `p2-bind-02-go`.
 
 **Acceptance:**
-- `oneos-go` repo with generated bindings.
+- `layer36-go` repo with generated bindings.
 - TinyGo build verified for a hello-world.
 - Documented limitations of TinyGo stdlib.
 
@@ -1140,37 +1140,37 @@ Each task targets approximately one engineer-week unless noted. Task IDs match B
 **Branch:** `p2-bind-03-ts`.
 
 **Acceptance:**
-- `@oneos/sdk` NPM package with type definitions.
+- `@layer36/sdk` NPM package with type definitions.
 - jco componentization pipeline documented.
 - Hello-world TS sample < 10 MB as component.
 
-### P2-APP-01 — `oneos-curl`
+### P2-APP-01 — `layer36-curl`
 
 **Estimate:** 2 days.
 **Branch:** `p2-app-01-curl`.
 
 **Acceptance:**
-- Source in `apps/oneos-curl/` (Rust).
+- Source in `apps/layer36-curl/` (Rust).
 - Behaves as §11.1.
 - CI runs against test HTTP server, diffs stdout across hosts.
 
-### P2-APP-02 — `oneos-cat`
+### P2-APP-02 — `layer36-cat`
 
 **Estimate:** 1 day.
 **Branch:** `p2-app-02-cat`.
 
 **Acceptance:**
-- Source in `apps/oneos-cat/` (Go via TinyGo).
+- Source in `apps/layer36-cat/` (Go via TinyGo).
 - Behaves as §11.2.
 - Cross-host stdout-identical against fixtures.
 
-### P2-APP-03 — `oneos-clock`
+### P2-APP-03 — `layer36-clock`
 
 **Estimate:** 1 day.
 **Branch:** `p2-app-03-clock`.
 
 **Acceptance:**
-- Source in `apps/oneos-clock/` (TypeScript via jco).
+- Source in `apps/layer36-clock/` (TypeScript via jco).
 - Behaves as §11.3.
 - Snapshot tested with `--test-time` flag for determinism.
 
@@ -1180,9 +1180,9 @@ Each task targets approximately one engineer-week unless noted. Task IDs match B
 **Branch:** `p2-test-01-harness`.
 
 **Acceptance:**
-- `test/integration/runner.rs` builds each sample, runs via `oneos`, diffs stdout.
+- `test/integration/runner.rs` builds each sample, runs via `layer36`, diffs stdout.
 - Fixtures checked into `test/fixtures/`.
-- Test HTTP server (simple hyper-based) for `oneos-curl` tests.
+- Test HTTP server (simple hyper-based) for `layer36-curl` tests.
 - CI runs on all three hosts.
 
 ### P2-SEC-01 — UCap soft enforcement
@@ -1230,7 +1230,7 @@ use crate::adapter::HostAdapter;
 pub fn wire_fs<A: HostAdapter + 'static>(
     linker: &mut wasmtime::component::Linker<HostState<A>>,
 ) -> anyhow::Result<()> {
-    let mut fs = linker.instance("oneos:fs/files@0.1.0")?;
+    let mut fs = linker.instance("layer36:fs/files@0.1.0")?;
 
     fs.func_wrap(
         "open",
@@ -1461,8 +1461,8 @@ impl Manifest {
 
 ```rust
 // crates/cli/src/prompt.rs
-use oneos_manifest::CapabilityDecl;
-use oneos_policy::Cap;
+use layer36_manifest::CapabilityDecl;
+use layer36_policy::Cap;
 use std::io::{self, Write};
 
 pub fn interactive_grant(caps: &[CapabilityDecl], app_id: &str)
@@ -1482,16 +1482,16 @@ pub fn interactive_grant(caps: &[CapabilityDecl], app_id: &str)
 }
 ```
 
-### 14.7 Rust sample: `oneos-curl` excerpt
+### 14.7 Rust sample: `layer36-curl` excerpt
 
 ```rust
-// apps/oneos-curl/src/main.rs
-use oneos::net::http_client::{fetch, HttpMethod, Request};
+// apps/layer36-curl/src/main.rs
+use layer36::net::http_client::{fetch, HttpMethod, Request};
 
 fn main() -> i32 {
     let args: Vec<String> = std::env::args().collect();
     let url = args.get(1).cloned().unwrap_or_else(|| {
-        eprintln!("usage: oneos-curl <url>");
+        eprintln!("usage: layer36-curl <url>");
         std::process::exit(1);
     });
 
@@ -1505,7 +1505,7 @@ fn main() -> i32 {
 
     match fetch(req) {
         Ok(resp) => {
-            oneos::io::stdio::stdout().write_all(&resp.body).ok();
+            layer36::io::stdio::stdout().write_all(&resp.body).ok();
             if resp.status >= 400 { 22 } else { 0 }
         }
         Err(e) => {
@@ -1516,17 +1516,17 @@ fn main() -> i32 {
 }
 ```
 
-### 14.8 Go sample: `oneos-cat` excerpt
+### 14.8 Go sample: `layer36-cat` excerpt
 
 ```go
-// apps/oneos-cat/main.go
+// apps/layer36-cat/main.go
 package main
 
 import (
     "os"
 
-    fs   "github.com/oneos/oneos-go/fs/files"
-    stdio "github.com/oneos/oneos-go/io/stdio"
+    fs   "github.com/layer36/layer36-go/fs/files"
+    stdio "github.com/layer36/layer36-go/io/stdio"
 )
 
 func main() {
@@ -1554,14 +1554,14 @@ func main() {
 }
 ```
 
-### 14.9 TypeScript sample: `oneos-clock` excerpt
+### 14.9 TypeScript sample: `layer36-clock` excerpt
 
 ```typescript
-// apps/oneos-clock/src/main.ts
-import { current, timezone } from 'oneos:locale/info@0.1.0';
-import { formatDate, DateStyle } from 'oneos:locale/format@0.1.0';
-import { nowMillis } from 'oneos:time/clock@0.1.0';
-import { stdout } from 'oneos:io/stdio@0.1.0';
+// apps/layer36-clock/src/main.ts
+import { current, timezone } from 'layer36:locale/info@0.1.0';
+import { formatDate, DateStyle } from 'layer36:locale/format@0.1.0';
+import { nowMillis } from 'layer36:time/clock@0.1.0';
+import { stdout } from 'layer36:io/stdio@0.1.0';
 
 export function run(): number {
     const loc = current();
@@ -1592,7 +1592,7 @@ export function run(): number {
 ### 15.2 Fixture strategy
 
 `test/fixtures/` contains:
-- Deterministic text files for `oneos-cat`.
+- Deterministic text files for `layer36-cat`.
 - Checked-in HTTP response bodies, replayed via the test HTTP server.
 - Frozen-clock test data (`--test-time` flag outputs known strings).
 
@@ -1602,10 +1602,10 @@ Cross-host diff tests take the form:
 
 ```rust
 #[test]
-fn oneos_cat_identical_across_hosts() {
-    let output_linux = run_on_host("linux", "oneos-cat fixtures/hello.txt");
-    let output_macos = run_on_host("macos", "oneos-cat fixtures/hello.txt");
-    let output_windows = run_on_host("windows", "oneos-cat fixtures/hello.txt");
+fn layer36_cat_identical_across_hosts() {
+    let output_linux = run_on_host("linux", "layer36-cat fixtures/hello.txt");
+    let output_macos = run_on_host("macos", "layer36-cat fixtures/hello.txt");
+    let output_windows = run_on_host("windows", "layer36-cat fixtures/hello.txt");
     assert_eq!(output_linux, output_macos);
     assert_eq!(output_linux, output_windows);
 }
@@ -1635,10 +1635,10 @@ Each sample's `--help` output snapshotted via `insta`. Errors surface on help-te
 |---|---|---|
 | UAPI dispatch overhead (hot) | < 1 µs | `criterion` microbench |
 | UCap check overhead (cached grant) | < 500 ns | microbench |
-| `oneos run` cold start w/ UAPI app | < 150 ms | `hyperfine` |
-| `oneos run` warm start | < 30 ms | `hyperfine` |
-| `oneos-curl` vs native `curl` (GET localhost) | < 3× overhead | comparison bench |
-| `oneos-cat` vs native `cat` (1 MB file) | < 2× overhead | comparison bench |
+| `layer36 run` cold start w/ UAPI app | < 150 ms | `hyperfine` |
+| `layer36 run` warm start | < 30 ms | `hyperfine` |
+| `layer36-curl` vs native `curl` (GET localhost) | < 3× overhead | comparison bench |
+| `layer36-cat` vs native `cat` (1 MB file) | < 2× overhead | comparison bench |
 | Runtime binary size | < 50 MB (up from 30 in Phase 1, due to adapters) | artifact size |
 | RSS per running app | < 60 MB | `ps`/`Get-Process`/`Activity Monitor` |
 
@@ -1688,7 +1688,7 @@ Misses > 10% from any target trigger an issue blocking exit criteria.
 
 `SECURITY.md` should be updated at end of Phase 2 to:
 
-> OneOS is pre-alpha. Phase 2 introduces capability-based sandboxing, but sandboxes are defense-in-depth — not a substitute for trusting the apps you run. Do not run malicious WASM expecting the sandbox to save you. Real hardening arrives in Phase 6 with signed bundles and persistent policy.
+> Layer36 is pre-alpha. Phase 2 introduces capability-based sandboxing, but sandboxes are defense-in-depth — not a substitute for trusting the apps you run. Do not run malicious WASM expecting the sandbox to save you. Real hardening arrives in Phase 6 with signed bundles and persistent policy.
 
 ---
 
@@ -1699,7 +1699,7 @@ Phase 2 ships five user-facing docs. Priority order:
 ### 18.1 WIT Style Guide
 
 `docs/book/src/wit-style.md`. Covers:
-- Package naming: `oneos:<module>@<semver>`.
+- Package naming: `layer36:<module>@<semver>`.
 - Interface organization: `types` / functional interfaces / consumer `world`.
 - Error variants: always `variant`, always include an `other(string)` bucket as last option.
 - Resource vs function: resources for anything with lifecycle; functions for stateless operations.
@@ -1756,14 +1756,14 @@ Additional ADRs as decisions surface. Rule of thumb: if you have to ask "should 
 - [ ] `crates/adapter-common/` shared logic passes on all three.
 
 ### Bindings
-- [ ] `oneos` Rust crate published to crates.io (or ready to publish).
-- [ ] `oneos-go` Go module; TinyGo build verified.
-- [ ] `@oneos/sdk` TypeScript package; jco pipeline documented.
+- [ ] `layer36` Rust crate published to crates.io (or ready to publish).
+- [ ] `layer36-go` Go module; TinyGo build verified.
+- [ ] `@layer36/sdk` TypeScript package; jco pipeline documented.
 
 ### Samples
-- [ ] `oneos-curl` runs on all three hosts, cross-host stdout identical for fixture URLs.
-- [ ] `oneos-cat` runs on all three hosts, cross-host stdout identical for fixture files.
-- [ ] `oneos-clock` runs on all three hosts, snapshot-tested with frozen clock.
+- [ ] `layer36-curl` runs on all three hosts, cross-host stdout identical for fixture URLs.
+- [ ] `layer36-cat` runs on all three hosts, cross-host stdout identical for fixture files.
+- [ ] `layer36-clock` runs on all three hosts, snapshot-tested with frozen clock.
 
 ### UCap
 - [ ] Manifest parser handles all §10.5 fields.
@@ -1806,7 +1806,7 @@ Additional ADRs as decisions surface. Rule of thumb: if you have to ask "should 
 | Path canonicalization has sandbox-escape edge cases | High | Critical | Fuzz aggressively. Port tests from well-trodden capability systems (sandboxie, chromium sandbox docs). |
 | Async-over-sync UAPI pattern causes deadlocks | Medium | High | Architectural RFC in Week 1 (ADR-0006); single-threaded Tokio per store enforced. |
 | HTTP client memory blowup on large responses | Medium | Medium | Hard cap on response body size (16 MB v0.1). Streaming is v0.2 of `net`. |
-| Cross-host stdout differs subtly (line endings, locale formatting) | High | Medium | Test fixtures explicit about encoding; LF-only output; `oneos-clock` tests use `--test-time` for determinism. |
+| Cross-host stdout differs subtly (line endings, locale formatting) | High | Medium | Test fixtures explicit about encoding; LF-only output; `layer36-clock` tests use `--test-time` for determinism. |
 
 ### 21.2 Process risks
 
@@ -1871,10 +1871,10 @@ Before kicking off Phase 3, update the main Build Plan with anything the Phase 2
 
 ### Appendix A — Complete WIT package index
 
-At end of Phase 2, `wit/oneos/` contains:
+At end of Phase 2, `wit/layer36/` contains:
 
 ```
-wit/oneos/
+wit/layer36/
 ├── io.wit           # 0.1.0
 ├── fs.wit           # 0.1.0
 ├── net.wit          # 0.1.0
@@ -1884,7 +1884,7 @@ wit/oneos/
 ```
 
 Deleted at end of Phase 2:
-- `wit/oneos/phase1.wit` — removed; apps migrated to real UAPI.
+- `wit/layer36/phase1.wit` — removed; apps migrated to real UAPI.
 
 ### Appendix B — Capability quick reference
 
@@ -1913,28 +1913,28 @@ Requires explicit grant:
 
 ```bash
 # Validate WIT
-wasm-tools component wit wit/oneos/fs.wit
+wasm-tools component wit wit/layer36/fs.wit
 
 # Generate Rust bindings
 cargo component bindings
 
 # Build the Rust sample
-cd apps/oneos-curl && cargo component build --release
+cd apps/layer36-curl && cargo component build --release
 
 # Build the Go sample
-cd apps/oneos-cat && tinygo build -target=wasi-p2 -o oneos-cat.wasm ./main.go
+cd apps/layer36-cat && tinygo build -target=wasi-p2 -o layer36-cat.wasm ./main.go
 
 # Build the TypeScript sample
-cd apps/oneos-clock && npm run build:component
+cd apps/layer36-clock && npm run build:component
 
 # Run with specific grants
-oneos run --grant net.connect:api.example.com:443,fs.read:./data/** app.wasm
+layer36 run --grant net.connect:api.example.com:443,fs.read:./data/** app.wasm
 
 # Auto-grant everything in manifest
-oneos run --auto-grant app.wasm
+layer36 run --auto-grant app.wasm
 
 # Interactive mode (default)
-oneos run app.wasm
+layer36 run app.wasm
 
 # Cross-host integration test locally
 cargo test -p integration-runner --release -- --test-threads 1
@@ -1946,15 +1946,15 @@ When a UAPI call fails unexpectedly:
 
 1. Enable UAPI tracing:
    ```bash
-   ONEOS_LOG=oneos_runtime::uapi=trace oneos run app.wasm
+   LAYER36_LOG=layer36_runtime::uapi=trace layer36 run app.wasm
    ```
 2. Enable policy tracing:
    ```bash
-   ONEOS_LOG=oneos_policy=trace oneos run app.wasm
+   LAYER36_LOG=layer36_policy=trace layer36 run app.wasm
    ```
 3. Dump effective capabilities for a session:
    ```bash
-   oneos run --dump-caps app.wasm
+   layer36 run --dump-caps app.wasm
    ```
 4. Validate the component's imports against the runtime's expected world:
    ```bash
@@ -2008,10 +2008,89 @@ Save as `docs/book/src/phase2/retro.md` at the end of Phase 2.
 
 ## Closing
 
-Phase 2 is where OneOS stops being a runtime and starts being a platform. The five WIT files you ship this phase will be cited, copied, and depended on by every OneOS app ever written. The adapter crates will be forked and ported for every new host. The UCap model will be extended, not replaced, for a decade.
+---
+
+## Development Log
+
+> **Phase Status:** Not started  
+> **Started:** —  
+> **Completed:** —  
+> **Last Updated:** 2026-05-01
+
+### Progress Summary
+
+_Not started. Awaiting completion of all [Phase 1 exit criteria](#3-success-criteria)._
+
+---
+
+### Exit Criteria Status
+
+Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each criterion is met.
+
+| # | Criterion | Status |
+|---|-----------|--------|
+| 1 | All five UAPI modules (`io`, `fs`, `net`, `time`, `locale`) frozen as stable v0.1 WIT | Not done |
+| 2 | Each module implemented in Linux, macOS, Windows host adapters; CI green on all | Not done |
+| 3 | Rust bindings generated and usable (`cargo add layer36 && use layer36::fs` works) | Not done |
+| 4 | Go (TinyGo) bindings generated and usable; sample builds and runs | Not done |
+| 5 | TypeScript (jco) bindings generated and usable; sample builds and runs | Not done |
+| 6 | `layer36-curl <url>` works identically on all three hosts | Not done |
+| 7 | `layer36-cat <file>` works identically on all three hosts | Not done |
+| 8 | `layer36-clock` prints time in user locale on all three hosts | Not done |
+| 9 | UCap v0.1: manifest-declared caps enforced; unauthorized calls trap cleanly | Not done |
+| 10 | Startup overhead for a UAPI-using app < 150 ms | Not done |
+| 11 | UAPI hot-path dispatch < 1 µs (microbenchmark) | Not done |
+| 12 | Developer who knows Rust but not WASM can write a CLI in < 30 min using docs | Not done |
+| 13 | UAPI reference docs auto-generated from WIT and published on docs site | Not done |
+| 14 | WIT Style Guide merged into `docs/book/` | Not done |
+| 15 | ADRs 0006 through at least 0012 merged | Not done |
+
+---
+
+### Completed Tasks
+
+| Task ID | Task | Completed | Notes |
+|---------|------|-----------|-------|
+| — | — | — | — |
+
+---
+
+### In Progress
+
+| Task ID | Task | Started | Blockers |
+|---------|------|---------|----------|
+| — | — | — | — |
+
+---
+
+### ADRs Filed This Phase
+
+| ADR | Title | Status | Merged |
+|-----|-------|--------|--------|
+| ADR-0006 | WIT versioning strategy (semver per module) | Pending | — |
+| ADR-0007 | UCap v0.1 soft enforcement model | Pending | — |
+| ADR-0008 | Async runtime choice (tokio) for host adapters | Pending | — |
+
+_ADRs 0009–0012 to be determined during Phase 2 work._
+
+---
+
+### Blockers & Open Questions
+
+_None currently._
+
+---
+
+### Notes & Learnings
+
+_Nothing yet. Add time-stamped notes as work progresses: WIT design decisions made during review, per-host adapter surprises, cross-host diff test failures and their causes, lessons for Phase 3._
+
+---
+
+Phase 2 is where Layer36 stops being a runtime and starts being a platform. The five WIT files you ship this phase will be cited, copied, and depended on by every Layer36 app ever written. The adapter crates will be forked and ported for every new host. The UCap model will be extended, not replaced, for a decade.
 
 Spend the time. Review the WIT aloud with someone who hasn't seen it. Write the tutorials before you think they're ready. Run the cross-host diff test until you trust it. The cost of getting Phase 2 right is three months. The cost of getting it wrong is every subsequent phase paying interest on that debt.
 
-When you ship, `oneos-curl`, `oneos-cat`, and `oneos-clock` running byte-identically on three operating systems is the moment OneOS stops being a plan and becomes a thing. That moment is worth earning.
+When you ship, `layer36-curl`, `layer36-cat`, and `layer36-clock` running byte-identically on three operating systems is the moment Layer36 stops being a plan and becomes a thing. That moment is worth earning.
 
 — end of document —

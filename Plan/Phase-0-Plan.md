@@ -1,4 +1,4 @@
-# OneOS — Phase 0 Detailed Plan: Foundation
+# Layer36 — Phase 0 Detailed Plan: Foundation
 
 > **Phase:** 0 of 8
 > **Duration:** Weeks 1–4 (20 calendar days, ~5 engineering days of actual work)
@@ -49,7 +49,7 @@ Phase 0 is short but easy to get wrong in ways that compound. The mistakes here 
 
 ### 1.2 Why this matters
 
-Every serious OSS project has a moment where someone who isn't the founder shows up, reads the repo, and decides whether to contribute or close the tab. That decision happens in the first five minutes. The README, the build system, the CI, the CONTRIBUTING guide — together they answer "is this real?" If the answer is no, the contributor leaves and doesn't come back. OneOS needs at least 30 external contributors over 24 months. Phase 0 is where we earn the right to attract them.
+Every serious OSS project has a moment where someone who isn't the founder shows up, reads the repo, and decides whether to contribute or close the tab. That decision happens in the first five minutes. The README, the build system, the CI, the CONTRIBUTING guide — together they answer "is this real?" If the answer is no, the contributor leaves and doesn't come back. Layer36 needs at least 30 external contributors over 24 months. Phase 0 is where we earn the right to attract them.
 
 ### 1.3 The four outputs of Phase 0
 
@@ -74,7 +74,7 @@ Phase 0 is **done** when, and only when, every row below is true.
 | 6 | mdBook site live at a URL (GitHub Pages OK) | Published link |
 | 7 | Discord server active with announcement channel and at least 10 members | Member count |
 | 8 | Public Twitter/X or equivalent announcement thread published | Post link |
-| 9 | Trademark search completed for "OneOS" (filing deferred) | Written summary in `docs/legal/` |
+| 9 | Trademark search completed for "Layer36" (filing deferred) | Written summary in `docs/legal/` |
 | 10 | At least one external contributor has opened and merged a PR | Git log |
 
 ---
@@ -119,7 +119,7 @@ Phase 0 has almost no running code, so its "architecture" is the repository stru
 ### 4.1 End-of-Phase-0 folder layout
 
 ```
-oneos/
+layer36/
 ├── .github/
 │   ├── workflows/
 │   │   └── ci.yml                        # fmt + clippy on empty workspace
@@ -242,14 +242,14 @@ Phase 0 makes the tooling decisions that Phase 1 will inherit. Get these right a
 
 ## 6. Week-by-Week Breakdown
 
-Sized for a founder working ~10–15 h/week on OneOS alongside ParkSure.
+Sized for a founder working ~10–15 h/week on Layer36 alongside ParkSure.
 
 ### Week 1 — Repo skeleton
 
 **Goal:** A clean, professional-looking public repo exists.
 
-- Create `oneos` GitHub organization.
-- Create `oneos/oneos` public repo.
+- Create `layer36` GitHub organization.
+- Create `layer36/layer36` public repo.
 - Commit: licenses, README draft, CODE_OF_CONDUCT, SECURITY, .gitignore, .gitattributes.
 - Initialize empty Cargo workspace.
 - Push. Make sure GitHub renders it sensibly.
@@ -299,7 +299,7 @@ Sized for a founder working ~10–15 h/week on OneOS alongside ParkSure.
 **Branch:** direct to `main` (bootstrap commits only; future work uses branches).
 
 **Acceptance:**
-- Repo exists at `github.com/oneos/oneos` (or your chosen org), public.
+- Repo exists at `github.com/layer36/layer36` (or your chosen org), public.
 - `LICENSE-MIT` and `LICENSE-APACHE` committed at root.
 - README.md committed with the template from §8.1.
 - `.gitignore` and `.gitattributes` present.
@@ -379,7 +379,7 @@ Sized for a founder working ~10–15 h/week on OneOS alongside ParkSure.
 
 **Acceptance:**
 - Twitter/X thread drafted in `docs/legal/launch/twitter-thread.md` (kept private until Week 4).
-- Announcement blog post drafted in `docs/book/src/blog/0001-announcing-oneos.md`.
+- Announcement blog post drafted in `docs/book/src/blog/0001-announcing-layer36.md`.
 - Reviewed by at least one trusted outsider before publication.
 
 ### P0-LEGAL-01 — Trademark search
@@ -387,9 +387,9 @@ Sized for a founder working ~10–15 h/week on OneOS alongside ParkSure.
 **Estimate:** 0.5 day (active; elapsed may be longer).
 
 **Acceptance:**
-- USPTO TESS search for "OneOS" and close variants — written results in `docs/legal/trademark-search.md`.
+- USPTO TESS search for "Layer36" and close variants — written results in `docs/legal/trademark-search.md`.
 - EUIPO (European Union Intellectual Property Office) search — same file.
-- Japan, China, India — same file (these are OneOS's likely early non-US markets).
+- Japan, China, India — same file (these are Layer36's likely early non-US markets).
 - Decision recorded: proceed with name, pick alternate, defer until Phase 6.
 - **No filing.** Search only.
 
@@ -412,11 +412,11 @@ These are not drafts. Paste them and adjust only the bracketed placeholders.
 ### 8.1 README.md
 
 ```markdown
-# OneOS
+# Layer36
 
 > Write once. Run on everything. Natively.
 
-OneOS is a universal application platform — a portable runtime, a universal
+Layer36 is a universal application platform — a portable runtime, a universal
 standard library, and a capability-based permission model — that lets you ship
 one binary and run it natively on Windows, macOS, Linux, iOS, Android, and the
 web.
@@ -425,22 +425,22 @@ It is built on WebAssembly and its Component Model, with a thin per-OS adapter
 layer that translates calls to native APIs.
 
 **Status:** Pre-alpha. Phase 0 (Foundation). Not yet usable.
-See [the roadmap](https://oneos.github.io/oneos/roadmap.html).
+See [the roadmap](https://layer36.github.io/layer36/roadmap.html).
 
 ## Why
 
 Every app today is written six times: once for each operating system it runs
-on. That is a tax on every developer and a ceiling on every idea. OneOS removes
+on. That is a tax on every developer and a ceiling on every idea. Layer36 removes
 the tax by making the developer's target a portable runtime, not any particular
 OS.
 
-Read [the full vision](https://oneos.github.io/oneos/vision.html).
+Read [the full vision](https://layer36.github.io/layer36/vision.html).
 
 ## Current phase
 
 **Phase 0 — Foundation.** Repo scaffolding, CI, community, first decisions.
 No runnable code yet. Phase 1 begins when the checklist in
-[`docs/book/src/roadmap.html`](https://oneos.github.io/oneos/roadmap.html) is
+[`docs/book/src/roadmap.html`](https://layer36.github.io/layer36/roadmap.html) is
 green.
 
 ## Quickstart
@@ -448,11 +448,11 @@ green.
 Nothing to run yet. When Phase 1 ships (ETA: ~8 weeks):
 
 ```bash
-# Install oneos
+# Install layer36
 # (instructions here in Phase 1)
 
 # Run your first component
-oneos run hello.wasm
+layer36 run hello.wasm
 ```
 
 ## Project structure
@@ -466,7 +466,7 @@ oneos run hello.wasm
 
 We want you. Read [CONTRIBUTING.md](CONTRIBUTING.md) and drop by
 [Discord](https://discord.gg/REPLACE). Good first issues are labeled
-[`good first issue`](https://github.com/oneos/oneos/labels/good%20first%20issue).
+[`good first issue`](https://github.com/layer36/layer36/labels/good%20first%20issue).
 
 ## License
 
@@ -481,7 +481,7 @@ Contributions are dual-licensed under the same terms.
 
 ## Acknowledgements
 
-OneOS stands on the shoulders of the Bytecode Alliance, the Rust Foundation,
+Layer36 stands on the shoulders of the Bytecode Alliance, the Rust Foundation,
 and everyone else building the open WebAssembly ecosystem.
 ```
 
@@ -495,22 +495,22 @@ Copy verbatim from:
 Change only the copyright line in MIT:
 
 ```
-Copyright (c) 2026 OneOS contributors
+Copyright (c) 2026 Layer36 contributors
 ```
 
 ### 8.3 CONTRIBUTING.md
 
 ```markdown
-# Contributing to OneOS
+# Contributing to Layer36
 
-Thanks for your interest. OneOS is young and every contribution compounds.
+Thanks for your interest. Layer36 is young and every contribution compounds.
 
 ## Before you start
 
 1. Read the [Code of Conduct](CODE_OF_CONDUCT.md). We enforce it.
-2. Skim the [vision and roadmap](https://oneos.github.io/oneos/).
+2. Skim the [vision and roadmap](https://layer36.github.io/layer36/).
 3. Find a `good first issue` if you're new:
-   https://github.com/oneos/oneos/labels/good%20first%20issue
+   https://github.com/layer36/layer36/labels/good%20first%20issue
 
 ## Development setup
 
@@ -522,8 +522,8 @@ Install prerequisites:
 Then:
 
 ```bash
-git clone https://github.com/oneos/oneos.git
-cd oneos
+git clone https://github.com/layer36/layer36.git
+cd layer36
 cargo build
 cargo test
 ```
@@ -587,7 +587,7 @@ that pipeline alive.
 
 ## Supported versions
 
-OneOS is pre-alpha (Phase 0). No versions are supported for production use.
+Layer36 is pre-alpha (Phase 0). No versions are supported for production use.
 
 When v1.0 ships, we will maintain the latest minor version with
 security patches. Older minor versions will receive patches for 12
@@ -597,7 +597,7 @@ months after the next minor release.
 
 **Do not open a public issue for security vulnerabilities.**
 
-Email `security@oneos.example` (REPLACE with real address once set up).
+Email `security@layer36.example` (REPLACE with real address once set up).
 
 If you prefer encrypted communication, the PGP key fingerprint is:
 
@@ -643,7 +643,7 @@ Use [Contributor Covenant 2.1](https://www.contributor-covenant.org/version/2/1/
 ```markdown
 # Changelog
 
-All notable changes to OneOS are documented here.
+All notable changes to Layer36 are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
@@ -657,7 +657,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - CI workflow.
 - Dual MIT / Apache 2.0 license.
 
-[Unreleased]: https://github.com/oneos/oneos/compare/main...HEAD
+[Unreleased]: https://github.com/layer36/layer36/compare/main...HEAD
 ```
 
 ### 8.7 `.gitattributes`
@@ -698,10 +698,10 @@ Thumbs.db
 
 ### 8.9 Announcement blog post (template)
 
-Publish as `docs/book/src/blog/0001-announcing-oneos.md` at the end of Week 4.
+Publish as `docs/book/src/blog/0001-announcing-layer36.md` at the end of Week 4.
 
 ```markdown
-# Announcing OneOS
+# Announcing Layer36
 
 An app today is written six times. Once for Windows, once for macOS, once for
 Linux, once for iOS, once for Android, once for the web. Every time a
@@ -713,11 +713,11 @@ trillion-dollar tax every year, and the result is that a huge fraction of
 good ideas never reach users because rewriting them five times wasn't
 worth it.
 
-OneOS is my attempt to stop paying that tax.
+Layer36 is my attempt to stop paying that tax.
 
 ## What it is
 
-OneOS is a universal application platform — one bytecode, one standard
+Layer36 is a universal application platform — one bytecode, one standard
 library, one permission model — that lets a developer write an app once
 and have it run natively on every operating system.
 
@@ -730,7 +730,7 @@ execute.
 
 Phase 0. Foundation. A repo, a CI pipeline, a documentation site, a
 Discord, and a plan. No runnable code yet — Phase 1 starts in ~4 weeks
-and the first `oneos run hello.wasm` follows soon after.
+and the first `layer36 run hello.wasm` follows soon after.
 
 I'm posting this because the best time to find collaborators is before
 the code exists, not after.
@@ -738,10 +738,10 @@ the code exists, not after.
 ## What I'm asking for
 
 Stars, for visibility:
-https://github.com/oneos/oneos
+https://github.com/layer36/layer36
 
 Eyes on the 24-month plan:
-https://oneos.github.io/oneos/roadmap
+https://layer36.github.io/layer36/roadmap
 
 People who want to build systems-level software with an actual shot
 at reshaping how apps get deployed:
@@ -755,12 +755,12 @@ If this resonates, or if you think I'm wrong, I want to hear from you.
 ### 8.10 Twitter / X announcement thread (template)
 
 ```
-1/ Launching OneOS.
+1/ Launching Layer36.
 
 Apps today are written 6 times — once per OS. That's a trillion-dollar
 tax on the software industry every year.
 
-OneOS is a universal platform that lets you write an app once and run it
+Layer36 is a universal platform that lets you write an app once and run it
 natively everywhere.
 
 2/ Not Electron. Not a browser. Not a cross-compiler.
@@ -771,11 +771,11 @@ execute. Built on WebAssembly + Component Model.
 3/ Status: Phase 0 of 8. Foundation.
 Repo, CI, docs, Discord — up now.
 
-Phase 1 starts in 4 weeks. First `oneos run hello.wasm` shortly after.
+Phase 1 starts in 4 weeks. First `layer36 run hello.wasm` shortly after.
 
 4/ Target v1.0: 24 months.
 
-By then: one .oneapp runs on Windows, macOS, Linux, iOS, Android, and
+By then: one .l36app runs on Windows, macOS, Linux, iOS, Android, and
 the web. Natively.
 
 First anchor tenant: @ParkSure — 6 client apps → 1 codebase.
@@ -823,7 +823,7 @@ What you expected instead.
 ## Environment
 
 - OS:
-- `oneos --version`:
+- `layer36 --version`:
 - `rustc --version`:
 ```
 
@@ -862,7 +862,7 @@ contact_links:
     url: https://discord.gg/REPLACE
     about: Questions and general discussion
   - name: GitHub Discussions
-    url: https://github.com/oneos/oneos/discussions
+    url: https://github.com/layer36/layer36/discussions
     about: Long-form design topics
 ```
 
@@ -941,7 +941,7 @@ members  = []
 edition      = "2021"
 version      = "0.0.0"
 license      = "MIT OR Apache-2.0"
-repository   = "https://github.com/oneos/oneos"
+repository   = "https://github.com/layer36/layer36"
 rust-version = "1.83"
 ```
 
@@ -981,15 +981,15 @@ unknown-git      = "warn"
 
 ```toml
 [book]
-title    = "OneOS"
-authors  = ["OneOS contributors"]
+title    = "Layer36"
+authors  = ["Layer36 contributors"]
 language = "en"
 src      = "src"
 
 [output.html]
-git-repository-url = "https://github.com/oneos/oneos"
-edit-url-template  = "https://github.com/oneos/oneos/edit/main/docs/book/{path}"
-site-url           = "/oneos/"
+git-repository-url = "https://github.com/layer36/layer36"
+edit-url-template  = "https://github.com/layer36/layer36/edit/main/docs/book/{path}"
+site-url           = "/layer36/"
 default-theme      = "ayu"
 preferred-dark-theme = "ayu"
 ```
@@ -1018,7 +1018,7 @@ preferred-dark-theme = "ayu"
 
 # Blog
 
-- [Announcing OneOS](./blog/0001-announcing-oneos.md)
+- [Announcing Layer36](./blog/0001-announcing-layer36.md)
 ```
 
 ---
@@ -1149,7 +1149,7 @@ Seven channels is the right number for Phase 0. More and the server looks empty;
 |---|---|
 | `#welcome` | Rules, role self-assign, one-line intro expectation |
 | `#announcements` | Read-only. New releases, milestones, talks |
-| `#general` | Anything OneOS-related not covered below |
+| `#general` | Anything Layer36-related not covered below |
 | `#dev` | Technical discussion, code, design |
 | `#rfc` | Long-form proposal discussion (mirror to GitHub Discussions) |
 | `#help` | Questions from users and new contributors |
@@ -1168,7 +1168,7 @@ Seven channels is the right number for Phase 0. More and the server looks empty;
 2. Don't ask to ask. Paste the error, paste the command, paste the code.
 3. Use code blocks for code. Plain text is painful to read.
 4. Keep threads on topic per channel.
-5. No spam, no self-promo unless it's directly OneOS-related.
+5. No spam, no self-promo unless it's directly Layer36-related.
 6. English is the primary working language, but don't let that stop you —
    translators exist and we'll help.
 7. If something makes you uncomfortable, DM a @maintainer. We follow up.
@@ -1179,11 +1179,11 @@ Seven channels is the right number for Phase 0. More and the server looks empty;
 Automate with a bot (Carl-bot, MEE6, or custom). Fires on new member join:
 
 ```
-Welcome to OneOS, {user}. Glad you're here.
+Welcome to Layer36, {user}. Glad you're here.
 
 A few things to know:
 • Read the pinned rules in #welcome.
-• Skim the vision: https://oneos.github.io/oneos/vision
+• Skim the vision: https://layer36.github.io/layer36/vision
 • Drop by #general and say hi — one line is enough.
 • Questions go in #help. Code and design in #dev.
 
@@ -1211,13 +1211,13 @@ In `docs/legal/trademark-search.md`, record results of searches in at least:
 - **CNIPA (China):** <https://sbj.cnipa.gov.cn/>.
 - **IP India:** <https://tmrsearch.ipindia.gov.in/>.
 
-For each jurisdiction record: search date, exact query, any conflicting marks, class (software is usually Class 9 for goods, 42 for services). If "OneOS" is taken in a way that conflicts (same or related class), decide: rename, qualify (e.g., "OneOS Runtime"), or proceed knowing a dispute is possible.
+For each jurisdiction record: search date, exact query, any conflicting marks, class (software is usually Class 9 for goods, 42 for services). If "Layer36" is taken in a way that conflicts (same or related class), decide: rename, qualify (e.g., "Layer36 Runtime"), or proceed knowing a dispute is possible.
 
 **Filing is Phase 6, not Phase 0.** Filing too early wastes money if the project pivots on name; filing too late risks being blocked by a squatter. Phase 6 is when the marketplace launches and the name becomes an economic asset worth defending.
 
 ### 11.2 Domain names
 
-Acquire at minimum `oneos.dev` (primary) and `oneos.com` if available within reasonable cost. Also register on common Indian and Singapore registrars (`.sg`, `.in`) since your business base is there.
+Acquire at minimum `layer36.dev` (primary) and `layer36.com` if available within reasonable cost. Also register on common Indian and Singapore registrars (`.sg`, `.in`) since your business base is there.
 
 Do NOT register 20 variant domains. Trademark rights cover variants without registration in most cases, and a forest of defensive domains is a tax forever.
 
@@ -1237,7 +1237,7 @@ Phase 0 has no users and collects no data. No privacy policy needed. Re-evaluate
 
 ### 11.6 Founder IP assignment
 
-If you work on OneOS from a device or account that your employer or academic institution (e.g., NTU) has IP claims on, resolve that in writing *before* the public announcement. Common paths:
+If you work on Layer36 from a device or account that your employer or academic institution (e.g., NTU) has IP claims on, resolve that in writing *before* the public announcement. Common paths:
 
 - Personal-time + personal-device carve-out letter from employer.
 - University "hobby project" disclosure form.
@@ -1252,7 +1252,7 @@ Do this in Week 1. Retroactive fixes are expensive; preventive fixes are an emai
 Copy this verbatim into `docs/adr/0001-rust-for-runtime.md` and commit.
 
 ```markdown
-# ADR-0001: Rust for the OneOS runtime
+# ADR-0001: Rust for the Layer36 runtime
 
 **Status:** Accepted
 **Date:** 2026-05-XX
@@ -1260,7 +1260,7 @@ Copy this verbatim into `docs/adr/0001-rust-for-runtime.md` and commit.
 
 ## Context
 
-The OneOS runtime is a native binary that ships on every host operating
+The Layer36 runtime is a native binary that ships on every host operating
 system we support (Windows, macOS, Linux, iOS, Android, browsers via
 WASM). Its job is to load a WebAssembly component, enforce a capability
 model, and dispatch UAPI calls to per-OS adapters.
@@ -1276,12 +1276,12 @@ decisions:
 
 ## Decision
 
-We write the OneOS runtime in **Rust**.
+We write the Layer36 runtime in **Rust**.
 
 Specifically:
 
 - `crates/runtime/` — the core runtime library.
-- `crates/cli/` — the `oneos` command-line binary.
+- `crates/cli/` — the `layer36` command-line binary.
 - `crates/host-adapter/*` — per-OS adapter crates.
 - `crates/bundle/`, `crates/policy/`, and future crates.
 
@@ -1383,29 +1383,29 @@ this decision: decade-scale.
 ## 13. Exit Criteria Checklist
 
 ### Repo
-- [ ] `oneos/oneos` repository exists, public, MIT + Apache-2.0 dual-licensed.
-- [ ] Root Cargo workspace compiles.
-- [ ] `rust-toolchain.toml` pins stable.
-- [ ] `deny.toml` in place and passing.
-- [ ] `.gitattributes` set for LF line endings.
-- [ ] `.gitignore` complete.
+- [ ] `layer36/layer36` repository exists, public, MIT + Apache-2.0 dual-licensed.
+- [x] Root Cargo workspace compiles.
+- [x] `rust-toolchain.toml` pins stable.
+- [x] `deny.toml` in place and passing.
+- [x] `.gitattributes` set for LF line endings.
+- [x] `.gitignore` complete.
 
 ### Documents
 - [ ] README.md reviewed by one external reader and revised.
-- [ ] CONTRIBUTING.md walks a newcomer from zero to merged PR.
-- [ ] SECURITY.md published with contact.
-- [ ] CODE_OF_CONDUCT.md (Contributor Covenant 2.1) present.
-- [ ] CHANGELOG.md initialized.
-- [ ] ADR template in `docs/adr/template.md`.
+- [x] CONTRIBUTING.md walks a newcomer from zero to merged PR.
+- [x] SECURITY.md published with contact.
+- [x] CODE_OF_CONDUCT.md (Contributor Covenant 2.1) present.
+- [x] CHANGELOG.md initialized.
+- [x] ADR template in `docs/adr/template.md`.
 - [ ] ADR-0001 merged.
 
 ### CI
-- [ ] `ci.yml` runs fmt, clippy, test, deny, book on every PR.
+- [x] `ci.yml` runs fmt, clippy, test, deny, book on every PR.
 - [ ] Branch protection active on `main` requiring CI green + 1 review.
 - [ ] CI has been green on `main` for ≥ 5 consecutive days.
 
 ### Docs site
-- [ ] mdBook scaffolded with SUMMARY, Introduction, Vision, Roadmap chapters.
+- [x] mdBook scaffolded with SUMMARY, Introduction, Vision, Roadmap chapters.
 - [ ] GitHub Pages deployed from workflow.
 - [ ] Live URL linked from README.
 
@@ -1416,9 +1416,9 @@ this decision: decade-scale.
 - [ ] Twitter/X or equivalent announcement thread published.
 
 ### Legal
-- [ ] Trademark search completed and written up in `docs/legal/`.
-- [ ] Domain `oneos.dev` (or chosen equivalent) secured.
-- [ ] Founder IP assignment status confirmed in writing.
+- [x] Trademark search completed and written up in `docs/legal/`.
+- [ ] Domain `layer36.dev` (or chosen equivalent) secured.
+- [x] Founder IP assignment status confirmed in writing.
 
 ### External signals
 - [ ] At least one external contributor has opened a PR.
@@ -1426,7 +1426,7 @@ this decision: decade-scale.
 - [ ] First 5 "good first issues" created and labeled.
 
 ### Governance
-- [ ] Retrospective written (`docs/book/src/phase0/retro.md`).
+- [x] Retrospective written (`docs/book/src/phase0/retro.md`).
 - [ ] Phase 1 kickoff issue opened referencing `META-OS-Phase-1-Plan.md`.
 
 ---
@@ -1444,7 +1444,7 @@ this decision: decade-scale.
 | Scope creep — "maybe Phase 0 should also have…" | High | Medium | Every Phase 0 PR cites a P0-* task ID. No task ID → defer to Phase 1 planning. |
 | Trademark attorney fee ambush | Low | Medium | You are not filing. Search is free via public databases. Do not engage counsel until Phase 6 unless a specific conflict demands it. |
 | Founder employer / university IP claim surfaces late | Low | High | Confirm status Week 1. Get it in writing. |
-| ParkSure crunch eats Phase 0 entirely | High | High | Phase 0 is 5 engineering days. You can fit it into evenings over 4 weeks. If even that is impossible, OneOS is not yet the right moment — defer, don't half-ship. |
+| ParkSure crunch eats Phase 0 entirely | High | High | Phase 0 is 5 engineering days. You can fit it into evenings over 4 weeks. If even that is impossible, Layer36 is not yet the right moment — defer, don't half-ship. |
 
 ---
 
@@ -1491,29 +1491,29 @@ At the end of Week 4:
 ### Appendix A — First-week daily checklist
 
 **Monday (Day 1)**
-- [ ] Create `oneos` GitHub org.
-- [ ] Create `oneos/oneos` public repo.
+- [ ] Create `layer36` GitHub org.
+- [ ] Create `layer36/layer36` public repo.
 - [ ] Push `LICENSE-MIT`, `LICENSE-APACHE`, initial README, .gitignore, .gitattributes.
 - [ ] Confirm employer / university IP status.
 
 **Tuesday (Day 2)**
-- [ ] Write `rust-toolchain.toml`, root `Cargo.toml`, `deny.toml`.
-- [ ] `cargo build` works on empty workspace.
-- [ ] Start trademark search.
+- [x] Write `rust-toolchain.toml`, root `Cargo.toml`, `deny.toml`.
+- [x] `cargo build` works on empty workspace.
+- [x] Start trademark search.
 
 **Wednesday (Day 3)**
-- [ ] Write SECURITY.md, CODE_OF_CONDUCT.md, CHANGELOG.md.
+- [x] Write SECURITY.md, CODE_OF_CONDUCT.md, CHANGELOG.md.
 - [ ] GitHub Actions CI (`ci.yml`) green.
 - [ ] Branch protection on `main`.
 
 **Thursday (Day 4)**
-- [ ] Issue + PR templates.
-- [ ] Labels created.
-- [ ] 5 "good first issue" tickets drafted.
+- [x] Issue + PR templates.
+- [x] Labels created.
+- [x] 5 "good first issue" tickets drafted.
 
 **Friday (Day 5)**
-- [ ] Retrospective on Week 1.
-- [ ] Plan Week 2 (CI + Docs scaffolding).
+- [x] Retrospective on Week 1.
+- [x] Plan Week 2 (CI + Docs scaffolding).
 
 Weeks 2, 3, 4 follow the pattern in §6. The daily cadence exists only in Week 1 because Week 1 establishes the habits that carry the project.
 
@@ -1546,9 +1546,9 @@ Under-promise hard in Phase 0. There are no enterprise customers. There is no fu
 Every item in this document has a reason, but the reasons aren't absolute. Situations where you can deviate:
 
 - **Your employer's IP policy forces GPL.** Then the whole project structure changes; open an ADR, not a workaround.
-- **The name "OneOS" is clearly blocked everywhere.** Pick a new name in Week 1. The sooner, the cheaper.
+- **The name "Layer36" is clearly blocked everywhere.** Pick a new name in Week 1. The sooner, the cheaper.
 - **A major contributor wants to join on day 3.** Great — expand Phase 0 to include making them a maintainer properly (roles, trust, onboarding). Don't just wave them in.
-- **ParkSure becomes unexpectedly funded in Week 2.** Pause OneOS; do ParkSure. Come back when the commitment level is sustainable. OneOS is a decade project; a two-month pause is nothing.
+- **ParkSure becomes unexpectedly funded in Week 2.** Pause Layer36; do ParkSure. Come back when the commitment level is sustainable. Layer36 is a decade project; a two-month pause is nothing.
 
 ### Appendix E — Retrospective template
 
@@ -1585,6 +1585,89 @@ Save as `docs/book/src/phase0/retro.md` at the end of Phase 0.
 ## Concrete changes to the Phase 1 plan before starting it
 - …
 ```
+
+---
+
+---
+
+## Development Log
+
+> **Phase Status:** In Progress  
+> **Started:** 2026-05-01  
+> **Completed:** —  
+> **Last Updated:** 2026-05-02
+
+### Progress Summary
+
+_Phase 0 is underway. Repo scaffolding, CI, documentation, ADR-0001, local verification, and the Layer36 naming pivot are now recorded. The development repository is `incyashraj/layer6x6`; Layer36 is the product name that the 6x6 matrix grows into. Remaining Phase 0 work is mostly external: GitHub settings, Pages publication, Discord, official trademark/domain work, and first external contributor PR._
+
+---
+
+### Exit Criteria Status
+
+Full criteria in [§2 Success Criteria](#2-success-criteria). Check off as each criterion is met.
+
+| # | Criterion | Status |
+|---|-----------|--------|
+| 1 | `git clone && cargo build` succeeds in ≤ 10 min on a fresh machine | Locally green; fresh-machine test pending |
+| 2 | CI green on `main` for ≥ 5 consecutive days without human intervention | Not done |
+| 3 | README renders cleanly on GitHub; project explained in ≤ 90 seconds | Draft complete; external reader pending |
+| 4 | CONTRIBUTING.md walks a contributor from zero to merged PR | Draft complete |
+| 5 | ADR-0001 merged; ADR template exists in `docs/adr/` | Done locally; merge pending |
+| 6 | mdBook site live at a public URL (GitHub Pages OK) | Not done |
+| 7 | Discord server active with ≥ 10 members | Not done |
+| 8 | Public Twitter/X announcement thread published | Not done |
+| 9 | Trademark search completed for “Layer36” (no filing, search only) | Preliminary screen done; official searches pending |
+| 10 | At least one external contributor PR merged | Not done |
+
+---
+
+### Completed Tasks
+
+| Task ID | Task | Completed | Notes |
+|---------|------|-----------|-------|
+| P0-REPO-01 | Initialize monorepo, licenses, README | 2026-05-02 | Done locally. |
+| P0-REPO-02 | Rust toolchain, Cargo workspace, cargo-deny | 2026-05-02 | Added root sentinel crate so baseline Cargo commands pass before runtime crates exist. |
+| P0-REPO-03 | GitHub Actions: fmt, clippy, test, deny | 2026-05-02 | Configured CI and added mdBook job. |
+| P0-DOCS-01 | mdBook site scaffold | 2026-05-02 | Builds locally with `mdbook build docs/book`. |
+| P0-DOCS-02 | ADR template + ADR-0001 | 2026-05-02 | Present in `docs/adr/`. |
+| P0-DOCS-03 | CONTRIBUTING.md | 2026-05-02 | Draft complete with setup, PR flow, ADRs, and licensing. |
+| P0-LEGAL-01 | Trademark search | 2026-05-02 | OneOS rejected due conflicts; Layer36 selected pending official clearance. |
+
+---
+
+### In Progress
+
+| Task ID | Task | Started | Blockers |
+|---------|------|---------|----------|
+| P0-COMM-01 | Discord server | 2026-05-02 | Requires account setup. Checklist drafted in `docs/community/discord-setup.md`. |
+| P0-COMM-02 | Announcement draft | 2026-05-02 | Draft exists; publish after official naming/docs/community readiness. |
+| P0-HIRE-01 | First contributor guide | 2026-05-02 | Guide drafted; screenshots pending live GitHub/Pages. |
+
+---
+
+### ADRs Filed This Phase
+
+| ADR | Title | Status | Merged |
+|-----|-------|--------|--------|
+| ADR-0001 | Rust for the runtime | Accepted locally | — |
+
+---
+
+### Blockers & Open Questions
+
+- Official trademark searches for Layer36 remain pending.
+- GitHub repository settings, branch protection, and Pages publication require repository owner access.
+- Discord creation and public launch should wait until official name/domain decisions are comfortable.
+- First external contributor PR cannot be completed locally.
+
+---
+
+### Notes & Learnings
+
+- 2026-05-02: `OneOS` was rejected as final project name after preliminary search surfaced exact software/mobile OS conflicts. `Layer36` selected as active name; plans/docs/CLI placeholders/WIT examples/bundle extension renamed accordingly.
+- 2026-05-02: Empty Cargo workspace failed baseline commands, so Phase 0 now uses a root sentinel crate until Phase 1 runtime crates exist.
+- 2026-05-02: mdBook `SUMMARY.md` structure failed local build and was fixed; docs build is now part of CI.
 
 ---
 

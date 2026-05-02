@@ -1,0 +1,40 @@
+[advisories]
+# Path to the advisory database; fetched on first run.
+version = 2
+ignore = []
+
+[licenses]
+version = 2
+# Licenses we explicitly allow.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "CC0-1.0",
+    "Zlib",
+    "OpenSSL",
+]
+# Confidence threshold for license expression detection.
+confidence-threshold = 0.8
+# Phase 0 has no dependencies yet, so most future-facing allow-list entries are
+# naturally unused. Keep CI quiet until real crates arrive in Phase 1.
+unused-allowed-license = "allow"
+
+[bans]
+# Warn when the same crate version appears multiple times.
+multiple-versions = "warn"
+# Deny wildcard dependencies (e.g. `dep = "*"`).
+wildcards = "deny"
+# List of crates that are never allowed.
+deny = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

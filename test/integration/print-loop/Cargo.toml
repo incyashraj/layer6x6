@@ -1,0 +1,18 @@
+[package]
+name = "print-loop"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
+
+[package.metadata.component]
+package = "layer36:print-loop"
+
+[package.metadata.component.target]
+path = "../../../wit/layer36"
+world = "app"

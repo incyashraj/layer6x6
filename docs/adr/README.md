@@ -1,0 +1,37 @@
+# Architecture Decision Records
+
+This directory contains all Architecture Decision Records for Layer36.
+
+## What is an ADR?
+
+An ADR is a short document that captures an important architectural decision:
+what was decided, why, and what the consequences are. It is written once,
+merged into `main`, and then **never modified** — only superseded by a new ADR.
+
+## Why write ADRs?
+
+- Technical decisions made verbally vanish. ADRs make them findable.
+- New contributors can see *why* the code is the way it is, not just *what* it does.
+- They create accountability: a decision that is hard to write down is a decision
+  that hasn't been thought through.
+
+## Index
+
+| ADR | Title | Status | Phase |
+|-----|-------|--------|-------|
+| [0001](0001-rust-for-runtime.md) | Rust for the Layer36 runtime | Accepted | 0 |
+| [0002](0002-wasmtime-runtime-engine.md) | Wasmtime as runtime engine | Accepted | 1 |
+| [0003](0003-component-model-from-day-one.md) | Component Model from day one | Accepted | 1 |
+
+*(Expand this table as ADRs are merged.)*
+
+## Process
+
+See [the ADR process guide](../book/src/contributing/adrs.md) for the full
+workflow, or the quick version:
+
+1. Copy `template.md` → `NNNN-short-title.md`
+2. Fill out every section
+3. Open a PR titled `ADR: <title>`
+4. Merge after 2 approvals (or 1 approval + 7 days)
+5. Update the index above

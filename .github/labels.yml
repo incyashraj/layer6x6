@@ -1,0 +1,42 @@
+# Source-of-truth label set for Phase 0 repository setup.
+# Apply these in GitHub manually or with a label sync tool.
+
+- name: good first issue
+  color: "7057ff"
+  description: Small, well-scoped work for new contributors.
+
+- name: needs-triage
+  color: "d876e3"
+  description: Needs maintainer review before work starts.
+
+- name: type:bug
+  color: "d73a4a"
+  description: Something is broken or behaving unexpectedly.
+
+- name: type:enhancement
+  color: "a2eeef"
+  description: A new capability or improvement.
+
+- name: type:docs
+  color: "0075ca"
+  description: Documentation, guides, examples, or references.
+
+- name: type:ci
+  color: "5319e7"
+  description: CI, release, automation, or repository tooling.
+
+- name: phase:0
+  color: "cfd3d7"
+  description: Foundation work from Phase 0.
+
+- name: phase:1
+  color: "bfdadc"
+  description: POC runtime work from Phase 1.
+
+- name: status:blocked
+  color: "b60205"
+  description: Blocked on an external dependency or decision.
+
+- name: status:ready
+  color: "0e8a16"
+  description: Ready for a contributor to pick up.

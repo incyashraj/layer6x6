@@ -1,0 +1,27 @@
+{
+  "recorded_at": "2026-05-02",
+  "machine": "Apple M4, 10 CPU cores, 16 GB RAM, macOS 26.3.1 (25D2128), arm64",
+  "notes": "Initial Phase 1 local baseline. CI uses these values only to emit warnings, never to fail builds.",
+  "metrics": {
+    "engine_construction": {
+      "criterion_path": "phase1_runtime/engine_construction",
+      "baseline_ns": 864
+    },
+    "component_from_binary_hello": {
+      "criterion_path": "phase1_runtime/component_from_binary_hello",
+      "baseline_ns": 2365821
+    },
+    "cold_start_to_main_hello": {
+      "criterion_path": "phase1_runtime/cold_start_to_main_hello",
+      "baseline_ns": 2451324
+    },
+    "first_print_latency_hello": {
+      "criterion_path": "phase1_runtime/first_print_latency_hello",
+      "baseline_ns": 10067
+    },
+    "per_call_print_dispatch_1000": {
+      "criterion_path": "phase1_runtime/per_call_print_dispatch_1000",
+      "baseline_ns": 88189
+    }
+  }
+}

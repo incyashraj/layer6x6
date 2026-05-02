@@ -1,9 +1,9 @@
-# OneOS — Phase 5 Detailed Plan: Developer SDK
+# Layer36 — Phase 5 Detailed Plan: Developer SDK
 
 > **Phase:** 5 of 8
 > **Duration:** Months 15–18 (120 calendar days, ~60–80 engineering days of work)
-> **Phase sentence:** *A developer runs `oneos new hello && oneos run` and has a working GUI app on their machine in under 60 seconds.*
-> **Prerequisite:** Phase 4 complete — mobile hosts stable, `oneos-notes` running on all five platforms.
+> **Phase sentence:** *A developer runs `layer36 new hello && layer36 run` and has a working GUI app on their machine in under 60 seconds.*
+> **Prerequisite:** Phase 4 complete — mobile hosts stable, `layer36-notes` running on all five platforms.
 > **Supersedes:** nothing.
 > **Superseded by:** nothing.
 
@@ -46,7 +46,7 @@
 
 ## 0. How to Use This Document
 
-Phase 5 is different from the phases before it. Phases 1–4 were about making OneOS *exist*. Phase 5 is about making OneOS *pleasant to use*. Good DX does not appear automatically from a good platform — it is a separate engineering discipline, with its own metrics, its own risks, and its own kind of done.
+Phase 5 is different from the phases before it. Phases 1–4 were about making Layer36 *exist*. Phase 5 is about making Layer36 *pleasant to use*. Good DX does not appear automatically from a good platform — it is a separate engineering discipline, with its own metrics, its own risks, and its own kind of done.
 
 - Read §5 (Developer Experience Thesis) first. Everything downstream flows from it.
 - Phase 5 adds very little to the platform's *capabilities* and a lot to its *ergonomics*. If a task doesn't measurably reduce developer friction, it doesn't belong.
@@ -60,15 +60,15 @@ Phase 5 is different from the phases before it. Phases 1–4 were about making O
 
 ### 1.1 One-sentence objective
 
-**A developer who has never seen OneOS installs the toolchain in five minutes, creates a new project in one command, modifies a template in their editor with full IntelliSense, hits save, and sees the change live on-screen within a second — all with clear error messages when anything goes wrong.**
+**A developer who has never seen Layer36 installs the toolchain in five minutes, creates a new project in one command, modifies a template in their editor with full IntelliSense, hits save, and sees the change live on-screen within a second — all with clear error messages when anything goes wrong.**
 
 ### 1.2 Why this matters
 
-Every platform shipped so far has lived or died at this exact boundary. Flutter's explosive growth came from `flutter create` + hot reload. React's dominance came from JSX + the browser dev tools. Rust's ecosystem exists because `cargo new` works. Phase 4 earned OneOS the right to ask developers to try it; Phase 5 gives them a reason to stay. If the first 60 seconds feels like work, developers leave. If it feels like magic, they tell friends.
+Every platform shipped so far has lived or died at this exact boundary. Flutter's explosive growth came from `flutter create` + hot reload. React's dominance came from JSX + the browser dev tools. Rust's ecosystem exists because `cargo new` works. Phase 4 earned Layer36 the right to ask developers to try it; Phase 5 gives them a reason to stay. If the first 60 seconds feels like work, developers leave. If it feels like magic, they tell friends.
 
 ### 1.3 The six deliverables of Phase 5
 
-1. **Unified `oneos` CLI** with `new`, `build`, `run`, `test`, `deploy`, `doctor`, `logs`, `debug`, `profile` subcommands, each polished.
+1. **Unified `layer36` CLI** with `new`, `build`, `run`, `test`, `deploy`, `doctor`, `logs`, `debug`, `profile` subcommands, each polished.
 2. **Project templates** for Rust, Go, and TypeScript covering CLI + GUI + mobile starting points.
 3. **Hot reload** — source change to running-app-updated in ≤ 1 second on desktop, ≤ 2 seconds on mobile.
 4. **Debugger integration** — breakpoints, stepping, variable inspection, works via VS Code and JetBrains IDEs.
@@ -82,11 +82,11 @@ Every platform shipped so far has lived or died at this exact boundary. Flutter'
 Before touching a single line of Phase 5 code, verify:
 
 - [ ] All Phase 4 exit criteria met (Phase 4 Plan §27).
-- [ ] `oneos-notes` runs on all five platforms (Windows, macOS, Linux, iOS, Android).
+- [ ] `layer36-notes` runs on all five platforms (Windows, macOS, Linux, iOS, Android).
 - [ ] UAPI v0.3 frozen: sensors, lifecycle, ui/touch, ui/navigation, ui/haptic.
 - [ ] CI green on all five platform matrices for ≥ 7 consecutive days.
 - [ ] ADRs 0001 through 0030 merged.
-- [ ] Host packaging pipelines (`oneos package ios/android`) functional.
+- [ ] Host packaging pipelines (`layer36 package ios/android`) functional.
 - [ ] Battery + perf targets met on mobile.
 
 If any box is unchecked, finish Phase 4 first. A SDK built on a shaky platform means every dev-friction issue is ambiguous — is the problem the SDK or the platform underneath?
@@ -99,19 +99,19 @@ Phase 5 is **done** when, and only when, every row below is true.
 
 | # | Criterion | Measured How |
 |---|-----------|--------------|
-| 1 | `oneos new hello --lang rust && cd hello && oneos run` produces a running GUI in < 60 seconds | Timed walkthrough, fresh machine |
+| 1 | `layer36 new hello --lang rust && cd hello && layer36 run` produces a running GUI in < 60 seconds | Timed walkthrough, fresh machine |
 | 2 | Same works with `--lang go` and `--lang ts` | Timed walkthrough |
 | 3 | Edit a template, save, hot reload shows change in ≤ 1 s on desktop | Timer |
 | 4 | Hot reload works on iOS simulator and Android emulator | Manual test |
 | 5 | VS Code extension installs, provides syntax highlighting + IntelliSense for WIT-generated bindings | Fresh extension install test |
 | 6 | JetBrains plugin equivalent functionality | Same test in CLion/RustRover/GoLand |
 | 7 | Breakpoints work in all three first-class languages via Debug Adapter Protocol | Manual debug session |
-| 8 | Profiler produces flamegraph + UAPI call timing report | Run `oneos profile` on `oneos-notes` |
-| 9 | `oneos doctor` detects missing toolchain pieces and explains fix | Break environment, run doctor, verify message |
+| 8 | Profiler produces flamegraph + UAPI call timing report | Run `layer36 profile` on `layer36-notes` |
+| 9 | `layer36 doctor` detects missing toolchain pieces and explains fix | Break environment, run doctor, verify message |
 | 10 | Clear error messages: every error surfaced in 5 common failure modes is human-readable with remediation | Test plan in §24 |
-| 11 | C/C++ bindings via `wasi-sdk` usable for at least one sample | `oneos-native-sample` builds |
+| 11 | C/C++ bindings via `wasi-sdk` usable for at least one sample | `layer36-native-sample` builds |
 | 12 | Python bindings via `componentize-py` usable for at least one sample | Sample runs |
-| 13 | UAPI v0.4 modules merged and frozen at v0.1.0 | `wit/oneos/*.wit` |
+| 13 | UAPI v0.4 modules merged and frozen at v0.1.0 | `wit/layer36/*.wit` |
 | 14 | Storage, crypto, IPC, notifications implementations on desktop + mobile | CI green |
 | 15 | ADRs 0031 through at least 0040 merged | Git log |
 
@@ -132,13 +132,13 @@ Phase 5 is **done** when, and only when, every row below is true.
 - C/C++ and Python bindings shipped in production form.
 - Four additional UAPIs (storage, crypto, ipc, notifications stub).
 - Polished error messages.
-- `oneos doctor` for environment triage.
+- `layer36 doctor` for environment triage.
 
 ### 4.2 Phase 5 is NOT
 
 - Not a visual designer / WYSIWYG tool. The widget tree is text; designer tools are post-v1.0.
-- Not a browser host target. WASM-in-browser for OneOS apps is deferred to post-v1.0 — the browser is a strange host because it lacks native widgets by our definition.
-- Not a plugin system for OneOS apps (inter-component extensibility). Deferred indefinitely.
+- Not a browser host target. WASM-in-browser for Layer36 apps is deferred to post-v1.0 — the browser is a strange host because it lacks native widgets by our definition.
+- Not a plugin system for Layer36 apps (inter-component extensibility). Deferred indefinitely.
 - Not a component registry for third-party libraries. Phase 6 marketplace covers apps; library registry is a separate concern for later.
 - Not identity or auth. That's Phase 6.
 - Not bundle signing / notarization. Phase 6.
@@ -180,7 +180,7 @@ If a Phase 5 decision is inconsistent with how `cargo`, Flutter, or TypeScript d
 
 - **Cryptic error messages.** Every runtime error shown to a developer must include: what happened, where it happened, why, and what to try.
 - **Mandatory configuration.** Defaults must produce a working app. If a developer must configure something on first use, we've failed.
-- **Slow tools.** `oneos build` on a small project is < 2 seconds. `oneos run` from a built state is < 100 ms overhead.
+- **Slow tools.** `layer36 build` on a small project is < 2 seconds. `layer36 run` from a built state is < 100 ms overhead.
 - **Divergent DX per language.** The same commands work the same way regardless of whether you're writing Rust, Go, or TypeScript.
 
 ### 5.5 Recorded in
@@ -196,14 +196,14 @@ ADR-0031 contains this full reasoning. It is the foundational DX decision for Ph
 ```mermaid
 flowchart TB
     subgraph L1[Outer: Developer-facing CLI]
-        NEW[oneos new]
-        RUN[oneos run]
-        BUILD[oneos build]
-        TEST[oneos test]
-        DOCTOR[oneos doctor]
-        DEBUG[oneos debug]
-        PROFILE[oneos profile]
-        LOGS[oneos logs]
+        NEW[layer36 new]
+        RUN[layer36 run]
+        BUILD[layer36 build]
+        TEST[layer36 test]
+        DOCTOR[layer36 doctor]
+        DEBUG[layer36 debug]
+        PROFILE[layer36 profile]
+        LOGS[layer36 logs]
     end
     subgraph L2[SDK services]
         TEMPL[Template engine]
@@ -214,7 +214,7 @@ flowchart TB
         SCAF[Scaffolder]
     end
     subgraph L3[Runtime & platform]
-        RT[oneos-runtime]
+        RT[layer36-runtime]
         WT[Wasmtime]
         UAPI[UAPI v0.4]
         ADPTS[Host adapters]
@@ -258,7 +258,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant IDE as VS Code
-    participant DAP as oneos dap-adapter
+    participant DAP as layer36 dap-adapter
     participant RT as Runtime
     participant App as App
 
@@ -286,19 +286,19 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    CLI[oneos-cli] --> RT[oneos-runtime]
-    CLI --> TEMPL[oneos-template]
-    CLI --> HOTR[oneos-hot-reload]
-    CLI --> DAP[oneos-dap]
-    CLI --> PROF[oneos-profile]
-    CLI --> DOC[oneos-doctor]
-    CLI --> PKG[oneos-package]
+    CLI[layer36-cli] --> RT[layer36-runtime]
+    CLI --> TEMPL[layer36-template]
+    CLI --> HOTR[layer36-hot-reload]
+    CLI --> DAP[layer36-dap]
+    CLI --> PROF[layer36-profile]
+    CLI --> DOC[layer36-doctor]
+    CLI --> PKG[layer36-package]
     RT --> UAPI[UAPI v0.4]
-    UAPI --> STORAGE[oneos-storage]
-    UAPI --> CRYPTO[oneos-crypto]
-    UAPI --> IPC[oneos-ipc]
-    UAPI --> NOTIFY[oneos-notify]
-    LSP[oneos-lsp] --> RT
+    UAPI --> STORAGE[layer36-storage]
+    UAPI --> CRYPTO[layer36-crypto]
+    UAPI --> IPC[layer36-ipc]
+    UAPI --> NOTIFY[layer36-notify]
+    LSP[layer36-lsp] --> RT
     VSC[VS Code ext] --> LSP
     VSC --> DAP
     VSC --> CLI
@@ -339,7 +339,7 @@ Each item frozen for Phase 5 unless noted. ADR references in §25.
 
 ### 7.4 Hot reload communication — **Unix domain sockets (Linux/macOS) + named pipes (Windows)**
 
-- Local-only IPC between `oneos` CLI and running runtime.
+- Local-only IPC between `layer36` CLI and running runtime.
 - Messages are length-prefixed JSON.
 - Simple framing so the protocol is trivial to implement from other tools.
 - **Recorded:** ADR-0034.
@@ -360,9 +360,9 @@ Each item frozen for Phase 5 unless noted. ADR references in §25.
 
 ### 7.7 Language Server Protocol (LSP)
 
-- We implement `oneos-lsp` that provides WIT-aware IntelliSense.
+- We implement `layer36-lsp` that provides WIT-aware IntelliSense.
 - For application source code (Rust/Go/TS), existing language LSPs handle the base.
-- `oneos-lsp` augments with: WIT-generated type knowledge, UAPI capability hints, manifest schema validation.
+- `layer36-lsp` augments with: WIT-generated type knowledge, UAPI capability hints, manifest schema validation.
 - **Recorded:** ADR-0037.
 
 ### 7.8 Profiler backend — **sample-based + UAPI instrumentation**
@@ -427,7 +427,7 @@ Each item frozen for Phase 5 unless noted. ADR references in §25.
 | Designer / WYSIWYG / GUI builder | Post-v1.0 |
 | Visual debugger for widget tree | Post-v1.0 |
 | Remote debugging (debug app running on another machine) | Phase 7 |
-| Package registry for OneOS crates | Phase 6+ |
+| Package registry for Layer36 crates | Phase 6+ |
 | Background tasks, scheduled tasks | Post-v1.0 |
 | Push notifications | Phase 6 |
 | In-app purchases | Post-v1.0 (App Store specific) |
@@ -452,48 +452,48 @@ Each item frozen for Phase 5 unless noted. ADR references in §25.
 
 | Subcommand | Purpose | Notes |
 |---|---|---|
-| `oneos new <n> --lang <lang>` | Create new project from template | §9 |
-| `oneos build` | Build current project | Delegates to per-language tool |
-| `oneos run [path]` | Run a component (dev mode) | Supports hot reload |
-| `oneos test` | Run tests | Per-language test harness |
-| `oneos deploy <target>` | Build + deploy to a target | ios/android/desktop |
-| `oneos package <target>` | Build installable artifact | Wraps Phase 4 packaging |
-| `oneos debug` | Start DAP server | §11 |
-| `oneos profile [subcmd]` | Run with profiling | §12 |
-| `oneos logs` | Tail device logs | Desktop + mobile |
-| `oneos doctor` | Diagnose environment | §8.3 |
-| `oneos install` | Install OneOS host tools | Used by install script |
-| `oneos uninstall` | Remove OneOS installation | |
-| `oneos update` | Update OneOS toolchain | Self-update via release API |
-| `oneos config` | Read/write user config | Global settings |
-| `oneos version` | Print versions | Already exists from Phase 1 |
-| `oneos wit` | WIT utilities | Format, validate, diff |
-| `oneos bundle` | Bundle utilities | Inspect, repack |
-| `oneos lsp` | Start language server | For editor integration |
-| `oneos init` | Init config for existing directory | |
+| `layer36 new <n> --lang <lang>` | Create new project from template | §9 |
+| `layer36 build` | Build current project | Delegates to per-language tool |
+| `layer36 run [path]` | Run a component (dev mode) | Supports hot reload |
+| `layer36 test` | Run tests | Per-language test harness |
+| `layer36 deploy <target>` | Build + deploy to a target | ios/android/desktop |
+| `layer36 package <target>` | Build installable artifact | Wraps Phase 4 packaging |
+| `layer36 debug` | Start DAP server | §11 |
+| `layer36 profile [subcmd]` | Run with profiling | §12 |
+| `layer36 logs` | Tail device logs | Desktop + mobile |
+| `layer36 doctor` | Diagnose environment | §8.3 |
+| `layer36 install` | Install Layer36 host tools | Used by install script |
+| `layer36 uninstall` | Remove Layer36 installation | |
+| `layer36 update` | Update Layer36 toolchain | Self-update via release API |
+| `layer36 config` | Read/write user config | Global settings |
+| `layer36 version` | Print versions | Already exists from Phase 1 |
+| `layer36 wit` | WIT utilities | Format, validate, diff |
+| `layer36 bundle` | Bundle utilities | Inspect, repack |
+| `layer36 lsp` | Start language server | For editor integration |
+| `layer36 init` | Init config for existing directory | |
 
-### 8.3 `oneos doctor` — the flagship helper
+### 8.3 `layer36 doctor` — the flagship helper
 
-`oneos doctor` is the CLI's face when things go wrong. A fresh user who runs it should see a checklist that makes their problem obvious.
+`layer36 doctor` is the CLI's face when things go wrong. A fresh user who runs it should see a checklist that makes their problem obvious.
 
 ```
-$ oneos doctor
+$ layer36 doctor
 
-OneOS Environment Diagnostic
+Layer36 Environment Diagnostic
 ============================
 
 Required:
   ✓ Rust toolchain           1.83.0 (stable)
   ✓ cargo-component          0.15.0
   ✓ wasm32-wasip2 target     installed
-  ✓ oneos runtime            0.5.0
-  ✓ OneOS cache directory    ~/.oneos  (456 MB used, 8.3 GB free)
+  ✓ layer36 runtime            0.5.0
+  ✓ Layer36 cache directory    ~/.layer36  (456 MB used, 8.3 GB free)
 
 Mobile (optional):
   ✓ Xcode                    15.3
   ✗ Android SDK              NOT FOUND
     Fix: install via Android Studio or sdkmanager
-    Docs: https://oneos.dev/docs/setup/android
+    Docs: https://layer36.dev/docs/setup/android
   ✓ Apple Developer account  configured
 
 Languages (optional):
@@ -504,11 +504,11 @@ Languages (optional):
     Fix: install Python 3.11+ and componentize-py
 
 Network:
-  ✓ docs.oneos.dev           reachable
+  ✓ docs.layer36.dev           reachable
   ✓ crates.io                reachable
 
 Summary: 2 recommended issues, 0 blockers.
-Run 'oneos doctor --fix' to attempt automatic remediation where possible.
+Run 'layer36 doctor --fix' to attempt automatic remediation where possible.
 ```
 
 Every failure row has a fix line. No cryptic output.
@@ -519,17 +519,17 @@ Every error surfaced to the user follows the template:
 
 ```
 error[E001]: cannot find manifest.toml
-    at: ./apps/oneos-notes/
-    why: oneos build needs a manifest.toml next to your main source
-    try: run 'oneos init' here, or cd into a directory that has one
-    docs: https://oneos.dev/docs/manifest
+    at: ./apps/layer36-notes/
+    why: layer36 build needs a manifest.toml next to your main source
+    try: run 'layer36 init' here, or cd into a directory that has one
+    docs: https://layer36.dev/docs/manifest
 ```
 
 Code `E001` is stable. Docs URLs stable. Message text may improve over time.
 
 ### 8.5 Completion scripts
 
-Generated for bash, zsh, fish, PowerShell. Installed automatically when a user runs `oneos install`.
+Generated for bash, zsh, fish, PowerShell. Installed automatically when a user runs `layer36 install`.
 
 ---
 
@@ -551,7 +551,7 @@ Nine templates. Three languages × three starting points.
 | `ts-gui` | TypeScript | Desktop GUI (jco) |
 | `ts-mobile` | TypeScript | Mobile-aware GUI (jco) |
 
-Default if `--kind` not specified: `gui` (not `cli`). Reason: most developers evaluating OneOS want to see the GUI, which is the differentiator.
+Default if `--kind` not specified: `gui` (not `cli`). Reason: most developers evaluating Layer36 want to see the GUI, which is the differentiator.
 
 ### 9.2 Template contents (example: `rust-gui`)
 
@@ -575,7 +575,7 @@ Generated project is immediately buildable — no extra steps, no "now install X
 ### 9.3 Template UX
 
 ```
-$ oneos new hello
+$ layer36 new hello
 
 ? What kind of app? [GUI (default) / CLI / Mobile]
 GUI
@@ -598,7 +598,7 @@ Creating project in ./hello ...
 
 Done. Next steps:
   cd hello
-  oneos run
+  layer36 run
 
 First build will take ~30 seconds. Subsequent rebuilds are instant.
 ```
@@ -610,7 +610,7 @@ If `--lang rust --kind gui hello` provided inline, no prompts — fully non-inte
 Every template must:
 
 1. Build successfully on CI across all target platforms relevant to it.
-2. Run successfully via `oneos run`.
+2. Run successfully via `layer36 run`.
 3. Be < 200 lines total.
 4. Have a one-paragraph README explaining what it does.
 5. Have zero TODO comments.
@@ -618,9 +618,9 @@ Every template must:
 
 ### 9.5 Template versioning
 
-- Templates ship with the `oneos` CLI.
+- Templates ship with the `layer36` CLI.
 - Each template includes a `template.toml` with version.
-- On `oneos new`, the CLI warns if a newer template is available via `oneos update`.
+- On `layer36 new`, the CLI warns if a newer template is available via `layer36 update`.
 - Templates are public domain or CC0 — no license friction for generated apps.
 
 ---
@@ -696,7 +696,7 @@ Same architecture, with adjustments:
 
 ### 10.8 Disabling hot reload
 
-`oneos run --no-reload` for production-style runs. Default is hot reload on when run from a project directory.
+`layer36 run --no-reload` for production-style runs. Default is hot reload on when run from a project directory.
 
 ---
 
@@ -704,7 +704,7 @@ Same architecture, with adjustments:
 
 ### 11.1 What we implement
 
-A DAP (Debug Adapter Protocol) server that sits between IDEs and the OneOS runtime. Apps debugged through this server get:
+A DAP (Debug Adapter Protocol) server that sits between IDEs and the Layer36 runtime. Apps debugged through this server get:
 
 - Breakpoints (line + conditional + logpoint).
 - Step over / into / out.
@@ -742,7 +742,7 @@ Our DAP server implements the standard protocol. It exposes:
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "oneos",
+      "type": "layer36",
       "request": "launch",
       "name": "Run with debugger",
       "program": "${workspaceFolder}",
@@ -753,7 +753,7 @@ Our DAP server implements the standard protocol. It exposes:
 }
 ```
 
-The `oneos` debug type is registered by the VS Code extension (§16).
+The `layer36` debug type is registered by the VS Code extension (§16).
 
 ### 11.5 JetBrains integration
 
@@ -788,7 +788,7 @@ Same DAP server. JetBrains IDEs have native DAP support in recent versions — t
 ### 12.2 CLI UX
 
 ```
-$ oneos profile run apps/oneos-notes
+$ layer36 profile run apps/layer36-notes
 
 Starting app with profiling...
 (run your normal workflow; press Ctrl+C to stop)
@@ -799,8 +799,8 @@ Profile captured: 127 samples, 12.3 s elapsed
 Top 10 functions by wall time:
   33.2%  vello::render_scene
   15.8%  harfbuzz_rs::shape
-  12.1%  oneos_reconcile::diff
-   8.7%  oneos_ui_macos::update_widget
+  12.1%  layer36_reconcile::diff
+   8.7%  layer36_ui_macos::update_widget
    ...
 
 UAPI call hotspots:
@@ -822,28 +822,28 @@ Open in speedscope? [Y/n]
 
 ### 12.4 Always-on lightweight metrics
 
-Even outside `oneos profile`, the runtime collects:
+Even outside `layer36 profile`, the runtime collects:
 - Frame time distribution.
 - UAPI call counts (no timing).
 - Memory high-water mark.
 
-Exposed via `oneos stats <pid>` or the `uapi::platform::telemetry` interface.
+Exposed via `layer36 stats <pid>` or the `uapi::platform::telemetry` interface.
 
 ### 12.5 GPU profiling
 
 For wgpu-heavy apps:
-- `oneos profile gpu` produces a RenderDoc-compatible capture.
+- `layer36 profile gpu` produces a RenderDoc-compatible capture.
 - Integrates with wgpu's existing `--capture` flag.
 
 ---
 
 ## 13. Language Server & IntelliSense
 
-### 13.1 What `oneos-lsp` adds
+### 13.1 What `layer36-lsp` adds
 
-Base language LSPs (`rust-analyzer`, `gopls`, `tsserver`) handle most of the work. `oneos-lsp` augments with:
+Base language LSPs (`rust-analyzer`, `gopls`, `tsserver`) handle most of the work. `layer36-lsp` augments with:
 
-- **WIT-aware completion:** when a developer writes `oneos::`, completions come from the imported world's interfaces.
+- **WIT-aware completion:** when a developer writes `layer36::`, completions come from the imported world's interfaces.
 - **UAPI capability hints:** hover over a UAPI call, see which caps are required.
 - **Manifest validation:** `manifest.toml` gets live validation against the schema.
 - **WIT file editing:** full syntax + semantic support for `.wit` files.
@@ -851,10 +851,10 @@ Base language LSPs (`rust-analyzer`, `gopls`, `tsserver`) handle most of the wor
 
 ### 13.2 How it coexists with base LSPs
 
-VS Code supports multiple LSP servers per file via extensions. `oneos-lsp` registers for:
+VS Code supports multiple LSP servers per file via extensions. `layer36-lsp` registers for:
 - `*.wit` files (primary)
 - `manifest.toml` (primary)
-- `*.rs`, `*.go`, `*.ts` in a OneOS project (secondary; supplements existing servers)
+- `*.rs`, `*.go`, `*.ts` in a Layer36 project (secondary; supplements existing servers)
 
 ### 13.3 Fast or useless
 
@@ -888,14 +888,14 @@ Three first-class languages (Rust, Go, TS) cover ~70% of developers. C/C++ adds 
 
 - Clang targeting `wasm32-wasip2`.
 - `wit-bindgen` emits C headers from WIT.
-- Sample: `oneos-sample-c` — a minimal CLI in C that calls `io`, `fs`, `net`.
-- Build driver: `oneos build` auto-detects `CMakeLists.txt` or `Makefile`.
+- Sample: `layer36-sample-c` — a minimal CLI in C that calls `io`, `fs`, `net`.
+- Build driver: `layer36 build` auto-detects `CMakeLists.txt` or `Makefile`.
 
 ### 14.3 Python via `componentize-py`
 
 - Embeds CPython + app `.py` files into a component.
 - `wit-bindgen-py` generates Python bindings from WIT.
-- Sample: `oneos-sample-py` — reads a CSV, POSTs to HTTP, logs.
+- Sample: `layer36-sample-py` — reads a CSV, POSTs to HTTP, logs.
 - Binary size: 10–20 MB overhead acceptable for Python's target use case.
 
 ### 14.4 Swift (embedded) — experimental
@@ -916,13 +916,13 @@ Three first-class languages (Rust, Go, TS) cover ~70% of developers. C/C++ adds 
 
 Four additions, each versioned @0.1.0. Total new interfaces: 4. Total LOC of WIT: ~300.
 
-### 15.1 `oneos:storage@0.1.0`
+### 15.1 `layer36:storage@0.1.0`
 
 Key-value + SQL, SQLite-backed.
 
 ```wit
-// wit/oneos/storage.wit
-package oneos:storage@0.1.0;
+// wit/layer36/storage.wit
+package layer36:storage@0.1.0;
 
 interface types {
     variant storage-error {
@@ -980,11 +980,11 @@ Design notes:
 - KV keys scoped to app; no collision across apps.
 - Schema migrations declared in manifest, applied at launch.
 
-### 15.2 `oneos:crypto@0.1.0`
+### 15.2 `layer36:crypto@0.1.0`
 
 ```wit
-// wit/oneos/crypto.wit
-package oneos:crypto@0.1.0;
+// wit/layer36/crypto.wit
+package layer36:crypto@0.1.0;
 
 interface hash {
     enum algo { sha256, sha512, blake3 }
@@ -1052,11 +1052,11 @@ world consumer {
 }
 ```
 
-### 15.3 `oneos:ipc@0.1.0`
+### 15.3 `layer36:ipc@0.1.0`
 
 ```wit
-// wit/oneos/ipc.wit
-package oneos:ipc@0.1.0;
+// wit/layer36/ipc.wit
+package layer36:ipc@0.1.0;
 
 interface channel {
     variant ipc-error {
@@ -1088,11 +1088,11 @@ world consumer {
 
 Names are scoped: `<app-id>/<channel-name>`. Cross-app requires the target app's `ipc.allow:<their-app>` cap.
 
-### 15.4 `oneos:notifications@0.1.0`
+### 15.4 `layer36:notifications@0.1.0`
 
 ```wit
-// wit/oneos/notifications.wit
-package oneos:notifications@0.1.0;
+// wit/layer36/notifications.wit
+package layer36:notifications@0.1.0;
 
 interface local {
     variant notify-error {
@@ -1125,50 +1125,50 @@ Push notifications (server-driven) deliberately absent — needs identity + infr
 ### 15.5 Updated consolidated `world`
 
 ```wit
-// wit/oneos/app.wit
-package oneos:app@0.4.0;
+// wit/layer36/app.wit
+package layer36:app@0.4.0;
 
 world full {
     // Phase 2
-    import oneos:io/stdio@0.1.0;
-    import oneos:io/log@0.1.0;
-    import oneos:fs/files@0.1.0;
-    import oneos:net/http-client@0.1.0;
-    import oneos:time/clock@0.1.0;
-    import oneos:time/sleep@0.1.0;
-    import oneos:locale/info@0.1.0;
-    import oneos:locale/format@0.1.0;
+    import layer36:io/stdio@0.1.0;
+    import layer36:io/log@0.1.0;
+    import layer36:fs/files@0.1.0;
+    import layer36:net/http-client@0.1.0;
+    import layer36:time/clock@0.1.0;
+    import layer36:time/sleep@0.1.0;
+    import layer36:locale/info@0.1.0;
+    import layer36:locale/format@0.1.0;
 
     // Phase 3
-    import oneos:ui/window@0.1.0;
-    import oneos:ui/tree@0.1.0;
-    import oneos:ui/events@0.1.0;
-    import oneos:ui/dialog@0.1.0;
-    import oneos:ui/clipboard@0.1.0;
-    import oneos:ui/menu@0.1.0;
-    import oneos:gfx/canvas2d@0.1.0;
-    import oneos:gfx/gpu3d@0.1.0;
-    import oneos:audio/playback@0.1.0;
-    import oneos:audio/capture@0.1.0;
+    import layer36:ui/window@0.1.0;
+    import layer36:ui/tree@0.1.0;
+    import layer36:ui/events@0.1.0;
+    import layer36:ui/dialog@0.1.0;
+    import layer36:ui/clipboard@0.1.0;
+    import layer36:ui/menu@0.1.0;
+    import layer36:gfx/canvas2d@0.1.0;
+    import layer36:gfx/gpu3d@0.1.0;
+    import layer36:audio/playback@0.1.0;
+    import layer36:audio/capture@0.1.0;
 
     // Phase 4
-    import oneos:ui/touch@0.1.0;
-    import oneos:ui/navigation@0.1.0;
-    import oneos:sensors/motion@0.1.0;
-    import oneos:sensors/location@0.1.0;
-    import oneos:sensors/camera@0.1.0;
-    import oneos:lifecycle/events@0.1.0;
-    import oneos:lifecycle/state@0.1.0;
+    import layer36:ui/touch@0.1.0;
+    import layer36:ui/navigation@0.1.0;
+    import layer36:sensors/motion@0.1.0;
+    import layer36:sensors/location@0.1.0;
+    import layer36:sensors/camera@0.1.0;
+    import layer36:lifecycle/events@0.1.0;
+    import layer36:lifecycle/state@0.1.0;
 
     // Phase 5
-    import oneos:storage/kv@0.1.0;
-    import oneos:storage/sql@0.1.0;
-    import oneos:crypto/hash@0.1.0;
-    import oneos:crypto/symmetric@0.1.0;
-    import oneos:crypto/asymmetric@0.1.0;
-    import oneos:crypto/random@0.1.0;
-    import oneos:ipc/channel@0.1.0;
-    import oneos:notifications/local@0.1.0;
+    import layer36:storage/kv@0.1.0;
+    import layer36:storage/sql@0.1.0;
+    import layer36:crypto/hash@0.1.0;
+    import layer36:crypto/symmetric@0.1.0;
+    import layer36:crypto/asymmetric@0.1.0;
+    import layer36:crypto/random@0.1.0;
+    import layer36:ipc/channel@0.1.0;
+    import layer36:notifications/local@0.1.0;
 
     export run: func() -> s32;
 }
@@ -1186,10 +1186,10 @@ Lives at `extensions/vscode/`.
 
 **Features:**
 - Syntax highlighting for `.wit`.
-- Integrates `oneos-lsp` via LSP client.
-- Registers `oneos` debug type.
-- Commands: `OneOS: New Project`, `OneOS: Run`, `OneOS: Package`.
-- Status bar item showing current OneOS project + runtime version.
+- Integrates `layer36-lsp` via LSP client.
+- Registers `layer36` debug type.
+- Commands: `Layer36: New Project`, `Layer36: Run`, `Layer36: Package`.
+- Status bar item showing current Layer36 project + runtime version.
 - Manifest schema contribution for `manifest.toml`.
 
 **Publish target:** VS Code Marketplace.
@@ -1201,15 +1201,15 @@ Lives at `extensions/jetbrains/`.
 **Features:**
 - Plugin for CLion, RustRover, GoLand, WebStorm, IntelliJ.
 - DAP integration (JetBrains native DAP support).
-- `oneos-lsp` integration (JetBrains LSP support since 2023.3).
+- `layer36-lsp` integration (JetBrains LSP support since 2023.3).
 - File templates for WIT and manifest.
-- Run configurations for OneOS apps.
+- Run configurations for Layer36 apps.
 
 **Publish target:** JetBrains Marketplace.
 
 ### 16.3 Other editors
 
-- **Neovim / Emacs / Helix:** work out of the box via LSP once `oneos-lsp` is installed. Example configs in docs.
+- **Neovim / Emacs / Helix:** work out of the box via LSP once `layer36-lsp` is installed. Example configs in docs.
 - **Zed:** LSP integration docs.
 
 No custom plugins for these editors in Phase 5 — the LSP-based story is enough.
@@ -1226,12 +1226,12 @@ No custom plugins for these editors in Phase 5 — the LSP-based story is enough
 
 ### 17.1 The claim
 
-From a fresh machine with no OneOS installed, a developer can:
+From a fresh machine with no Layer36 installed, a developer can:
 
 ```
-1. Install OneOS                                        (20 s)
-2. Run `oneos new hello && cd hello`                    (10 s)
-3. Run `oneos run`                                      (25 s on first build)
+1. Install Layer36                                        (20 s)
+2. Run `layer36 new hello && cd hello`                    (10 s)
+3. Run `layer36 run`                                      (25 s on first build)
 4. See the app window with a "Hello" button             (5 s)
 ```
 
@@ -1242,8 +1242,8 @@ Total: 60 seconds.
 | Step | Time budget | How |
 |---|---|---|
 | Install | < 20 s | Single-script installer; prebuilt binary; fast CDN |
-| `oneos new` | < 10 s | Template is small; no network fetch needed |
-| First `oneos run` | < 25 s | First build is slow (dependencies compile); all subsequent builds are < 2 s |
+| `layer36 new` | < 10 s | Template is small; no network fetch needed |
+| First `layer36 run` | < 25 s | First build is slow (dependencies compile); all subsequent builds are < 2 s |
 | First paint | < 5 s | Runtime cold start + window open |
 
 ### 17.3 The test
@@ -1254,7 +1254,7 @@ Total: 60 seconds.
 
 ### 17.4 The second-time promise
 
-After first install, subsequent `oneos new + run` cycles should complete in < 15 s. This comes free once dependencies are cached.
+After first install, subsequent `layer36 new + run` cycles should complete in < 15 s. This comes free once dependencies are cached.
 
 ### 17.5 Why 60 and not 30
 
@@ -1272,13 +1272,13 @@ Sized for 16 weeks calendar, ~60–80 engineering days.
 
 - Write ADR-0031 (DX thesis), ADR-0032 (templates), ADR-0033 (file watcher), ADR-0034 (hot reload IPC), ADR-0035 (DAP), ADR-0036 (DWARF), ADR-0037 (LSP), ADR-0038 (profiler), ADR-0039 (C/C++), ADR-0040 (Python), ADR-0041 (storage), ADR-0042 (crypto), ADR-0043 (IPC), ADR-0044 (notifications).
 - CLI command inventory finalized.
-- `oneos doctor` implementation started.
+- `layer36 doctor` implementation started.
 
-### Weeks 3–4: Templates + `oneos new`
+### Weeks 3–4: Templates + `layer36 new`
 
 - Nine templates authored.
 - Template engine (handlebars-based).
-- Interactive + non-interactive modes of `oneos new`.
+- Interactive + non-interactive modes of `layer36 new`.
 - CI validates every template builds and runs.
 
 ### Weeks 5–6: Hot reload
@@ -1308,7 +1308,7 @@ Sized for 16 weeks calendar, ~60–80 engineering days.
 
 ### Weeks 10–11: LSP + editor extensions
 
-- `oneos-lsp` implementation.
+- `layer36-lsp` implementation.
 - WIT syntax + semantics.
 - Manifest validation.
 - VS Code extension: publish to Marketplace.
@@ -1319,7 +1319,7 @@ Sized for 16 weeks calendar, ~60–80 engineering days.
 - `wasi-sdk` integration.
 - WIT → C header generator.
 - `componentize-py` integration.
-- `oneos-sample-c` and `oneos-sample-py`.
+- `layer36-sample-c` and `layer36-sample-py`.
 
 ### Week 13: UAPI v0.4 — storage + crypto
 
@@ -1353,7 +1353,7 @@ Sized for 16 weeks calendar, ~60–80 engineering days.
 
 Matches Build Plan §7.6 task IDs.
 
-### P5-CLI-01 — `oneos new`
+### P5-CLI-01 — `layer36 new`
 
 **Estimate:** 3 days.
 **Branch:** `p5-cli-01-new`.
@@ -1362,16 +1362,16 @@ Matches Build Plan §7.6 task IDs.
 - All nine templates work.
 - Generated project builds on first try.
 
-### P5-CLI-02 — `oneos build`
+### P5-CLI-02 — `layer36 build`
 
 **Estimate:** 2 days.
 **Branch:** `p5-cli-02-build`.
 **Acceptance:**
 - Auto-detects language from manifest.
 - Delegates to `cargo component build` / `tinygo build` / `jco componentize` as appropriate.
-- Caches compiled output in `~/.oneos/cache/`.
+- Caches compiled output in `~/.layer36/cache/`.
 
-### P5-CLI-03 — `oneos test`
+### P5-CLI-03 — `layer36 test`
 
 **Estimate:** 2 days.
 **Branch:** `p5-cli-03-test`.
@@ -1380,7 +1380,7 @@ Matches Build Plan §7.6 task IDs.
 - Prints summary with exit code 0 or 1.
 - Supports `--json` for CI.
 
-### P5-CLI-04 — `oneos doctor`
+### P5-CLI-04 — `layer36 doctor`
 
 **Estimate:** 2 days.
 **Branch:** `p5-cli-04-doctor`.
@@ -1422,7 +1422,7 @@ Matches Build Plan §7.6 task IDs.
 **Branch:** `p5-dbg-02-vscode`.
 **Acceptance:**
 - Extension installs from .vsix.
-- Registers `oneos` debug type.
+- Registers `layer36` debug type.
 - Launches debug adapter, connects to app.
 
 ### P5-DBG-03 — Breakpoints + step-through
@@ -1439,7 +1439,7 @@ Matches Build Plan §7.6 task IDs.
 **Estimate:** 3 days.
 **Branch:** `p5-prof-01-flamegraph`.
 **Acceptance:**
-- `oneos profile run <app>` produces flamegraph HTML.
+- `layer36 profile run <app>` produces flamegraph HTML.
 - UAPI calls show as aggregated leaf nodes.
 - Accurate to within 5% vs external measurement.
 
@@ -1448,7 +1448,7 @@ Matches Build Plan §7.6 task IDs.
 **Estimate:** 3 days.
 **Branch:** `p5-prof-02-heap`.
 **Acceptance:**
-- `oneos profile heap <app>` captures snapshots.
+- `layer36 profile heap <app>` captures snapshots.
 - pprof output with allocation sites.
 
 ### P5-LSP-01 — WIT language server
@@ -1456,7 +1456,7 @@ Matches Build Plan §7.6 task IDs.
 **Estimate:** 3 days.
 **Branch:** `p5-lsp-01-wit`.
 **Acceptance:**
-- `oneos-lsp` serves WIT files.
+- `layer36-lsp` serves WIT files.
 - Syntax + semantic errors, goto-definition, hover.
 
 ### P5-LSP-02 — LSP integration in editors
@@ -1464,7 +1464,7 @@ Matches Build Plan §7.6 task IDs.
 **Estimate:** 3 days.
 **Branch:** `p5-lsp-02-editors`.
 **Acceptance:**
-- VS Code extension forwards WIT/manifest files to `oneos-lsp`.
+- VS Code extension forwards WIT/manifest files to `layer36-lsp`.
 - JetBrains plugin equivalent.
 - Documented setup for neovim / Emacs / Helix.
 
@@ -1503,7 +1503,7 @@ Matches Build Plan §7.6 task IDs.
 
 ## 20. Code Skeletons
 
-### 20.1 `oneos new` entry point
+### 20.1 `layer36 new` entry point
 
 ```rust
 // crates/cli/src/commands/new.rs
@@ -1556,7 +1556,7 @@ fn print_next_steps(target: &std::path::Path) {
     println!();
     println!("Done. Next steps:");
     println!("  cd {}", target.display());
-    println!("  oneos run");
+    println!("  layer36 run");
     println!();
     println!("First build will take ~30 seconds. Subsequent rebuilds are instant.");
 }
@@ -1705,7 +1705,7 @@ impl OneOsDapServer {
 
 ```rust
 // Developer-visible API
-use oneos::storage::sql;
+use layer36::storage::sql;
 
 fn main() -> i32 {
     sql::execute("CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY, title TEXT, body TEXT)", vec![]).unwrap();
@@ -1761,9 +1761,9 @@ pub fn err_no_manifest(cwd: &Path) -> OneOsError {
         code: "E001",
         what: "cannot find manifest.toml".into(),
         at: Some(cwd.display().to_string()),
-        why: "oneos build needs a manifest.toml next to your main source".into(),
-        try_: "run 'oneos init' here, or cd into a directory that has one".into(),
-        docs: "https://oneos.dev/docs/manifest",
+        why: "layer36 build needs a manifest.toml next to your main source".into(),
+        try_: "run 'layer36 init' here, or cd into a directory that has one".into(),
+        docs: "https://layer36.dev/docs/manifest",
     }
 }
 ```
@@ -1777,7 +1777,7 @@ pub fn err_no_manifest(cwd: &Path) -> OneOsError {
 | Level | Tool | What's new |
 |---|---|---|
 | Unit | cargo test | Template engine, DAP adapter, LSP server |
-| Integration | custom | End-to-end `oneos new` → `oneos run` pipelines |
+| Integration | custom | End-to-end `layer36 new` → `layer36 run` pipelines |
 | Fresh-machine | CI VMs | Every Phase 5 release times a fresh install + first-run cycle |
 | Extension | vsce + IntelliJ plugin test framework | Installs, activates, provides expected commands |
 | Profiler | custom | Profiling output validated against known benchmarks |
@@ -1800,10 +1800,10 @@ Every template × every platform × every language — built and run on every PR
 ### 21.4 DX regression tests
 
 Automated tests that time:
-- `oneos new` → project exists.
-- `oneos build` → warm build time.
+- `layer36 new` → project exists.
+- `layer36 build` → warm build time.
 - Hot reload swap latency.
-- `oneos doctor` execution time.
+- `layer36 doctor` execution time.
 
 Regressions > 20% fail the build.
 
@@ -1814,10 +1814,10 @@ Regressions > 20% fail the build.
 | Metric | Target | Measured how |
 |---|---|---|
 | 60-second walkthrough | ≤ 60 s | Fresh-machine benchmark |
-| `oneos new` (interactive) | < 10 s | Timer |
-| `oneos new` (non-interactive) | < 3 s | Timer |
-| `oneos build` (incremental, small change) | < 2 s | Timer |
-| `oneos run` (warm) | < 200 ms overhead | Timer |
+| `layer36 new` (interactive) | < 10 s | Timer |
+| `layer36 new` (non-interactive) | < 3 s | Timer |
+| `layer36 build` (incremental, small change) | < 2 s | Timer |
+| `layer36 run` (warm) | < 200 ms overhead | Timer |
 | Hot reload swap (desktop, small change) | < 1 s | Timer |
 | Hot reload swap (mobile over Wi-Fi) | < 2 s | Timer |
 | DAP: launch to stopped-on-entry | < 3 s | Timer |
@@ -1847,7 +1847,7 @@ Only changes from v0.4:
 
 | Category | Threat | Mitigation |
 |---|---|---|
-| S | Malicious tool in `~/.oneos/bin` | Install script verifies checksums; updates signed |
+| S | Malicious tool in `~/.layer36/bin` | Install script verifies checksums; updates signed |
 | T | Attacker modifies hot-reload binary mid-swap | Hot reload only accepts binaries from local socket; socket permissions restricted |
 | I | DAP exposes memory to local attacker | DAP server binds to 127.0.0.1 only; never externally |
 | D | Profiler creates huge files | Size cap; user-configurable |
@@ -1856,10 +1856,10 @@ Only changes from v0.4:
 ### 23.3 Dev-mode vs prod-mode
 
 Phase 5 introduces explicit dev-mode and prod-mode:
-- **Dev mode** is what `oneos run` uses. Hot reload, DAP, file system access to project dir, all enabled.
-- **Prod mode** is what `oneos package` produces. No hot reload, no DAP, UCap fully enforced.
+- **Dev mode** is what `layer36 run` uses. Hot reload, DAP, file system access to project dir, all enabled.
+- **Prod mode** is what `layer36 package` produces. No hot reload, no DAP, UCap fully enforced.
 
-Dev mode is explicitly documented as trusted-developer-only. Users who install a OneOS app via Phase 6 marketplace never see dev mode.
+Dev mode is explicitly documented as trusted-developer-only. Users who install a Layer36 app via Phase 6 marketplace never see dev mode.
 
 ### 23.4 Out of scope
 
@@ -1873,10 +1873,10 @@ Dev mode is explicitly documented as trusted-developer-only. Users who install a
 
 ### 24.1 Updated UAPI reference
 
-- `oneos:storage/kv`, `oneos:storage/sql`.
-- `oneos:crypto/hash`, `oneos:crypto/symmetric`, `oneos:crypto/asymmetric`, `oneos:crypto/random`.
-- `oneos:ipc/channel`.
-- `oneos:notifications/local`.
+- `layer36:storage/kv`, `layer36:storage/sql`.
+- `layer36:crypto/hash`, `layer36:crypto/symmetric`, `layer36:crypto/asymmetric`, `layer36:crypto/random`.
+- `layer36:ipc/channel`.
+- `layer36:notifications/local`.
 
 ### 24.2 "Your first 60 seconds" tutorial
 
@@ -1947,7 +1947,7 @@ Further ADRs as decisions surface.
 
 ### CLI
 - [ ] All 19 subcommands implemented.
-- [ ] `oneos doctor` covers all target platforms.
+- [ ] `layer36 doctor` covers all target platforms.
 - [ ] Every error has code + remediation.
 - [ ] Completion scripts for bash, zsh, fish, PowerShell.
 - [ ] `--format json` supported on all subcommands.
@@ -1961,7 +1961,7 @@ Further ADRs as decisions surface.
 ### Hot reload
 - [ ] Swap latency < 1 s desktop small change.
 - [ ] Swap latency < 2 s mobile over Wi-Fi.
-- [ ] State preservation works for `oneos-notes`.
+- [ ] State preservation works for `layer36-notes`.
 - [ ] Fallback to full restart on ABI-incompatible changes.
 
 ### Debugger
@@ -1977,7 +1977,7 @@ Further ADRs as decisions surface.
 - [ ] Overhead < 5% in collect mode.
 
 ### LSP + IDE
-- [ ] `oneos-lsp` provides WIT + manifest support.
+- [ ] `layer36-lsp` provides WIT + manifest support.
 - [ ] VS Code extension published to Marketplace.
 - [ ] JetBrains plugin published to Marketplace.
 - [ ] Neovim / Emacs / Helix docs verified.
@@ -2038,7 +2038,7 @@ Further ADRs as decisions surface.
 ### 27.3 Tripwires
 
 Stop and reassess if:
-- Week 4 and `oneos new` doesn't produce a buildable project.
+- Week 4 and `layer36 new` doesn't produce a buildable project.
 - Week 6 and hot reload isn't under 2 s.
 - Week 9 and DAP doesn't hit a breakpoint.
 - Week 12 and the LSP is over 300 ms for completion.
@@ -2050,7 +2050,7 @@ Stop and reassess if:
 
 ### 28.1 What Phase 6 inherits
 
-- Productized CLI (`oneos deploy` is the foundation for marketplace upload).
+- Productized CLI (`layer36 deploy` is the foundation for marketplace upload).
 - Hot reload + debugger + profiler — dev-mode polish.
 - UAPI v0.4 (crypto + storage + IPC) — enables identity + persistent grants.
 - Nine templates — good starting points for marketplace-submitted apps.
@@ -2058,8 +2058,8 @@ Stop and reassess if:
 
 ### 28.2 What Phase 6 builds on top
 
-- Bundle format (`.oneapp`) using Phase 5's storage + crypto UAPIs for encryption and signing.
-- Marketplace backend — `oneos deploy` target extended.
+- Bundle format (`.l36app`) using Phase 5's storage + crypto UAPIs for encryption and signing.
+- Marketplace backend — `layer36 deploy` target extended.
 - Identity (DIDs) — uses Phase 5's crypto UAPI.
 - Delta updates — builds on Phase 5's packaging pipeline.
 - Policy DB persistence — replaces Phase 2-4's session-only grants.
@@ -2088,19 +2088,19 @@ Before Phase 6 kickoff, update the main Build Plan and Phase 6 Plan with:
 
 | Command | Common flags | Purpose |
 |---|---|---|
-| `oneos new <name>` | `--lang --kind --id --no-interactive` | Create project |
-| `oneos build` | `--release --target` | Build current project |
-| `oneos run` | `--no-reload --debug --profile` | Run with hot reload |
-| `oneos test` | `--json` | Run tests |
-| `oneos deploy <target>` | `--testflight --internal` | Deploy |
-| `oneos package <target>` | | Build installable |
-| `oneos debug` | `--port` | Start DAP server |
-| `oneos profile run` | `--heap --gpu` | Profile |
-| `oneos logs` | `--device --filter` | Tail logs |
-| `oneos doctor` | `--fix` | Diagnose env |
-| `oneos wit` | `fmt / validate / diff` | WIT utilities |
-| `oneos bundle` | `inspect / repack` | Bundle utilities |
-| `oneos lsp` | | Start LSP server |
+| `layer36 new <name>` | `--lang --kind --id --no-interactive` | Create project |
+| `layer36 build` | `--release --target` | Build current project |
+| `layer36 run` | `--no-reload --debug --profile` | Run with hot reload |
+| `layer36 test` | `--json` | Run tests |
+| `layer36 deploy <target>` | `--testflight --internal` | Deploy |
+| `layer36 package <target>` | | Build installable |
+| `layer36 debug` | `--port` | Start DAP server |
+| `layer36 profile run` | `--heap --gpu` | Profile |
+| `layer36 logs` | `--device --filter` | Tail logs |
+| `layer36 doctor` | `--fix` | Diagnose env |
+| `layer36 wit` | `fmt / validate / diff` | WIT utilities |
+| `layer36 bundle` | `inspect / repack` | Bundle utilities |
+| `layer36 lsp` | | Start LSP server |
 
 ### Appendix B — Template variable reference
 
@@ -2110,7 +2110,7 @@ Before Phase 6 kickoff, update the main Build Plan and Phase 6 Plan with:
 | `{{app_id}}` | User input | `com.example.hello` |
 | `{{author}}` | Git config + override | `Jane Dev <jane@example.com>` |
 | `{{version}}` | Default 0.1.0 | `0.1.0` |
-| `{{oneos_version}}` | CLI version | `0.5.0` |
+| `{{layer36_version}}` | CLI version | `0.5.0` |
 | `{{current_year}}` | System clock | `2026` |
 | `{{license}}` | `--license` flag or MIT | `MIT` |
 
@@ -2142,7 +2142,7 @@ Before Phase 6 kickoff, update the main Build Plan and Phase 6 Plan with:
 
 ```json
 {
-  "type": "oneos",
+  "type": "layer36",
   "request": "launch",
   "name": "Run",
   "program": "${workspaceFolder}",
@@ -2204,11 +2204,90 @@ Save as `docs/book/src/phase5/retro.md`.
 
 ---
 
+---
+
+## Development Log
+
+> **Phase Status:** Not started  
+> **Started:** —  
+> **Completed:** —  
+> **Last Updated:** 2026-05-01
+
+### Progress Summary
+
+_Not started. Awaiting completion of all [Phase 4 exit criteria](#3-success-criteria)._
+
+---
+
+### Exit Criteria Status
+
+Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each criterion is met.
+
+| # | Criterion | Status |
+|---|-----------|--------|
+| 1 | `layer36 new hello --lang rust && cd hello && layer36 run` in < 60 s on fresh machine | Not done |
+| 2 | Same walkthrough works with `--lang go` and `--lang ts` | Not done |
+| 3 | Edit template, save → hot reload shows change in ≤ 1 s on desktop | Not done |
+| 4 | Hot reload works on iOS simulator and Android emulator | Not done |
+| 5 | VS Code extension: syntax highlighting + IntelliSense for WIT-generated bindings | Not done |
+| 6 | JetBrains plugin with equivalent functionality | Not done |
+| 7 | Breakpoints work in all three first-class languages via DAP | Not done |
+| 8 | Profiler produces flamegraph + UAPI call timing report | Not done |
+| 9 | `layer36 doctor` detects missing toolchain pieces and prints remediation | Not done |
+| 10 | 5 common failure modes produce human-readable errors with remediation steps | Not done |
+| 11 | C/C++ bindings via `wasi-sdk` usable for at least one sample app | Not done |
+| 12 | Python bindings via `componentize-py` usable for at least one sample app | Not done |
+| 13 | UAPI v0.4 modules (`storage`, `crypto`, `ipc`, `notifications`) frozen at v0.1.0 | Not done |
+| 14 | Storage, crypto, IPC, notifications implemented on desktop + mobile | Not done |
+| 15 | ADRs 0031 through at least 0040 merged | Not done |
+
+---
+
+### Completed Tasks
+
+| Task ID | Task | Completed | Notes |
+|---------|------|-----------|-------|
+| — | — | — | — |
+
+---
+
+### In Progress
+
+| Task ID | Task | Started | Blockers |
+|---------|------|---------|----------|
+| — | — | — | — |
+
+---
+
+### ADRs Filed This Phase
+
+| ADR | Title | Status | Merged |
+|-----|-------|--------|--------|
+| ADR-0031 | Hot reload architecture (re-instantiation with state migration) | Pending | — |
+| ADR-0032 | Debugger integration via DWARF + DAP | Pending | — |
+| ADR-0033 | WIT LSP strategy (standalone server vs. extension to rust-analyzer/gopls) | Pending | — |
+
+_ADRs 0034–0040 to be determined during Phase 5 work._
+
+---
+
+### Blockers & Open Questions
+
+_None currently._
+
+---
+
+### Notes & Learnings
+
+_Nothing yet. Add time-stamped notes as work progresses: hot reload state migration design decisions, DWARF support gaps in the component format, IDE plugin challenges, 60-second walkthrough timing failures and causes, things to carry into Phase 6._
+
+---
+
 ## Closing
 
-Phase 5 is the phase that decides whether OneOS attracts developers or repels them. Every earlier phase built capability; this one builds *approachability*. The difference between the two is the difference between platforms that existed only on engineering diagrams and platforms that reshaped how software is written.
+Phase 5 is the phase that decides whether Layer36 attracts developers or repels them. Every earlier phase built capability; this one builds *approachability*. The difference between the two is the difference between platforms that existed only on engineering diagrams and platforms that reshaped how software is written.
 
-Sixteen weeks is not enough time to make every tool perfect, but it is enough time to make every tool adequate and a few tools excellent. Spend that time carefully. The 60-second walkthrough is the metric that matters; everything else serves it. When a developer installs OneOS, types two commands, and sees their app running on their screen before they've made a coffee — that's the moment OneOS stops being a project and becomes a *thing people use*.
+Sixteen weeks is not enough time to make every tool perfect, but it is enough time to make every tool adequate and a few tools excellent. Spend that time carefully. The 60-second walkthrough is the metric that matters; everything else serves it. When a developer installs Layer36, types two commands, and sees their app running on their screen before they've made a coffee — that's the moment Layer36 stops being a project and becomes a *thing people use*.
 
 Phase 6 will put apps in front of users. Phase 5 puts the platform in front of developers. Both matter. Phase 5 is where the first real test happens.
 

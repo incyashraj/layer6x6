@@ -1,0 +1,40 @@
+# Rust / Cargo
+/target/
+target/
+debug/
+
+# Rust backup files (rustfmt)
+**/*.rs.bk
+
+# MSVC-generated
+*.pdb
+
+# mdBook
+docs/book/book/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+
+# OS
+Thumbs.db
+ehthumbs.db
+
+# Test artifacts
+/test/fixtures/generated/
+
+# Build scripts output
+/dist/
+/scripts/out/

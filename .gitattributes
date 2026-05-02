@@ -1,0 +1,14 @@
+# Normalize all text files to LF on checkout.
+# This prevents CI line-ending failures on Windows runners.
+* text=auto eol=lf
+
+# Force binary treatment for actual binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.wasm binary
+*.zip binary
+*.tar.gz binary
+*.oneapp binary

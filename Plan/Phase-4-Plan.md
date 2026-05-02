@@ -1,8 +1,8 @@
-# OneOS — Phase 4 Detailed Plan: Mobile Hosts
+# Layer36 — Phase 4 Detailed Plan: Mobile Hosts
 
 > **Phase:** 4 of 8
 > **Duration:** Months 11–14 (120 calendar days, ~70–90 engineering days of work)
-> **Phase sentence:** *The same `.oneapp` that runs on desktop runs on iOS and Android without source changes — only with mobile-appropriate layout.*
+> **Phase sentence:** *The same `.l36app` that runs on desktop runs on iOS and Android without source changes — only with mobile-appropriate layout.*
 > **Prerequisite:** Phase 3 complete — desktop GUI stable on Windows, macOS, Linux.
 > **Supersedes:** nothing.
 > **Superseded by:** nothing.
@@ -29,7 +29,7 @@
 15. [Packaging: IPA and APK/AAB](#15-packaging-ipa-and-apkaab)
 16. [UCap v0.3 (Mobile Permissions)](#16-ucap-v03-mobile-permissions)
 17. [App Store Posture](#17-app-store-posture)
-18. [Porting `oneos-notes`](#18-porting-oneos-notes)
+18. [Porting `layer36-notes`](#18-porting-layer36-notes)
 19. [Week-by-Week Breakdown](#19-week-by-week-breakdown)
 20. [Task Details](#20-task-details)
 21. [Code Skeletons](#21-code-skeletons)
@@ -47,7 +47,7 @@
 
 ## 0. How to Use This Document
 
-Phase 4 is the phase where the entire OneOS thesis finally comes home. Phases 1–3 all ran on one class of device (desktops). Phase 4 is the first time the platform literally does what it was supposed to do: a single binary that runs on a laptop *and* a phone.
+Phase 4 is the phase where the entire Layer36 thesis finally comes home. Phases 1–3 all ran on one class of device (desktops). Phase 4 is the first time the platform literally does what it was supposed to do: a single binary that runs on a laptop *and* a phone.
 
 - Mobile operating systems are not just "smaller desktops." Lifecycle, permissions, input, battery, and store policy all behave differently enough that copying Phase 3 patterns into Phase 4 would fail. §5 names the tension.
 - iOS and Android are different enough from each other that they need separate host adapters, separate packaging pipelines, and separate CI stories. Do not try to unify them above the `HostAdapter` trait.
@@ -60,20 +60,20 @@ Phase 4 is the phase where the entire OneOS thesis finally comes home. Phases 1�
 
 ### 1.1 One-sentence objective
 
-**A developer takes the `oneos-notes` binary from Phase 3, unchanged, and runs it on an iPhone and a Pixel via the OneOS host apps. It feels like a mobile app, handles touch naturally, survives being backgrounded, and uses sensors appropriately.**
+**A developer takes the `layer36-notes` binary from Phase 3, unchanged, and runs it on an iPhone and a Pixel via the Layer36 host apps. It feels like a mobile app, handles touch naturally, survives being backgrounded, and uses sensors appropriately.**
 
 ### 1.2 Why this matters
 
-Every previous phase has been an incremental extension of the same form factor. Phase 4 is the first phase that proves the META-OS thesis works *across form factors*. Without Phase 4, OneOS is just another Linux/macOS/Windows cross-platform runtime — which already exist. With Phase 4, it is the only platform where a note-taking app you write on Monday runs on a MacBook, a Dell, a Linux workstation, an iPhone, and a Pixel by Friday, with real native feel on every one of them.
+Every previous phase has been an incremental extension of the same form factor. Phase 4 is the first phase that proves the META-OS thesis works *across form factors*. Without Phase 4, Layer36 is just another Linux/macOS/Windows cross-platform runtime — which already exist. With Phase 4, it is the only platform where a note-taking app you write on Monday runs on a MacBook, a Dell, a Linux workstation, an iPhone, and a Pixel by Friday, with real native feel on every one of them.
 
 ### 1.3 The six deliverables of Phase 4
 
-1. **iOS host app** — a Swift-thin-shell that embeds the OneOS runtime and lets a user run `.oneapp` bundles on iPhone/iPad.
-2. **Android host app** — a Kotlin-thin-shell that embeds the OneOS runtime and lets a user run `.oneapp` bundles on Android phones/tablets.
-3. **Three new UAPI modules** — `oneos:sensors`, `oneos:ui/touch`, `oneos:lifecycle`.
+1. **iOS host app** — a Swift-thin-shell that embeds the Layer36 runtime and lets a user run `.l36app` bundles on iPhone/iPad.
+2. **Android host app** — a Kotlin-thin-shell that embeds the Layer36 runtime and lets a user run `.l36app` bundles on Android phones/tablets.
+3. **Three new UAPI modules** — `layer36:sensors`, `layer36:ui/touch`, `layer36:lifecycle`.
 4. **Porting work for Phase 3 UAPIs** — `ui` widget lowering to UIKit and Android Views, `gfx` on Metal/Vulkan (already wgpu-covered, needs surface integration), `audio` on CoreAudio/AAudio.
 5. **Mobile-aware packaging** — `.ipa` for iOS developer distribution, `.apk`/`.aab` for Android sideload and Play Store.
-6. **`oneos-notes` ported** — same source, runs on iOS and Android with touch-appropriate defaults.
+6. **`layer36-notes` ported** — same source, runs on iOS and Android with touch-appropriate defaults.
 
 ---
 
@@ -83,7 +83,7 @@ Before touching a single line of Phase 4 code, verify:
 
 - [ ] All Phase 3 exit criteria met (Phase 3 Plan §26).
 - [ ] `ui.wit`, `gfx.wit`, `audio.wit` frozen at v0.1.0.
-- [ ] `oneos-notes` runs natively on Windows, macOS, Linux.
+- [ ] `layer36-notes` runs natively on Windows, macOS, Linux.
 - [ ] 60 fps sustained on typical hardware.
 - [ ] IME + screen reader passing on all three desktop hosts.
 - [ ] UCap v0.2 with system-UI grant dialogs working.
@@ -100,13 +100,13 @@ Phase 4 is **done** when, and only when, every row below is true.
 
 | # | Criterion | Measured How |
 |---|-----------|--------------|
-| 1 | iOS host app builds for arm64 device + simulator, runs `.oneapp` | TestFlight + sim |
-| 2 | Android host app builds for arm64 + x86_64, runs `.oneapp` | Play Internal Testing + emulator |
-| 3 | `oneos-notes` runs on iPhone and Pixel with no source changes | Side-by-side manual test |
+| 1 | iOS host app builds for arm64 device + simulator, runs `.l36app` | TestFlight + sim |
+| 2 | Android host app builds for arm64 + x86_64, runs `.l36app` | Play Internal Testing + emulator |
+| 3 | `layer36-notes` runs on iPhone and Pixel with no source changes | Side-by-side manual test |
 | 4 | Touch, tap, long-press, scroll, pinch all work correctly | Automated + manual |
 | 5 | App survives background → foreground round-trip | Scripted test |
 | 6 | App persists state across OS-initiated kill-and-resume | Scripted test |
-| 7 | `oneos:sensors` module fires correct events (accel, gyro, GPS, camera read) | Manual on device |
+| 7 | `layer36:sensors` module fires correct events (accel, gyro, GPS, camera read) | Manual on device |
 | 8 | UCap v0.3: native OS permission prompts integrate (camera, mic, location) | Manual on device |
 | 9 | Battery drain comparable to native equivalent | Battery consumption ≤ 1.5× native Swift/Kotlin baseline |
 | 10 | Cold start on mid-range phone (iPhone 13 / Pixel 6) < 800 ms | Timer measurement |
@@ -159,7 +159,7 @@ Mobile apps are governed by **two opposing forces**:
 - **The OS owns the lifecycle.** The user swipes up and your app is frozen. The phone runs low on memory and your app is killed. A phone call arrives and your audio session is suspended. Nothing on desktop resembles this — desktop apps run until the user closes them, and "background" basically means "minimized." Mobile apps live at the OS's discretion.
 - **The user expects instant response.** Tap a button, something happens in 100 ms or they think it's broken. Launch an app, first frame in 800 ms or they close it. Mobile users don't wait.
 
-A platform layer like OneOS therefore has to be simultaneously:
+A platform layer like Layer36 therefore has to be simultaneously:
 
 - **Obedient** — the runtime must save state immediately when the OS says "you might die soon," and resume without flicker when the OS says "you're back."
 - **Fast** — cold start, reconnect to sensors, rehydrate UI all in under a second.
@@ -171,11 +171,11 @@ Every technical decision downstream is influenced by these two forces. Specifica
 - **Lifecycle is a first-class UAPI.** Apps observe explicit `lifecycle` events (§8.3) and are expected to persist state synchronously during `will-suspend`.
 - **AOT compilation is preferred over JIT.** Mobile users tolerate one-time install cost; cold-start-on-every-launch is unacceptable. Phase 4 introduces AOT caching for bundled `.wasm` components on first launch.
 - **Sensors are event-driven with explicit subscribe/unsubscribe.** Continuous polling drains battery; the UAPI forbids it.
-- **The host app, not the OneOS binary, is what the OS sees.** Phase 4's deliverables are Swift/Kotlin shells that embed the runtime. The OS schedules these shells; they in turn delegate to the WASM inside.
+- **The host app, not the Layer36 binary, is what the OS sees.** Phase 4's deliverables are Swift/Kotlin shells that embed the runtime. The OS schedules these shells; they in turn delegate to the WASM inside.
 
 ### 5.3 A name for the bet
 
-In ADR-0021 we call this the **"host-shell model"**: on mobile, OneOS runs as a Swift/Kotlin app that happens to be mostly written in Rust via a statically-linked runtime, executing WASM bundles supplied by the developer. The user sees a normal mobile app; the developer has a cross-platform codebase; the OS sees a well-behaved citizen.
+In ADR-0021 we call this the **"host-shell model"**: on mobile, Layer36 runs as a Swift/Kotlin app that happens to be mostly written in Rust via a statically-linked runtime, executing WASM bundles supplied by the developer. The user sees a normal mobile app; the developer has a cross-platform codebase; the OS sees a well-behaved citizen.
 
 This is the single most important decision of Phase 4 and the whole document hinges on it.
 
@@ -197,14 +197,14 @@ flowchart TB
     end
 
     subgraph Dist["Distribution"]
-        IPA["OneOS.ipa"]
-        APK["OneOS.apk"]
-        NOTES["oneos-notes bundle"]
+        IPA["Layer36.ipa"]
+        APK["Layer36.apk"]
+        NOTES["layer36-notes bundle"]
     end
 
     subgraph iOS["iPhone/iPad"]
         SwiftShell["Swift host app"]
-        RT_i["OneOS runtime (static lib)"]
+        RT_i["Layer36 runtime (static lib)"]
         WASMI["Wasmtime-iOS (interp + AOT cache)"]
         UIK["UIKit widgets + Metal + CoreAudio"]
         SwiftShell --> RT_i --> WASMI
@@ -213,7 +213,7 @@ flowchart TB
 
     subgraph Android["Android phone/tablet"]
         KotlinShell["Kotlin host app"]
-        RT_a["OneOS runtime (JNI)"]
+        RT_a["Layer36 runtime (JNI)"]
         WASMA["Wasmtime-Android (JIT + AOT cache)"]
         ANV["Android Views + Vulkan + AAudio"]
         KotlinShell --> RT_a --> WASMA
@@ -285,14 +285,14 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    CLI[oneos-cli, desktop only] --> RT[oneos-runtime]
-    HOST_IOS[OneOS.ipa Swift shell] --> RT
-    HOST_AND[OneOS.apk Kotlin shell via JNI] --> RT
-    RT --> UI[oneos-ui]
-    RT --> GFX[oneos-gfx]
-    RT --> AUDIO[oneos-audio]
-    RT --> SENS[oneos-sensors]
-    RT --> LIFE[oneos-lifecycle]
+    CLI[layer36-cli, desktop only] --> RT[layer36-runtime]
+    HOST_IOS[Layer36.ipa Swift shell] --> RT
+    HOST_AND[Layer36.apk Kotlin shell via JNI] --> RT
+    RT --> UI[layer36-ui]
+    RT --> GFX[layer36-gfx]
+    RT --> AUDIO[layer36-audio]
+    RT --> SENS[layer36-sensors]
+    RT --> LIFE[layer36-lifecycle]
     RT --> AD_I[adapter-ios]
     RT --> AD_A[adapter-android]
     AD_I --> UIKit[objc2-ui-kit]
@@ -413,8 +413,8 @@ Each item frozen for Phase 4 unless noted. ADR references in §26.
 ### 7.11 App store policy posture (recorded in ADR-0029)
 
 - Phase 4 operates under TestFlight + Play Internal Testing constraints only. These are more permissive than public App Store.
-- We explicitly **do not ship arbitrary user-supplied `.oneapp` bundles as a feature of a store-distributed OneOS host app in Phase 4**. That would clearly violate App Store rules about interpreters and downloaded code.
-- Instead, the iOS host app in Phase 4 is a **developer tool** — the developer's `.oneapp` is bundled at build time into the Swift shell, not downloaded at runtime.
+- We explicitly **do not ship arbitrary user-supplied `.l36app` bundles as a feature of a store-distributed Layer36 host app in Phase 4**. That would clearly violate App Store rules about interpreters and downloaded code.
+- Instead, the iOS host app in Phase 4 is a **developer tool** — the developer's `.l36app` is bundled at build time into the Swift shell, not downloaded at runtime.
 - Public distribution mode comes in Phase 7 with negotiated sideload / marketplace strategies.
 - See §17 for the full store posture.
 
@@ -450,11 +450,11 @@ Each item frozen for Phase 4 unless noted. ADR references in §26.
 
 Three new modules. All v0.1.0 (first release, independently versioned).
 
-### 8.1 `oneos:sensors@0.1.0`
+### 8.1 `layer36:sensors@0.1.0`
 
 ```wit
-// wit/oneos/sensors.wit
-package oneos:sensors@0.1.0;
+// wit/layer36/sensors.wit
+package layer36:sensors@0.1.0;
 
 interface types {
     record vec3 { x: f32, y: f32, z: f32 }
@@ -561,12 +561,12 @@ Design notes:
 - Frame format negotiation at open; runtime handles conversion if the OS gives us a different format.
 - `hz` is a *hint*, not a guarantee. Some platforms clamp.
 
-### 8.2 `oneos:ui/touch@0.1.0` (extension to `oneos:ui`)
+### 8.2 `layer36:ui/touch@0.1.0` (extension to `layer36:ui`)
 
 Added to `ui.wit` as a new interface. Not a breaking change to Phase 3's `ui`.
 
 ```wit
-// within wit/oneos/ui.wit
+// within wit/layer36/ui.wit
 
 interface touch {
     use types.{widget-id, pointer-event};
@@ -606,11 +606,11 @@ Design notes:
 - Desktop also gets these events (tap = click, pan = drag) so cross-platform apps don't branch on OS.
 - Pinch/rotate events only fire on hosts that support multi-touch; desktop typically won't.
 
-### 8.3 `oneos:lifecycle@0.1.0`
+### 8.3 `layer36:lifecycle@0.1.0`
 
 ```wit
-// wit/oneos/lifecycle.wit
-package oneos:lifecycle@0.1.0;
+// wit/layer36/lifecycle.wit
+package layer36:lifecycle@0.1.0;
 
 interface events {
     variant lifecycle-event {
@@ -656,45 +656,45 @@ world consumer {
 
 Design notes:
 - Explicit events, not implicit observer registration; mirrors Phase 3's `ui/events` model.
-- `state.save` / `state.load` provide a small persistent store for "where I was" — not a database. Apps use `oneos:fs` for real data.
+- `state.save` / `state.load` provide a small persistent store for "where I was" — not a database. Apps use `layer36:fs` for real data.
 - `will-terminate` is a best-effort — apps get a brief sync window to persist.
 
 ### 8.4 Updated consolidated `world`
 
 ```wit
-// wit/oneos/app.wit
-package oneos:app@0.3.0;
+// wit/layer36/app.wit
+package layer36:app@0.3.0;
 
 world mobile {
     // Phase 2: CLI modules
-    import oneos:io/stdio@0.1.0;
-    import oneos:io/log@0.1.0;
-    import oneos:fs/files@0.1.0;
-    import oneos:net/http-client@0.1.0;
-    import oneos:time/clock@0.1.0;
-    import oneos:time/sleep@0.1.0;
-    import oneos:locale/info@0.1.0;
-    import oneos:locale/format@0.1.0;
+    import layer36:io/stdio@0.1.0;
+    import layer36:io/log@0.1.0;
+    import layer36:fs/files@0.1.0;
+    import layer36:net/http-client@0.1.0;
+    import layer36:time/clock@0.1.0;
+    import layer36:time/sleep@0.1.0;
+    import layer36:locale/info@0.1.0;
+    import layer36:locale/format@0.1.0;
 
     // Phase 3: GUI modules
-    import oneos:ui/window@0.1.0;
-    import oneos:ui/tree@0.1.0;
-    import oneos:ui/events@0.1.0;
-    import oneos:ui/dialog@0.1.0;
-    import oneos:ui/clipboard@0.1.0;
-    import oneos:ui/menu@0.1.0;
-    import oneos:gfx/canvas2d@0.1.0;
-    import oneos:gfx/gpu3d@0.1.0;
-    import oneos:audio/playback@0.1.0;
-    import oneos:audio/capture@0.1.0;
+    import layer36:ui/window@0.1.0;
+    import layer36:ui/tree@0.1.0;
+    import layer36:ui/events@0.1.0;
+    import layer36:ui/dialog@0.1.0;
+    import layer36:ui/clipboard@0.1.0;
+    import layer36:ui/menu@0.1.0;
+    import layer36:gfx/canvas2d@0.1.0;
+    import layer36:gfx/gpu3d@0.1.0;
+    import layer36:audio/playback@0.1.0;
+    import layer36:audio/capture@0.1.0;
 
     // Phase 4: mobile additions
-    import oneos:ui/touch@0.1.0;
-    import oneos:sensors/motion@0.1.0;
-    import oneos:sensors/location@0.1.0;
-    import oneos:sensors/camera@0.1.0;
-    import oneos:lifecycle/events@0.1.0;
-    import oneos:lifecycle/state@0.1.0;
+    import layer36:ui/touch@0.1.0;
+    import layer36:sensors/motion@0.1.0;
+    import layer36:sensors/location@0.1.0;
+    import layer36:sensors/camera@0.1.0;
+    import layer36:lifecycle/events@0.1.0;
+    import layer36:lifecycle/state@0.1.0;
 
     export run: func() -> s32;
 }
@@ -746,16 +746,16 @@ The Swift shell is a thin standard iOS app:
 ```swift
 // Shell excerpt — pseudo-Swift
 import UIKit
-import OneOSRuntime  // statically linked Rust lib
+import Layer36Runtime  // statically linked Rust lib
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-    var runtime: OneOSRuntime!
+    var runtime: Layer36Runtime!
 
     func application(_ app: UIApplication,
                      didFinishLaunchingWithOptions opts: [...]) -> Bool {
-        runtime = OneOSRuntime(bundleURL: Bundle.main.url(forResource: "app",
-                                                          withExtension: "oneapp")!)
+        runtime = Layer36Runtime(bundleURL: Bundle.main.url(forResource: "app",
+                                                          withExtension: "l36app")!)
         runtime.start()
         return true
     }
@@ -805,11 +805,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 Phase 3 widgets don't include `NavigationController` — the master-detail, push-pop model of iOS. Two options:
 
-- **Add `oneos:ui/navigation`** — a mobile-aware UAPI interface. Chosen. v0.1 supports push, pop, back.
+- **Add `layer36:ui/navigation`** — a mobile-aware UAPI interface. Chosen. v0.1 supports push, pop, back.
 - On desktop, navigation events degrade to modal sheets or tab switches.
 
 ```wit
-// within wit/oneos/ui.wit (or separate if cleaner)
+// within wit/layer36/ui.wit (or separate if cleaner)
 
 interface navigation {
     use types.{widget-node, navigation-id};
@@ -827,7 +827,7 @@ interface navigation {
 
 ### 9.6 Safe area, keyboard, and other iOS peculiarities
 
-- Safe area insets exposed as `oneos:ui/preferences::safe-area-insets`.
+- Safe area insets exposed as `layer36:ui/preferences::safe-area-insets`.
 - Software keyboard height delivered as `input-event::keyboard-shown / -hidden` with height.
 - Status bar style settable via manifest.
 - Dark mode follows `UITraitCollection`.
@@ -871,14 +871,14 @@ adapter-android/
 
 ```kotlin
 // host-app/src/main/kotlin/MainActivity.kt
-package dev.oneos.host
+package dev.layer36.host
 
 import android.app.Activity
 import android.os.Bundle
 
 class MainActivity : Activity() {
     companion object {
-        init { System.loadLibrary("oneos_runtime") }
+        init { System.loadLibrary("layer36_runtime") }
     }
 
     external fun nativeStart(bundlePath: String)
@@ -886,7 +886,7 @@ class MainActivity : Activity() {
 
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
-        val bundlePath = assets.extractBundle("app.oneapp")
+        val bundlePath = assets.extractBundle("app.l36app")
         nativeStart(bundlePath)
     }
 
@@ -926,7 +926,7 @@ class MainActivity : Activity() {
 
 ### 10.5 Navigation on Android
 
-Android's navigation idiom differs (Fragments, NavigationComponent, back stack owned by OS back button). Our `oneos:ui/navigation` interface maps to:
+Android's navigation idiom differs (Fragments, NavigationComponent, back stack owned by OS back button). Our `layer36:ui/navigation` interface maps to:
 
 - **Push** → add fragment to fragment manager with back stack entry.
 - **Pop** → pop back stack.
@@ -934,10 +934,10 @@ Android's navigation idiom differs (Fragments, NavigationComponent, back stack o
 
 ### 10.6 Android-specific idioms
 
-- Snackbar / Toast → via `oneos:ui/toast` extension (small addition, Phase 4 ships).
+- Snackbar / Toast → via `layer36:ui/toast` extension (small addition, Phase 4 ships).
 - Action Bar / Top App Bar → mapped from Phase 3's `ui::menu::set-window-menu`.
 - FAB (Floating Action Button) → custom-drawn in v0.1; apps compose with Canvas.
-- Bottom sheets → v0.2 of `oneos:ui`; not in Phase 4.
+- Bottom sheets → v0.2 of `layer36:ui`; not in Phase 4.
 
 ---
 
@@ -982,7 +982,7 @@ For any touch location:
 ### 11.5 Haptic feedback (minimal in Phase 4)
 
 ```wit
-// addition to wit/oneos/ui.wit
+// addition to wit/layer36/ui.wit
 
 interface haptic {
     enum impact { light, medium, heavy }
@@ -1007,8 +1007,8 @@ Apps that don't handle lifecycle lose user data, drain battery, or get killed qu
 
 ### 12.2 State save rules
 
-- Runtime offers a single key-value blob (`oneos:lifecycle/state::save/load`) — intentionally small.
-- Size cap: 1 MB. Beyond this, apps use `oneos:fs` with explicit path.
+- Runtime offers a single key-value blob (`layer36:lifecycle/state::save/load`) — intentionally small.
+- Size cap: 1 MB. Beyond this, apps use `layer36:fs` with explicit path.
 - `save` is synchronous from the WASM perspective — runtime drives to completion before surfacing `will-pause`.
 
 ### 12.3 Platform lifecycle mapping
@@ -1088,7 +1088,7 @@ Desktops have 1280–4K screens in landscape-dominant modes. Phones have 360–4
 - **Apps hand-branch** on size — creates double code paths.
 - **Layout adapts automatically** based on available space, providing good defaults.
 
-OneOS takes the second path via **size classes** (inherited from iOS and Web's responsive idioms).
+Layer36 takes the second path via **size classes** (inherited from iOS and Web's responsive idioms).
 
 ### 14.2 Size classes
 
@@ -1097,7 +1097,7 @@ Two dimensions, each with three values:
 - **Width class:** compact (< 600 dp), regular (600–1023 dp), expanded (≥ 1024 dp).
 - **Height class:** same thresholds.
 
-Size classes are exposed via `oneos:ui/preferences::size-class()` and change events are fired when the window resizes or the device rotates.
+Size classes are exposed via `layer36:ui/preferences::size-class()` and change events are fired when the window resizes or the device rotates.
 
 ### 14.3 Responsive patterns
 
@@ -1146,25 +1146,25 @@ flowchart LR
     MANI --> ASSET_A[Embed in Android Gradle project]
     AOT_A --> ASSET_A
     WASM --> ASSET_A
-    ASSET_I --> IPA[OneOS-MyApp.ipa]
-    ASSET_A --> AAB[OneOS-MyApp.aab]
+    ASSET_I --> IPA[Layer36-MyApp.ipa]
+    ASSET_A --> AAB[Layer36-MyApp.aab]
 ```
 
 ### 15.2 iOS packaging steps
 
-1. Prebuild OneOS runtime as static library (`liboneos_runtime.a`) for arm64-apple-ios and arm64-apple-ios-sim.
+1. Prebuild Layer36 runtime as static library (`liblayer36_runtime.a`) for arm64-apple-ios and arm64-apple-ios-sim.
 2. Xcode project template includes Swift shell + runtime static lib + embedded app bundle.
-3. `oneos package ios <app>` fills the template with the app's `.wasm` and `.cwasm`.
+3. `layer36 package ios <app>` fills the template with the app's `.wasm` and `.cwasm`.
 4. Xcode builds & signs .ipa with developer cert.
-5. `oneos deploy ios <app>` uploads to TestFlight via `altool` or `fastlane`.
+5. `layer36 deploy ios <app>` uploads to TestFlight via `altool` or `fastlane`.
 
 ### 15.3 Android packaging steps
 
-1. Prebuild runtime as shared libs for arm64, armv7, x86_64 (`liboneos_runtime.so`).
+1. Prebuild runtime as shared libs for arm64, armv7, x86_64 (`liblayer36_runtime.so`).
 2. Gradle template includes Kotlin shell + runtime .so files in jniLibs.
-3. `oneos package android <app>` fills the template with assets.
+3. `layer36 package android <app>` fills the template with assets.
 4. Gradle builds APK and/or AAB; signs with developer key (or debug key by default).
-5. `oneos deploy android <app>` uploads to Play Console Internal Testing track.
+5. `layer36 deploy android <app>` uploads to Play Console Internal Testing track.
 
 ### 15.4 Developer certs (Phase 4 constraint)
 
@@ -1179,7 +1179,7 @@ flowchart LR
 id      = "com.parksure.driver"
 version = "1.0.0"
 entry   = "driver.wasm"
-world   = "oneos:app/mobile@0.3.0"
+world   = "layer36:app/mobile@0.3.0"
 
 [mobile]
 min-ios       = "15.0"
@@ -1202,7 +1202,7 @@ These fields drive Info.plist and AndroidManifest.xml generation automatically. 
 
 ### 16.1 What changes on mobile
 
-- **Permissions are a two-layer problem.** OneOS UCap + OS-level permission (iOS TCC or Android runtime permission). An app must have BOTH.
+- **Permissions are a two-layer problem.** Layer36 UCap + OS-level permission (iOS TCC or Android runtime permission). An app must have BOTH.
 - **OS-level prompts are uncontrollable.** We can trigger them but not style them; we can't re-prompt after denial without user visiting Settings.
 - **Grant persistence is OS-managed for sensitive caps.** We do NOT store "user said yes to camera" in our policy DB; the OS does.
 
@@ -1216,7 +1216,7 @@ sequenceDiagram
 
     App->>UCap: request sensors.camera:rear
     alt UCap not granted
-        UCap->>App: show OneOS rationale dialog
+        UCap->>App: show Layer36 rationale dialog
         App-->>UCap: user agreed
     end
     UCap->>UCap: grant session cap
@@ -1247,16 +1247,16 @@ ui.haptic
 
 ### 16.4 First-run UX
 
-- On first launch of an app on mobile, OneOS shows a single consolidated grant dialog for caps declared in the manifest (above default-granted set).
+- On first launch of an app on mobile, Layer36 shows a single consolidated grant dialog for caps declared in the manifest (above default-granted set).
 - Then each specific OS-level prompt fires at first actual use.
-- Users never see *only* the OS prompt without context — OneOS rationale precedes it.
+- Users never see *only* the OS prompt without context — Layer36 rationale precedes it.
 
 ### 16.5 Settings deep-link
 
-When an OS permission is denied and the app needs it, OneOS provides a UAPI that opens the system Settings page for the app:
+When an OS permission is denied and the app needs it, Layer36 provides a UAPI that opens the system Settings page for the app:
 
 ```wit
-// additional to wit/oneos/ui.wit
+// additional to wit/layer36/ui.wit
 
 interface settings {
     open-app-settings: func();
@@ -1269,13 +1269,13 @@ interface settings {
 
 ### 17.1 The constraint
 
-Both Apple and Google restrict apps that "download and execute code." Naively distributing the OneOS host app on App Store and allowing users to install arbitrary `.oneapp` bundles at runtime would likely be rejected.
+Both Apple and Google restrict apps that "download and execute code." Naively distributing the Layer36 host app on App Store and allowing users to install arbitrary `.l36app` bundles at runtime would likely be rejected.
 
 ### 17.2 Phase 4 posture
 
-In Phase 4, **we do not distribute a consumer-facing OneOS host app to public stores.** Instead:
+In Phase 4, **we do not distribute a consumer-facing Layer36 host app to public stores.** Instead:
 
-- **Developer mode:** each developer builds their own IPA/APK via `oneos package` which bakes their specific `.oneapp` into a standalone Swift/Kotlin shell.
+- **Developer mode:** each developer builds their own IPA/APK via `layer36 package` which bakes their specific `.l36app` into a standalone Swift/Kotlin shell.
 - **TestFlight and Play Internal Testing:** used to share builds with beta testers.
 - **Direct install:** APK sideload works without Play Store.
 - **No public consumer marketplace until Phase 6–7.**
@@ -1286,17 +1286,17 @@ This means Phase 4 has no App Store rejection risk — we're not submitting to A
 
 The host shell templates support **two modes**:
 
-- **"Baked"** — `.oneapp` is bundled at build time. The shell loads only that. This is the default for Phase 4.
-- **"Runtime"** — the shell loads user-supplied `.oneapp` at runtime. Works in dev mode / TestFlight but is risky for public stores.
+- **"Baked"** — `.l36app` is bundled at build time. The shell loads only that. This is the default for Phase 4.
+- **"Runtime"** — the shell loads user-supplied `.l36app` at runtime. Works in dev mode / TestFlight but is risky for public stores.
 
-Both modes coexist. Developers start with baked; OneOS team experiments internally with runtime to learn.
+Both modes coexist. Developers start with baked; Layer36 team experiments internally with runtime to learn.
 
 ### 17.4 What the long-term play looks like (not Phase 4's problem)
 
-- **Marketplace as a website**, not an app. Users download `.oneapp`s there. OneOS host on device loads them.
-- **Small pre-reviewed library**, where the OneOS org vets bundles and includes them inside a host app distributed on stores. Conservative but store-acceptable.
+- **Marketplace as a website**, not an app. Users download `.l36app`s there. Layer36 host on device loads them.
+- **Small pre-reviewed library**, where the Layer36 org vets bundles and includes them inside a host app distributed on stores. Conservative but store-acceptable.
 - **Interpreter-only mode** where WASM never JIT-compiles; some prior art (Swift Playgrounds, Pythonista) has shown this gets past review.
-- **Developer-tools classification** where OneOS targets developer audiences explicitly and can avoid consumer-facing store rules.
+- **Developer-tools classification** where Layer36 targets developer audiences explicitly and can avoid consumer-facing store rules.
 
 These are decisions for Phase 6 and 7. Phase 4 defers them and focuses on developer-mode delivery.
 
@@ -1306,11 +1306,11 @@ ADR-0029: App Store posture for Phase 4.
 
 ---
 
-## 18. Porting `oneos-notes`
+## 18. Porting `layer36-notes`
 
 ### 18.1 What should be zero effort
 
-The promise of the platform: `oneos-notes` compiled for Phase 3 runs on iOS and Android after Phase 4 ships. Ideally, source diff is empty.
+The promise of the platform: `layer36-notes` compiled for Phase 3 runs on iOS and Android after Phase 4 ships. Ideally, source diff is empty.
 
 ### 18.2 What actually changes
 
@@ -1321,7 +1321,7 @@ In practice, two kinds of changes are fine:
 
 Anything more than this is an API miss on our side.
 
-### 18.3 Mobile-aware `oneos-notes`
+### 18.3 Mobile-aware `layer36-notes`
 
 - On compact width: single-pane. Note list is the root; tapping a note pushes the editor via `navigation::push`.
 - On regular width (iPad landscape, folding phones unfolded): two-pane master-detail.
@@ -1331,7 +1331,7 @@ Anything more than this is an API miss on our side.
 
 ### 18.4 Testing matrix
 
-`oneos-notes` manual test devices:
+`layer36-notes` manual test devices:
 
 - iPhone SE (smallest modern screen, 4.7").
 - iPhone 13 (reference mid-range).
@@ -1344,7 +1344,7 @@ Each runs the full test plan from Phase 3 plus Phase 4 additions (touch, rotatio
 
 ### 18.5 LOC budget
 
-Phase 3's `oneos-notes` was < 2000 LOC. Phase 4 porting should add < 200 LOC total. If it adds more, the UAPI is leaky.
+Phase 3's `layer36-notes` was < 2000 LOC. Phase 4 porting should add < 200 LOC total. If it adds more, the UAPI is leaky.
 
 ---
 
@@ -1402,14 +1402,14 @@ Sized for 16 weeks calendar, ~70–90 engineering days of active work.
 - `SizeClassSwitch` widget.
 - Safe area insets, keyboard height, orientation handling.
 
-### Week 15: `oneos-notes` mobile port
+### Week 15: `layer36-notes` mobile port
 
 - Port and test on all target devices.
 - Any final UAPI additions driven by pain points.
 
 ### Week 16: Packaging, CI, exit criteria
 
-- `oneos package ios` and `oneos package android` finalized.
+- `layer36 package ios` and `layer36 package android` finalized.
 - iOS CI on GitHub macOS runners.
 - Android CI via emulator on Linux runners.
 - Retrospective.
@@ -1436,7 +1436,7 @@ Matches Build Plan §7.5 task IDs.
 **Branch:** `p4-ios-02-shell`.
 **Acceptance:**
 - Xcode project template in `templates/ios-host/`.
-- `oneos package ios hello` produces .ipa that installs + runs in simulator.
+- `layer36 package ios hello` produces .ipa that installs + runs in simulator.
 - Swift ↔ Rust bridge established.
 
 ### P4-IOS-03 — UIKit widget bridge
@@ -1478,7 +1478,7 @@ Matches Build Plan §7.5 task IDs.
 **Estimate:** 2 days.
 **Branch:** `p4-ios-07-testflight`.
 **Acceptance:**
-- `oneos deploy ios` uploads a signed build to TestFlight.
+- `layer36 deploy ios` uploads a signed build to TestFlight.
 - Documented setup for Apple Dev account.
 
 ### P4-AND-01 — Compile Wasmtime for Android
@@ -1496,7 +1496,7 @@ Matches Build Plan §7.5 task IDs.
 **Branch:** `p4-and-02-shell`.
 **Acceptance:**
 - Gradle template in `templates/android-host/`.
-- `oneos package android hello` produces APK that installs + runs in emulator.
+- `layer36 package android hello` produces APK that installs + runs in emulator.
 - JNI bridge established.
 
 ### P4-AND-03 — Android Views widget bridge
@@ -1538,8 +1538,8 @@ Matches Build Plan §7.5 task IDs.
 **Estimate:** 2 days.
 **Branch:** `p4-and-07-apk`.
 **Acceptance:**
-- `oneos package android` produces both APK (sideload) and AAB (Play).
-- `oneos deploy android` uploads AAB to Play Console Internal Testing.
+- `layer36 package android` produces both APK (sideload) and AAB (Play).
+- `layer36 deploy android` uploads AAB to Play Console Internal Testing.
 
 ### P4-UI-01 — Touch + gesture UAPI
 
@@ -1559,7 +1559,7 @@ Matches Build Plan §7.5 task IDs.
 - `preferences` UAPI for size-class + safe-area.
 - Default adaptations for Tabs, Navigation, Scroll on narrow screens.
 
-### P4-APP-01 — `oneos-notes` mobile port
+### P4-APP-01 — `layer36-notes` mobile port
 
 **Estimate:** 3 days.
 **Branch:** `p4-app-01-notes-mobile`.
@@ -1601,7 +1601,7 @@ pub struct OneOsHandle {
 }
 
 #[no_mangle]
-pub extern "C" fn oneos_start(bundle_path: *const c_char) -> *mut OneOsHandle {
+pub extern "C" fn layer36_start(bundle_path: *const c_char) -> *mut OneOsHandle {
     let path = unsafe { CStr::from_ptr(bundle_path) }
         .to_str()
         .expect("invalid utf-8 bundle path");
@@ -1613,7 +1613,7 @@ pub extern "C" fn oneos_start(bundle_path: *const c_char) -> *mut OneOsHandle {
 }
 
 #[no_mangle]
-pub extern "C" fn oneos_lifecycle(handle: *mut OneOsHandle, event: i32) {
+pub extern "C" fn layer36_lifecycle(handle: *mut OneOsHandle, event: i32) {
     let h = unsafe { &mut *handle };
     let ev = match event {
         0 => LifecycleEvent::WillResume,
@@ -1629,7 +1629,7 @@ pub extern "C" fn oneos_lifecycle(handle: *mut OneOsHandle, event: i32) {
 }
 
 #[no_mangle]
-pub extern "C" fn oneos_shutdown(handle: *mut OneOsHandle) {
+pub extern "C" fn layer36_shutdown(handle: *mut OneOsHandle) {
     if !handle.is_null() {
         unsafe { drop(Box::from_raw(handle)); }
     }
@@ -1646,7 +1646,7 @@ use jni::objects::{JClass, JString};
 use jni::sys::{jlong, jint};
 
 #[no_mangle]
-pub extern "system" fn Java_dev_oneos_host_MainActivity_nativeStart(
+pub extern "system" fn Java_dev_layer36_host_MainActivity_nativeStart(
     env: JNIEnv,
     _class: JClass,
     bundle_path: JString,
@@ -1663,7 +1663,7 @@ pub extern "system" fn Java_dev_oneos_host_MainActivity_nativeStart(
 }
 
 #[no_mangle]
-pub extern "system" fn Java_dev_oneos_host_MainActivity_nativeLifecycle(
+pub extern "system" fn Java_dev_layer36_host_MainActivity_nativeLifecycle(
     _env: JNIEnv,
     _class: JClass,
     handle: jlong,
@@ -1734,7 +1734,7 @@ fn android_motion_to_event(ev: &MotionEvent, idx: usize) -> TouchEvent {
 
 ```rust
 // example app code
-use oneos::lifecycle::{self, LifecycleEvent, state};
+use layer36::lifecycle::{self, LifecycleEvent, state};
 
 fn main() -> i32 {
     let mut app_state: AppState = match state::load() {
@@ -1785,7 +1785,7 @@ impl CameraSession for AndroidCameraSession {
         let env = jni_env();
         // call into Kotlin helper that sets up ImageReader + CaptureSession
         let handle = env.call_static_method(
-            "dev/oneos/host/CameraHelper", "open",
+            "dev/layer36/host/CameraHelper", "open",
             "(IIII)J",
             &[
                 (facing as i32).into(),
@@ -1853,11 +1853,11 @@ Either owned by founder or via remote device cloud (BrowserStack, AWS Device Far
 given: app at HomeScreen
 when: press Home button
 then: app enters background
-and: oneos-notes saves state within 2 seconds
+and: layer36-notes saves state within 2 seconds
 when: swipe to kill from app switcher
 then: app fully terminates
 when: relaunch
-then: oneos-notes restores last open note
+then: layer36-notes restores last open note
 ```
 
 Same scenarios for Android via Espresso.
@@ -1898,8 +1898,8 @@ VoiceOver on iOS and TalkBack on Android are part of exit criteria. Manual on on
 
 ### 23.2 Battery targets
 
-- `oneos-notes` idle (open, not interacting): ≤ 2% battery/hr.
-- `oneos-notes` typing continuously: ≤ 8% battery/hr.
+- `layer36-notes` idle (open, not interacting): ≤ 2% battery/hr.
+- `layer36-notes` typing continuously: ≤ 8% battery/hr.
 - Sensor subscriptions don't remain active across backgrounding.
 
 Measured via Instruments / Battery Historian over 30-minute sessions.
@@ -1926,7 +1926,7 @@ Only changes from Phase 3:
 
 | Category | Threat | Mitigation |
 |---|---|---|
-| S | Hostile `.oneapp` spoofs another app ID | Bundle signing required before Phase 7 store distribution; Phase 4 TestFlight assumes signed dev builds only |
+| S | Hostile `.l36app` spoofs another app ID | Bundle signing required before Phase 7 store distribution; Phase 4 TestFlight assumes signed dev builds only |
 | T | Tampered AOT cache loaded on device | AOT files are validated against signed manifest hash before load |
 | R | OS-level permission decision not reflected in app logic | Always re-query OS permission at point of use, not just at grant time |
 | I | Camera frames leak to disk via logs | No frame data in logs at any verbosity level; enforced by lint rule |
@@ -1951,9 +1951,9 @@ Only changes from Phase 3:
 
 ### 25.1 UAPI reference updates
 
-- `oneos:sensors@0.1.0` documentation.
-- `oneos:lifecycle@0.1.0` documentation.
-- `oneos:ui/touch@0.1.0`, `oneos:ui/navigation@0.1.0`, `oneos:ui/haptic@0.1.0`, `oneos:ui/settings@0.1.0` documentation.
+- `layer36:sensors@0.1.0` documentation.
+- `layer36:lifecycle@0.1.0` documentation.
+- `layer36:ui/touch@0.1.0`, `layer36:ui/navigation@0.1.0`, `layer36:ui/haptic@0.1.0`, `layer36:ui/settings@0.1.0` documentation.
 
 ### 25.2 "Your first mobile app" tutorial
 
@@ -1961,7 +1961,7 @@ Step-by-step Rust tutorial: mobile-specific hello-world with a button, a text fi
 
 ### 25.3 "Porting from desktop to mobile" guide
 
-Walk-through using `oneos-notes` as case study: minimum manifest changes, size-class branching, touch target adjustments, lifecycle handling.
+Walk-through using `layer36-notes` as case study: minimum manifest changes, size-class branching, touch target adjustments, lifecycle handling.
 
 ### 25.4 Per-host setup docs
 
@@ -2019,9 +2019,9 @@ Further ADRs as decisions surface.
 - [ ] Lifecycle events fire correctly, state persists.
 - [ ] Sensors (motion, location, camera) functional on real device.
 - [ ] UCap + TCC integration works.
-- [ ] `oneos package ios` produces installable IPA.
+- [ ] `layer36 package ios` produces installable IPA.
 - [ ] TestFlight distribution verified.
-- [ ] VoiceOver reads `oneos-notes` correctly.
+- [ ] VoiceOver reads `layer36-notes` correctly.
 
 ### Android
 - [ ] Host shell builds for arm64, armv7, x86_64.
@@ -2031,11 +2031,11 @@ Further ADRs as decisions surface.
 - [ ] Lifecycle events fire correctly, state persists.
 - [ ] Sensors functional on real device.
 - [ ] UCap + runtime permissions integration works.
-- [ ] `oneos package android` produces APK + AAB.
+- [ ] `layer36 package android` produces APK + AAB.
 - [ ] Play Internal Testing distribution verified.
-- [ ] TalkBack reads `oneos-notes` correctly.
+- [ ] TalkBack reads `layer36-notes` correctly.
 
-### `oneos-notes`
+### `layer36-notes`
 - [ ] Runs on iPhone SE, iPhone 13, iPad, Pixel 6, Samsung mid-range.
 - [ ] Size-class branches render appropriately.
 - [ ] Touch targets ≥ 44 dp.
@@ -2064,7 +2064,7 @@ Further ADRs as decisions surface.
 - [ ] ADR-0021 through ADR-0030 merged.
 
 ### External validation
-- [ ] One external developer builds a mobile OneOS app via tutorial.
+- [ ] One external developer builds a mobile Layer36 app via tutorial.
 - [ ] Retrospective written.
 - [ ] Phase 5 kickoff issue opened.
 
@@ -2095,7 +2095,7 @@ Further ADRs as decisions surface.
 | Physical device access constraints | High | Medium | Budget for minimum 3 iOS + 3 Android devices early |
 | Scope creep (push notifications, IAP, widgets) | Very High | High | Deferred list is a live doc; every request deferred by default |
 | Testing time on real devices insufficient | High | High | Manual test plan allocates explicit days in Week 15–16 |
-| Founder time split between ParkSure, Bouclier, OneOS | Very High | Critical | Phase 4 is 16 weeks; compressing destroys quality — extend if needed, don't cut |
+| Founder time split between ParkSure, Bouclier, Layer36 | Very High | Critical | Phase 4 is 16 weeks; compressing destroys quality — extend if needed, don't cut |
 
 ### 28.3 Tripwires
 
@@ -2104,7 +2104,7 @@ Stop and reassess if:
 - Week 8 and Android emulator cannot run hello-world.
 - Week 11 and widget lowering incomplete on either platform.
 - Week 13 and lifecycle save/restore doesn't pass kill-relaunch test.
-- Week 15 and `oneos-notes` doesn't run on both platforms.
+- Week 15 and `layer36-notes` doesn't run on both platforms.
 - Frame time > 25 ms on mid-range device at Week 14.
 
 ---
@@ -2117,11 +2117,11 @@ Stop and reassess if:
 - iOS + Android host adapters in production.
 - Packaging pipelines for all five target platforms.
 - Lifecycle and sensor abstractions.
-- `oneos-notes` proving the thesis end to end.
+- `layer36-notes` proving the thesis end to end.
 
 ### 29.2 What Phase 5 extends
 
-- Developer SDK productization (`oneos new`, hot reload, debugger).
+- Developer SDK productization (`layer36 new`, hot reload, debugger).
 - Language support beyond Rust/Go/TypeScript (C/C++, Python).
 - Performance and developer experience polish.
 - Additional UAPIs: IPC, storage (SQLite), crypto, notifications (interface only), push (architecture only).
@@ -2179,36 +2179,36 @@ Before Phase 5 kickoff, update the main Build Plan and Phase 5 Plan with:
 
 ```bash
 # Package iOS app
-oneos package ios apps/oneos-notes
+layer36 package ios apps/layer36-notes
 
 # Run on iOS simulator
-oneos run ios --sim "iPhone 15" apps/oneos-notes
+layer36 run ios --sim "iPhone 15" apps/layer36-notes
 
 # Upload to TestFlight
-oneos deploy ios --testflight apps/oneos-notes
+layer36 deploy ios --testflight apps/layer36-notes
 
 # Package Android app
-oneos package android apps/oneos-notes
+layer36 package android apps/layer36-notes
 
 # Run on Android emulator
-oneos run android --avd "Pixel_6_API_34" apps/oneos-notes
+layer36 run android --avd "Pixel_6_API_34" apps/layer36-notes
 
 # Upload to Play Internal Testing
-oneos deploy android --internal apps/oneos-notes
+layer36 deploy android --internal apps/layer36-notes
 
 # Start a device log tail
-oneos logs ios --device "MyiPhone"
-oneos logs android --device "pixel-6"
+layer36 logs ios --device "MyiPhone"
+layer36 logs android --device "pixel-6"
 
 # Dump lifecycle state for debugging
-oneos debug state dump apps/oneos-notes
+layer36 debug state dump apps/layer36-notes
 ```
 
 ### Appendix D — Debugging a backgrounded app that won't resume
 
-1. Confirm `lifecycle` events fired: `oneos logs --filter lifecycle`.
+1. Confirm `lifecycle` events fired: `layer36 logs --filter lifecycle`.
 2. Check state blob size — cap is 1 MB, oversized writes silently fail.
-3. Check if app was killed vs paused: `oneos debug lifecycle-history`.
+3. Check if app was killed vs paused: `layer36 debug lifecycle-history`.
 4. If killed: was state saved before `will-terminate`? Check timing.
 5. If paused: why no `will-resume`? Check permissions, memory pressure, crashes.
 
@@ -2263,10 +2263,88 @@ Save as `docs/book/src/phase4/retro.md` at end of Phase 4.
 
 ---
 
+---
+
+## Development Log
+
+> **Phase Status:** Not started  
+> **Started:** —  
+> **Completed:** —  
+> **Last Updated:** 2026-05-01
+
+### Progress Summary
+
+_Not started. Awaiting completion of all [Phase 3 exit criteria](#3-success-criteria)._
+
+---
+
+### Exit Criteria Status
+
+Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each criterion is met.
+
+| # | Criterion | Status |
+|---|-----------|--------|
+| 1 | iOS host app builds for arm64 device + simulator; runs `.l36app` | Not done |
+| 2 | Android host app builds for arm64 + x86_64; runs `.l36app` | Not done |
+| 3 | `layer36-notes` runs on iPhone and Pixel without source changes | Not done |
+| 4 | Touch, tap, long-press, scroll, pinch all work correctly | Not done |
+| 5 | App survives background → foreground round-trip | Not done |
+| 6 | App persists state across OS-initiated kill-and-resume | Not done |
+| 7 | `layer36:sensors` fires correct events (accel, gyro, GPS, camera read-only) | Not done |
+| 8 | UCap v0.3: native OS permission prompts integrate (camera, mic, location) | Not done |
+| 9 | Battery drain ≤ 1.5× native Swift/Kotlin equivalent | Not done |
+| 10 | Cold start on mid-range phone (iPhone 13 / Pixel 6) < 800 ms | Not done |
+| 11 | Steady-state 60 fps on typical mobile workload | Not done |
+| 12 | `.ipa` distributable via TestFlight | Not done |
+| 13 | `.apk` + `.aab` produced; Play Store Internal Testing distribution works | Not done |
+| 14 | ADRs 0021 through at least 0028 merged | Not done |
+
+---
+
+### Completed Tasks
+
+| Task ID | Task | Completed | Notes |
+|---------|------|-----------|-------|
+| — | — | — | — |
+
+---
+
+### In Progress
+
+| Task ID | Task | Started | Blockers |
+|---------|------|---------|----------|
+| — | — | — | — |
+
+---
+
+### ADRs Filed This Phase
+
+| ADR | Title | Status | Merged |
+|-----|-------|--------|--------|
+| ADR-0021 | Host-shell model for mobile (Swift/Kotlin thin shell + embedded runtime) | Pending | — |
+| ADR-0022 | Wasmtime on iOS: interpreter + AOT cache to avoid JIT ban | Pending | — |
+| ADR-0023 | Lifecycle UAPI design (mirrors iOS + Android state machines) | Pending | — |
+
+_ADRs 0024–0028 to be determined during Phase 4 work._
+
+---
+
+### Blockers & Open Questions
+
+_None currently._
+
+---
+
+### Notes & Learnings
+
+_Nothing yet. Add time-stamped notes as work progresses: App Store JIT policy interactions, UIKit/Android View bridge difficulties, sensor API edge cases, battery measurement methodology, unexpected platform walls encountered, things to carry into Phase 5._
+
+---
+
 ## Closing
 
-Phase 4 is the phase that turns OneOS from a cross-platform *desktop* runtime — already a useful thing, but not a unique thing — into a genuinely cross-*device* platform. By the end of Phase 4, a developer can write an app on Tuesday that runs on their MacBook, their Windows laptop, their Linux workstation, their iPhone, their iPad, and their friend's Pixel by Friday, without once rewriting for a new host. That has never existed before. Many have tried; all have traded something — nativeness, performance, or platform breadth — to get there. OneOS's bet is that the layered architecture set up in Phases 1–3 lets us add mobile without surrendering any of those three.
+Phase 4 is the phase that turns Layer36 from a cross-platform *desktop* runtime — already a useful thing, but not a unique thing — into a genuinely cross-*device* platform. By the end of Phase 4, a developer can write an app on Tuesday that runs on their MacBook, their Windows laptop, their Linux workstation, their iPhone, their iPad, and their friend's Pixel by Friday, without once rewriting for a new host. That has never existed before. Many have tried; all have traded something — nativeness, performance, or platform breadth — to get there. Layer36's bet is that the layered architecture set up in Phases 1–3 lets us add mobile without surrendering any of those three.
 
-Four months is right. Mobile platforms are full of invisible walls — the background-execution limit, the JIT ban, the permission model, the fragmentation of OEMs — and each one is learned by hitting it. Expect at least three weeks of Phase 4 to be consumed by problems none of this plan anticipates. That's the work. When Phase 4 exits with `oneos-notes` on an iPhone, opened by someone who has never heard of OneOS, and they think "oh, it's just an app" — that is the platform's graduation.
+Four months is right. Mobile platforms are full of invisible walls — the background-execution limit, the JIT ban, the permission model, the fragmentation of OEMs — and each one is learned by hitting it. Expect at least three weeks of Phase 4 to be consumed by problems none of this plan anticipates. That's the work. When Phase 4 exits with `layer36-notes` on an iPhone, opened by someone who has never heard of Layer36, and they think "oh, it's just an app" — that is the platform's graduation.
 
 — end of document —

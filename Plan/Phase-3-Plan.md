@@ -1,4 +1,4 @@
-# OneOS — Phase 3 Detailed Plan: UI + Graphics
+# Layer36 — Phase 3 Detailed Plan: UI + Graphics
 
 > **Phase:** 3 of 8
 > **Duration:** Months 7–10 (120 calendar days, ~60–80 engineering days of work)
@@ -28,7 +28,7 @@
 14. [Accessibility](#14-accessibility)
 15. [Per-Host Adapters](#15-per-host-adapters)
 16. [UCap v0.2 (System-UI Grants)](#16-ucap-v02-system-ui-grants)
-17. [The `oneos-notes` Flagship Sample](#17-the-oneos-notes-flagship-sample)
+17. [The `layer36-notes` Flagship Sample](#17-the-layer36-notes-flagship-sample)
 18. [Week-by-Week Breakdown](#18-week-by-week-breakdown)
 19. [Task Details](#19-task-details)
 20. [Code Skeletons](#20-code-skeletons)
@@ -60,11 +60,11 @@ Phase 3 is the riskiest and most ambitious phase before v1.0. Every previous pha
 
 ### 1.1 One-sentence objective
 
-**A developer writes a note-taking app in Rust, Go, or TypeScript using UAPI v0.2, compiles to a `.wasm` component, and runs it via `oneos run` on Windows, macOS, and Linux — where it opens a real window with native-feeling controls, handles keyboard/mouse/text input, persists files, renders 60 fps steady-state, and passes basic accessibility checks.**
+**A developer writes a note-taking app in Rust, Go, or TypeScript using UAPI v0.2, compiles to a `.wasm` component, and runs it via `layer36 run` on Windows, macOS, and Linux — where it opens a real window with native-feeling controls, handles keyboard/mouse/text input, persists files, renders 60 fps steady-state, and passes basic accessibility checks.**
 
 ### 1.2 Why this matters
 
-Phase 2 proved the UAPI abstraction works for batch-style programs. Phase 3 proves it works for *interactive* programs — which is where the hard cross-platform problems live. Window management, text input (IME), accessibility trees, keyboard shortcuts, menu conventions, scroll physics, DPI scaling, color spaces: every single one differs between Windows, macOS, and Linux, and every single one has to feel correct to the user. Ship Phase 3 and the rest of OneOS is largely implementation. Ship it wrong and OneOS inherits "doesn't feel native" as a reputation that will take years to shake.
+Phase 2 proved the UAPI abstraction works for batch-style programs. Phase 3 proves it works for *interactive* programs — which is where the hard cross-platform problems live. Window management, text input (IME), accessibility trees, keyboard shortcuts, menu conventions, scroll physics, DPI scaling, color spaces: every single one differs between Windows, macOS, and Linux, and every single one has to feel correct to the user. Ship Phase 3 and the rest of Layer36 is largely implementation. Ship it wrong and Layer36 inherits "doesn't feel native" as a reputation that will take years to shake.
 
 ### 1.3 The six deliverables of Phase 3
 
@@ -72,7 +72,7 @@ Phase 2 proved the UAPI abstraction works for batch-style programs. Phase 3 prov
 2. **Widget protocol** that supports both native-backed widgets and custom-drawn fallbacks in one tree.
 3. **Layout engine** (Taffy-based) with flexbox semantics.
 4. **2D canvas** (vello on wgpu) and **3D GPU** (WebGPU-compatible subset via wgpu).
-5. **`oneos-notes` flagship** — a small but real note-taking app that demonstrates the entire UI stack.
+5. **`layer36-notes` flagship** — a small but real note-taking app that demonstrates the entire UI stack.
 6. **UCap v0.2** — system-UI grant dialogs replacing terminal prompts for GUI apps.
 
 ---
@@ -87,7 +87,7 @@ Before touching a single line of Phase 3 code, verify:
 - [ ] Three language bindings (Rust/Go/TS) in use by sample apps.
 - [ ] UCap v0.1 enforcing soft grants at UAPI boundary.
 - [ ] Cross-host stdout-identical testing harness green.
-- [ ] `oneos-curl`, `oneos-cat`, `oneos-clock` all runnable.
+- [ ] `layer36-curl`, `layer36-cat`, `layer36-clock` all runnable.
 - [ ] ADRs 0001 through 0012 merged.
 
 If any box is unchecked, finish Phase 2 first. A GUI platform built on an unstable CLI foundation is worse than no GUI platform at all — you'll spend months in Phase 3 rediscovering Phase 2 bugs.
@@ -100,20 +100,20 @@ Phase 3 is **done** when, and only when, every row below is true.
 
 | # | Criterion | Measured How |
 |---|-----------|--------------|
-| 1 | `ui`, `gfx`, `audio` WIT modules frozen at v0.1.0 | `wit/oneos/*.wit` |
+| 1 | `ui`, `gfx`, `audio` WIT modules frozen at v0.1.0 | `wit/layer36/*.wit` |
 | 2 | Each module implemented in Linux, macOS, Windows adapters | CI green on all hosts |
-| 3 | `oneos-notes` runs on all three desktop OSes | Integration test |
-| 4 | `oneos-notes` UI feels native on each host (not Electron-style) | Qualitative test, documented rubric |
+| 3 | `layer36-notes` runs on all three desktop OSes | Integration test |
+| 4 | `layer36-notes` UI feels native on each host (not Electron-style) | Qualitative test, documented rubric |
 | 5 | Steady-state frame time ≤ 16.7 ms on 2020+ hardware | Frame-time histogram |
 | 6 | Cold start for GUI app < 300 ms to first paint | Timestamp diff |
 | 7 | IME (CJK input) works on all three hosts | Manual test + automated event capture |
-| 8 | Screen reader reads `oneos-notes` correctly on all three hosts | VoiceOver / Narrator / Orca |
+| 8 | Screen reader reads `layer36-notes` correctly on all three hosts | VoiceOver / Narrator / Orca |
 | 9 | UCap v0.2: system-UI grant dialog fires for GUI apps | Manual walkthrough |
 | 10 | 60 fps 10,000-node widget tree benchmark passes | Frame-time benchmark |
 | 11 | DPI scaling: 100%, 125%, 150%, 200% all render correctly | Snapshot test |
 | 12 | Dark mode: follows system preference, switches live | Manual + snapshot |
 | 13 | Runtime binary size < 80 MB (up from 50 MB in Phase 2) | Artifact size |
-| 14 | Per-app RSS < 120 MB for `oneos-notes` | Process monitor |
+| 14 | Per-app RSS < 120 MB for `layer36-notes` | Process monitor |
 | 15 | ADRs 0013 through at least 0020 merged | Git log |
 
 Rows 4, 7, 8 are the **hardest to measure and most likely to be skipped**. They have explicit sub-criteria in §26.
@@ -154,7 +154,7 @@ Rows 4, 7, 8 are the **hardest to measure and most likely to be skipped**. They 
 
 ### 4.3 The discipline
 
-Phase 3 is a tire-fire of temptations. "Can we also add tray icons? Themes? Plugins? A component library?" Every yes adds a week. The answer is "Phase N" — except for the rare case where the primitive in question is genuinely prerequisite to `oneos-notes` working. If you can build `oneos-notes` without it, defer it.
+Phase 3 is a tire-fire of temptations. "Can we also add tray icons? Themes? Plugins? A component library?" Every yes adds a week. The answer is "Phase N" — except for the rare case where the primitive in question is genuinely prerequisite to `layer36-notes` working. If you can build `layer36-notes` without it, defer it.
 
 ---
 
@@ -162,7 +162,7 @@ Phase 3 is a tire-fire of temptations. "Can we also add tray icons? Themes? Plug
 
 ### 5.1 The question
 
-When a developer's OneOS app says "I want a button," what does that button actually become on the user's screen?
+When a developer's Layer36 app says "I want a button," what does that button actually become on the user's screen?
 
 ### 5.2 Four possible answers
 
@@ -231,7 +231,7 @@ flowchart TB
         A1 --> A2 --> A3
     end
 
-    subgraph RT["OneOS Runtime"]
+    subgraph RT["Layer36 Runtime"]
         DISP["UAPI dispatcher"]
         UI["ui subsystem"]
         GFX["gfx subsystem"]
@@ -303,13 +303,13 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    CLI[oneos-cli] --> RT[oneos-runtime]
-    RT --> UI[oneos-ui]
-    RT --> GFX[oneos-gfx]
-    RT --> AUDIO[oneos-audio]
-    UI --> LAY[oneos-layout]
-    UI --> RECON[oneos-reconcile]
-    UI --> A11Y[oneos-a11y]
+    CLI[layer36-cli] --> RT[layer36-runtime]
+    RT --> UI[layer36-ui]
+    RT --> GFX[layer36-gfx]
+    RT --> AUDIO[layer36-audio]
+    UI --> LAY[layer36-layout]
+    UI --> RECON[layer36-reconcile]
+    UI --> A11Y[layer36-a11y]
     GFX --> WGPU[wgpu]
     GFX --> VELLO[vello]
     RT --> AD_L[adapter-linux]
@@ -368,7 +368,7 @@ See §5. Recorded in ADR-0013. Frozen.
 
 ### 7.6 3D: **wgpu / WebGPU subset**
 
-- Expose a WebGPU-compatible subset in `oneos:gfx/3d`.
+- Expose a WebGPU-compatible subset in `layer36:gfx/3d`.
 - Shader language: **WGSL** (WebGPU Shading Language) only.
 - No raw Vulkan / D3D12 / Metal API exposed to apps.
 - **Recorded:** ADR-0017.
@@ -391,7 +391,7 @@ See §5. Recorded in ADR-0013. Frozen.
 ### 7.9 Audio
 
 - Playback / capture: **`cpal`** (cross-platform audio).
-- Mixing: simple floating-point mixer in `oneos-audio`.
+- Mixing: simple floating-point mixer in `layer36-audio`.
 - Decoder: **`symphonia`** for MP3/AAC/OGG/FLAC.
 - No MIDI, no DAW features in v0.1.
 - **Recorded:** ADR-0020.
@@ -432,15 +432,15 @@ See §5. Recorded in ADR-0013. Frozen.
 
 ## 8. UAPI v0.2 Module Specifications
 
-Phase 3 ships three new modules under `oneos:` package. All three are versioned `@0.1.0` at module level (first release). They do not affect Phase 2's `@0.1.0` modules.
+Phase 3 ships three new modules under `layer36:` package. All three are versioned `@0.1.0` at module level (first release). They do not affect Phase 2's `@0.1.0` modules.
 
-### 8.1 `oneos:ui@0.1.0`
+### 8.1 `layer36:ui@0.1.0`
 
 The widget protocol and windowing. Presented in full in §9. Here is the top-level structure:
 
 ```wit
-// wit/oneos/ui.wit
-package oneos:ui@0.1.0;
+// wit/layer36/ui.wit
+package layer36:ui@0.1.0;
 
 interface types {
     // see §9.1 and §9.2 for widget node enum, event types
@@ -494,13 +494,13 @@ world consumer {
 }
 ```
 
-### 8.2 `oneos:gfx@0.1.0`
+### 8.2 `layer36:gfx@0.1.0`
 
 2D canvas + 3D GPU (WebGPU-compatible subset).
 
 ```wit
-// wit/oneos/gfx.wit
-package oneos:gfx@0.1.0;
+// wit/layer36/gfx.wit
+package layer36:gfx@0.1.0;
 
 interface canvas2d {
     use types.{color, rect, path, paint, gfx-error};
@@ -535,13 +535,13 @@ world consumer {
 }
 ```
 
-### 8.3 `oneos:audio@0.1.0`
+### 8.3 `layer36:audio@0.1.0`
 
 Local playback + capture. Intentionally minimal; richer audio work is Phase 5+.
 
 ```wit
-// wit/oneos/audio.wit
-package oneos:audio@0.1.0;
+// wit/layer36/audio.wit
+package layer36:audio@0.1.0;
 
 interface playback {
     use types.{audio-buffer, playback-error};
@@ -579,31 +579,31 @@ world consumer {
 ### 8.4 Updated consolidated `world`
 
 ```wit
-// wit/oneos/app.wit
-package oneos:app@0.2.0;
+// wit/layer36/app.wit
+package layer36:app@0.2.0;
 
 world gui {
     // Phase 2 modules
-    import oneos:io/stdio@0.1.0;
-    import oneos:io/log@0.1.0;
-    import oneos:fs/files@0.1.0;
-    import oneos:net/http-client@0.1.0;
-    import oneos:time/clock@0.1.0;
-    import oneos:time/sleep@0.1.0;
-    import oneos:locale/info@0.1.0;
-    import oneos:locale/format@0.1.0;
+    import layer36:io/stdio@0.1.0;
+    import layer36:io/log@0.1.0;
+    import layer36:fs/files@0.1.0;
+    import layer36:net/http-client@0.1.0;
+    import layer36:time/clock@0.1.0;
+    import layer36:time/sleep@0.1.0;
+    import layer36:locale/info@0.1.0;
+    import layer36:locale/format@0.1.0;
 
     // Phase 3 modules
-    import oneos:ui/window@0.1.0;
-    import oneos:ui/tree@0.1.0;
-    import oneos:ui/events@0.1.0;
-    import oneos:ui/dialog@0.1.0;
-    import oneos:ui/clipboard@0.1.0;
-    import oneos:ui/menu@0.1.0;
-    import oneos:gfx/canvas2d@0.1.0;
-    import oneos:gfx/gpu3d@0.1.0;
-    import oneos:audio/playback@0.1.0;
-    import oneos:audio/capture@0.1.0;
+    import layer36:ui/window@0.1.0;
+    import layer36:ui/tree@0.1.0;
+    import layer36:ui/events@0.1.0;
+    import layer36:ui/dialog@0.1.0;
+    import layer36:ui/clipboard@0.1.0;
+    import layer36:ui/menu@0.1.0;
+    import layer36:gfx/canvas2d@0.1.0;
+    import layer36:gfx/gpu3d@0.1.0;
+    import layer36:audio/playback@0.1.0;
+    import layer36:audio/capture@0.1.0;
 
     export run: func() -> s32;
 }
@@ -653,7 +653,7 @@ Fifteen widgets pass the "native three of five" test (§5.5). Others are custom-
 ### 9.2 Widget node WIT
 
 ```wit
-// within wit/oneos/ui.wit, in interface types
+// within wit/layer36/ui.wit, in interface types
 
 variant widget-node {
     stack(stack-props),
@@ -777,7 +777,7 @@ Each widget carries a `widget-id` that is stable across frames. Identity rules:
 
 1. Apps MUST use stable IDs. The reconciler does not attempt content-based diffing; it uses ID-based match.
 2. ID collision is a runtime error, logged as a warning in dev builds.
-3. IDs are opaque `u64`; developers use binding helpers (`oneos::ui::id("save-button")`) to derive them.
+3. IDs are opaque `u64`; developers use binding helpers (`layer36::ui::id("save-button")`) to derive them.
 
 ### 9.7 Hit testing and event routing
 
@@ -914,11 +914,11 @@ Apps using `Canvas` widget get a `canvas` resource they draw to. Drawing is GPU-
 - WGSL is validated by wgpu's validator before compilation.
 - Buffer bindings are type-checked.
 - No raw SPIR-V / DXIL / MSL is exposed — developers can't side-step WGSL.
-- GPU driver bugs remain a theoretical concern — the ecosystem-wide problem, not OneOS-specific.
+- GPU driver bugs remain a theoretical concern — the ecosystem-wide problem, not Layer36-specific.
 
 ### 12.4 Scope discipline
 
-`oneos-notes` uses 2D only. The 3D surface exists to prove it *can* be done by Phase 3 exit and to unblock game-adjacent experiments. We do not ship 3D samples this phase.
+`layer36-notes` uses 2D only. The 3D surface exists to prove it *can* be done by Phase 3 exit and to unblock game-adjacent experiments. We do not ship 3D samples this phase.
 
 ---
 
@@ -989,7 +989,7 @@ For each widget in §9.1, define:
 
 ### 14.4 Reduced-motion, high-contrast, large-text
 
-- System preferences queried via `oneos:ui/preferences` (sub-interface to add in Phase 3 or 4; Phase 3 adds minimum).
+- System preferences queried via `layer36:ui/preferences` (sub-interface to add in Phase 3 or 4; Phase 3 adds minimum).
 - Runtime honours `prefers-reduced-motion` by suppressing animation.
 - Apps query user preferences directly; runtime does not force.
 
@@ -1117,7 +1117,7 @@ flowchart TD
     B -- no --> C[Runtime shows system dialog]
     C --> D{User choice}
     D -- "Allow Once" --> E[Grant for this call only]
-    D -- "Allow for Session" --> F[Grant until oneos exits]
+    D -- "Allow for Session" --> F[Grant until layer36 exits]
     D -- "Never for this app" --> G[Record deny; suppress future prompts]
     D -- "Deny" --> DENY[Return error]
     E --> ALLOW
@@ -1131,11 +1131,11 @@ Apps cannot summon grant dialogs at will. They can only trigger them by calling 
 
 ---
 
-## 17. The `oneos-notes` Flagship Sample
+## 17. The `layer36-notes` Flagship Sample
 
 ### 17.1 Why build a flagship
 
-A flagship app is the project's best argument. If `oneos-notes` feels good, developers believe the platform. If it feels weird, no amount of documentation convinces them.
+A flagship app is the project's best argument. If `layer36-notes` feels good, developers believe the platform. If it feels weird, no amount of documentation convinces them.
 
 ### 17.2 Scope
 
@@ -1143,7 +1143,7 @@ A minimal note-taking app:
 - Sidebar: list of notes with titles and preview text.
 - Main area: editor for the selected note.
 - Top bar: app menu (File/Edit/View).
-- Saves to `~/Documents/OneOSNotes/` (requires `fs.write` cap).
+- Saves to `~/Documents/Layer36Notes/` (requires `fs.write` cap).
 - Searchable by title.
 - Keyboard shortcuts (`Cmd/Ctrl+N` new, `Cmd/Ctrl+S` save, `Cmd/Ctrl+F` find).
 - Dark mode follows system.
@@ -1170,7 +1170,7 @@ Rust. First-class for the flagship; we eat our own canonical bindings.
 - Dark mode switches live.
 - Screen readers navigate correctly.
 - UCap grant flow fires on first launch.
-- Save/load works via `oneos:fs`.
+- Save/load works via `layer36:fs`.
 - 60 fps in typical editing sessions.
 
 If all ten boxes check, Phase 3 shipped.
@@ -1191,7 +1191,7 @@ Sized for 16 weeks calendar, ~60–80 engineering days of active work. A full-ti
 
 - Windowing trait + per-host implementations.
 - Basic event loop: open window, receive close event, close.
-- Smoke test: `oneos run blank-window.wasm` opens a blank window on all three hosts.
+- Smoke test: `layer36 run blank-window.wasm` opens a blank window on all three hosts.
 
 ### Weeks 5–6: Widget tree + reconciler
 
@@ -1237,7 +1237,7 @@ Sized for 16 weeks calendar, ~60–80 engineering days of active work. A full-ti
 - Clipboard read/write.
 - App + window menus.
 
-### Week 15: `oneos-notes`
+### Week 15: `layer36-notes`
 
 - Build the flagship.
 - This is where the UAPI gets stress-tested. Expect gaps — each gap is a lesson, not a failure.
@@ -1267,7 +1267,7 @@ Matches Build Plan §7.4 task IDs.
 - §9 of this doc as starting point.
 - Merged into `docs/adr/` as ADR-0013 + ADR-0014 where decisions are final.
 
-### P3-UI-02 — `wit/oneos/ui.wit`
+### P3-UI-02 — `wit/layer36/ui.wit`
 
 **Estimate:** 2 days.
 **Branch:** `p3-ui-02-ui-wit`.
@@ -1321,7 +1321,7 @@ Matches Build Plan §7.4 task IDs.
 - Drawn-fallback path working.
 - Manual test on Ubuntu 22.04 + Fedora.
 
-### P3-GFX-01 — `wit/oneos/gfx.wit`
+### P3-GFX-01 — `wit/layer36/gfx.wit`
 
 **Estimate:** 2 days.
 **Branch:** `p3-gfx-01-wit`.
@@ -1374,12 +1374,12 @@ Matches Build Plan §7.4 task IDs.
 - CJK manual test pass on all three hosts.
 - Test plan in `docs/book/src/phase3/ime-testing.md`.
 
-### P3-APP-01 — `oneos-notes`
+### P3-APP-01 — `layer36-notes`
 
 **Estimate:** 5 days.
 **Branch:** `p3-app-01-notes`.
 **Acceptance:**
-- App in `apps/oneos-notes/` (Rust).
+- App in `apps/layer36-notes/` (Rust).
 - Implements scope per §17.2.
 - Runs on all three hosts in CI.
 
@@ -1390,7 +1390,7 @@ Matches Build Plan §7.4 task IDs.
 **Acceptance:**
 - accesskit tree built from widget tree.
 - Per-host bridges into UIAutomation / NSAccessibility / AT-SPI.
-- `oneos-notes` reads correctly on all three screen readers.
+- `layer36-notes` reads correctly on all three screen readers.
 
 ### P3-TEST-01 — UI snapshot testing
 
@@ -1416,7 +1416,7 @@ Matches Build Plan §7.4 task IDs.
 **Branch:** `p3-doc-01-tutorial`.
 **Acceptance:**
 - Step-by-step in `docs/book/src/tutorial/build-gui.md`.
-- Ends with a working mini-app (smaller than `oneos-notes`).
+- Ends with a working mini-app (smaller than `layer36-notes`).
 - External reader test: < 45 min to working app.
 
 ---
@@ -1471,7 +1471,7 @@ pub enum Widget {
 
 ```rust
 // in an app
-use oneos::ui::{Widget, Event, window, tree, events};
+use layer36::ui::{Widget, Event, window, tree, events};
 
 fn main() -> i32 {
     let win = window::create(WindowConfig {
@@ -1489,10 +1489,10 @@ fn main() -> i32 {
 
         match events::wait() {
             Event::WindowClosed(_) => break,
-            Event::ButtonClick(id) if id == oneos::ui::id("save-btn") => {
+            Event::ButtonClick(id) if id == layer36::ui::id("save-btn") => {
                 state.save();
             }
-            Event::TextFieldChange(id, value) if id == oneos::ui::id("editor") => {
+            Event::TextFieldChange(id, value) if id == layer36::ui::id("editor") => {
                 state.editor_value = value;
             }
             _ => {}
@@ -1503,19 +1503,19 @@ fn main() -> i32 {
 
 fn build_ui(state: &AppState) -> Widget {
     Widget::Stack {
-        id: oneos::ui::id("root"),
+        id: layer36::ui::id("root"),
         direction: Direction::Vertical,
         spacing: 8.0,
         padding: EdgeInsets::all(16.0),
         children: vec![
             Widget::TextField {
-                id: oneos::ui::id("editor"),
+                id: layer36::ui::id("editor"),
                 value: state.editor_value.clone(),
                 placeholder: "Type here".into(),
                 ..Default::default()
             },
             Widget::Button {
-                id: oneos::ui::id("save-btn"),
+                id: layer36::ui::id("save-btn"),
                 label: "Save".into(),
                 disabled: false,
                 style: Style::default(),
@@ -1657,7 +1657,7 @@ pub fn widget_to_a11y(widget: &Widget) -> Node {
 | Level | Addition |
 |---|---|
 | Snapshot | Per-host widget renders compared against reference PNGs |
-| E2E | Drive `oneos-notes` via scripted input; assert UI state |
+| E2E | Drive `layer36-notes` via scripted input; assert UI state |
 | Accessibility | Automated screen-reader simulation via accesskit trees |
 | Performance | Frame-time histogram, layout time, reconcile time |
 | IME | Manual test matrix per host with CJK inputs |
@@ -1699,7 +1699,7 @@ Ten-minute manual test per host per input method. Documented in `docs/book/src/p
 - 10k-node layout: < 4 ms.
 - Reconcile a 1k-node tree with 10% changed: < 1 ms.
 - First paint after window creation: < 200 ms.
-- `oneos-notes` typing: 60 fps sustained.
+- `layer36-notes` typing: 60 fps sustained.
 
 ---
 
@@ -1714,9 +1714,9 @@ Ten-minute manual test per host per input method. Documented in `docs/book/src/p
 | 10k-node layout | < 4 ms | Criterion bench |
 | Reconcile 1k nodes, 10% changed | < 1 ms | Criterion bench |
 | UAPI dispatch (UI) | < 1 µs | Microbench |
-| `oneos-notes` typing 60 fps sustained | 60 fps | Frame histogram |
+| `layer36-notes` typing 60 fps sustained | 60 fps | Frame histogram |
 | Runtime binary size | < 80 MB | Artifact size |
-| `oneos-notes` RSS | < 120 MB | Process monitor |
+| `layer36-notes` RSS | < 120 MB | Process monitor |
 | First-open file dialog | < 150 ms | Manual timing |
 
 Miss > 10% = issue blocking exit criteria.
@@ -1774,7 +1774,7 @@ Auto-generated from WIT. Now includes `ui`, `gfx`, `audio`.
 
 ### 24.2 "Build a GUI app" tutorial
 
-Step-by-step construction of a mini-app (counter + text field) — smaller than `oneos-notes`. Language: Rust. Reader should finish in < 45 min.
+Step-by-step construction of a mini-app (counter + text field) — smaller than `layer36-notes`. Language: Rust. Reader should finish in < 45 min.
 
 ### 24.3 Widget catalog
 
@@ -1842,14 +1842,14 @@ Further ADRs as specific decisions surface (grant dialog design, theme token lay
 - [ ] 10,000-node layout bench: < 4 ms.
 
 ### Accessibility
-- [ ] accesskit tree built for `oneos-notes`.
+- [ ] accesskit tree built for `layer36-notes`.
 - [ ] VoiceOver (macOS) announces all widgets correctly.
 - [ ] Narrator (Windows) announces all widgets correctly.
 - [ ] Orca (Linux) announces all widgets correctly.
-- [ ] Keyboard-only navigation works end-to-end in `oneos-notes`.
+- [ ] Keyboard-only navigation works end-to-end in `layer36-notes`.
 
 ### Audio
-- [ ] `oneos-audio` playback of 44.1 kHz WAV, MP3, AAC works on all three hosts.
+- [ ] `layer36-audio` playback of 44.1 kHz WAV, MP3, AAC works on all three hosts.
 - [ ] Microphone capture fires UCap prompt; works when granted.
 
 ### UCap v0.2
@@ -1859,7 +1859,7 @@ Further ADRs as specific decisions surface (grant dialog design, theme token lay
 - [ ] OS-native privacy prompts integrate (macOS TCC, Windows privacy).
 
 ### Flagship
-- [ ] `oneos-notes` runs on Windows, macOS, Linux.
+- [ ] `layer36-notes` runs on Windows, macOS, Linux.
 - [ ] Passes native-feel rubric (see §29 Appendix C).
 - [ ] 60 fps sustained while typing.
 - [ ] Screen readers pass on all three hosts.
@@ -1887,7 +1887,7 @@ Further ADRs as specific decisions surface (grant dialog design, theme token lay
 
 ### External validation
 - [ ] One external developer builds and runs a GUI app via tutorial in < 45 min.
-- [ ] One external user runs `oneos-notes` and describes it as "feels native."
+- [ ] One external user runs `layer36-notes` and describes it as "feels native."
 - [ ] Retrospective written.
 - [ ] Phase 4 kickoff issue opened with link to Phase 4 plan doc.
 
@@ -1899,7 +1899,7 @@ Further ADRs as specific decisions surface (grant dialog design, theme token lay
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Widget lowering produces subtle per-host inconsistencies | Very high | High | Snapshot tests per host; native-feel rubric; dogfood `oneos-notes` on each host weekly |
+| Widget lowering produces subtle per-host inconsistencies | Very high | High | Snapshot tests per host; native-feel rubric; dogfood `layer36-notes` on each host weekly |
 | IME edge cases (surrogate pairs, pre-edit in list widgets) | High | High | Manual test matrix early; catch in Week 11, not Week 16 |
 | Accessibility retrofits found to be incomplete | Medium | High | Bake a11y at Week 6, not Week 12; screen-reader review per widget, not end of phase |
 | vello maturity not yet production-ready | Medium | Medium | Pinned version; fallback to simpler CPU rasterizer for edge cases; monitor upstream |
@@ -1916,7 +1916,7 @@ Further ADRs as specific decisions surface (grant dialog design, theme token lay
 |---|---|---|---|
 | Scope creep: "let's add tray icons / notifications / themes" | Very high | High | Deferred list is a live doc; every new ask lands there first |
 | WIT churn as widgets are implemented | High | Medium | Week 1–2 is WIT-locked after review; changes post-Week-4 need ADR |
-| `oneos-notes` ambition scope | High | Medium | LOC cap (2000); features frozen Week 14 |
+| `layer36-notes` ambition scope | High | Medium | LOC cap (2000); features frozen Week 14 |
 | Perf tuning eats all buffer | Medium | Medium | Performance targets set Week 1; accept trailing regressions within 10% |
 | Founder time pressure | Very high | Critical | Phase 3 is the longest so far. Phase 3 cannot be compressed without sacrificing quality. Extend calendar, do not drop scope. |
 
@@ -1925,7 +1925,7 @@ Further ADRs as specific decisions surface (grant dialog design, theme token lay
 Stop and reassess if:
 - Week 8 and any one host doesn't have widgets rendering.
 - Week 12 and screen reader test fails on any host.
-- Week 14 and frame time is > 25 ms for `oneos-notes`.
+- Week 14 and frame time is > 25 ms for `layer36-notes`.
 - Any critical widget (Button, TextField, List) lacks native rendering on any host by Week 10.
 - IME matrix has > 3 red cells at Week 13.
 
@@ -1944,12 +1944,12 @@ Stop and reassess if:
 
 ### 28.2 What Phase 4 extends
 
-- Add `oneos:ui/touch`, `oneos:ui/gesture`, `oneos:ui/haptics`.
+- Add `layer36:ui/touch`, `layer36:ui/gesture`, `layer36:ui/haptics`.
 - Mobile lifecycle events: background, foreground, memory pressure.
 - Mobile-appropriate default layouts (bottom sheets, tab bars).
 - iOS-specific adapter using UIKit.
 - Android-specific adapter using View system.
-- Sensor UAPI module (`oneos:sensors`).
+- Sensor UAPI module (`layer36:sensors`).
 
 ### 28.3 What Phase 4 must NOT touch
 
@@ -2007,7 +2007,7 @@ Full table checked in as `crates/adapter-common/src/input/keymap.rs`.
 
 ### Appendix C — "Feels native" rubric
 
-Passing rubric for `oneos-notes` on each host. 10 checks per host, need ≥ 9/10:
+Passing rubric for `layer36-notes` on each host. 10 checks per host, need ≥ 9/10:
 
 1. Window chrome matches host convention (traffic lights / min-max-close / Wayland client-side).
 2. Menu bar semantics correct (macOS app menu; Windows/Linux per-window).
@@ -2026,30 +2026,30 @@ Documented in `docs/book/src/phase3/native-feel-rubric.md`.
 
 ```bash
 # Run GUI app with auto-grant
-oneos run --auto-grant --gui apps/oneos-notes/notes.wasm
+layer36 run --auto-grant --gui apps/layer36-notes/notes.wasm
 
 # Force software rendering (for low-spec debug)
-ONEOS_GPU_BACKEND=cpu oneos run app.wasm
+LAYER36_GPU_BACKEND=cpu layer36 run app.wasm
 
 # Enable frame-time tracing
-ONEOS_LOG=oneos_runtime::ui::frame=trace oneos run app.wasm
+LAYER36_LOG=layer36_runtime::ui::frame=trace layer36 run app.wasm
 
 # Dump a11y tree
-oneos run --dump-a11y-tree app.wasm
+layer36 run --dump-a11y-tree app.wasm
 
 # Run IME test manually
-oneos run --ime-debug apps/oneos-notes/notes.wasm
+layer36 run --ime-debug apps/layer36-notes/notes.wasm
 ```
 
 ### Appendix E — Debugging a stuck frame
 
 1. Enable frame trace:
    ```
-   ONEOS_LOG=oneos_runtime::ui::frame=trace,oneos_gfx=debug oneos run app.wasm
+   LAYER36_LOG=layer36_runtime::ui::frame=trace,layer36_gfx=debug layer36 run app.wasm
    ```
 2. Check reconciler time in trace output.
 3. Check layout time.
-4. If GPU-bound: `ONEOS_GPU_CAPTURE=1` produces a RenderDoc-compatible capture.
+4. If GPU-bound: `LAYER36_GPU_CAPTURE=1` produces a RenderDoc-compatible capture.
 5. If WASM-bound: `--profile wall` produces a flame graph.
 
 ### Appendix F — Retrospective template
@@ -2098,12 +2098,92 @@ Save as `docs/book/src/phase3/retro.md` at the end of Phase 3.
 
 ---
 
+---
+
+## Development Log
+
+> **Phase Status:** Not started  
+> **Started:** —  
+> **Completed:** —  
+> **Last Updated:** 2026-05-01
+
+### Progress Summary
+
+_Not started. Awaiting completion of all [Phase 2 exit criteria](#3-success-criteria)._
+
+---
+
+### Exit Criteria Status
+
+Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each criterion is met.
+
+| # | Criterion | Status |
+|---|-----------|--------|
+| 1 | `ui`, `gfx`, `audio` WIT modules frozen at v0.1.0 | Not done |
+| 2 | All three modules implemented in Linux, macOS, Windows adapters; CI green | Not done |
+| 3 | `layer36-notes` runs on all three desktop OSes | Not done |
+| 4 | `layer36-notes` UI feels native on each host (documented rubric passed) | Not done |
+| 5 | Steady-state frame time ≤ 16.7 ms on 2020+ hardware | Not done |
+| 6 | Cold start for GUI app < 300 ms to first paint | Not done |
+| 7 | IME (CJK input) works correctly on all three hosts | Not done |
+| 8 | Screen reader reads `layer36-notes` on Win/macOS/Linux (Narrator/VoiceOver/Orca) | Not done |
+| 9 | UCap v0.2: system-UI grant dialog fires for GUI apps | Not done |
+| 10 | 60 fps sustained with a 10,000-node widget tree benchmark | Not done |
+| 11 | DPI scaling at 100%, 125%, 150%, 200% renders correctly (snapshot tests) | Not done |
+| 12 | Dark mode follows system preference and switches live | Not done |
+| 13 | Runtime binary size < 80 MB | Not done |
+| 14 | Per-app RSS < 120 MB for `layer36-notes` | Not done |
+| 15 | ADRs 0013 through at least 0020 merged | Not done |
+
+---
+
+### Completed Tasks
+
+| Task ID | Task | Completed | Notes |
+|---------|------|-----------|-------|
+| — | — | — | — |
+
+---
+
+### In Progress
+
+| Task ID | Task | Started | Blockers |
+|---------|------|---------|----------|
+| — | — | — | — |
+
+---
+
+### ADRs Filed This Phase
+
+| ADR | Title | Status | Merged |
+|-----|-------|--------|--------|
+| ADR-0013 | Widget lowering strategy — “native three of five” rule (Answer D) | Pending | — |
+| ADR-0014 | Layout engine: Taffy (flexbox subset) | Pending | — |
+| ADR-0015 | 2D canvas: vello on wgpu | Pending | — |
+| ADR-0016 | GPU API: WebGPU-compatible subset via wgpu | Pending | — |
+
+_ADRs 0017–0020 to be determined during Phase 3 work._
+
+---
+
+### Blockers & Open Questions
+
+_None currently._
+
+---
+
+### Notes & Learnings
+
+_Nothing yet. Add time-stamped notes as work progresses: widget protocol design decisions, per-host adapter quirks (AppKit/Win32/GTK4), frame budget findings, IME complications, accessibility tree insights, things to carry into Phase 4._
+
+---
+
 ## Closing
 
-Phase 3 is the phase where OneOS either becomes a real platform or becomes another also-ran cross-platform framework. Every prior phase was infrastructure; this one is the first user-visible surface, and users judge platforms in the first thirty seconds. A button that feels slightly wrong, a scroll that lags, a menu that doesn't open where expected — these are not papercuts, they are the reasons platforms die.
+Phase 3 is the phase where Layer36 either becomes a real platform or becomes another also-ran cross-platform framework. Every prior phase was infrastructure; this one is the first user-visible surface, and users judge platforms in the first thirty seconds. A button that feels slightly wrong, a scroll that lags, a menu that doesn't open where expected — these are not papercuts, they are the reasons platforms die.
 
-Take the sixteen weeks. Build the widget protocol twice if the first draft feels off. Run the screen reader on `oneos-notes` every Friday. Test IME on real hardware with real users. Measure frame times. Fix what's slow. When a native widget fights the abstract widget, side with the native widget — our abstract layer exists to serve users, not developers.
+Take the sixteen weeks. Build the widget protocol twice if the first draft feels off. Run the screen reader on `layer36-notes` every Friday. Test IME on real hardware with real users. Measure frame times. Fix what's slow. When a native widget fights the abstract widget, side with the native widget — our abstract layer exists to serve users, not developers.
 
-When Phase 3 ships, someone who has never heard of OneOS will open `oneos-notes` on their MacBook and then on their Windows work machine and think "oh, nice, is this made by Apple? Microsoft?" That confusion is the highest compliment this phase can earn. Earn it.
+When Phase 3 ships, someone who has never heard of Layer36 will open `layer36-notes` on their MacBook and then on their Windows work machine and think "oh, nice, is this made by Apple? Microsoft?" That confusion is the highest compliment this phase can earn. Earn it.
 
 — end of document —

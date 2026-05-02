@@ -1,0 +1,22 @@
+[package]
+name = "layer36-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+build = "build.rs"
+
+[[bin]]
+name = "layer36"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+layer36-runtime = { path = "../runtime", version = "0.1.0-dev" }
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+sha2 = "0.10.9"

@@ -1,9 +1,10 @@
-layer6x6 — Comprehensive Build Plan
+Layer36 — Comprehensive Build Plan
 
 > **Version:** 0.1 — Working draft
 > **Status:** Pre-phase-0 (planning)
 > **Horizon:** 24 months to v1.0
-> **Codename:** OneOS
+> **Name:** Layer36
+> **Development repo:** `incyashraj/layer6x6` while the 6x6 portability matrix is being built.
 > **Tagline:** Write once. Run on everything. Natively.
 
 ---
@@ -31,6 +32,7 @@ layer6x6 — Comprehensive Build Plan
 18. [Glossary](#18-glossary)
 19. [References & Prior Art](#19-references--prior-art)
 20. [Appendices](#20-appendices)
+21. [Development Status](#21-development-status)
 
 ---
 
@@ -51,7 +53,7 @@ All task IDs follow the pattern `P{phase}-{area}-{n}` (e.g. `P2-UAPI-05`). Refer
 
 ### 1.1 What we're building
 
-**OneOS** is a universal application platform: a portable runtime, a universal standard library (UAPI), a capability-based permission system (UCap), a package format, and a distribution layer that together let developers write an app **once** and have it run natively — with access to each platform's hardware and performance — on Windows, macOS, Linux, iOS, Android, and the web.
+**Layer36** is a universal application platform: a portable runtime, a universal standard library (UAPI), a capability-based permission system (UCap), a package format, and a distribution layer that together let developers write an app **once** and have it run natively — with access to each platform's hardware and performance — on Windows, macOS, Linux, iOS, Android, and the web.
 
 It is not:
 - A new operating system in the Linux kernel sense
@@ -74,11 +76,11 @@ Four forces are converging:
 
 ### 1.3 Success criteria (v1.0)
 
-At v1.0 launch (end of month 24), OneOS must be able to:
+At v1.0 launch (end of month 24), Layer36 must be able to:
 
 | # | Criterion | Target |
 |---|-----------|--------|
-| 1 | Run the same `.oneapp` binary on | Windows 11+, macOS 13+, Ubuntu 22.04+, iOS 16+, Android 12+, browsers w/ WASM2 |
+| 1 | Run the same `.l36app` binary on | Windows 11+, macOS 13+, Ubuntu 22.04+, iOS 16+, Android 12+, browsers w/ WASM2 |
 | 2 | Hello-world startup time | < 100 ms cold, < 20 ms warm |
 | 3 | GUI app frame budget | 16.7 ms (60 fps) on M1/Snapdragon 8 Gen 2 |
 | 4 | Binary size overhead vs native | < 3× for a typical productivity app |
@@ -91,7 +93,7 @@ At v1.0 launch (end of month 24), OneOS must be able to:
 
 ```mermaid
 gantt
-    title OneOS — 24 Month Roadmap
+    title Layer36 — 24 Month Roadmap
     dateFormat  YYYY-MM-DD
     axisFormat  %b '%y
 
@@ -128,7 +130,7 @@ Every scalable computing abstraction has solved fragmentation the same way: **in
 - Multiple OSes (server) → **JVM bytecode / .NET CLR** → any OS
 - Multiple devices (web) → **HTML/JS/CSS** → any browser
 
-Each time, the N² problem became 2N. OneOS applies the same transformation to native apps: **one portable bytecode, one standard library, one permission model** at the center; a thin adapter per host on the outside.
+Each time, the N² problem became 2N. Layer36 applies the same transformation to native apps: **one portable bytecode, one standard library, one permission model** at the center; a thin adapter per host on the outside.
 
 ### 2.3 Prior art (what we learn from each)
 
@@ -161,16 +163,16 @@ Every concept here has a one-sentence canonical definition. Memorize them — th
 
 ### 3.1 Universal IR (UIR)
 
-The portable bytecode and ABI that every OneOS app compiles to. **Base: WebAssembly Core + Component Model.** Extensions we add: structured Unicode strings at ABI level, SIMD 128 mandatory, threads mandatory, exception handling (proposal) required, GC (proposal) required.
+The portable bytecode and ABI that every Layer36 app compiles to. **Base: WebAssembly Core + Component Model.** Extensions we add: structured Unicode strings at ABI level, SIMD 128 mandatory, threads mandatory, exception handling (proposal) required, GC (proposal) required.
 
 ### 3.2 Universal API (UAPI)
 
-The standard library every OneOS app calls. **Defined as WIT interfaces** (WebAssembly Interface Types). Implemented by the runtime on each host by calling native OS APIs.
+The standard library every Layer36 app calls. **Defined as WIT interfaces** (WebAssembly Interface Types). Implemented by the runtime on each host by calling native OS APIs.
 
 UAPI modules (target set for v1.0):
 
 ```
-oneos:
+layer36:
 ├── io/         # stdio, files, pipes, stdout, stderr
 ├── net/        # TCP, UDP, QUIC, HTTP, WebSocket, DNS
 ├── time/       # clocks, timers, scheduling
@@ -203,7 +205,7 @@ Canonical capability examples:
 
 ### 3.4 Runtime
 
-The binary installed on each host that loads and executes `.oneapp` bundles. Responsibilities: bytecode JIT/AOT, UAPI dispatch, UCap enforcement, app lifecycle, window/surface management, update delivery.
+The binary installed on each host that loads and executes `.l36app` bundles. Responsibilities: bytecode JIT/AOT, UAPI dispatch, UCap enforcement, app lifecycle, window/surface management, update delivery.
 
 **One runtime per host OS.** Internal architecture is shared across hosts; only the host-adapter layer differs.
 
@@ -211,12 +213,12 @@ The binary installed on each host that loads and executes `.oneapp` bundles. Res
 
 The per-OS module inside the runtime that translates UAPI calls into native OS calls. Example: `uapi::ui::window::create` on macOS host adapter calls AppKit `NSWindow`; on Windows, `CreateWindowExW`; on Android, `Activity` binder calls.
 
-### 3.6 App Bundle (`.oneapp`)
+### 3.6 App Bundle (`.l36app`)
 
 The distributable package. A zip-structured container:
 
 ```
-myapp.oneapp/
+myapp.l36app/
 ├── manifest.toml        # app id, version, capabilities, entry point, locale, deps
 ├── code.wasm            # WASM component (main entry)
 ├── modules/             # additional WASM components (lazy-loaded)
@@ -247,10 +249,10 @@ flowchart TB
         SRC --> COMP
         WIT --> COMP
         COMP --> BUNDLE
-        BUNDLE --> APP[myapp.oneapp]
+        BUNDLE --> APP[myapp.l36app]
     end
 
-    subgraph Runtime["OneOS Runtime (per host)"]
+    subgraph Runtime["Layer36 Runtime (per host)"]
         LOADER[Bundle Loader]
         VERIFY[Signature + Manifest Verifier]
         PERM[UCap Enforcer]
@@ -290,7 +292,7 @@ flowchart LR
     D --> E[wasm-tools optimize]
     E --> F[Merge assets + manifest]
     F --> G[Sign + attest]
-    G --> H[myapp.oneapp]
+    G --> H[myapp.l36app]
     H --> I{{Marketplace upload}}
     H --> J{{Side-load / dev install}}
 ```
@@ -299,7 +301,7 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    START([User opens myapp.oneapp]) --> CHECK{Signature valid?}
+    START([User opens myapp.l36app]) --> CHECK{Signature valid?}
     CHECK -- no --> REJECT[Show error, refuse]
     CHECK -- yes --> MANIFEST[Parse manifest.toml]
     MANIFEST --> CAPS{New capabilities?}
@@ -325,7 +327,7 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant App as OneOS App
+    participant App as Layer36 App
     participant Rt as Runtime
     participant DB as Policy DB
     participant Host as Host OS
@@ -468,7 +470,7 @@ Every choice below is a **decision**, not a suggestion. Departing from it requir
 
 ### 5.10 Package format
 
-- **Decision:** `.oneapp` = zip with deterministic ordering, using `zip` crate.
+- **Decision:** `.l36app` = zip with deterministic ordering, using `zip` crate.
 - **Signing:** Ed25519 signature over the manifest + content hashes; signature verified before any WASM executes.
 - **Reproducible builds:** deterministic timestamps, sorted file order, locked toolchain versions.
 
@@ -492,7 +494,7 @@ Every choice below is a **decision**, not a suggestion. Departing from it requir
 | `wit-bindgen` | Generate language bindings from WIT |
 | `wasm-tools` | Component composition, optimization, validation |
 | `wasmtime` CLI | Local execution for debugging |
-| `oneos` CLI | Our product CLI (built Phase 5) |
+| `layer36` CLI | Our product CLI (built Phase 5) |
 | `just` | Task runner (thin layer over make) |
 | `pre-commit` | Lint + format hooks |
 
@@ -520,7 +522,7 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 | 2 | UAPI v0.1 (CLI) | Ship the first useful cross-platform CLI app through our runtime. | Months 4–6 |
 | 3 | UI + Graphics | First GUI app running natively on Win / macOS / Linux. | Months 7–10 |
 | 4 | Mobile Hosts | Same app runs on iOS and Android. | Months 11–14 |
-| 5 | Developer SDK | A dev can `oneos new hello && oneos run` in under 60 seconds. | Months 15–18 |
+| 5 | Developer SDK | A dev can `layer36 new hello && layer36 run` in under 60 seconds. | Months 15–18 |
 | 6 | Distribution & Identity | Users discover, install, update, and sign in across devices. | Months 19–22 |
 | 7 | v1.0 Hardening | ParkSure migrated end-to-end; public launch. | Months 23–24 |
 
@@ -529,7 +531,7 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 **Objective:** Everything a new contributor needs to start writing code on day 1.
 
 **Deliverables:**
-- Monorepo `oneos/oneos` on GitHub (MIT + Apache-2.0 dual license).
+- Monorepo `layer36/layer36` on GitHub (MIT + Apache-2.0 dual license).
 - README, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT.
 - Repo skeleton (see §7.0).
 - First ADR (ADR-0001: "We use Rust for the runtime").
@@ -548,13 +550,13 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 **Objective:** "Same `.wasm` file runs via our CLI on Linux, macOS, Windows and prints Hello World. Nothing else."
 
 **Deliverables:**
-- `oneos-runtime` crate wrapping Wasmtime with the beginnings of our API surface.
-- `oneos` CLI v0.0.1 with `oneos run <file.wasm>`.
+- `layer36-runtime` crate wrapping Wasmtime with the beginnings of our API surface.
+- `layer36` CLI v0.0.1 with `layer36 run <file.wasm>`.
 - Cross-platform CI matrix green.
 - ADR-0002: "We use Wasmtime." ADR-0003: "We adopt Component Model."
 
 **Exit criteria:**
-- One Rust file → `cargo component build` → `oneos run foo.wasm` prints hello on all three desktop OSes.
+- One Rust file → `cargo component build` → `layer36 run foo.wasm` prints hello on all three desktop OSes.
 - Startup time < 200 ms cold on mid-range hardware.
 - Runtime binary size < 30 MB.
 
@@ -565,11 +567,11 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 **Scope for v0.1:** `io`, `fs`, `net` (HTTP client only), `time`, `locale`.
 
 **Deliverables:**
-- WIT files for each v0.1 module in `wit/oneos/*.wit`.
+- WIT files for each v0.1 module in `wit/layer36/*.wit`.
 - Host adapter implementations for Linux, macOS, Windows.
 - `wit-bindgen` generated Rust, Go, and TypeScript stubs.
-- Sample apps: `oneos-curl` (HTTP client), `oneos-cat` (file reader), `oneos-clock` (time demo).
-- Integration test harness that runs sample apps under `oneos run` on all three hosts and diffs stdout.
+- Sample apps: `layer36-curl` (HTTP client), `layer36-cat` (file reader), `layer36-clock` (time demo).
+- Integration test harness that runs sample apps under `layer36 run` on all three hosts and diffs stdout.
 
 **Exit criteria:**
 - All three sample apps pass on all three hosts in CI.
@@ -590,15 +592,15 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 - 2D canvas fallback (vello / wgpu) for custom-drawn widgets.
 - Layout engine (flexbox subset based on Taffy).
 - Input (keyboard, mouse, touch surrogate).
-- Sample app: `oneos-notes` — minimal note-taking app with list, editor, save to disk.
+- Sample app: `layer36-notes` — minimal note-taking app with list, editor, save to disk.
 
 **Exit criteria:**
-- `oneos-notes` runs on all three desktop OSes and feels native (no Electron-style "web app in a chrome").
+- `layer36-notes` runs on all three desktop OSes and feels native (no Electron-style "web app in a chrome").
 - 60 fps steady on 2020+ hardware.
 
 ### Phase 4 — Mobile Hosts (Months 11–14)
 
-**Objective:** The same `.oneapp` that ran on desktop in Phase 3 runs on iOS and Android without source changes, only with mobile-appropriate layout.
+**Objective:** The same `.l36app` that ran on desktop in Phase 3 runs on iOS and Android without source changes, only with mobile-appropriate layout.
 
 **Deliverables:**
 - Runtime port to iOS (via Embedded Swift bridge + Wasmtime-on-iOS).
@@ -609,7 +611,7 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 - Mobile CI (GitHub Actions macOS runners for iOS; Linux for Android via AVD).
 
 **Exit criteria:**
-- `oneos-notes` runs on iPhone and Android phone.
+- `layer36-notes` runs on iPhone and Android phone.
 - Battery usage comparable to a native Swift/Kotlin equivalent of the same app (≤ 1.5× acceptable for v0.1).
 
 ### Phase 5 — Developer SDK (Months 15–18)
@@ -617,7 +619,7 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 **Objective:** A developer's first 60 seconds.
 
 **Deliverables:**
-- `oneos` CLI: `new`, `build`, `run`, `test`, `deploy`, `doctor`.
+- `layer36` CLI: `new`, `build`, `run`, `test`, `deploy`, `doctor`.
 - Project templates (Rust, Go, TypeScript).
 - Hot reload during dev.
 - Debugger integration (DWARF via `wasm-tools component-debug`, VSCode extension).
@@ -625,7 +627,7 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 - Language servers / IntelliSense work for WIT-generated bindings in all three first-class languages.
 
 **Exit criteria:**
-- `oneos new hello --lang rust && cd hello && oneos run` produces a running GUI on the dev's machine in under 60 seconds.
+- `layer36 new hello --lang rust && cd hello && layer36 run` produces a running GUI on the dev's machine in under 60 seconds.
 - Stack traces in app crashes point to app source, not WASM offsets.
 
 ### Phase 6 — Distribution & Identity (Months 19–22)
@@ -634,22 +636,22 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 
 **Deliverables:**
 - Marketplace backend (axum + Postgres + S3).
-- Marketplace frontend (itself a OneOS app — deep dogfood).
+- Marketplace frontend (itself a Layer36 app — deep dogfood).
 - Signing infrastructure (developer keypairs, revocation, transparency log).
-- Delta updates (`.oneapp` diff format).
+- Delta updates (`.l36app` diff format).
 - Identity: `did:key` support in runtime, `uapi::identity` module, DID resolution UI.
 - Age-rating, content guidelines, moderation tooling (basic).
 
 **Exit criteria:**
 - A new user can install runtime, sign in, install 3 apps, and each app recognizes them as same user — on two different devices — without manual account setup in each app.
-- Developer can `oneos deploy` and the update reaches users' devices within 24 hours.
+- Developer can `layer36 deploy` and the update reaches users' devices within 24 hours.
 
 ### Phase 7 — v1.0 Hardening (Months 23–24)
 
 **Objective:** Ship.
 
 **Deliverables:**
-- ParkSure migrated to OneOS (all 6 client apps → 1 codebase).
+- ParkSure migrated to Layer36 (all 6 client apps → 1 codebase).
 - Security audit by external firm (Trail of Bits or similar).
 - Performance work: meet all §1.3 + §11 targets.
 - Documentation pass: every UAPI function documented with examples.
@@ -668,7 +670,7 @@ Each phase's tasks are listed with an ID. Tasks are independent enough to be ass
 ### 7.0 Repo skeleton (Phase 0)
 
 ```
-oneos/
+layer36/
 ├── Cargo.toml              # workspace
 ├── rust-toolchain.toml     # pinned stable + wasm32 targets
 ├── .github/
@@ -680,8 +682,8 @@ oneos/
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── crates/
 │   ├── runtime/            # the host runtime (Phase 1+)
-│   ├── cli/                # `oneos` command (Phase 1+)
-│   ├── bundle/             # .oneapp format (Phase 6)
+│   ├── cli/                # `layer36` command (Phase 1+)
+│   ├── bundle/             # .l36app format (Phase 6)
 │   ├── policy/             # UCap policy engine (Phase 2+)
 │   └── host-adapter/
 │       ├── linux/
@@ -690,13 +692,13 @@ oneos/
 │       ├── ios/            # Phase 4
 │       └── android/        # Phase 4
 ├── wit/
-│   └── oneos/
+│   └── layer36/
 │       ├── io.wit
 │       ├── net.wit
 │       └── ...             # one file per UAPI module
 ├── apps/                   # sample & dogfood apps
-│   ├── oneos-curl/
-│   ├── oneos-notes/
+│   ├── layer36-curl/
+│   ├── layer36-notes/
 │   └── marketplace/        # Phase 6
 ├── docs/
 │   ├── adr/                # decision records
@@ -726,7 +728,7 @@ oneos/
 | P0-DOCS-03 | CONTRIBUTING.md covering PR flow, DCO, commit style | 0.5d |
 | P0-COMM-01 | Discord server + #general, #dev, #design, #help | 0.5d |
 | P0-COMM-02 | Twitter/X account, first announcement thread draft | 0.5d |
-| P0-LEGAL-01 | Trademark search for "OneOS" (defer filing) | 0.5d |
+| P0-LEGAL-01 | Trademark search for "Layer36" (defer filing) | 0.5d |
 | P0-HIRE-01 | Write contributor guide for first external PR | 0.5d |
 
 ### 7.2 Phase 1 tasks
@@ -737,13 +739,13 @@ oneos/
 | P1-RT-02 | Load + instantiate a WASM component | 1d |
 | P1-RT-03 | Define minimal host import table (print, exit) | 1d |
 | P1-RT-04 | Configurable fuel / memory limits | 1d |
-| P1-CLI-01 | `oneos` binary using `clap` | 1d |
-| P1-CLI-02 | `oneos run <file>` subcommand | 1d |
-| P1-CLI-03 | `oneos version`, `oneos doctor` basic | 0.5d |
+| P1-CLI-01 | `layer36` binary using `clap` | 1d |
+| P1-CLI-02 | `layer36 run <file>` subcommand | 1d |
+| P1-CLI-03 | `layer36 version`, `layer36 doctor` basic | 0.5d |
 | P1-CI-01 | Cross-platform CI matrix | 2d |
 | P1-CI-02 | Release artifacts (tar.gz, zip, .msi, .pkg) | 2d |
 | P1-TEST-01 | Integration test: hello-world.wasm runs on all hosts | 1d |
-| P1-DOC-01 | Quickstart: "Run your first WASM under oneos" | 1d |
+| P1-DOC-01 | Quickstart: "Run your first WASM under layer36" | 1d |
 | P1-DOC-02 | ADR-0002 (Wasmtime), ADR-0003 (Component Model) | 1d |
 | P1-PERF-01 | Baseline startup, memory benchmarks | 2d |
 | P1-SEC-01 | Threat model document v0.1 | 2d |
@@ -752,20 +754,20 @@ oneos/
 
 | ID | Task | Est |
 |---|---|---|
-| P2-UAPI-01 | Write `wit/oneos/io.wit` (stdio, log) | 1d |
-| P2-UAPI-02 | Write `wit/oneos/fs.wit` (open, read, write, stat) | 2d |
-| P2-UAPI-03 | Write `wit/oneos/net.wit` (HTTP client only) | 2d |
-| P2-UAPI-04 | Write `wit/oneos/time.wit` (clock, sleep, timer) | 1d |
-| P2-UAPI-05 | Write `wit/oneos/locale.wit` (current locale, format) | 1d |
+| P2-UAPI-01 | Write `wit/layer36/io.wit` (stdio, log) | 1d |
+| P2-UAPI-02 | Write `wit/layer36/fs.wit` (open, read, write, stat) | 2d |
+| P2-UAPI-03 | Write `wit/layer36/net.wit` (HTTP client only) | 2d |
+| P2-UAPI-04 | Write `wit/layer36/time.wit` (clock, sleep, timer) | 1d |
+| P2-UAPI-05 | Write `wit/layer36/locale.wit` (current locale, format) | 1d |
 | P2-ADPT-01 | Implement io/fs/net/time adapters on Linux | 3d |
 | P2-ADPT-02 | Implement same on macOS | 3d |
 | P2-ADPT-03 | Implement same on Windows | 3d |
 | P2-BIND-01 | Rust bindings via wit-bindgen | 1d |
 | P2-BIND-02 | Go bindings via TinyGo | 2d |
 | P2-BIND-03 | TypeScript bindings via jco | 2d |
-| P2-APP-01 | Write `oneos-curl` sample | 2d |
-| P2-APP-02 | Write `oneos-cat` sample | 1d |
-| P2-APP-03 | Write `oneos-clock` sample | 1d |
+| P2-APP-01 | Write `layer36-curl` sample | 2d |
+| P2-APP-02 | Write `layer36-cat` sample | 1d |
+| P2-APP-03 | Write `layer36-clock` sample | 1d |
 | P2-TEST-01 | Harness: run sample, diff stdout across hosts | 2d |
 | P2-SEC-01 | UCap minimum: cap per UAPI module, grant-at-launch | 3d |
 | P2-DOC-01 | WIT style guide | 1d |
@@ -776,19 +778,19 @@ oneos/
 | ID | Task | Est |
 |---|---|---|
 | P3-UI-01 | Widget protocol design RFC | 3d |
-| P3-UI-02 | `wit/oneos/ui.wit` | 2d |
+| P3-UI-02 | `wit/layer36/ui.wit` | 2d |
 | P3-UI-03 | Layout engine (Taffy integration) | 3d |
 | P3-UI-04 | Window + event loop abstractions | 3d |
 | P3-UI-05 | macOS adapter: NSWindow + NSView widget bridge | 5d |
 | P3-UI-06 | Windows adapter: Win32 + DirectComposition | 5d |
 | P3-UI-07 | Linux adapter: GTK4 bridge | 5d |
-| P3-GFX-01 | `wit/oneos/gfx.wit` (2D canvas) | 2d |
+| P3-GFX-01 | `wit/layer36/gfx.wit` (2D canvas) | 2d |
 | P3-GFX-02 | `wgpu` integration in runtime | 3d |
 | P3-GFX-03 | 2D canvas via vello | 5d |
 | P3-GFX-04 | 3D API (WebGPU-compatible subset) | 5d |
 | P3-INPUT-01 | Keyboard + mouse input | 2d |
 | P3-INPUT-02 | Text input + IME | 3d |
-| P3-APP-01 | Design and build `oneos-notes` | 5d |
+| P3-APP-01 | Design and build `layer36-notes` | 5d |
 | P3-A11Y-01 | Screen reader integration per platform | 5d |
 | P3-TEST-01 | UI snapshot testing harness | 3d |
 | P3-PERF-01 | Frame budget dashboard | 2d |
@@ -814,7 +816,7 @@ oneos/
 | P4-AND-07 | APK/AAB packaging | 2d |
 | P4-UI-01 | Touch + gesture UAPI | 3d |
 | P4-UI-02 | Mobile-appropriate default layouts | 3d |
-| P4-APP-01 | `oneos-notes` port verified on both mobile OSes | 3d |
+| P4-APP-01 | `layer36-notes` port verified on both mobile OSes | 3d |
 | P4-CI-01 | iOS CI on GitHub Actions macOS runners | 3d |
 | P4-CI-02 | Android CI via emulator | 3d |
 
@@ -822,10 +824,10 @@ oneos/
 
 | ID | Task | Est |
 |---|---|---|
-| P5-CLI-01 | `oneos new <name> --lang <rust\|go\|ts>` scaffolding | 3d |
-| P5-CLI-02 | `oneos build` wrapper around component builds | 2d |
-| P5-CLI-03 | `oneos test` harness integration | 2d |
-| P5-CLI-04 | `oneos doctor` environment check | 2d |
+| P5-CLI-01 | `layer36 new <name> --lang <rust\|go\|ts>` scaffolding | 3d |
+| P5-CLI-02 | `layer36 build` wrapper around component builds | 2d |
+| P5-CLI-03 | `layer36 test` harness integration | 2d |
+| P5-CLI-04 | `layer36 doctor` environment check | 2d |
 | P5-HOT-01 | Hot reload architecture RFC | 2d |
 | P5-HOT-02 | Hot reload implementation (re-instantiate w/ state migration) | 7d |
 | P5-DBG-01 | DWARF in component format | 5d |
@@ -844,7 +846,7 @@ oneos/
 
 | ID | Task | Est |
 |---|---|---|
-| P6-BUNDLE-01 | `.oneapp` format spec | 3d |
+| P6-BUNDLE-01 | `.l36app` format spec | 3d |
 | P6-BUNDLE-02 | Packer / unpacker in bundle crate | 3d |
 | P6-BUNDLE-03 | Delta update diff format | 5d |
 | P6-SIGN-01 | Developer keypair enrollment flow | 3d |
@@ -856,7 +858,7 @@ oneos/
 | P6-MP-04 | Reviews + ratings | 3d |
 | P6-MP-05 | Categories + featured content | 2d |
 | P6-MP-06 | Age-rating + moderation tooling | 5d |
-| P6-MP-07 | Marketplace frontend (itself a OneOS app) | 10d |
+| P6-MP-07 | Marketplace frontend (itself a Layer36 app) | 10d |
 | P6-ID-01 | `did:key` implementation | 3d |
 | P6-ID-02 | `did:web` resolver | 3d |
 | P6-ID-03 | `uapi::identity` module | 3d |
@@ -869,7 +871,7 @@ oneos/
 
 | ID | Task | Est |
 |---|---|---|
-| P7-PARK-01 | ParkSure architecture review for OneOS port | 3d |
+| P7-PARK-01 | ParkSure architecture review for Layer36 port | 3d |
 | P7-PARK-02 | Port driver app | 10d |
 | P7-PARK-03 | Port operator app | 10d |
 | P7-PARK-04 | Port valet ops + lot admin | 10d |
@@ -879,7 +881,7 @@ oneos/
 | P7-SEC-02 | Remediation of findings | 10d |
 | P7-PERF-01 | Meet §1.3 and §11 targets | 20d |
 | P7-DOC-01 | Documentation pass (every UAPI fn) | 15d |
-| P7-DOC-02 | Migration guide "from Electron/Flutter/RN to OneOS" | 5d |
+| P7-DOC-02 | Migration guide "from Electron/Flutter/RN to Layer36" | 5d |
 | P7-I18N-01 | Runtime + marketplace in 6 locales | 10d |
 | P7-A11Y-01 | Full accessibility audit | 5d |
 | P7-LAUNCH-01 | Marketing site | 5d |
@@ -929,7 +931,7 @@ Every phase owns a benchmark suite. Results published to a dashboard.
 - `bench_startup` — cold start, warm start, first frame.
 - `bench_uapi_hot_path` — UAPI call overhead (measured in ns).
 - `bench_ui_frame` — build + render a 1000-widget tree.
-- `bench_bundle_install` — extract + verify `.oneapp`.
+- `bench_bundle_install` — extract + verify `.l36app`.
 
 CI fails if benchmarks regress > 5% without an approved ADR.
 
@@ -1061,15 +1063,15 @@ CREATE INDEX idx_grant_app ON ucap_grant(app_id);
 
 | Metric | Target | Measured how |
 |---|---|---|
-| Cold start (hello-world CLI) | < 100 ms | `oneos run` wall time, average of 20 |
+| Cold start (hello-world CLI) | < 100 ms | `layer36 run` wall time, average of 20 |
 | Warm start (same binary) | < 20 ms | As above, after first run |
 | UAPI dispatch overhead | < 500 ns | Microbench inside runtime |
 | First frame (GUI hello-world) | < 300 ms | Timestamp diff from exec to first paint |
 | Steady-state frame | 16.7 ms (60 fps) | Per-frame histogram |
-| Bundle install time (10 MB) | < 2 s | `oneos install` wall time |
+| Bundle install time (10 MB) | < 2 s | `layer36 install` wall time |
 | Bundle delta update (1 MB) | < 500 ms | Download + apply |
 | Memory overhead (runtime + empty app) | < 40 MB RSS | `ps` after hello-world exits |
-| Binary size overhead vs native equivalent | < 3× | Size of `.oneapp` vs hand-written native |
+| Binary size overhead vs native equivalent | < 3× | Size of `.l36app` vs hand-written native |
 
 Every phase has a subset of these to hit. §7 tasks link to the relevant target.
 
@@ -1170,12 +1172,12 @@ Any change to UIR, UAPI, UCap, or bundle format requires an RFC:
 | Founder-only team cannot ship 24-month plan | High | Critical | Recruit co-founder (systems or DeFi+security background) by end of Phase 1 |
 | Funding runway | Medium | Critical | Build MVP (Phase 2) before fundraising; OSS + sponsorships supplement |
 | Burnout | Medium | High | Hard 40h/wk default; explicit rest weeks between phases |
-| ParkSure time conflict | High | High | Phase OneOS work around ParkSure milestones; use Phase 7 to migrate ParkSure itself — one-stone-two-birds |
+| ParkSure time conflict | High | High | Schedule Layer36 work around ParkSure milestones; use Phase 7 to migrate ParkSure itself — one-stone-two-birds |
 
 ### 14.4 Legal (deferred per founder instruction; tracked)
 
 Items to revisit at Phase 6:
-- Trademark "OneOS" + "META-OS".
+- Trademark "Layer36" + "META-OS".
 - GPL-vs-permissive implications of any linked code.
 - Export controls on crypto (BIS EAR classification).
 - App Store ToS compliance posture.
@@ -1247,7 +1249,7 @@ Rank order for the next three hires after founder:
 
 ### 16.3 Co-founder question
 
-Y's existing memory says a technical co-founder with DeFi or security background is the highest-leverage hire for Bouclier. For OneOS the best co-founder profile is different: **systems / compiler / OS kernel background**. Not the same person. If Bouclier and OneOS both need a co-founder, these are two different people and time has to be allocated to recruiting both separately.
+Y's existing memory says a technical co-founder with DeFi or security background is the highest-leverage hire for Bouclier. For Layer36 the best co-founder profile is different: **systems / compiler / OS kernel background**. Not the same person. If Bouclier and Layer36 both need a co-founder, these are two different people and time has to be allocated to recruiting both separately.
 
 ---
 
@@ -1307,11 +1309,11 @@ Total infra without salaries: < $1k/month for 18 months, < $2k/month after launc
 - **Capability** — An unforgeable token granting the right to perform an operation on a resource.
 - **Component Model** — WebAssembly specification adding typed interfaces and composition to WASM modules.
 - **DID** — Decentralized Identifier. A W3C standard for self-sovereign identity.
-- **Host Adapter** — The per-OS module inside the OneOS runtime that maps UAPI to native calls.
+- **Host Adapter** — The per-OS module inside the Layer36 runtime that maps UAPI to native calls.
 - **JIT** — Just-In-Time compilation.
-- **Manifest** — `manifest.toml` describing a OneOS app's metadata and required capabilities.
-- **OneOS** — Product name for the META-OS described here.
-- **UAPI** — Universal API. The standard library exposed to every OneOS app.
+- **Manifest** — `manifest.toml` describing a Layer36 app's metadata and required capabilities.
+- **Layer36** — Product name for the META-OS described here.
+- **UAPI** — Universal API. The standard library exposed to every Layer36 app.
 - **UCap** — Universal Capabilities. The permission model.
 - **UIR** — Universal Intermediate Representation. The bytecode every app compiles to (= WASM).
 - **WASI** — WebAssembly System Interface. A standard set of host interfaces for WASM.
@@ -1367,10 +1369,10 @@ Total infra without salaries: < $1k/month for 18 months, < $2k/month after launc
 
 ## 20. Appendices
 
-### Appendix A — Example WIT file (`wit/oneos/fs.wit`)
+### Appendix A — Example WIT file (`wit/layer36/fs.wit`)
 
 ```wit
-package oneos:fs@0.1.0;
+package layer36:fs@0.1.0;
 
 interface types {
   record file-stat {
@@ -1466,10 +1468,10 @@ splash     = "assets/splash.png"
 
 ```rust
 // myapp/src/main.rs
-use oneos::fs::{self, OpenMode};
-use oneos::ui::{Window, Stack, Text, Button};
+use layer36::fs::{self, OpenMode};
+use layer36::ui::{Window, Stack, Text, Button};
 
-fn main() -> oneos::Result<()> {
+fn main() -> layer36::Result<()> {
     let mut file = fs::open("~/notes.txt", OpenMode::Read)?;
     let contents = file.read_to_string()?;
 
@@ -1484,7 +1486,7 @@ fn main() -> oneos::Result<()> {
     window.show_and_run()
 }
 
-fn save(_ev: oneos::ui::Event) {
+fn save(_ev: layer36::ui::Event) {
     // ...
 }
 ```
@@ -1526,35 +1528,35 @@ Links, prior art, discussion threads.
 Day-by-day for Phase 0 week 1, no room for "what do I do next?"
 
 **Monday**
-- [ ] Create GitHub org `oneos`
-- [ ] Create repo `oneos/oneos`
-- [ ] Add MIT + Apache-2.0 LICENSE files
-- [ ] Init Cargo workspace
+- [ ] Create GitHub org `layer36`
+- [ ] Create repo `layer36/layer36`
+- [x] Add MIT + Apache-2.0 LICENSE files
+- [x] Init Cargo workspace
 - [ ] Push first commit: `chore: init workspace`
 
 **Tuesday**
-- [ ] Write README.md (vision, quickstart placeholder, contribute link)
-- [ ] Write SECURITY.md (disclosure email, PGP key)
-- [ ] Write CONTRIBUTING.md (DCO, commit style, PR flow)
-- [ ] Write CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
+- [x] Write README.md (vision, quickstart placeholder, contribute link)
+- [x] Write SECURITY.md (disclosure email, PGP key)
+- [x] Write CONTRIBUTING.md (DCO, commit style, PR flow)
+- [x] Write CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 
 **Wednesday**
-- [ ] Add GitHub Actions: `ci.yml` with fmt + clippy + test
+- [x] Add GitHub Actions: `ci.yml` with fmt + clippy + test
 - [ ] Set up branch protection on `main`
-- [ ] Add issue + PR templates
-- [ ] Add labels (phase:0…7, area:runtime, area:uapi, …)
+- [x] Add issue + PR templates
+- [x] Add labels (phase:0…7, area:runtime, area:uapi, …)
 
 **Thursday**
 - [ ] Create Discord server; write rules and channel descriptions
 - [ ] Cross-link Discord ↔ repo in all files
-- [ ] mdBook skeleton with TOC matching §1–§20 of this plan
+- [x] mdBook skeleton with TOC matching §1–§20 of this plan
 - [ ] Commit this plan as `docs/book/src/BUILD_PLAN.md`
 
 **Friday**
-- [ ] Write ADR-0001 (Rust choice)
-- [ ] First blog post draft: "Why I'm building OneOS"
-- [ ] Twitter/X announcement thread draft
-- [ ] Retrospective: what took longer than expected; update this plan
+- [x] Write ADR-0001 (Rust choice)
+- [x] First blog post draft: "Why I'm building Layer36"
+- [x] Twitter/X announcement thread draft
+- [x] Retrospective: what took longer than expected; update this plan
 
 ### Appendix F — Nomenclature cheat sheet
 
@@ -1565,9 +1567,111 @@ What we call things vs. what the ecosystem calls them. Keep these consistent in 
 | UIR | WASM bytecode | Same thing; UIR is our platform-branded name. |
 | UAPI | WASI + our additions | Superset of WASI. |
 | UCap | WASI capabilities + grants + policy | We add the grant UX + policy DB. |
-| OneOS runtime | WASM runtime (Wasmtime) | Ours = Wasmtime + our adapters + loaders + policy. |
+| Layer36 runtime | WASM runtime (Wasmtime) | Ours = Wasmtime + our adapters + loaders + policy. |
 | Host Adapter | (no standard name) | Our term for the OS-specific translation layer. |
-| .oneapp | WASM component + manifest | Packaged form. |
+| .l36app | WASM component + manifest | Packaged form. |
+
+---
+
+---
+
+## 21. Development Status
+
+> **Current Phase:** Phase 1 — POC Runtime, with account-bound Phase 0 items still pending  
+> **Project Status:** In Progress  
+> **Phase 0 Start:** 2026-05-01  
+> **v1.0 Target:** ~April 2028  
+> **Last Updated:** 2026-05-02
+
+This section is the living status board for all of Layer36. Update it at every phase boundary, major milestone, and architectural pivot. It is the first thing a returning contributor should read.
+
+---
+
+### 21.1 Phase Overview
+
+| # | Phase | Status | Started | Completed | Notes |
+|---|-------|--------|---------|-----------|-------|
+| 0 | Foundation | In Progress | 2026-05-01 | — | Renamed from OneOS to Layer36 on 2026-05-02; local scaffold and docs checks green. |
+| 1 | POC Runtime | In Progress | 2026-05-02 | — | Runtime, CLI, WIT host imports, hello-world fixture, CI harness, fuel/memory limits, release packaging, quickstart, and threat model are in place; remote cross-host results pending. |
+| 2 | UAPI v0.1 (CLI) | Not started | — | — | |
+| 3 | UI + Graphics | Not started | — | — | |
+| 4 | Mobile Hosts | Not started | — | — | |
+| 5 | Developer SDK | Not started | — | — | |
+| 6 | Distribution & Identity | Not started | — | — | |
+| 7 | v1.0 Hardening | Not started | — | — | |
+
+---
+
+### 21.2 Cross-Phase Milestones
+
+| Milestone | Target Phase | Status | Date | Notes |
+|-----------|-------------|--------|------|-------|
+| First external contributor PR merged | 0 | Pending | — | |
+| `layer36 run hello.wasm` green on 3 desktop OSes | 1 | Pending | — | |
+| `layer36-curl` byte-identical across Linux/macOS/Win | 2 | Pending | — | |
+| `layer36-notes` GUI running on Win/macOS/Linux | 3 | Pending | — | |
+| `layer36-notes` running on iOS + Android | 4 | Pending | — | |
+| 60-second `layer36 new && layer36 run` walkthrough | 5 | Pending | — | |
+| First app published via external developer | 6 | Pending | — | |
+| ParkSure fully migrated to Layer36 | 7 | Pending | — | |
+| Co-founder / first key hire onboarded | Phase 1 target | Pending | — | |
+| v1.0 public launch | 7 | Pending | — | |
+
+---
+
+### 21.3 ADR Log
+
+Append as each ADR is drafted and merged. Full ADR files live in `docs/adr/`.
+
+| ADR | Title | Phase | Status | Merged |
+|-----|-------|-------|--------|--------|
+| ADR-0001 | Rust for the runtime | 0 | Accepted locally | — |
+| ADR-0002 | Wasmtime as runtime engine | 1 | Accepted locally | — |
+| ADR-0003 | Adopt WASM Component Model from day one | 1 | Accepted locally | — |
+
+_ADRs 0004 onward will be added here as they are drafted and merged across phases._
+
+---
+
+### 21.4 Team
+
+| Role | Person | Joined | Notes |
+|------|--------|--------|-------|
+| Founder / BDFL | Y | 2026-05-01 | |
+
+---
+
+### 21.5 Open Decisions
+
+Decisions actively under discussion, not yet resolved into an ADR.
+
+| # | Question | Context | Target By |
+|---|----------|---------|----------|
+| — | — | — | — |
+
+---
+
+### 21.6 Running Log
+
+Short time-stamped entries for anything significant — ecosystem developments, pivots, key learnings, notable contributor events.
+
+| Date | Entry |
+|------|-------|
+| 2026-05-01 | Project initiated. Build Plan and all Phase Plans written. Phase 0 underway. |
+| 2026-05-02 | Project renamed from OneOS to Layer36 after preliminary trademark search found material OneOS conflicts. Plans, docs, CLI placeholders, WIT namespace examples, and bundle extension updated. |
+| 2026-05-02 | Phase 0 local scaffold verified: Cargo build/test/fmt/clippy, mdBook build, cargo-deny, and setup script are green. |
+| 2026-05-02 | Phase 1 local development started: `crates/runtime` and `crates/cli` added, Wasmtime 43.0.2 selected for Rust 1.91.1, and initial `layer36` CLI commands verified. |
+| 2026-05-02 | First Phase 1 end-to-end local run: `cargo-component` built the Rust hello-world component and `layer36 run` printed `Hello, Layer36!` through WIT host imports. |
+| 2026-05-02 | Local release build verified: `cargo build --release --workspace` produced `target/release/layer36`, and the release binary ran the hello-world component. |
+| 2026-05-02 | Phase 1 CI harness added: Linux/macOS/Windows test matrix now builds release binaries, builds the hello component, checks its SHA-256, and runs it through `layer36`. |
+| 2026-05-02 | Phase 1 limit enforcement added: `layer36 run --fuel 1` and `layer36 run --mem-limit 0` fail cleanly with exit code 4. |
+| 2026-05-02 | Phase 1 release packaging added: `release.yml` builds five planned artifacts on tags and `scripts/package.sh` produced a local 4.4 MB macOS tarball. |
+| 2026-05-02 | Phase 1 quickstart added to the mdBook and linked from README. Volunteer timing is still pending. |
+| 2026-05-02 | `layer36 doctor` improved to find `cargo-component` under Cargo home and report both Phase 1 WASM targets. |
+| 2026-05-02 | Phase 1 Threat Model v0.1 added with STRIDE analysis and explicit deferred security work. |
+| 2026-05-02 | Phase 1 benchmark suite added with Criterion, a print-loop component fixture, warning-only CI regression checks, and an Apple M4 local baseline published in the mdBook. |
+| 2026-05-02 | Phase 1 test harness consolidated in `scripts/test-phase1.sh` so local setup and CI both build the hello component before running fixture-backed tests. |
+| 2026-05-02 | Drafted the Phase 2 kickoff issue under `docs/governance/phase-2-kickoff-issue.md`; actual GitHub issue creation remains pending until Phase 1 exits. |
 
 ---
 

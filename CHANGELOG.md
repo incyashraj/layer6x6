@@ -1,0 +1,54 @@
+# Changelog
+
+All notable changes to Layer36 will be documented in this file.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+Layer36 uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+Pre-1.0: breaking changes may occur in any minor release.
+
+---
+
+## [Unreleased]
+
+### Added
+- Initial repository scaffold: licenses, README, CI, ADR-0001.
+- Phase Plans (0–7) and Build Plan in `Plan/`.
+- `docs/adr/` with ADR template and ADR-0001.
+- `docs/book/` mdBook scaffold.
+- Phase 0 workspace sentinel so baseline Cargo commands succeed before runtime crates exist.
+- Code of Conduct, first-PR guide, legal search record, launch drafts, and setup script scaffolding.
+- mdBook CI coverage on pull requests.
+- Phase 0 status tracker, repository label definitions, and good-first-issue drafts.
+- Preliminary naming/trademark risk record and external setup checklists.
+- Project rename from OneOS to Layer36 across plans, docs, CLI placeholders, WIT examples, and bundle naming.
+- Phase 1 runtime and CLI crate scaffolds with `layer36 run`, `layer36 version`, and `layer36 doctor`.
+- ADR-0002 and ADR-0003 for Wasmtime and Component Model decisions.
+- Phase 1 WIT interface and Rust hello-world component fixture that prints through the Layer36 host import.
+- CI-backed Phase 1 hello fixture test with SHA-256 verification and `layer36 run` output assertion.
+- Phase 1 fuel and memory limit enforcement with clear `limit exceeded` CLI exits.
+- Phase 1 release packaging workflow and local package script for tar.gz/zip artifacts.
+- Phase 1 quickstart for building and running the hello-world component.
+- Phase 1 Threat Model v0.1 and updated security scope.
+- Phase 1 Criterion benchmark suite, warning-only regression check, and published local baseline.
+- Phase 1 test harness script that builds the hello component before running workspace tests.
+
+---
+
+<!-- Releases appear here as they are cut. Example format:
+
+## [0.1.0] — 2026-XX-XX
+
+### Added
+- …
+
+### Changed
+- …
+
+### Fixed
+- …
+
+[0.1.0]: https://github.com/incyashraj/layer6x6/releases/tag/v0.1.0
+-->
+
+[Unreleased]: https://github.com/incyashraj/layer6x6/compare/HEAD...HEAD
