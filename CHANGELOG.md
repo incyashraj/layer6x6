@@ -25,7 +25,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 - Phase 1 runtime and CLI crate scaffolds with `layer36 run`, `layer36 version`, and `layer36 doctor`.
 - ADR-0002 and ADR-0003 for Wasmtime and Component Model decisions.
 - Phase 1 WIT interface and Rust hello-world component fixture that prints through the Layer36 host import.
-- CI-backed Phase 1 hello fixture test with SHA-256 verification and `layer36 run` output assertion.
+- CI-backed Phase 1 hello fixture test with SHA-256 logging and `layer36 run` output assertion.
 - Phase 1 fuel and memory limit enforcement with clear `limit exceeded` CLI exits.
 - Phase 1 release packaging workflow and local package script for tar.gz/zip artifacts.
 - Phase 1 quickstart for building and running the hello-world component.

@@ -1498,7 +1498,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 |---|-----------|--------|
 | 1 | `cargo build --release` produces `layer36` binary on Linux, macOS, Windows | Locally green on macOS; Linux/Windows CI pending |
 | 2 | `layer36 run hello.wasm` prints `Hello, Layer36!` on all three hosts | Locally green on macOS; Linux/Windows CI pending |
-| 3 | `hello.wasm` input is byte-for-byte identical across hosts (SHA-256 verified) | Harness added; remote CI result pending |
+| 3 | `hello.wasm` input is byte-for-byte identical across hosts (SHA-256 verified) | Not done; first CI showed host-dependent component bytes, so the harness now logs hashes while reproducibility work remains open |
 | 4 | Cold start < 200 ms on a 2020+ laptop | Locally green on Apple M4 at ~2.45 ms; cross-host baselines pending |
 | 5 | Release binary size < 30 MB (compressed) | Locally green on macOS at 4.4 MB compressed; CI artifact check pending |
 | 6 | Memory RSS < 40 MB after hello-world exits | Locally green on macOS at ~14.9 MiB; cross-host baselines pending |
@@ -1559,7 +1559,8 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 - 2026-05-02: Wasmtime latest is 44.0.1 but requires Rust 1.92.0; selected Wasmtime 43.0.2 while repo remains pinned to Rust 1.91.1.
 - 2026-05-02: `cargo-component` builds the sample component to `target/wasm32-wasip1/release/hello_world.wasm`; `layer36 run` prints `Hello, Layer36!` locally through the temporary WIT host imports.
 - 2026-05-02: `cargo build --release --workspace` succeeds locally and the release `target/release/layer36` binary runs the hello-world component.
-- 2026-05-02: Added a CLI integration test that checks the hello component SHA-256 (`e907967678ead7033c6f3dae26388f278768b8e838b82071d20949abfd555aca`) and asserts `layer36 run` prints `Hello, Layer36!`.
+- 2026-05-02: Added a CLI integration test that logs the hello component SHA-256 and asserts `layer36 run` prints `Hello, Layer36!`. First GitHub CI showed component bytes differ by host, so byte-for-byte reproducibility remains open.
+- 2026-05-02: Replaced the bundled `cargo-deny-action@v1` CI path with `cargo-deny 0.19.4` installed by Cargo, because the older action could not parse RustSec advisories carrying CVSS 4.0 vectors.
 - 2026-05-02: Updated `.github/workflows/ci.yml` so the Linux/macOS/Windows test matrix installs `cargo-component`, builds the hello fixture, builds release binaries, and runs the fixture-backed workspace tests.
 - 2026-05-02: Enforced Phase 1 runtime limits with Wasmtime fuel and a store resource limiter. CLI now maps out-of-fuel and memory-cap failures to exit code 4.
 - 2026-05-02: Added `.github/workflows/release.yml` and `scripts/package.sh` for Phase 1 release artifacts. Local `aarch64-apple-darwin` package is 4.4 MB compressed and includes the binary, README, and dual licenses.
