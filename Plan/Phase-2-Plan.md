@@ -2034,7 +2034,7 @@ The generated import host exists now as well. `crates/runtime/src/phase2_host.rs
 
 `layer36 run` now has an initial Phase 2 execution path. The runtime still tries the Phase 1 `app` world first, then falls back to the Phase 2 `cli` world and installs the generated UAPI host into the Wasmtime linker. The local Phase 2 adapter is intentionally small: stdio, basic filesystem, time, and locale are wired; HTTP is still explicit `Unsupported` until a real network adapter lands.
 
-The first real Phase 2 component proof exists under `test/integration/phase2-smoke`. It targets the Phase 2 `cli` world, reads `phase2-smoke-input.txt` through `layer36:fs/files`, calls time and locale imports, and writes its result through `layer36:io/stdio`. CI now builds this component as a shared fixture and runs it through `layer36 run --grant fs.read:phase2-smoke-input.txt` on the cross-host test matrix.
+The first real Phase 2 component proof exists under `test/integration/phase2-smoke`. It targets the Phase 2 `cli` world, reads `phase2-smoke-input.txt` through `layer36:fs/files`, calls time and locale imports, and writes its result through `layer36:io/stdio`. CI can build this component as a shared fixture and run it through `layer36 run --grant fs.read:phase2-smoke-input.txt` on the cross-host test matrix. The local test suite now also checks the missing-grant path: without `fs.read`, the host maps the call to `permission-denied`, the component writes a short stderr message, and exits with a stable non-zero code.
 
 GitHub Actions is now in budget-aware mode. Normal pushes run the cheap checks:
 format, clippy, Linux workspace tests, and docs. The expensive full path builds
@@ -2060,7 +2060,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | 6 | `layer36-curl <url>` works identically on all three hosts | Not done |
 | 7 | `layer36-cat <file>` works identically on all three hosts | Not done |
 | 8 | `layer36-clock` prints time in user locale on all three hosts | Not done |
-| 9 | UCap v0.1: manifest-declared caps enforced; unauthorized calls trap cleanly | Started: CLI preflight, runtime UAPI guard, dispatcher scaffold, generated WIT type bridge, generated host wiring, resource table, runtime linker install, and a Phase 2 smoke component proof exist; real adapters, HTTP, and final sample apps remain |
+| 9 | UCap v0.1: manifest-declared caps enforced; unauthorized calls trap cleanly | Started: CLI preflight, runtime UAPI guard, dispatcher scaffold, generated WIT type bridge, generated host wiring, resource table, runtime linker install, Phase 2 smoke happy path, and missing-grant proof exist; real adapters, HTTP, and final sample apps remain |
 | 10 | Startup overhead for a UAPI-using app < 150 ms | Not done |
 | 11 | UAPI hot-path dispatch < 1 µs (microbenchmark) | Not done |
 | 12 | Developer who knows Rust but not WASM can write a CLI in < 30 min using docs | Not done |
@@ -2090,6 +2090,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-SEC-01E-d | Runtime Phase 2 linker install | 2026-05-03 | `layer36 run` can now fall back from the Phase 1 `app` world to the Phase 2 `cli` world and install generated UAPI imports with a local adapter for stdio, basic fs, time, and locale. |
 | P2-SEC-01E-e | Phase 2 smoke component proof | 2026-05-03 | Added `test/integration/phase2-smoke`, a real Phase 2 `cli` component that reads a file, calls time/locale, writes to stdout, and is wired into the cross-host CI fixture path. |
 | P2-CI-01 | Budget-aware CI mode | 2026-05-04 | Normal push CI now runs cheap Linux checks only; full cross-host matrix, benchmarks, cargo-deny, fixtures, and the dedicated Phase 2 binding checkpoint run manually with `full = true` or a `[full-ci]` commit marker. |
+| P2-SEC-01F | Phase 2 smoke missing-grant proof | 2026-05-04 | Added a CLI integration test proving the smoke component receives `fs.permission-denied` without `fs.read`, writes a clear stderr message, and exits non-zero without reading host files. |
 
 ---
 
@@ -2097,7 +2098,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
-| P2-APP-01A | Promote smoke proof into formal sample path | 2026-05-03 | Smoke proof exists; next step is turning it into the first named sample app and expanding denial tests. |
+| P2-APP-01A | Promote smoke proof into formal sample path | 2026-05-03 | Smoke happy path and missing-grant proof exist; next step is turning the pattern into the first named sample app. |
 | P2-BIND-01A | Rust SDK crate skeleton | 2026-05-03 | Host binding shape is known; app-facing wrapper crate still needs design. |
 
 ---

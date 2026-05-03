@@ -53,7 +53,9 @@ There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2
 component can read a file, call time and locale, and print through the UAPI
 path. CI builds that component and runs it through `layer36 run` on the host
-test matrix.
+test matrix. The same smoke app now has a missing-grant test too: without
+`fs.read`, the host returns permission denied and the component exits with a
+clear stderr message.
 
 The proof apps are:
 

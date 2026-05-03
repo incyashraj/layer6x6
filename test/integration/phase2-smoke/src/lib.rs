@@ -2,7 +2,10 @@
 mod bindings;
 
 use bindings::layer36::{
-    fs::{files, types::OpenMode},
+    fs::{
+        files,
+        types::{FsError, OpenMode},
+    },
     io::stdio,
     locale::{format, info, types::NumberStyle},
     time::clock,
@@ -21,6 +24,12 @@ impl Guest for Component {
 
         let file = match files::open("phase2-smoke-input.txt", OpenMode::Read) {
             Ok(file) => file,
+            Err(FsError::PermissionDenied) => {
+                let stderr = stdio::stderr();
+                let _ = write_line(&stderr, "phase2-smoke permission denied: fs.read");
+                let _ = stderr.flush();
+                return 25;
+            }
             Err(_) => return 20,
         };
 

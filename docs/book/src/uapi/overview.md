@@ -167,7 +167,8 @@ network adapter.
 The first proof component lives at `test/integration/phase2-smoke`. It reads a
 file, checks time and locale, and writes output through the Phase 2 imports.
 This is the first end-to-end proof that the UAPI path is more than generated
-types.
+types. The matching denial test runs the same component without `fs.read`; the
+host returns permission denied before native file access happens.
 
 ## Rust Binding Checkpoint
 

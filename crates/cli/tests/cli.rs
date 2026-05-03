@@ -209,6 +209,32 @@ fn configured_phase2_smoke_component_runs_through_uapi() {
 }
 
 #[test]
+fn configured_phase2_smoke_component_denies_missing_file_grant() {
+    let Some(path) = configured_phase2_smoke_component() else {
+        return;
+    };
+
+    let dir = tempfile::tempdir().expect("create temp dir");
+    std::fs::write(
+        dir.path().join("phase2-smoke-input.txt"),
+        "Layer36 Phase 2 input\n",
+    )
+    .expect("write Phase 2 smoke input");
+
+    let output = layer36()
+        .current_dir(dir.path())
+        .args(["run"])
+        .arg(path)
+        .output()
+        .expect("run layer36 Phase 2 smoke component without grant");
+
+    assert_eq!(output.status.code(), Some(25));
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("phase2-smoke permission denied: fs.read"));
+}
+
+#[test]
 fn fuel_limit_exits_with_limit_code() {
     let Some(path) = configured_hello_component() else {
         return;
