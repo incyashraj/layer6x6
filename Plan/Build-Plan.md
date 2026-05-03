@@ -1683,7 +1683,7 @@ Short time-stamped entries for anything significant: ecosystem developments, piv
 | 2026-05-04 | Added the first named Phase 2 sample app, `apps/layer36-clock`, and a hidden fixed-time test flag so clock output can be tested without depending on the real wall clock. |
 | 2026-05-04 | Added a Layer36-native `io.args` import, app argument forwarding through `layer36 run ... -- <args>`, and the first `apps/layer36-cat` sample with grant and denial tests. |
 | 2026-05-04 | Added the first `apps/layer36-curl` sample and a plain HTTP adapter slice. Local tests now prove granted localhost GET works and missing `net.connect` is denied before network access. |
-| 2026-05-04 | Added the first Rust guest SDK crate at `crates/bindings-rust` and migrated `apps/layer36-clock` to `use layer36::{io, time, locale}` instead of raw app-local bindings. |
+| 2026-05-04 | Added the first Rust guest SDK crate at `crates/bindings-rust` and migrated the Rust sample apps to `use layer36::{io, fs, net, time, locale}` instead of raw app-local binding paths. |
 
 ---
 

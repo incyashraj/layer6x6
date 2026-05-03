@@ -1,11 +1,8 @@
-#[allow(warnings)]
-mod bindings;
-
-use bindings::layer36::{
-    io::{args, stdio},
-    net::{http_client, types::NetError},
+use layer36::{
+    io::{args, stdio, streams::OutputStream},
+    net::{self, NetError},
+    Guest,
 };
-use bindings::Guest;
 
 struct Component;
 
@@ -19,7 +16,7 @@ impl Guest for Component {
             return 2;
         }
 
-        let body = match http_client::get(&url) {
+        let body = match net::get(&url) {
             Ok(body) => body,
             Err(NetError::PermissionDenied) => {
                 let _ = write_line(&stderr, "layer36-curl: permission denied");
@@ -47,8 +44,8 @@ impl Guest for Component {
     }
 }
 
-fn write_line(stream: &bindings::layer36::io::streams::OutputStream, value: &str) -> bool {
+fn write_line(stream: &OutputStream, value: &str) -> bool {
     stream.write_all(value.as_bytes()).is_ok() && stream.write_all(b"\n").is_ok()
 }
 
-bindings::export!(Component with_types_in bindings);
+layer36::export!(Component);

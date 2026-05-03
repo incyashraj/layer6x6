@@ -12,7 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
-- First Rust guest SDK crate at `crates/bindings-rust`, published locally as package `layer36`, plus `apps/layer36-clock` migrated onto the SDK facade.
+- First Rust guest SDK crate at `crates/bindings-rust`, published locally as package `layer36`, plus the Rust sample apps migrated onto the SDK facade.
 - First Phase 2 HTTP adapter slice and `apps/layer36-curl` sample for granted localhost GETs.
 - Phase 2 `io.args` import and `layer36 run ... -- <args>` forwarding, used by the new `apps/layer36-cat` sample.
 - First named Phase 2 sample app, `apps/layer36-clock`, plus a hidden `layer36 run --test-time` flag for deterministic clock tests.

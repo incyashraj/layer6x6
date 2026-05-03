@@ -1,14 +1,8 @@
-#[allow(warnings)]
-mod bindings;
-
-use bindings::layer36::{
-    fs::{
-        files,
-        types::{FsError, OpenMode},
-    },
-    io::{args, stdio},
+use layer36::{
+    fs::{self, FsError, OpenMode},
+    io::{args, stdio, streams::OutputStream},
+    Guest,
 };
-use bindings::Guest;
 
 struct Component;
 
@@ -29,7 +23,7 @@ impl Guest for Component {
                 continue;
             }
 
-            let file = match files::open(path, OpenMode::Read) {
+            let file = match fs::open(path, OpenMode::Read) {
                 Ok(file) => file,
                 Err(FsError::PermissionDenied) => {
                     let _ = write_error(&stderr, "permission denied", path);
@@ -76,19 +70,15 @@ impl Guest for Component {
     }
 }
 
-fn write_line(stream: &bindings::layer36::io::streams::OutputStream, value: &str) -> bool {
+fn write_line(stream: &OutputStream, value: &str) -> bool {
     stream.write_all(value.as_bytes()).is_ok() && stream.write_all(b"\n").is_ok()
 }
 
-fn write_error(
-    stream: &bindings::layer36::io::streams::OutputStream,
-    message: &str,
-    path: &str,
-) -> bool {
+fn write_error(stream: &OutputStream, message: &str, path: &str) -> bool {
     stream.write_all(b"layer36-cat: ").is_ok()
         && stream.write_all(message.as_bytes()).is_ok()
         && stream.write_all(b": ").is_ok()
         && write_line(stream, path)
 }
 
-bindings::export!(Component with_types_in bindings);
+layer36::export!(Component);

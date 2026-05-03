@@ -224,6 +224,6 @@ use layer36::{
 ```
 
 It lives at `crates/bindings-rust` and builds as package `layer36`. For now it
-is a thin facade over generated WIT imports. That is enough to move
-`apps/layer36-clock` away from raw generated module paths, while keeping the
-door open for nicer helpers as the UAPI settles.
+is a thin facade over generated WIT imports. That is enough to move the Rust
+sample apps away from raw generated module paths, while keeping the door open
+for nicer helpers as the UAPI settles.

@@ -7,6 +7,7 @@ repository = "https://github.com/incyashraj/layer6x6"
 rust-version = "1.91"
 
 [dependencies]
+layer36 = { path = "../../crates/bindings-rust" }
 wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
 
 [lib]
