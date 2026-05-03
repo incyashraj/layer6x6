@@ -116,3 +116,16 @@ flowchart LR
 
 Today this guard is tested inside the runtime. The generated Phase 2 dispatcher
 still needs to call it for each real WIT import.
+
+## Rust Binding Checkpoint
+
+The runtime has a feature named `phase2-bindings` that asks Wasmtime to generate
+Rust host bindings from the Phase 2 WIT:
+
+```bash
+cargo test -p layer36-runtime --features phase2-bindings
+```
+
+This is not the public SDK yet. It is a safety check for us while the WIT is
+still moving. It tells us whether the current WIT names turn into usable Rust
+names before we build adapter code on top of them.

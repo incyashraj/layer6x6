@@ -2024,6 +2024,8 @@ Phase 2 development has started with the UAPI contract layer. The first draft li
 
 The first UCap slices also exist now. `crates/manifest` parses the Phase 2 `manifest.toml` shape, validates app identity and capability strings, records default grants, and is exposed through `layer36 manifest check`. `crates/policy` resolves the run-session grants, checks required capabilities, supports simple wildcard resource matching, and is wired into `layer36 run --grant ...` / `--auto-grant` before the component starts. The runtime also carries the session policy and exposes a Phase 2 UAPI guard that maps calls such as `fs.read`, `fs.write`, and `net.connect` to capability checks before future host adapters do native work.
 
+The Rust host-binding checkpoint is in place behind the `phase2-bindings` runtime feature. It confirms the Phase 2 `cli` world generates through Wasmtime, that `run` is exposed as a host-side `i32` result, and that generated names such as `OpenMode::Read` and `HttpMethod::Get` are usable before we wire dispatch.
+
 This does not freeze UAPI v0.1 yet. It gives us a real contract to review, generate bindings from, and wire into host adapters.
 
 ---
@@ -2036,7 +2038,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 |---|-----------|--------|
 | 1 | All five UAPI modules (`io`, `fs`, `net`, `time`, `locale`) frozen as stable v0.1 WIT | Drafted, not frozen |
 | 2 | Each module implemented in Linux, macOS, Windows host adapters; CI green on all | Not done |
-| 3 | Rust bindings generated and usable (`cargo add layer36 && use layer36::fs` works) | Not done |
+| 3 | Rust bindings generated and usable (`cargo add layer36 && use layer36::fs` works) | Started: host-side Wasmtime binding checkpoint exists; SDK crate remains |
 | 4 | Go (TinyGo) bindings generated and usable; sample builds and runs | Not done |
 | 5 | TypeScript (jco) bindings generated and usable; sample builds and runs | Not done |
 | 6 | `layer36-curl <url>` works identically on all three hosts | Not done |
@@ -2064,6 +2066,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-SEC-01A | Manifest parser and capability string validator | 2026-05-03 | Added `crates/manifest` and `layer36 manifest check`; policy matching and runtime enforcement remain open. |
 | P2-SEC-01B | Session policy and CLI grant preflight | 2026-05-03 | Added `crates/policy`; `layer36 run` reads sidecar manifests and enforces required grants before execution. |
 | P2-SEC-01C | Runtime UAPI policy guard | 2026-05-03 | Runtime config now carries the session policy; `layer36_runtime::uapi` maps Phase 2 calls to capability checks. |
+| P2-UAPI-REVIEW | Rust host binding checkpoint | 2026-05-03 | Added `phase2-bindings` feature and CI job; confirms Phase 2 WIT generates usable host-side Rust names. |
 
 ---
 
@@ -2071,8 +2074,8 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
-| P2-UAPI-REVIEW | Review generated bindings and naming before freeze | 2026-05-03 | Check Rust binding shape next, before implementing adapters. |
-| P2-SEC-01D | Generated UAPI dispatcher wiring | 2026-05-03 | Needs Phase 2 binding shape review, then adapter method stubs. |
+| P2-SEC-01D | Generated UAPI dispatcher wiring | 2026-05-03 | Needs adapter trait stubs and call-by-call error mapping. |
+| P2-BIND-01A | Rust SDK crate skeleton | 2026-05-03 | Host binding shape is known; app-facing wrapper crate still needs design. |
 
 ---
 

@@ -7,6 +7,9 @@ repository.workspace = true
 rust-version.workspace = true
 publish = false
 
+[features]
+phase2-bindings = []
+
 [dependencies]
 layer36-manifest = { path = "../manifest", version = "0.1.0-dev" }
 layer36-policy = { path = "../policy", version = "0.1.0-dev" }

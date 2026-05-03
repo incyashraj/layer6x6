@@ -22,6 +22,11 @@ runtime. The newest piece is a runtime UAPI guard: it translates calls like
 `fs.read ./data/file.txt` or `net.connect api.example.com:443` into the exact
 capability check that must pass before an adapter talks to the host OS.
 
+The Phase 2 WIT also has a Rust host-binding checkpoint now. That means CI asks
+Wasmtime to generate bindings for the new `cli` world and checks a few important
+names. So far the shape is usable: `run` returns an `i32`, `OpenMode::Read`
+exists, and `HttpMethod::Get` exists.
+
 The proof apps are:
 
 - `layer36-curl`

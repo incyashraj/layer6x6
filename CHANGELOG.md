@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Phase 2 Rust host binding checkpoint behind the `phase2-bindings` runtime feature and CI coverage.
 - Phase 2 runtime UAPI guard that maps `io`, `fs`, `net`, `time`, and `locale` calls to UCap checks.
 - Phase 2 session policy crate and `layer36 run --grant/--auto-grant` checks for manifest-required capabilities.
 - Phase 2 sidecar manifest parser crate with capability string validation and `layer36 manifest check`.

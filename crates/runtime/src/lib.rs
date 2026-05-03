@@ -13,6 +13,9 @@ use wasmtime::{
 
 pub mod uapi;
 
+#[cfg(feature = "phase2-bindings")]
+pub mod phase2_bindings;
+
 use layer36_policy::SessionPolicy;
 use uapi::UapiGuard;
 
