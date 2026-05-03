@@ -141,11 +141,36 @@ pub trait IoAdapter {
     fn stdin(&self) -> std::result::Result<FileHandle, AdapterError>;
     fn stdout(&self) -> std::result::Result<FileHandle, AdapterError>;
     fn stderr(&self) -> std::result::Result<FileHandle, AdapterError>;
+    fn read_stream(
+        &self,
+        handle: &FileHandle,
+        n: u32,
+    ) -> std::result::Result<Vec<u8>, AdapterError>;
+    fn read_stream_to_string(
+        &self,
+        handle: &FileHandle,
+    ) -> std::result::Result<String, AdapterError>;
+    fn write_stream(
+        &self,
+        handle: &FileHandle,
+        bytes: &[u8],
+    ) -> std::result::Result<u32, AdapterError>;
+    fn write_all_stream(
+        &self,
+        handle: &FileHandle,
+        bytes: &[u8],
+    ) -> std::result::Result<(), AdapterError>;
+    fn flush_stream(&self, handle: &FileHandle) -> std::result::Result<(), AdapterError>;
     fn log(&self, level: &str, message: &str) -> std::result::Result<(), AdapterError>;
 }
 
 pub trait FsAdapter {
     fn open(&self, path: &str, mode: OpenMode) -> std::result::Result<FileHandle, AdapterError>;
+    fn read(&self, handle: &FileHandle, n: u32) -> std::result::Result<Vec<u8>, AdapterError>;
+    fn write(&self, handle: &FileHandle, bytes: &[u8]) -> std::result::Result<u32, AdapterError>;
+    fn seek_set(&self, handle: &FileHandle, pos: u64) -> std::result::Result<u64, AdapterError>;
+    fn seek_end(&self, handle: &FileHandle) -> std::result::Result<u64, AdapterError>;
+    fn stat_handle(&self, handle: &FileHandle) -> std::result::Result<FileStat, AdapterError>;
     fn stat(&self, path: &str) -> std::result::Result<FileStat, AdapterError>;
     fn list(&self, path: &str) -> std::result::Result<Vec<String>, AdapterError>;
     fn remove_file(&self, path: &str) -> std::result::Result<(), AdapterError>;
@@ -221,6 +246,41 @@ impl<'a> UapiDispatcher<'a> {
         self.adapter.fs().open(path, mode).map_err(Into::into)
     }
 
+    pub fn fs_read(
+        &self,
+        handle: &FileHandle,
+        n: u32,
+    ) -> std::result::Result<Vec<u8>, FsDispatchError> {
+        self.adapter.fs().read(handle, n).map_err(Into::into)
+    }
+
+    pub fn fs_write(
+        &self,
+        handle: &FileHandle,
+        bytes: &[u8],
+    ) -> std::result::Result<u32, FsDispatchError> {
+        self.adapter.fs().write(handle, bytes).map_err(Into::into)
+    }
+
+    pub fn fs_seek_set(
+        &self,
+        handle: &FileHandle,
+        pos: u64,
+    ) -> std::result::Result<u64, FsDispatchError> {
+        self.adapter.fs().seek_set(handle, pos).map_err(Into::into)
+    }
+
+    pub fn fs_seek_end(&self, handle: &FileHandle) -> std::result::Result<u64, FsDispatchError> {
+        self.adapter.fs().seek_end(handle).map_err(Into::into)
+    }
+
+    pub fn fs_stat_handle(
+        &self,
+        handle: &FileHandle,
+    ) -> std::result::Result<FileStat, FsDispatchError> {
+        self.adapter.fs().stat_handle(handle).map_err(Into::into)
+    }
+
     pub fn fs_stat(&self, path: &str) -> std::result::Result<FileStat, FsDispatchError> {
         self.check_fs(UapiCall::Fs(FsCall::Read {
             path: path.to_string(),
@@ -264,6 +324,35 @@ impl<'a> UapiDispatcher<'a> {
             path: to.to_string(),
         }))?;
         self.adapter.fs().rename(from, to).map_err(Into::into)
+    }
+
+    pub fn read_stream(&self, handle: &FileHandle, n: u32) -> DispatchResult<Vec<u8>> {
+        self.adapter.io().read_stream(handle, n).map_err(Into::into)
+    }
+
+    pub fn read_stream_to_string(&self, handle: &FileHandle) -> DispatchResult<String> {
+        self.adapter
+            .io()
+            .read_stream_to_string(handle)
+            .map_err(Into::into)
+    }
+
+    pub fn write_stream(&self, handle: &FileHandle, bytes: &[u8]) -> DispatchResult<u32> {
+        self.adapter
+            .io()
+            .write_stream(handle, bytes)
+            .map_err(Into::into)
+    }
+
+    pub fn write_all_stream(&self, handle: &FileHandle, bytes: &[u8]) -> DispatchResult<()> {
+        self.adapter
+            .io()
+            .write_all_stream(handle, bytes)
+            .map_err(Into::into)
+    }
+
+    pub fn flush_stream(&self, handle: &FileHandle) -> DispatchResult<()> {
+        self.adapter.io().flush_stream(handle).map_err(Into::into)
     }
 
     pub fn net_fetch(
@@ -476,6 +565,41 @@ mod tests {
             Ok(FileHandle { id: 3 })
         }
 
+        fn read_stream(
+            &self,
+            _handle: &FileHandle,
+            _n: u32,
+        ) -> std::result::Result<Vec<u8>, AdapterError> {
+            Ok(b"stdin".to_vec())
+        }
+
+        fn read_stream_to_string(
+            &self,
+            _handle: &FileHandle,
+        ) -> std::result::Result<String, AdapterError> {
+            Ok("stdin".to_string())
+        }
+
+        fn write_stream(
+            &self,
+            _handle: &FileHandle,
+            bytes: &[u8],
+        ) -> std::result::Result<u32, AdapterError> {
+            Ok(bytes.len() as u32)
+        }
+
+        fn write_all_stream(
+            &self,
+            _handle: &FileHandle,
+            _bytes: &[u8],
+        ) -> std::result::Result<(), AdapterError> {
+            Ok(())
+        }
+
+        fn flush_stream(&self, _handle: &FileHandle) -> std::result::Result<(), AdapterError> {
+            Ok(())
+        }
+
         fn log(&self, _level: &str, _message: &str) -> std::result::Result<(), AdapterError> {
             Ok(())
         }
@@ -489,6 +613,42 @@ mod tests {
         ) -> std::result::Result<FileHandle, AdapterError> {
             self.calls.borrow_mut().fs_open += 1;
             Ok(FileHandle { id: 4 })
+        }
+
+        fn read(
+            &self,
+            _handle: &FileHandle,
+            _n: u32,
+        ) -> std::result::Result<Vec<u8>, AdapterError> {
+            Ok(b"file".to_vec())
+        }
+
+        fn write(
+            &self,
+            _handle: &FileHandle,
+            bytes: &[u8],
+        ) -> std::result::Result<u32, AdapterError> {
+            Ok(bytes.len() as u32)
+        }
+
+        fn seek_set(
+            &self,
+            _handle: &FileHandle,
+            pos: u64,
+        ) -> std::result::Result<u64, AdapterError> {
+            Ok(pos)
+        }
+
+        fn seek_end(&self, _handle: &FileHandle) -> std::result::Result<u64, AdapterError> {
+            Ok(4)
+        }
+
+        fn stat_handle(&self, _handle: &FileHandle) -> std::result::Result<FileStat, AdapterError> {
+            Ok(FileStat {
+                size: 4,
+                modified_millis: 0,
+                is_dir: false,
+            })
         }
 
         fn stat(&self, _path: &str) -> std::result::Result<FileStat, AdapterError> {

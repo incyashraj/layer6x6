@@ -38,10 +38,10 @@ runtime now understands the words that generated WIT code will use when it asks
 for files, network, time, locale, and logs.
 
 The generated host traits are also wired for the first useful slice. HTTP,
-path-level filesystem operations, time, locale, logs, and stdio handles now call
-the dispatcher, which means UCap sits in front of those calls. File and stream
-read/write resources still need a real resource table before they can be safely
-used by apps.
+path-level filesystem operations, time, locale, logs, and stdio now call the
+dispatcher, which means UCap sits in front of those calls. A small resource
+table now owns opened file and stdio handles, so reads, writes, seeks, stats,
+and flushes can route through the adapter without exposing raw host IDs.
 
 The proof apps are:
 

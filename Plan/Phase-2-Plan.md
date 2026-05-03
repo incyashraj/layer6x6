@@ -2030,7 +2030,7 @@ The Rust host-binding checkpoint is in place behind the `phase2-bindings` runtim
 
 The generated WIT type bridge is also in place. `crates/runtime/src/phase2_bridge.rs` maps generated WIT records, enums, and module errors into the runtime dispatcher shapes. This is a small step, but it removes guesswork from the next one: the Wasmtime import traits can now call the dispatcher and return the right WIT-shaped values.
 
-The generated import host exists now as well. `crates/runtime/src/phase2_host.rs` implements Wasmtime's generated Phase 2 host traits over `UapiDispatcher` for path-level filesystem calls, HTTP fetch, time, locale, logging, and stdio handle creation. File and stream resource read/write methods are deliberately wired as "not implemented yet" until the runtime has a resource table that can safely own handles.
+The generated import host exists now as well. `crates/runtime/src/phase2_host.rs` implements Wasmtime's generated Phase 2 host traits over `UapiDispatcher` for path-level filesystem calls, HTTP fetch, time, locale, logging, and stdio. It now has a small resource table too, so opened files and stdio streams get runtime-owned IDs before file read/write/seek/stat and stream read/write/flush calls reach the host adapter.
 
 This does not freeze UAPI v0.1 yet. It gives us a real contract to review, generate bindings from, and wire into host adapters.
 
@@ -2050,7 +2050,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | 6 | `layer36-curl <url>` works identically on all three hosts | Not done |
 | 7 | `layer36-cat <file>` works identically on all three hosts | Not done |
 | 8 | `layer36-clock` prints time in user locale on all three hosts | Not done |
-| 9 | UCap v0.1: manifest-declared caps enforced; unauthorized calls trap cleanly | Started: CLI preflight, runtime UAPI guard, dispatcher scaffold, generated WIT type bridge, and value-level import host wiring exist; resource table and runtime linker install remain |
+| 9 | UCap v0.1: manifest-declared caps enforced; unauthorized calls trap cleanly | Started: CLI preflight, runtime UAPI guard, dispatcher scaffold, generated WIT type bridge, generated host wiring, and resource table exist; runtime linker install remains |
 | 10 | Startup overhead for a UAPI-using app < 150 ms | Not done |
 | 11 | UAPI hot-path dispatch < 1 µs (microbenchmark) | Not done |
 | 12 | Developer who knows Rust but not WASM can write a CLI in < 30 min using docs | Not done |
@@ -2076,6 +2076,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-SEC-01D | Runtime UAPI dispatcher scaffold | 2026-05-03 | Added adapter traits and dispatcher methods that map policy denial to module-level errors before adapter calls run. |
 | P2-SEC-01E-a | Generated WIT type/error bridge | 2026-05-03 | Added `phase2_bridge` to convert generated WIT records, enums, and module errors to and from runtime dispatcher types. |
 | P2-SEC-01E-b | Generated import host trait wiring | 2026-05-03 | Added `phase2_host` so generated Wasmtime traits call `UapiDispatcher` for HTTP, path-level fs, time, locale, logging, and stdio handle creation. |
+| P2-SEC-01E-c | Phase 2 host resource table | 2026-05-03 | Added runtime-owned resource IDs for file and stream handles, then routed file read/write/seek/stat and stream read/write/flush calls through dispatcher adapter methods. |
 
 ---
 
@@ -2083,7 +2084,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
-| P2-SEC-01E | Generated WIT import wiring | 2026-05-03 | Value-level host traits are wired; resource table ownership and runtime linker installation remain. |
+| P2-SEC-01E | Generated WIT import wiring | 2026-05-03 | Host traits and resource ownership are wired; runtime linker installation remains. |
 | P2-BIND-01A | Rust SDK crate skeleton | 2026-05-03 | Host binding shape is known; app-facing wrapper crate still needs design. |
 
 ---

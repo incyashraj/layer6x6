@@ -147,11 +147,16 @@ generated Phase 2 traits to the dispatcher for:
 - time and sleep
 - locale info and formatting
 - logging
-- stdio handle creation
+- stdio
 
-File and stream resource read/write calls are intentionally not implemented yet.
-They need a resource table so the runtime can own handles safely instead of just
-passing IDs around. That is the next runtime wiring step.
+That host implementation also has the first resource table. When an app opens a
+file or asks for stdio, the runtime gives it a resource ID owned by the host.
+Later reads, writes, seeks, stats, and flushes use that ID to find the real host
+handle and call the adapter. This keeps handles inside the runtime instead of
+letting guest code pass around raw host IDs.
+
+The next runtime wiring step is installing this host into the actual Wasmtime
+linker path used by `layer36 run`.
 
 ## Rust Binding Checkpoint
 

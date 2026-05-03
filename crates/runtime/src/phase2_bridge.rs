@@ -97,6 +97,16 @@ pub fn log_level_to_str(level: io::types::LogLevel) -> &'static str {
     }
 }
 
+pub fn io_error_to_wit(err: dispatch::DispatchError) -> io::types::IoError {
+    match err {
+        dispatch::DispatchError::PermissionDenied => {
+            io::types::IoError::Other("permission denied".to_string())
+        }
+        dispatch::DispatchError::Policy(message) => io::types::IoError::Other(message),
+        dispatch::DispatchError::Adapter(err) => io_adapter_error_to_wit(err),
+    }
+}
+
 pub fn locale_from_wit(loc: locale::types::LocaleId) -> dispatch::LocaleId {
     dispatch::LocaleId { bcp47: loc.bcp47 }
 }
@@ -152,6 +162,19 @@ fn net_adapter_error_to_wit(err: dispatch::AdapterError) -> net::types::NetError
         dispatch::AdapterError::Unsupported => net::types::NetError::Other(
             "operation is not supported by this host adapter yet".to_string(),
         ),
+    }
+}
+
+fn io_adapter_error_to_wit(err: dispatch::AdapterError) -> io::types::IoError {
+    match err {
+        dispatch::AdapterError::NotFound => io::types::IoError::Closed,
+        dispatch::AdapterError::PermissionDenied => {
+            io::types::IoError::Other("permission denied".to_string())
+        }
+        dispatch::AdapterError::InvalidPath
+        | dispatch::AdapterError::Unsupported
+        | dispatch::AdapterError::Network(_) => io::types::IoError::Other(err.to_string()),
+        dispatch::AdapterError::Io(message) => io::types::IoError::Other(message),
     }
 }
 
@@ -230,6 +253,12 @@ mod tests {
     #[test]
     fn maps_locale_and_log_shapes() {
         assert_eq!(log_level_to_str(io::types::LogLevel::Warn), "warn");
+        assert!(matches!(
+            io_error_to_wit(dispatch::DispatchError::Adapter(
+                dispatch::AdapterError::NotFound
+            )),
+            io::types::IoError::Closed
+        ));
         assert_eq!(
             date_style_from_wit(locale::types::DateStyle::Full),
             dispatch::DateStyle::Full

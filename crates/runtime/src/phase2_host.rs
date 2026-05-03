@@ -4,6 +4,8 @@
 //! runtime dispatcher. Path-level filesystem calls, HTTP, time, locale, log, and
 //! stdio handles flow through UCap before reaching a host adapter.
 
+use std::collections::BTreeMap;
+
 use crate::{
     phase2_bindings::layer36::{fs, io, locale, net, time},
     phase2_bridge as bridge,
@@ -15,12 +17,14 @@ use wasmtime::component::Resource;
 
 pub struct Phase2Host<'a> {
     dispatcher: UapiDispatcher<'a>,
+    resources: Phase2ResourceTable,
 }
 
 impl<'a> Phase2Host<'a> {
     pub fn new(guard: &'a UapiGuard, adapter: &'a dyn HostAdapter) -> Self {
         Self {
             dispatcher: UapiDispatcher::new(guard, adapter),
+            resources: Phase2ResourceTable::default(),
         }
     }
 }
@@ -37,7 +41,7 @@ impl fs::files::Host for Phase2Host<'_> {
             Err(err) => return Ok(Err(bridge::fs_error_to_wit(err))),
         };
 
-        Ok(Ok(resource_from_handle(handle)?))
+        Ok(Ok(self.resources.insert_file(handle)?))
     }
 
     fn stat(
@@ -94,87 +98,142 @@ impl fs::files::Host for Phase2Host<'_> {
 impl fs::files::HostFile for Phase2Host<'_> {
     fn read(
         &mut self,
-        _self_: Resource<fs::files::File>,
-        _n: u32,
+        self_: Resource<fs::files::File>,
+        n: u32,
     ) -> wasmtime::Result<Result<Vec<u8>, fs::types::FsError>> {
-        Ok(Err(resource_io_not_wired()))
+        let Some(handle) = self.resources.file(self_.rep()) else {
+            return Ok(Err(missing_file_resource()));
+        };
+
+        Ok(self
+            .dispatcher
+            .fs_read(handle, n)
+            .map_err(bridge::fs_error_to_wit))
     }
 
     fn write(
         &mut self,
-        _self_: Resource<fs::files::File>,
-        _bytes: Vec<u8>,
+        self_: Resource<fs::files::File>,
+        bytes: Vec<u8>,
     ) -> wasmtime::Result<Result<u32, fs::types::FsError>> {
-        Ok(Err(resource_io_not_wired()))
+        let Some(handle) = self.resources.file(self_.rep()) else {
+            return Ok(Err(missing_file_resource()));
+        };
+
+        Ok(self
+            .dispatcher
+            .fs_write(handle, &bytes)
+            .map_err(bridge::fs_error_to_wit))
     }
 
     fn seek_set(
         &mut self,
-        _self_: Resource<fs::files::File>,
-        _pos: u64,
+        self_: Resource<fs::files::File>,
+        pos: u64,
     ) -> wasmtime::Result<Result<u64, fs::types::FsError>> {
-        Ok(Err(resource_io_not_wired()))
+        let Some(handle) = self.resources.file(self_.rep()) else {
+            return Ok(Err(missing_file_resource()));
+        };
+
+        Ok(self
+            .dispatcher
+            .fs_seek_set(handle, pos)
+            .map_err(bridge::fs_error_to_wit))
     }
 
     fn seek_end(
         &mut self,
-        _self_: Resource<fs::files::File>,
+        self_: Resource<fs::files::File>,
     ) -> wasmtime::Result<Result<u64, fs::types::FsError>> {
-        Ok(Err(resource_io_not_wired()))
+        let Some(handle) = self.resources.file(self_.rep()) else {
+            return Ok(Err(missing_file_resource()));
+        };
+
+        Ok(self
+            .dispatcher
+            .fs_seek_end(handle)
+            .map_err(bridge::fs_error_to_wit))
     }
 
     fn stat(
         &mut self,
-        _self_: Resource<fs::files::File>,
+        self_: Resource<fs::files::File>,
     ) -> wasmtime::Result<Result<fs::types::FileStat, fs::types::FsError>> {
-        Ok(Err(resource_io_not_wired()))
+        let Some(handle) = self.resources.file(self_.rep()) else {
+            return Ok(Err(missing_file_resource()));
+        };
+
+        Ok(self
+            .dispatcher
+            .fs_stat_handle(handle)
+            .map(bridge::file_stat_to_wit)
+            .map_err(bridge::fs_error_to_wit))
     }
 
-    fn drop(&mut self, _rep: Resource<fs::files::File>) -> wasmtime::Result<()> {
+    fn drop(&mut self, rep: Resource<fs::files::File>) -> wasmtime::Result<()> {
+        self.resources.remove_file(rep.rep());
         Ok(())
     }
 }
 
 impl io::stdio::Host for Phase2Host<'_> {
     fn stdin(&mut self) -> wasmtime::Result<Resource<io::streams::InputStream>> {
-        self.dispatcher
+        let handle = self
+            .dispatcher
             .stdin()
-            .map(resource_from_handle)
-            .map_err(bridge::dispatch_error_to_trap)?
+            .map_err(bridge::dispatch_error_to_trap)?;
+        self.resources.insert_input(handle)
     }
 
     fn stdout(&mut self) -> wasmtime::Result<Resource<io::streams::OutputStream>> {
-        self.dispatcher
+        let handle = self
+            .dispatcher
             .stdout()
-            .map(resource_from_handle)
-            .map_err(bridge::dispatch_error_to_trap)?
+            .map_err(bridge::dispatch_error_to_trap)?;
+        self.resources.insert_output(handle)
     }
 
     fn stderr(&mut self) -> wasmtime::Result<Resource<io::streams::OutputStream>> {
-        self.dispatcher
+        let handle = self
+            .dispatcher
             .stderr()
-            .map(resource_from_handle)
-            .map_err(bridge::dispatch_error_to_trap)?
+            .map_err(bridge::dispatch_error_to_trap)?;
+        self.resources.insert_output(handle)
     }
 }
 
 impl io::streams::HostInputStream for Phase2Host<'_> {
     fn read(
         &mut self,
-        _self_: Resource<io::streams::InputStream>,
-        _n: u32,
+        self_: Resource<io::streams::InputStream>,
+        n: u32,
     ) -> wasmtime::Result<Result<Vec<u8>, io::types::IoError>> {
-        Ok(Err(stream_io_not_wired()))
+        let Some(handle) = self.resources.input(self_.rep()) else {
+            return Ok(Err(missing_stream_resource()));
+        };
+
+        Ok(self
+            .dispatcher
+            .read_stream(handle, n)
+            .map_err(bridge::io_error_to_wit))
     }
 
     fn read_to_string(
         &mut self,
-        _self_: Resource<io::streams::InputStream>,
+        self_: Resource<io::streams::InputStream>,
     ) -> wasmtime::Result<Result<String, io::types::IoError>> {
-        Ok(Err(stream_io_not_wired()))
+        let Some(handle) = self.resources.input(self_.rep()) else {
+            return Ok(Err(missing_stream_resource()));
+        };
+
+        Ok(self
+            .dispatcher
+            .read_stream_to_string(handle)
+            .map_err(bridge::io_error_to_wit))
     }
 
-    fn drop(&mut self, _rep: Resource<io::streams::InputStream>) -> wasmtime::Result<()> {
+    fn drop(&mut self, rep: Resource<io::streams::InputStream>) -> wasmtime::Result<()> {
+        self.resources.remove_input(rep.rep());
         Ok(())
     }
 }
@@ -182,28 +241,50 @@ impl io::streams::HostInputStream for Phase2Host<'_> {
 impl io::streams::HostOutputStream for Phase2Host<'_> {
     fn write(
         &mut self,
-        _self_: Resource<io::streams::OutputStream>,
-        _bytes: Vec<u8>,
+        self_: Resource<io::streams::OutputStream>,
+        bytes: Vec<u8>,
     ) -> wasmtime::Result<Result<u32, io::types::IoError>> {
-        Ok(Err(stream_io_not_wired()))
+        let Some(handle) = self.resources.output(self_.rep()) else {
+            return Ok(Err(missing_stream_resource()));
+        };
+
+        Ok(self
+            .dispatcher
+            .write_stream(handle, &bytes)
+            .map_err(bridge::io_error_to_wit))
     }
 
     fn write_all(
         &mut self,
-        _self_: Resource<io::streams::OutputStream>,
-        _bytes: Vec<u8>,
+        self_: Resource<io::streams::OutputStream>,
+        bytes: Vec<u8>,
     ) -> wasmtime::Result<Result<(), io::types::IoError>> {
-        Ok(Err(stream_io_not_wired()))
+        let Some(handle) = self.resources.output(self_.rep()) else {
+            return Ok(Err(missing_stream_resource()));
+        };
+
+        Ok(self
+            .dispatcher
+            .write_all_stream(handle, &bytes)
+            .map_err(bridge::io_error_to_wit))
     }
 
     fn flush(
         &mut self,
-        _self_: Resource<io::streams::OutputStream>,
+        self_: Resource<io::streams::OutputStream>,
     ) -> wasmtime::Result<Result<(), io::types::IoError>> {
-        Ok(Err(stream_io_not_wired()))
+        let Some(handle) = self.resources.output(self_.rep()) else {
+            return Ok(Err(missing_stream_resource()));
+        };
+
+        Ok(self
+            .dispatcher
+            .flush_stream(handle)
+            .map_err(bridge::io_error_to_wit))
     }
 
-    fn drop(&mut self, _rep: Resource<io::streams::OutputStream>) -> wasmtime::Result<()> {
+    fn drop(&mut self, rep: Resource<io::streams::OutputStream>) -> wasmtime::Result<()> {
+        self.resources.remove_output(rep.rep());
         Ok(())
     }
 }
@@ -298,18 +379,79 @@ impl locale::format::Host for Phase2Host<'_> {
     }
 }
 
-fn resource_from_handle<T: 'static>(handle: FileHandle) -> wasmtime::Result<Resource<T>> {
-    let id = u32::try_from(handle.id)
-        .map_err(|_| wasmtime::Error::msg(format!("resource id {} is too large", handle.id)))?;
-    Ok(Resource::new_own(id))
+#[derive(Default)]
+struct Phase2ResourceTable {
+    next_id: u32,
+    files: BTreeMap<u32, FileHandle>,
+    inputs: BTreeMap<u32, FileHandle>,
+    outputs: BTreeMap<u32, FileHandle>,
 }
 
-fn resource_io_not_wired() -> fs::types::FsError {
-    fs::types::FsError::Io("file resource operations are not wired yet".to_string())
+impl Phase2ResourceTable {
+    fn insert_file(&mut self, handle: FileHandle) -> wasmtime::Result<Resource<fs::files::File>> {
+        let id = self.allocate_id()?;
+        self.files.insert(id, handle);
+        Ok(Resource::new_own(id))
+    }
+
+    fn insert_input(
+        &mut self,
+        handle: FileHandle,
+    ) -> wasmtime::Result<Resource<io::streams::InputStream>> {
+        let id = self.allocate_id()?;
+        self.inputs.insert(id, handle);
+        Ok(Resource::new_own(id))
+    }
+
+    fn insert_output(
+        &mut self,
+        handle: FileHandle,
+    ) -> wasmtime::Result<Resource<io::streams::OutputStream>> {
+        let id = self.allocate_id()?;
+        self.outputs.insert(id, handle);
+        Ok(Resource::new_own(id))
+    }
+
+    fn file(&self, id: u32) -> Option<&FileHandle> {
+        self.files.get(&id)
+    }
+
+    fn input(&self, id: u32) -> Option<&FileHandle> {
+        self.inputs.get(&id)
+    }
+
+    fn output(&self, id: u32) -> Option<&FileHandle> {
+        self.outputs.get(&id)
+    }
+
+    fn remove_file(&mut self, id: u32) {
+        self.files.remove(&id);
+    }
+
+    fn remove_input(&mut self, id: u32) {
+        self.inputs.remove(&id);
+    }
+
+    fn remove_output(&mut self, id: u32) {
+        self.outputs.remove(&id);
+    }
+
+    fn allocate_id(&mut self) -> wasmtime::Result<u32> {
+        let id = self.next_id;
+        self.next_id = self
+            .next_id
+            .checked_add(1)
+            .ok_or_else(|| wasmtime::Error::msg("Phase 2 resource table exhausted"))?;
+        Ok(id)
+    }
 }
 
-fn stream_io_not_wired() -> io::types::IoError {
-    io::types::IoError::Other("stream resource operations are not wired yet".to_string())
+fn missing_file_resource() -> fs::types::FsError {
+    fs::types::FsError::Io("unknown file resource".to_string())
+}
+
+fn missing_stream_resource() -> io::types::IoError {
+    io::types::IoError::Other("unknown stream resource".to_string())
 }
 
 #[cfg(test)]
@@ -332,10 +474,12 @@ mod tests {
 
     #[derive(Default)]
     struct Calls {
+        file_read: usize,
         fs_stat: usize,
         log: usize,
         net_fetch: usize,
         sleep: usize,
+        stream_write_all: usize,
     }
 
     impl HostAdapter for RecordingAdapter {
@@ -373,6 +517,31 @@ mod tests {
             Ok(FileHandle { id: 12 })
         }
 
+        fn read_stream(&self, handle: &FileHandle, _n: u32) -> Result<Vec<u8>, AdapterError> {
+            Ok(format!("stream-{}", handle.id).into_bytes())
+        }
+
+        fn read_stream_to_string(&self, handle: &FileHandle) -> Result<String, AdapterError> {
+            Ok(format!("stream-{}", handle.id))
+        }
+
+        fn write_stream(&self, _handle: &FileHandle, bytes: &[u8]) -> Result<u32, AdapterError> {
+            Ok(bytes.len() as u32)
+        }
+
+        fn write_all_stream(
+            &self,
+            _handle: &FileHandle,
+            _bytes: &[u8],
+        ) -> Result<(), AdapterError> {
+            self.calls.borrow_mut().stream_write_all += 1;
+            Ok(())
+        }
+
+        fn flush_stream(&self, _handle: &FileHandle) -> Result<(), AdapterError> {
+            Ok(())
+        }
+
         fn log(&self, _level: &str, _message: &str) -> Result<(), AdapterError> {
             self.calls.borrow_mut().log += 1;
             Ok(())
@@ -382,6 +551,34 @@ mod tests {
     impl FsAdapter for RecordingAdapter {
         fn open(&self, _path: &str, _mode: OpenMode) -> Result<FileHandle, AdapterError> {
             Ok(FileHandle { id: 20 })
+        }
+
+        fn read(&self, handle: &FileHandle, _n: u32) -> Result<Vec<u8>, AdapterError> {
+            self.calls.borrow_mut().file_read += 1;
+            Ok(format!("file-{}", handle.id).into_bytes())
+        }
+
+        fn write(&self, _handle: &FileHandle, bytes: &[u8]) -> Result<u32, AdapterError> {
+            Ok(bytes.len() as u32)
+        }
+
+        fn seek_set(&self, _handle: &FileHandle, pos: u64) -> Result<u64, AdapterError> {
+            Ok(pos)
+        }
+
+        fn seek_end(&self, _handle: &FileHandle) -> Result<u64, AdapterError> {
+            Ok(7)
+        }
+
+        fn stat_handle(
+            &self,
+            _handle: &FileHandle,
+        ) -> Result<crate::uapi_dispatch::FileStat, AdapterError> {
+            Ok(crate::uapi_dispatch::FileStat {
+                size: 7,
+                modified_millis: 5678,
+                is_dir: false,
+            })
         }
 
         fn stat(&self, _path: &str) -> Result<crate::uapi_dispatch::FileStat, AdapterError> {
@@ -537,7 +734,7 @@ mod tests {
         let stdin = io::stdio::Host::stdin(&mut host).unwrap();
 
         assert_eq!(stat.size, 64);
-        assert_eq!(stdin.rep(), 10);
+        assert_eq!(stdin.rep(), 0);
         assert_eq!(adapter.calls.borrow().fs_stat, 1);
     }
 
@@ -566,19 +763,51 @@ mod tests {
     }
 
     #[test]
-    fn resource_methods_are_explicitly_not_wired_yet() {
+    fn resource_table_routes_file_and_stream_operations() {
+        let adapter = RecordingAdapter::default();
+        let guard = UapiGuard::new(SessionPolicy::from_grants([
+            "fs.read:/tmp/data.txt".parse().unwrap(),
+            "io.stdout".parse().unwrap(),
+        ]));
+        let mut host = Phase2Host::new(&guard, &adapter);
+
+        let file = fs::files::Host::open(
+            &mut host,
+            "/tmp/data.txt".to_string(),
+            fs::types::OpenMode::Read,
+        )
+        .unwrap()
+        .unwrap();
+        let stdout = io::stdio::Host::stdout(&mut host).unwrap();
+
+        let bytes = fs::files::HostFile::read(&mut host, file, 128)
+            .unwrap()
+            .unwrap();
+        io::streams::HostOutputStream::write_all(&mut host, stdout, b"hello".to_vec())
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(bytes, b"file-20");
+        assert_eq!(adapter.calls.borrow().file_read, 1);
+        assert_eq!(adapter.calls.borrow().stream_write_all, 1);
+    }
+
+    #[test]
+    fn unknown_resources_return_clear_errors() {
         let adapter = RecordingAdapter::default();
         let guard = UapiGuard::new(SessionPolicy::default());
         let mut host = Phase2Host::new(&guard, &adapter);
 
         let err = io::streams::HostOutputStream::write_all(
             &mut host,
-            Resource::new_own(11),
+            Resource::new_own(99),
             b"hello".to_vec(),
         )
         .unwrap()
         .unwrap_err();
 
-        assert!(matches!(err, io::types::IoError::Other(message) if message.contains("not wired")));
+        assert!(
+            matches!(err, io::types::IoError::Other(message) if message.contains("unknown stream"))
+        );
     }
 }
