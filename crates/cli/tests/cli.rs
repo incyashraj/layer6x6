@@ -63,13 +63,21 @@ fn missing_input_returns_clear_error() {
 }
 
 #[test]
-fn configured_hello_component_runs_and_reports_fixture_hash() {
+fn configured_hello_component_runs_and_matches_expected_fixture_hash() {
     let Some(path) = configured_hello_component() else {
         return;
     };
 
     let wasm = std::fs::read(&path).expect("read configured hello component");
-    eprintln!("hello component sha256: {}", sha256_hex(&wasm));
+    let actual_hash = sha256_hex(&wasm);
+    eprintln!("hello component sha256: {actual_hash}");
+
+    if let Some(expected_hash) = expected_hello_hash() {
+        assert_eq!(
+            actual_hash, expected_hash,
+            "configured hello component hash does not match the expected shared fixture"
+        );
+    }
 
     let output = layer36()
         .args(["run"])
@@ -149,4 +157,11 @@ fn configured_hello_component() -> Option<PathBuf> {
     };
 
     Some(workspace_path(PathBuf::from(path)))
+}
+
+fn expected_hello_hash() -> Option<String> {
+    std::env::var("LAYER36_HELLO_SHA256")
+        .ok()
+        .map(|value| value.trim().to_ascii_lowercase())
+        .filter(|value| !value.is_empty())
 }

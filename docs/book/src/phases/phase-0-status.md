@@ -19,7 +19,7 @@ This page tracks the Phase 0 exit checklist from `Plan/Phase-0-Plan.md`.
 | Changelog | Done locally | `[Unreleased]` section initialized. |
 | ADRs | Done locally | ADR template and ADR-0001 are present. |
 | CI | Configured | `ci.yml` runs fmt, clippy, tests, mdBook, and cargo-deny. |
-| mdBook | Done locally | Book source builds with `mdbook build docs/book`; Pages publication remains external. |
+| mdBook | Live | Book source builds with `mdbook build docs/book`; Pages is live at `https://incyashraj.github.io/layer6x6/`. |
 | First-PR guide | Draft complete | Screenshot section is pending live GitHub/Pages URLs. |
 | Legal records | Naming decision recorded | Layer36 is active project name; official clearance remains pending. |
 | Launch drafts | Draft complete | Blog post and social thread drafts exist. |
@@ -30,7 +30,7 @@ This page tracks the Phase 0 exit checklist from `Plan/Phase-0-Plan.md`.
 |------|--------|-------------|
 | Public repo settings | Mostly done | Description, homepage, topics, Issues, labels, and initial issues are configured; public visibility and social preview remain. |
 | Branch protection | Pending | Require CI green, one review, and no force-push on `main`. |
-| CI history | Pending | Latest CI fix is running; need five consecutive green days on `main`. |
+| CI history | In progress | First green `main` CI runs confirmed on 2026-05-03; need five consecutive green days on `main`. |
 | GitHub Pages | Live | Published at `https://incyashraj.github.io/layer6x6/`. |
 | Discord | Pending | Create channels, welcome/rules post, and invite link. |
 | Announcement | Pending | Publish only after repo, docs, and Discord are ready. |

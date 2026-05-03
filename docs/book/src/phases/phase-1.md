@@ -18,11 +18,12 @@ Phase 1 has started with the runtime and CLI scaffold:
   prints `Hello, Layer36!` locally.
 - `layer36 run --fuel 1 ...` and `layer36 run --mem-limit 0 ...` fail
   cleanly with exit code 4 and a limit-exceeded message.
-- The CI test matrix now builds the hello-world component, verifies its
-  SHA-256 fixture hash, and runs it through the real `layer36` binary on each
-  desktop host.
-- `scripts/test-phase1.sh` builds the hello-world fixture and runs the full
-  workspace test suite with `LAYER36_HELLO_WASM` configured.
+- CI builds the hello-world component once on Ubuntu, uploads that exact
+  `.wasm` as a workflow artifact, verifies its SHA-256 hash, and runs the same
+  bytes through the real `layer36` binary on Linux, macOS, and Windows.
+- `scripts/test-phase1.sh` can either build the hello-world fixture locally or
+  consume a prebuilt `LAYER36_HELLO_WASM` fixture with an expected
+  `LAYER36_HELLO_SHA256`.
 - `.github/workflows/release.yml` packages the five planned Phase 1 release
   artifacts on `v*` tags and publishes a `SHA256SUMS` file.
 - The Phase 1 quickstart is published at `docs/book/src/quickstart.md` and
@@ -33,7 +34,8 @@ Phase 1 has started with the runtime and CLI scaffold:
   regression signals.
 
 The runtime now registers the temporary `layer36:phase1/host` WIT interface for
-`print` and `exit`. Remote CI/release results, cross-host benchmark runs, and
-RSS measurements are still pending.
+`print` and `exit`. The Linux/macOS/Windows CI matrix is green; release-tag
+results, cross-host benchmark runs, and volunteer quickstart timing are still
+pending.
 
 See [`Plan/Phase-1-Plan.md`](https://github.com/incyashraj/layer6x6/blob/main/Plan/Phase-1-Plan.md).

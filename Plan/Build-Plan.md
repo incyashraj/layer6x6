@@ -1591,8 +1591,8 @@ This section is the living status board for all of Layer36. Update it at every p
 
 | # | Phase | Status | Started | Completed | Notes |
 |---|-------|--------|---------|-----------|-------|
-| 0 | Foundation | In Progress | 2026-05-01 | — | Renamed from OneOS to Layer36 on 2026-05-02; local scaffold and docs checks green. |
-| 1 | POC Runtime | In Progress | 2026-05-02 | — | Runtime, CLI, WIT host imports, hello-world fixture, CI harness, fuel/memory limits, release packaging, quickstart, and threat model are in place; remote cross-host results pending. |
+| 0 | Foundation | In Progress | 2026-05-01 | — | Renamed from OneOS to Layer36 on 2026-05-02; local scaffold, docs, Pages, labels/issues, and CI are green. |
+| 1 | POC Runtime | In Progress | 2026-05-02 | — | Runtime, CLI, WIT host imports, shared hello-world fixture, CI harness, fuel/memory limits, release packaging, quickstart, and threat model are in place; release-tag proof and external timing remain. |
 | 2 | UAPI v0.1 (CLI) | Not started | — | — | |
 | 3 | UI + Graphics | Not started | — | — | |
 | 4 | Mobile Hosts | Not started | — | — | |
@@ -1607,7 +1607,7 @@ This section is the living status board for all of Layer36. Update it at every p
 | Milestone | Target Phase | Status | Date | Notes |
 |-----------|-------------|--------|------|-------|
 | First external contributor PR merged | 0 | Pending | — | |
-| `layer36 run hello.wasm` green on 3 desktop OSes | 1 | Pending | — | |
+| `layer36 run hello.wasm` green on 3 desktop OSes | 1 | Done | 2026-05-03 | GitHub CI confirmed Linux, macOS, and Windows; follow-up CI now runs one shared `.wasm` artifact across all three. |
 | `layer36-curl` byte-identical across Linux/macOS/Win | 2 | Pending | — | |
 | `layer36-notes` GUI running on Win/macOS/Linux | 3 | Pending | — | |
 | `layer36-notes` running on iOS + Android | 4 | Pending | — | |

@@ -75,12 +75,12 @@ Because the *dispatcher* — the thing that takes a WASM file, finds the right h
 Before touching a single line of Phase 1 code, verify:
 
 - [ ] `incyashraj/layer6x6` monorepo exists on GitHub, public, dual MIT/Apache-2.0.
-- [ ] `cargo build` succeeds on an empty workspace on Linux, macOS, and Windows.
-- [ ] GitHub Actions runs `fmt`, `clippy`, and `test` on every PR.
+- [x] `cargo build` succeeds on Linux, macOS, and Windows.
+- [x] GitHub Actions runs `fmt`, `clippy`, and `test` on every PR.
 - [ ] Branch protection on `main` requires green CI.
 - [x] Issue + PR templates exist.
-- [ ] mdBook site lives at `docs/book/`, deployed to GitHub Pages.
-- [ ] ADR-0001 (Rust for the runtime) merged.
+- [x] mdBook site lives at `docs/book/`, deployed to GitHub Pages.
+- [x] ADR-0001 (Rust for the runtime) merged.
 - [ ] Discord server created, `#dev` channel active.
 - [x] `rust-toolchain.toml` pins stable Rust and includes `wasm32-wasip2` as a target.
 
@@ -1218,9 +1218,9 @@ If during Phase 1 you find yourself making a choice that affects Phase 2+ archit
 Tick every box. No exceptions.
 
 ### Code
-- [ ] `crates/runtime/` compiles on all three hosts.
-- [ ] `crates/cli/` compiles on all three hosts.
-- [ ] `layer36 run hello.wasm` prints `Hello, Layer36!` and exits 0 on all three hosts.
+- [x] `crates/runtime/` compiles on all three hosts.
+- [x] `crates/cli/` compiles on all three hosts.
+- [x] `layer36 run hello.wasm` prints `Hello, Layer36!` and exits 0 on all three hosts.
 - [x] `layer36 version` prints correct info.
 - [x] `layer36 doctor` runs without panic.
 - [x] `layer36 run --fuel 1 hello.wasm` fails with a clear "limit exceeded" error.
@@ -1233,7 +1233,7 @@ Tick every box. No exceptions.
 - [x] `cargo-deny` check green.
 
 ### Docs
-- [ ] Quickstart merged and published to docs site.
+- [x] Quickstart merged and published to docs site.
 - [ ] Architecture overview merged.
 - [ ] ADR-0002 merged.
 - [ ] ADR-0003 merged.
@@ -1486,7 +1486,7 @@ Save as `docs/book/src/phase1/retro.md` at the end of Phase 1.
 
 ### Progress Summary
 
-_Phase 1 has started under a local-development waiver for account-bound Phase 0 items. Runtime and CLI crates exist, Wasmtime 43.0.2 is pinned for Rust 1.91.1 compatibility, host `print`/`exit` imports are wired through WIT, the first hello-world component runs locally through `layer36 run`, CI has an integration harness for building/hashing/running that fixture, fuel/memory limits fail cleanly, release packaging is in place, the first quickstart is published, Threat Model v0.1 is documented, and the first local benchmark baseline is recorded._
+_Phase 1 has started under a local-development waiver for account-bound Phase 0 items. Runtime and CLI crates exist, Wasmtime 43.0.2 is pinned for Rust 1.91.1 compatibility, host `print`/`exit` imports are wired through WIT, the hello-world component runs through `layer36 run`, CI is green across Linux/macOS/Windows, the matrix now consumes one shared hello `.wasm` fixture, fuel/memory limits fail cleanly, release packaging is in place, the first quickstart is published, Threat Model v0.1 is documented, and the first local benchmark baseline is recorded._
 
 ---
 
@@ -1496,15 +1496,15 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | # | Criterion | Status |
 |---|-----------|--------|
-| 1 | `cargo build --release` produces `layer36` binary on Linux, macOS, Windows | Locally green on macOS; Linux/Windows CI pending |
-| 2 | `layer36 run hello.wasm` prints `Hello, Layer36!` on all three hosts | Locally green on macOS; Linux/Windows CI pending |
-| 3 | `hello.wasm` input is byte-for-byte identical across hosts (SHA-256 verified) | Not done; first CI showed host-dependent component bytes, so the harness now logs hashes while reproducibility work remains open |
+| 1 | `cargo build --release` produces `layer36` binary on Linux, macOS, Windows | Green in GitHub CI on 2026-05-03 |
+| 2 | `layer36 run hello.wasm` prints `Hello, Layer36!` on all three hosts | Green in GitHub CI on 2026-05-03 |
+| 3 | `hello.wasm` input is byte-for-byte identical across hosts (SHA-256 verified) | Implemented with a single uploaded CI fixture and `LAYER36_HELLO_SHA256`; remote confirmation pending after this change lands |
 | 4 | Cold start < 200 ms on a 2020+ laptop | Locally green on Apple M4 at ~2.45 ms; cross-host baselines pending |
 | 5 | Release binary size < 30 MB (compressed) | Locally green on macOS at 4.4 MB compressed; CI artifact check pending |
 | 6 | Memory RSS < 40 MB after hello-world exits | Locally green on macOS at ~14.9 MiB; cross-host baselines pending |
 | 7 | Release artifacts build and upload correctly on `v*` tag | Workflow added; tag-triggered GitHub run pending |
 | 8 | ADR-0002 (Wasmtime) and ADR-0003 (Component Model) merged | Accepted locally; merge pending |
-| 9 | Threat Model v0.1 published in `docs/book/` | Done locally; docs site publication pending |
+| 9 | Threat Model v0.1 published in `docs/book/` | Published through mdBook/Pages; redeploy after latest status edits |
 | 10 | Quickstart tutorial exists; new user can run hello-world in ≤ 10 min | Tutorial exists; volunteer timing pending |
 
 ---
@@ -1518,7 +1518,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P1-CLI-01 | `layer36` binary using `clap` | 2026-05-02 | `--help`, `version`, and command routing work locally. |
 | P1-CLI-02 | `layer36 run <file>` subcommand | 2026-05-02 | Runs the hello-world component locally and maps runtime failures to CLI exit codes. |
 | P1-CLI-03 | `layer36 version`, `layer36 doctor` basic | 2026-05-02 | `doctor` reports `cargo-component`, `wasm32-wasip1`, `wasm32-wasip2`, and state directory status. |
-| P1-CI-01 | Cross-platform CI matrix | 2026-05-02 | Existing Linux/macOS/Windows test job now builds release binaries and runs the hello fixture harness. |
+| P1-CI-01 | Cross-platform CI matrix | 2026-05-03 | Linux/macOS/Windows CI is green; the test matrix now runs one shared hello `.wasm` artifact across all three hosts. |
 | P1-RT-04 | Configurable fuel / memory limits | 2026-05-02 | Store fuel and resource limiter are wired; `--fuel 1` and `--mem-limit 0` return exit code 4 with clear limit messages. |
 | P1-DOC-01 | Quickstart | 2026-05-02 | `docs/book/src/quickstart.md` walks from checkout/tooling to `Hello, Layer36!`; external timing still pending. |
 | P1-SEC-01 | Threat Model v0.1 | 2026-05-02 | STRIDE model published in `docs/book/src/phase1/threat-model.md`; README/SECURITY warning updated. |
@@ -1531,7 +1531,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
-| P1-TEST-01 | Integration test: hello-world.wasm runs on all hosts | 2026-05-02 | `scripts/test-phase1.sh` builds the fixture and runs the workspace tests with `LAYER36_HELLO_WASM`; waiting for GitHub-hosted Linux/macOS/Windows confirmation. |
+| P1-TEST-01 | Integration test: hello-world.wasm runs on all hosts | 2026-05-02 | GitHub-hosted Linux/macOS/Windows confirmation is green; shared fixture artifact confirmation is pending for this follow-up CI run. |
 | P1-CI-02 | Release artifacts | 2026-05-02 | `release.yml` and `scripts/package.sh` added; local macOS tarball packaging is green; tag-triggered remote publish still pending. |
 | P1-GOV-01 | Phase 2 kickoff issue draft | 2026-05-02 | Draft exists at `docs/governance/phase-2-kickoff-issue.md`; actual GitHub issue creation waits for Phase 1 exit. |
 
@@ -1548,8 +1548,8 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 ### Blockers & Open Questions
 
-- Initial workspace is pushed to `incyashraj/layer6x6`; GitHub Actions, Pages, branch protection, release tag, and public settings still need owner-side confirmation.
-- Cross-host CI workflow has been updated, but remote GitHub-hosted Linux/macOS/Windows results are still pending.
+- Initial workspace is pushed to `incyashraj/layer6x6`; branch protection, release tag, and public settings still need owner-side confirmation.
+- Cross-host CI is green; the current follow-up makes the CI proof stricter by running one uploaded hello `.wasm` fixture on all three hosts.
 - Wasmtime 44.0.1 requires Rust 1.92.0; Phase 1 currently pins Wasmtime 43.0.2 for Rust 1.91.1 compatibility.
 
 ---
@@ -1573,6 +1573,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 - 2026-05-02: Local environment note: `cargo-component` currently needs the rustup-managed Cargo earlier in `PATH` so it can see the installed WASM target. `scripts/build-hello-component.sh` handles this for local development.
 - 2026-05-02: Improved `layer36 doctor` so it can find `cargo-component` in `CARGO_HOME`/`~/.cargo/bin` and reports both `wasm32-wasip1` and `wasm32-wasip2`.
 - 2026-05-02: Added `crates/runtime` and `crates/cli`; `layer36 --help`, `layer36 version`, and `layer36 doctor` run locally.
+- 2026-05-03: GitHub CI is green across Linux, macOS, and Windows. Follow-up CI now builds the hello component once on Ubuntu, uploads it as an artifact, and makes every OS assert the same SHA-256 before running it.
 
 ---
 

@@ -1397,7 +1397,7 @@ this decision: decade-scale.
 - [x] CODE_OF_CONDUCT.md (Contributor Covenant 2.1) present.
 - [x] CHANGELOG.md initialized.
 - [x] ADR template in `docs/adr/template.md`.
-- [ ] ADR-0001 merged.
+- [x] ADR-0001 merged.
 
 ### CI
 - [x] `ci.yml` runs fmt, clippy, test, deny, book on every PR.
@@ -1599,7 +1599,7 @@ Save as `docs/book/src/phase0/retro.md` at the end of Phase 0.
 
 ### Progress Summary
 
-_Phase 0 is underway. Repo scaffolding, CI, documentation, ADR-0001, local verification, GitHub bootstrap, Pages publication, and the Layer36 naming pivot are now recorded. The development repository is `incyashraj/layer6x6`; Layer36 is the product name that the 6x6 matrix grows into. Remaining Phase 0 work is mostly external: public visibility/social preview, branch protection after CI is green, Discord, official trademark/domain work, and first external contributor PR._
+_Phase 0 is underway. Repo scaffolding, CI, documentation, ADR-0001, local verification, GitHub bootstrap, Pages publication, and the Layer36 naming pivot are now recorded. The development repository is `incyashraj/layer6x6`; Layer36 is the product name that the 6x6 matrix grows into. Remaining Phase 0 work is mostly external: public visibility/social preview, branch protection setup now that CI is green, Discord, official trademark/domain work, and first external contributor PR._
 
 ---
 
@@ -1610,10 +1610,10 @@ Full criteria in [§2 Success Criteria](#2-success-criteria). Check off as each 
 | # | Criterion | Status |
 |---|-----------|--------|
 | 1 | `git clone && cargo build` succeeds in ≤ 10 min on a fresh machine | Initial workspace pushed to GitHub; fresh-machine clone timing pending |
-| 2 | CI green on `main` for ≥ 5 consecutive days without human intervention | Not done |
+| 2 | CI green on `main` for ≥ 5 consecutive days without human intervention | First green `main` CI confirmed on 2026-05-03; 5-day window pending |
 | 3 | README renders cleanly on GitHub; project explained in ≤ 90 seconds | Draft complete; external reader pending |
 | 4 | CONTRIBUTING.md walks a contributor from zero to merged PR | Draft complete |
-| 5 | ADR-0001 merged; ADR template exists in `docs/adr/` | Done locally; merge pending |
+| 5 | ADR-0001 merged; ADR template exists in `docs/adr/` | Present on `main` |
 | 6 | mdBook site live at a public URL (GitHub Pages OK) | Live at `https://incyashraj.github.io/layer6x6/` |
 | 7 | Discord server active with ≥ 10 members | Not done |
 | 8 | Public Twitter/X announcement thread published | Not done |
@@ -1671,6 +1671,7 @@ Full criteria in [§2 Success Criteria](#2-success-criteria). Check off as each 
 - 2026-05-02: mdBook `SUMMARY.md` structure failed local build and was fixed; docs build is now part of CI.
 - 2026-05-02: Initial Layer36 workspace pushed to GitHub at `incyashraj/layer6x6` with commit `fe41db4` (`chore: bring Layer36 foundation online`), authored and committed as `incyashraj`.
 - 2026-05-02: GitHub CLI authenticated as `incyashraj`; repo homepage/topics set, labels synced, Pages verified at `https://incyashraj.github.io/layer6x6/`, five good-first issues opened, and Phase 1 kickoff opened as issue `#6`.
+- 2026-05-03: GitHub CI is green on `main` after the cargo-deny and cross-host Phase 1 fixes. The 5-day Phase 0 stability window starts from this point, subject to future pushes staying green.
 
 ---
 

@@ -50,11 +50,58 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
 
   # ──────────────────────────────────────────────
-  # 3. Test matrix — Linux, macOS, Windows
+  # 3. Shared Phase 1 fixture
+  # ──────────────────────────────────────────────
+  hello-fixture:
+    name: Build shared hello fixture
+    runs-on: ubuntu-latest
+    outputs:
+      sha256: ${{ steps.hash.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@1.91.1
+        with:
+          targets: wasm32-wasip1, wasm32-wasip2
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-fixture-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install cargo-component
+        run: cargo install cargo-component --locked --version 0.21.1
+      - name: Build hello fixture once
+        id: build
+        shell: bash
+        run: |
+          wasm_path="$(scripts/build-hello-component.sh)"
+          mkdir -p .layer36-fixture
+          cp "$wasm_path" .layer36-fixture/hello_world.wasm
+      - name: Record fixture hash
+        id: hash
+        shell: bash
+        run: |
+          sha256="$(sha256sum .layer36-fixture/hello_world.wasm | awk '{print $1}')"
+          printf '%s\n' "$sha256" > .layer36-fixture/hello_world.wasm.sha256
+          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
+          echo "hello fixture sha256: $sha256"
+      - name: Upload hello fixture
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-hello-fixture
+          path: .layer36-fixture/
+          if-no-files-found: error
+
+  # ──────────────────────────────────────────────
+  # 4. Test matrix — Linux, macOS, Windows
   # ──────────────────────────────────────────────
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    needs: hello-fixture
     strategy:
       fail-fast: false
       matrix:
@@ -77,14 +124,20 @@ jobs:
         run: cargo build --workspace
       - name: Build release binary
         run: cargo build --release --workspace
-      - name: Install cargo-component
-        run: cargo install cargo-component --locked --version 0.21.1
+      - name: Download shared hello fixture
+        uses: actions/download-artifact@v4
+        with:
+          name: phase1-hello-fixture
+          path: .layer36-fixture
       - name: Run Phase 1 tests
         shell: bash
+        env:
+          LAYER36_HELLO_WASM: .layer36-fixture/hello_world.wasm
+          LAYER36_HELLO_SHA256: ${{ needs.hello-fixture.outputs.sha256 }}
         run: scripts/test-phase1.sh
 
   # ──────────────────────────────────────────────
-  # 4. Documentation build
+  # 5. Documentation build
   # ──────────────────────────────────────────────
   docs:
     name: Docs (mdBook)
@@ -101,7 +154,7 @@ jobs:
         run: mdbook build docs/book
 
   # ──────────────────────────────────────────────
-  # 5. Benchmark smoke + warning-only regression check
+  # 6. Benchmark smoke + warning-only regression check
   # ──────────────────────────────────────────────
   benchmarks:
     name: Benchmarks (warning only)
@@ -132,7 +185,7 @@ jobs:
         run: scripts/check-benchmark-regression.sh
 
   # ──────────────────────────────────────────────
-  # 6. Dependency audit (cargo-deny)
+  # 7. Dependency audit (cargo-deny)
   # ──────────────────────────────────────────────
   deny:
     name: Dependency audit (cargo-deny)
