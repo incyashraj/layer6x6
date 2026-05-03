@@ -44,3 +44,45 @@ platform is ready.
 
 The first Phase 2 draft is checked into `wit/layer36/phase2`. It is a review
 draft, not a frozen compatibility promise yet.
+
+## App Manifest
+
+Phase 2 apps can also carry a sidecar `manifest.toml`.
+
+The manifest says:
+
+- what the app is called
+- which `.wasm` file is the entry point
+- which UAPI world it targets
+- which capabilities it wants
+
+Example:
+
+```toml
+[app]
+id = "com.example.hello"
+name = "Hello"
+version = "1.0.0"
+entry = "hello.wasm"
+world = "layer36:app/cli@0.1.0"
+
+[[capabilities]]
+cap = "fs.read:~/Documents/notes/**"
+rationale = "Read saved notes"
+required = true
+
+[[capabilities]]
+cap = "net.connect:api.example.com:443"
+rationale = "Sync to cloud"
+required = false
+```
+
+You can validate the file today:
+
+```bash
+cargo run -p layer36-cli -- manifest check manifest.toml
+```
+
+This is the first UCap piece. It checks the shape of the request. The next step
+is a session policy that grants or denies those requests when a Phase 2 app
+calls UAPI.

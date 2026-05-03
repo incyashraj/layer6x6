@@ -1192,8 +1192,8 @@ Each task targets approximately one engineer-week unless noted. Task IDs match B
 **Branch:** `p2-sec-01-ucap`.
 
 **Acceptance:**
-- `crates/policy/` implements cap parsing, matching, and checking.
-- Manifest parser in `crates/manifest/`.
+- `crates/policy/` implements cap matching and checking.
+- Manifest parser in `crates/manifest/`. Started as `crates/manifest/`, package name `layer36-manifest`.
 - Dispatcher calls `policy.check()` at every UAPI entry.
 - CLI flags `--grant`, `--auto-grant`, interactive prompt.
 
@@ -2022,6 +2022,8 @@ Save as `docs/book/src/phase2/retro.md` at the end of Phase 2.
 
 Phase 2 development has started with the UAPI contract layer. The first draft lives under `wit/layer36/phase2`, uses WIT dependency packages for `io`, `fs`, `net`, `time`, and `locale`, and is parse-checked by `crates/runtime/tests/phase2_wit.rs`.
 
+The first manifest slice also exists now. `crates/manifest` parses the Phase 2 `manifest.toml` shape, validates app identity and capability strings, records default grants, and is exposed through `layer36 manifest check`.
+
 This does not freeze UAPI v0.1 yet. It gives us a real contract to review, generate bindings from, and wire into host adapters.
 
 ---
@@ -2059,6 +2061,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-UAPI-03 | Draft `net` WIT package | 2026-05-03 | Added under `wit/layer36/phase2/deps/net`; HTTP client only. |
 | P2-UAPI-04 | Draft `time` WIT package | 2026-05-03 | Added under `wit/layer36/phase2/deps/time`; clock and sleep only. |
 | P2-UAPI-05 | Draft `locale` WIT package | 2026-05-03 | Added under `wit/layer36/phase2/deps/locale`; info and formatting only. |
+| P2-SEC-01A | Manifest parser and capability string validator | 2026-05-03 | Added `crates/manifest` and `layer36 manifest check`; policy matching and runtime enforcement remain open. |
 
 ---
 
@@ -2067,6 +2070,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
 | P2-UAPI-REVIEW | Review generated bindings and naming before freeze | 2026-05-03 | Check Rust binding shape next, before implementing adapters. |
+| P2-SEC-01B | UCap session policy and runtime checks | 2026-05-03 | Needs dispatcher wiring after Phase 2 bindings shape is reviewed. |
 
 ---
 

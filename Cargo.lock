@@ -918,9 +918,20 @@ version = "0.1.0-dev"
 dependencies = [
  "anyhow",
  "clap",
+ "layer36-manifest",
  "layer36-runtime",
  "sha2",
+ "tempfile",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "layer36-manifest"
+version = "0.1.0-dev"
+dependencies = [
+ "serde",
+ "thiserror 2.0.18",
+ "toml",
 ]
 
 [[package]]

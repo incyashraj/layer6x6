@@ -17,6 +17,7 @@ fn help_lists_phase_1_commands() {
     assert!(stdout.contains("run"));
     assert!(stdout.contains("version"));
     assert!(stdout.contains("doctor"));
+    assert!(stdout.contains("manifest"));
 }
 
 #[test]
@@ -48,6 +49,80 @@ fn doctor_lists_phase_1_tooling() {
     assert!(stdout.contains("wasm32-wasip1"));
     assert!(stdout.contains("wasm32-wasip2"));
     assert!(stdout.contains("state dir"));
+}
+
+#[test]
+fn manifest_check_validates_phase_2_manifest() {
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let manifest_path = dir.path().join("manifest.toml");
+    std::fs::write(
+        &manifest_path,
+        r#"
+            [app]
+            id = "com.example.hello"
+            name = "Hello"
+            version = "1.0.0"
+            entry = "hello.wasm"
+            world = "layer36:app/cli@0.1.0"
+
+            [[capabilities]]
+            cap = "io.stdout"
+            rationale = "Print output"
+            required = true
+        "#,
+    )
+    .expect("write manifest");
+
+    let output = layer36()
+        .args(["manifest", "check"])
+        .arg(&manifest_path)
+        .output()
+        .expect("run manifest check");
+
+    assert!(
+        output.status.success(),
+        "manifest check failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Manifest OK"));
+    assert!(stdout.contains("app id          com.example.hello"));
+    assert!(stdout.contains("capabilities    1"));
+}
+
+#[test]
+fn manifest_check_rejects_bad_capability() {
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let manifest_path = dir.path().join("manifest.toml");
+    std::fs::write(
+        &manifest_path,
+        r#"
+            [app]
+            id = "com.example.hello"
+            name = "Hello"
+            version = "1.0.0"
+            entry = "hello.wasm"
+            world = "layer36:app/cli@0.1.0"
+
+            [[capabilities]]
+            cap = "FS.read:./data/**"
+            rationale = "Read data"
+            required = true
+        "#,
+    )
+    .expect("write manifest");
+
+    let output = layer36()
+        .args(["manifest", "check"])
+        .arg(&manifest_path)
+        .output()
+        .expect("run manifest check");
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("invalid capability"));
 }
 
 #[test]

@@ -3,6 +3,7 @@ use std::process::{Command as ProcessCommand, ExitCode};
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
+use layer36_manifest::Manifest;
 use layer36_runtime::{Config, RunOutcome, Runtime, RuntimeError};
 
 #[derive(Debug, Parser)]
@@ -35,6 +36,20 @@ enum Command {
     Version,
     /// Check the local development environment.
     Doctor,
+    /// Inspect and validate Phase 2 app manifests.
+    Manifest {
+        #[command(subcommand)]
+        command: ManifestCommand,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum ManifestCommand {
+    /// Validate a manifest.toml file.
+    Check {
+        /// Path to manifest.toml.
+        file: PathBuf,
+    },
 }
 
 fn main() -> ExitCode {
@@ -69,6 +84,9 @@ fn run() -> Result<u8> {
             Ok(0)
         }
         Command::Doctor => doctor(),
+        Command::Manifest { command } => match command {
+            ManifestCommand::Check { file } => check_manifest(&file),
+        },
     }
 }
 
@@ -117,6 +135,22 @@ fn doctor() -> Result<u8> {
     print_target_status("wasm32-wasip1")?;
     print_target_status("wasm32-wasip2")?;
     println!("state dir       {}", layer36_home().display());
+    Ok(0)
+}
+
+fn check_manifest(file: &Path) -> Result<u8> {
+    let manifest = Manifest::parse_file(file)?;
+    let declared_caps = manifest.declared_capabilities()?;
+    let required_caps = manifest.required_capabilities()?;
+
+    println!("Manifest OK");
+    println!("app id          {}", manifest.app.id);
+    println!("app name        {}", manifest.app.name);
+    println!("entry           {}", manifest.app.entry.display());
+    println!("world           {}", manifest.app.world);
+    println!("capabilities    {}", declared_caps.len());
+    println!("required caps   {}", required_caps.len());
+
     Ok(0)
 }
 

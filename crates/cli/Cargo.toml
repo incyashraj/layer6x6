@@ -15,8 +15,10 @@ path = "src/main.rs"
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
+layer36-manifest = { path = "../manifest", version = "0.1.0-dev" }
 layer36-runtime = { path = "../runtime", version = "0.1.0-dev" }
 tracing-subscriber.workspace = true
 
 [dev-dependencies]
 sha2 = "0.10.9"
+tempfile = "3.27.0"

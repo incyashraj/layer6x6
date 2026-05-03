@@ -159,3 +159,16 @@ cargo run -p layer36-cli -- doctor
 `doctor` reports your `cargo-component` version, `wasm32-wasip1` and
 `wasm32-wasip2` target status, and Layer36 state directory. It is basic in
 Phase 1 because the runtime is still a proof.
+
+## Check a Phase 2 Manifest
+
+Phase 2 adds a sidecar `manifest.toml` for app identity and capability
+requests. You can validate one before the app runtime path is complete:
+
+```bash
+cargo run -p layer36-cli -- manifest check path/to/manifest.toml
+```
+
+For now this checks the TOML schema, app world, app id, duplicate capabilities,
+and capability string format. Runtime permission prompts come in the next UCap
+slice.
