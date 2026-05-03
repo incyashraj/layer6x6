@@ -14,6 +14,7 @@
 # UAPI Reference
 
 - [Overview](uapi/overview.md)
+- [Rust SDK](uapi/rust-sdk.md)
 
 # Developer Guide
 

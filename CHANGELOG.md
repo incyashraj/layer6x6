@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Rust guest SDK helper layer for Phase 2 apps, including argument helpers, stream text helpers, file read/write helpers, HTTP text helpers, time/locale shortcuts, and a public Rust SDK guide.
 - First Rust guest SDK crate at `crates/bindings-rust`, published locally as package `layer36`, plus the Rust sample apps migrated onto the SDK facade.
 - First Phase 2 HTTP adapter slice and `apps/layer36-curl` sample for granted localhost GETs.
 - Phase 2 `io.args` import and `layer36 run ... -- <args>` forwarding, used by the new `apps/layer36-cat` sample.

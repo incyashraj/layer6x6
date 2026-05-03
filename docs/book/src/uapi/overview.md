@@ -216,14 +216,18 @@ The first guest-side Rust SDK crate has started now too:
 
 ```rust
 use layer36::{
-    io::stdio,
-    locale::{format, info, DateStyle},
-    time::clock,
+    io::{stdio, streams::OutputStreamExt},
+    locale::{self, DateStyle},
+    time,
     Guest,
 };
 ```
 
 It lives at `crates/bindings-rust` and builds as package `layer36`. For now it
-is a thin facade over generated WIT imports. That is enough to move the Rust
-sample apps away from raw generated module paths, while keeping the door open
-for nicer helpers as the UAPI settles.
+is a thin facade over generated WIT imports, plus a few helpers for app
+arguments, text output, file reads and writes, HTTP GET, time, and locale.
+
+The Rust sample apps now use that facade instead of raw generated module paths.
+That gives us a real app-facing surface to improve.
+
+Read the short guide here: [Rust SDK](rust-sdk.md).

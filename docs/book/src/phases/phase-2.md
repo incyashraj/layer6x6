@@ -36,8 +36,14 @@ There is also a first Rust guest SDK crate now. It lives at
 `crates/bindings-rust`, builds as package `layer36`, and gives app code simple
 module names such as `layer36::io`, `layer36::time`, and `layer36::locale`.
 The Rust sample apps now use that SDK facade, so normal app code talks to
-`layer36::fs::open`, `layer36::net::get`, and `layer36::time::clock` instead of
-deep generated binding paths.
+`layer36::fs::open`, `layer36::net::get`, and `layer36::time::now_millis`
+instead of deep generated binding paths.
+
+The SDK now has its first small helper layer too: argument helpers, stdout and
+stderr text helpers, common file helpers, HTTP body helpers, and top-level time
+and locale shortcuts. The important rule is still the same: guest apps should
+import Layer36 UAPI, not host WASI APIs. The current sample components are
+checked for that.
 
 The latest runtime piece is the generated type bridge. It maps WIT records and
 errors into the dispatcher's Rust types, then back again. Put simply: the

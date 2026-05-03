@@ -1,6 +1,9 @@
 use layer36::{
     fs::{self, FsError, OpenMode},
-    io::{args, stdio, streams::OutputStream},
+    io::{
+        args, stdio,
+        streams::{OutputStream, OutputStreamExt},
+    },
     Guest,
 };
 
@@ -12,31 +15,27 @@ impl Guest for Component {
         let stderr = stdio::stderr();
 
         if app_args.is_empty() {
-            let _ = write_line(&stderr, "usage: layer36-cat <file> [file...]");
+            let _ = stderr.write_line("usage: layer36-cat <file> [file...]");
             let _ = stderr.flush();
             return 2;
         }
 
         let stdout = stdio::stdout();
-        for path in app_args.split('\n') {
-            if path.is_empty() {
-                continue;
-            }
-
+        for path in args::split_raw(&app_args) {
             let file = match fs::open(path, OpenMode::Read) {
                 Ok(file) => file,
                 Err(FsError::PermissionDenied) => {
-                    let _ = write_error(&stderr, "permission denied", path);
+                    let _ = write_error(&stderr, "permission denied", &path);
                     let _ = stderr.flush();
                     return 25;
                 }
                 Err(FsError::NotFound) => {
-                    let _ = write_error(&stderr, "not found", path);
+                    let _ = write_error(&stderr, "not found", &path);
                     let _ = stderr.flush();
                     return 20;
                 }
                 Err(_) => {
-                    let _ = write_error(&stderr, "could not open", path);
+                    let _ = write_error(&stderr, "could not open", &path);
                     let _ = stderr.flush();
                     return 21;
                 }
@@ -46,7 +45,7 @@ impl Guest for Component {
                 let bytes = match file.read(8192) {
                     Ok(bytes) => bytes,
                     Err(_) => {
-                        let _ = write_error(&stderr, "could not read", path);
+                        let _ = write_error(&stderr, "could not read", &path);
                         let _ = stderr.flush();
                         return 22;
                     }
@@ -70,15 +69,11 @@ impl Guest for Component {
     }
 }
 
-fn write_line(stream: &OutputStream, value: &str) -> bool {
-    stream.write_all(value.as_bytes()).is_ok() && stream.write_all(b"\n").is_ok()
-}
-
 fn write_error(stream: &OutputStream, message: &str, path: &str) -> bool {
-    stream.write_all(b"layer36-cat: ").is_ok()
-        && stream.write_all(message.as_bytes()).is_ok()
-        && stream.write_all(b": ").is_ok()
-        && write_line(stream, path)
+    stream.write_text("layer36-cat: ").is_ok()
+        && stream.write_text(message).is_ok()
+        && stream.write_text(": ").is_ok()
+        && stream.write_line(path).is_ok()
 }
 
 layer36::export!(Component);
