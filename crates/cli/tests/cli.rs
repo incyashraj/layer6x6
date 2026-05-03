@@ -235,6 +235,32 @@ fn configured_phase2_smoke_component_denies_missing_file_grant() {
 }
 
 #[test]
+fn configured_layer36_clock_component_uses_fixed_test_time() {
+    let Some(path) = configured_layer36_clock_component() else {
+        return;
+    };
+
+    let output = layer36()
+        .args(["run", "--test-time", "1234567890"])
+        .arg(path)
+        .output()
+        .expect("run layer36-clock component");
+
+    assert!(
+        output.status.success(),
+        "layer36-clock failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("app=layer36-clock"));
+    assert!(stdout.contains("timezone="));
+    assert!(stdout.contains("locale="));
+    assert!(stdout.contains("date=1234567890:"));
+}
+
+#[test]
 fn fuel_limit_exits_with_limit_code() {
     let Some(path) = configured_hello_component() else {
         return;
@@ -404,6 +430,15 @@ fn configured_hello_component() -> Option<PathBuf> {
 fn configured_phase2_smoke_component() -> Option<PathBuf> {
     let Some(path) = std::env::var_os("LAYER36_PHASE2_SMOKE_WASM") else {
         eprintln!("skipping Phase 2 smoke component test: LAYER36_PHASE2_SMOKE_WASM is not set");
+        return None;
+    };
+
+    Some(workspace_path(PathBuf::from(path)))
+}
+
+fn configured_layer36_clock_component() -> Option<PathBuf> {
+    let Some(path) = std::env::var_os("LAYER36_CLOCK_WASM") else {
+        eprintln!("skipping layer36-clock component test: LAYER36_CLOCK_WASM is not set");
         return None;
     };
 

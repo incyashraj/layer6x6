@@ -1581,7 +1581,7 @@ What we call things vs. what the ecosystem calls them. Keep these consistent in 
 > **Project Status:** In Progress
 > **Phase 0 Start:** 2026-05-01
 > **v1.0 Target:** estimated after Phase 7
-> **Last Updated:** 2026-05-03
+> **Last Updated:** 2026-05-04
 
 This section is the living status board for all of Layer36. Update it at every phase boundary, major milestone, and architectural pivot. It is the first thing a returning contributor should read.
 
@@ -1593,7 +1593,7 @@ This section is the living status board for all of Layer36. Update it at every p
 |---|-------|--------|---------|-----------|-------|
 | 0 | Foundation | Mostly done | 2026-05-01 | pending external gates | Renamed from OneOS to Layer36 on 2026-05-02; local scaffold, docs, Pages, labels/issues, and CI are green. |
 | 1 | POC Runtime | Engineering done | 2026-05-02 | pending formal exit gates | Runtime, CLI, WIT host imports, shared hello-world fixture, CI harness, fuel/memory limits, release packaging, quickstart, threat model, benchmarks, ADRs, retrospective, and `v0.1.0-rc1` are in place. |
-| 2 | UAPI v0.1 (CLI) | Started | 2026-05-03 | pending | Draft WIT package, manifest/policy checks, runtime guard, host-binding checkpoint, dispatcher scaffold, generated type bridge, generated host wiring, resource table, initial Phase 2 `layer36 run` linker path, smoke happy/denied proofs, and budget-aware CI mode are in place. |
+| 2 | UAPI v0.1 (CLI) | Started | 2026-05-03 | pending | Draft WIT package, manifest/policy checks, runtime guard, host-binding checkpoint, dispatcher scaffold, generated type bridge, generated host wiring, resource table, initial Phase 2 `layer36 run` linker path, smoke happy/denied proofs, first `layer36-clock` sample, and budget-aware CI mode are in place. |
 | 3 | UI + Graphics | Not started | pending | pending | |
 | 4 | Mobile Hosts | Not started | pending | pending | |
 | 5 | Developer SDK | Not started | pending | pending | |
@@ -1680,6 +1680,7 @@ Short time-stamped entries for anything significant: ecosystem developments, piv
 | 2026-05-03 | Verified ADR-0002 and ADR-0003 are on `main`; Phase 1 ADR gate is closed. |
 | 2026-05-03 | Wrote the Phase 1 engineering retrospective. External quickstart timing and governance closeout remain pending. |
 | 2026-05-03 | Reworked public docs into simpler human language, added a left-to-right system timeline, and changed roadmap timing from fixed months to estimates. |
+| 2026-05-04 | Added the first named Phase 2 sample app, `apps/layer36-clock`, and a hidden fixed-time test flag so clock output can be tested without depending on the real wall clock. |
 
 ---
 

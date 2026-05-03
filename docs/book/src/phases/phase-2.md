@@ -57,6 +57,11 @@ test matrix. The same smoke app now has a missing-grant test too: without
 `fs.read`, the host returns permission denied and the component exits with a
 clear stderr message.
 
+The first named sample app has started too. `apps/layer36-clock` is a Rust
+component that reads time and locale through UAPI, then prints through UAPI
+stdout. The CLI now has a hidden `--test-time` flag, so tests can freeze the
+clock and check stable output.
+
 The proof apps are:
 
 - `layer36-curl`

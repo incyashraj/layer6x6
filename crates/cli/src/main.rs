@@ -44,6 +44,10 @@ enum Command {
         /// Grant every capability declared in the manifest for this run session.
         #[arg(long)]
         auto_grant: bool,
+
+        /// Fixed wall-clock time in milliseconds since Unix epoch. Intended for deterministic tests.
+        #[arg(long, hide = true)]
+        test_time: Option<u64>,
     },
     /// Print version information.
     Version,
@@ -94,7 +98,10 @@ fn run() -> Result<u8> {
             manifest,
             grant,
             auto_grant,
-        } => run_component(file, fuel, mem_limit, manifest, grant, auto_grant),
+            test_time,
+        } => run_component(
+            file, fuel, mem_limit, manifest, grant, auto_grant, test_time,
+        ),
         Command::Version => {
             print_version();
             Ok(0)
@@ -113,6 +120,7 @@ fn run_component(
     manifest_path: Option<PathBuf>,
     grants: Vec<String>,
     auto_grant: bool,
+    test_time_millis: Option<u64>,
 ) -> Result<u8> {
     if !file.exists() {
         anyhow::bail!("input file does not exist: {}", file.display());
@@ -138,6 +146,7 @@ fn run_component(
             .checked_mul(1024 * 1024)
             .context("memory limit is too large")?,
         session_policy: policy,
+        test_time_millis,
     };
     let runtime = Runtime::new(&config)?;
 

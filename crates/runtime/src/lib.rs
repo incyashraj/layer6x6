@@ -50,6 +50,8 @@ pub struct Config {
     pub memory_bytes: u64,
     /// Session-scoped UCap grants used by Phase 2 UAPI dispatch.
     pub session_policy: SessionPolicy,
+    /// Optional fixed wall-clock time for deterministic test runs.
+    pub test_time_millis: Option<u64>,
 }
 
 impl Default for Config {
@@ -58,6 +60,7 @@ impl Default for Config {
             fuel: None,
             memory_bytes: 256 * 1024 * 1024,
             session_policy: SessionPolicy::default(),
+            test_time_millis: None,
         }
     }
 }
@@ -271,7 +274,7 @@ impl HostState {
             #[cfg(feature = "phase2-bindings")]
             phase2: phase2_host::Phase2Host::new(
                 UapiGuard::new(config.session_policy.clone()),
-                Box::new(LocalPhase2Adapter::new(output)),
+                Box::new(LocalPhase2Adapter::new(output, config.test_time_millis)),
             ),
         })
     }
@@ -362,15 +365,17 @@ struct LocalPhase2Adapter {
     output: Rc<RefCell<OutputMode>>,
     state: RefCell<LocalPhase2AdapterState>,
     started: Instant,
+    test_time_millis: Option<u64>,
 }
 
 #[cfg(feature = "phase2-bindings")]
 impl LocalPhase2Adapter {
-    fn new(output: Rc<RefCell<OutputMode>>) -> Self {
+    fn new(output: Rc<RefCell<OutputMode>>, test_time_millis: Option<u64>) -> Self {
         Self {
             output,
             state: RefCell::new(LocalPhase2AdapterState::default()),
             started: Instant::now(),
+            test_time_millis,
         }
     }
 
@@ -626,6 +631,10 @@ impl NetAdapter for LocalPhase2Adapter {
 #[cfg(feature = "phase2-bindings")]
 impl TimeAdapter for LocalPhase2Adapter {
     fn now_millis(&self) -> std::result::Result<u64, AdapterError> {
+        if let Some(millis) = self.test_time_millis {
+            return Ok(millis);
+        }
+
         let millis = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map_err(|err| AdapterError::Io(err.to_string()))?

@@ -170,6 +170,11 @@ This is the first end-to-end proof that the UAPI path is more than generated
 types. The matching denial test runs the same component without `fs.read`; the
 host returns permission denied before native file access happens.
 
+The first named sample app is `apps/layer36-clock`. It uses the same Phase 2
+world but focuses on time, locale, and stdout. A hidden `--test-time` runner
+flag lets the test suite freeze wall-clock time, which keeps the sample output
+stable across machines.
+
 ## Rust Binding Checkpoint
 
 The runtime has a feature named `phase2-bindings` that asks Wasmtime to generate

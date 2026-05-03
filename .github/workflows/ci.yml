@@ -142,6 +142,11 @@ jobs:
         run: |
           wasm_path="$(scripts/build-phase2-smoke-component.sh)"
           cp "$wasm_path" layer36-fixture/phase2_smoke.wasm
+      - name: Build layer36-clock fixture once
+        shell: bash
+        run: |
+          wasm_path="$(scripts/build-layer36-clock-component.sh)"
+          cp "$wasm_path" layer36-fixture/layer36_clock.wasm
       - name: Record fixture hash
         id: hash
         shell: bash
@@ -198,6 +203,7 @@ jobs:
           LAYER36_HELLO_WASM: layer36-fixture/hello_world.wasm
           LAYER36_HELLO_SHA256: ${{ needs.hello-fixture.outputs.sha256 }}
           LAYER36_PHASE2_SMOKE_WASM: layer36-fixture/phase2_smoke.wasm
+          LAYER36_CLOCK_WASM: layer36-fixture/layer36_clock.wasm
         run: scripts/test-phase1.sh
 
   # ──────────────────────────────────────────────
