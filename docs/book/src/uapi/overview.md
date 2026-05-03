@@ -117,6 +117,25 @@ flowchart LR
 Today this guard is tested inside the runtime. The generated Phase 2 dispatcher
 still needs to call it for each real WIT import.
 
+## Dispatcher Scaffold
+
+The runtime now has the first dispatcher layer too:
+
+```text
+WIT import -> UapiDispatcher -> UapiGuard -> HostAdapter trait -> native OS
+```
+
+Right now, the host adapter traits are still stubs. That is expected. The value
+of this step is that the boundary is testable:
+
+- a denied `fs.open` does not call the file adapter
+- a denied `net.fetch` does not call the network adapter
+- a granted call reaches the adapter
+- file and network permission failures are mapped to module-level errors
+
+The next step is to connect the generated Wasmtime import bindings to these
+dispatcher methods.
+
 ## Rust Binding Checkpoint
 
 The runtime has a feature named `phase2-bindings` that asks Wasmtime to generate

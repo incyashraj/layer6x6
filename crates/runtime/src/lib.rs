@@ -12,6 +12,7 @@ use wasmtime::{
 };
 
 pub mod uapi;
+pub mod uapi_dispatch;
 
 #[cfg(feature = "phase2-bindings")]
 pub mod phase2_bindings;
