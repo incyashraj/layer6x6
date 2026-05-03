@@ -97,6 +97,10 @@ When `--prompt` is passed, or when the command is running in a real terminal,
 Layer36 can ask for the missing manifest capabilities and add them to the
 current run session.
 
+The manifest entry is checked too. If `manifest.toml` says `entry = "app.wasm"`
+but you run a different file, Layer36 stops before grant resolution. That keeps
+a manifest from accidentally applying to the wrong component.
+
 The runtime now also has the next piece: a UAPI guard. It is small, but it is
 the path every future adapter should use before it touches the host OS.
 

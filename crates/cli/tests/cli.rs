@@ -441,6 +441,36 @@ fn run_with_manifest_denies_missing_required_capability() {
 }
 
 #[test]
+fn run_with_manifest_rejects_entry_mismatch() {
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let wasm_path = dir.path().join("other.wasm");
+    std::fs::write(&wasm_path, b"not actually wasm").expect("write wasm placeholder");
+    std::fs::write(
+        dir.path().join("manifest.toml"),
+        r#"
+            [app]
+            id = "com.example.mismatch"
+            name = "Mismatch"
+            version = "1.0.0"
+            entry = "app.wasm"
+            world = "layer36:app/cli@0.1.0"
+        "#,
+    )
+    .expect("write manifest");
+
+    let output = layer36()
+        .arg("run")
+        .arg(&wasm_path)
+        .output()
+        .expect("run layer36 with mismatched sidecar manifest");
+
+    assert_eq!(output.status.code(), Some(5));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("manifest entry"));
+    assert!(stderr.contains("does not match"));
+}
+
+#[test]
 fn run_with_manifest_and_explicit_grant_reaches_runtime() {
     let dir = tempfile::tempdir().expect("create temp dir");
     let wasm_path = dir.path().join("app.wasm");

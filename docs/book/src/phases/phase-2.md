@@ -94,6 +94,11 @@ terminal the same prompt can appear automatically when required capabilities
 are missing. In non-interactive runs, Layer36 keeps the safer behavior and
 fails with a clear permission message.
 
+There is now a small manifest trust check as well. If the sidecar manifest says
+the app entry is `app.wasm`, then `layer36 run` must be pointed at that same
+file. Running a different component with that manifest is rejected before any
+grant prompt or runtime execution.
+
 The proof apps are:
 
 - `layer36-curl`

@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Manifest entry hardening for `layer36 run`: when a sidecar manifest is present, its `app.entry` must match the `.wasm` being run.
 - First terminal grant prompt for Phase 2 manifest capabilities via `layer36 run --prompt`, while non-interactive runs still fail cleanly when required grants are missing.
 - Rust guest SDK helper layer for Phase 2 apps, including argument helpers, stream text helpers, file read/write helpers, HTTP text helpers, time/locale shortcuts, and a public Rust SDK guide.
 - First Rust guest SDK crate at `crates/bindings-rust`, published locally as package `layer36`, plus the Rust sample apps migrated onto the SDK facade.
@@ -57,6 +58,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 - `v0.1.0-rc1` prerelease with Linux x64, Linux ARM64, macOS Intel, macOS Apple Silicon, Windows x64, and `SHA256SUMS` assets.
 
 ### Changed
+- CI is temporarily manual-only while the GitHub account's Actions billing/spending limit is blocked; local checks remain the required development gate.
 - Reduced normal GitHub Actions usage by keeping push CI on cheap Linux checks and moving the full Linux/macOS/Windows matrix, benchmarks, and cargo-deny audit behind manual full CI or `[full-ci]`.
 - Render Mermaid flowcharts as diagrams on the published mdBook site.
 - Reworked the public mdBook docs into clearer human language, added system flow diagrams, and changed the roadmap from fixed fixed-month language to estimates.

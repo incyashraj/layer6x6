@@ -149,11 +149,22 @@ fn run_component(request: RunRequest) -> Result<u8> {
         anyhow::bail!("input file does not exist: {}", request.file.display());
     }
 
-    let manifest = load_run_manifest(&request.file, request.manifest_path.as_deref())?;
-    let mut policy =
-        resolve_session_policy(manifest.as_ref(), &request.grants, request.auto_grant)?;
+    let loaded_manifest = load_run_manifest(&request.file, request.manifest_path.as_deref())?;
+    if let Some(loaded) = &loaded_manifest {
+        if !manifest_entry_matches(&request.file, loaded)? {
+            eprintln!(
+                "permission denied: manifest entry `{}` does not match `{}`",
+                loaded.manifest.app.entry.display(),
+                request.file.display()
+            );
+            return Ok(5);
+        }
+    }
 
-    if let Some(manifest) = &manifest {
+    let manifest = loaded_manifest.as_ref().map(|loaded| &loaded.manifest);
+    let mut policy = resolve_session_policy(manifest, &request.grants, request.auto_grant)?;
+
+    if let Some(manifest) = manifest {
         let can_prompt = request.prompt || io::stdin().is_terminal();
         let missing = policy.missing_required_for_manifest(manifest)?;
         if !missing.is_empty() && can_prompt && !request.auto_grant {
@@ -272,9 +283,17 @@ fn parse_grant_response(input: &str, caps: &[Capability]) -> Result<Vec<Capabili
     Ok(selected)
 }
 
-fn load_run_manifest(file: &Path, manifest_path: Option<&Path>) -> Result<Option<Manifest>> {
+struct LoadedManifest {
+    manifest: Manifest,
+    path: PathBuf,
+}
+
+fn load_run_manifest(file: &Path, manifest_path: Option<&Path>) -> Result<Option<LoadedManifest>> {
     if let Some(path) = manifest_path {
-        return Ok(Some(Manifest::parse_file(path)?));
+        return Ok(Some(LoadedManifest {
+            manifest: Manifest::parse_file(path)?,
+            path: path.to_path_buf(),
+        }));
     }
 
     let Some(parent) = file.parent() else {
@@ -283,10 +302,32 @@ fn load_run_manifest(file: &Path, manifest_path: Option<&Path>) -> Result<Option
 
     let candidate = parent.join("manifest.toml");
     if candidate.exists() {
-        Ok(Some(Manifest::parse_file(candidate)?))
+        Ok(Some(LoadedManifest {
+            manifest: Manifest::parse_file(&candidate)?,
+            path: candidate,
+        }))
     } else {
         Ok(None)
     }
+}
+
+fn manifest_entry_matches(file: &Path, loaded: &LoadedManifest) -> Result<bool> {
+    let manifest_dir = loaded
+        .path
+        .parent()
+        .context("manifest path has no parent directory")?;
+    let expected = if loaded.manifest.app.entry.is_absolute() {
+        loaded.manifest.app.entry.clone()
+    } else {
+        manifest_dir.join(&loaded.manifest.app.entry)
+    };
+
+    let file = std::fs::canonicalize(file)?;
+    let Ok(expected) = std::fs::canonicalize(expected) else {
+        return Ok(false);
+    };
+
+    Ok(file == expected)
 }
 
 fn print_version() {
