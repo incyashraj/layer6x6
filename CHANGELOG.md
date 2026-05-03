@@ -39,6 +39,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 - `v0.1.0-rc1` prerelease with Linux x64, Linux ARM64, macOS Intel, macOS Apple Silicon, Windows x64, and `SHA256SUMS` assets.
 
 ### Changed
+- Render Mermaid flowcharts as diagrams on the published mdBook site.
 - Reworked the public mdBook docs into clearer human language, added system flow diagrams, and changed the roadmap from fixed fixed-month language to estimates.
 
 ---

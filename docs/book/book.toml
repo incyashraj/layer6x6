@@ -12,6 +12,7 @@ git-repository-icon = "fa-github"
 edit-url-template = "https://github.com/incyashraj/layer6x6/edit/main/docs/book/{path}"
 no-section-label = false
 additional-css = []
+additional-js = ["mermaid-render.js"]
 
 [output.html.fold]
 enable = true
