@@ -8,6 +8,7 @@ use std::{
     collections::BTreeMap,
     fs::File,
     io::{Read, Seek, SeekFrom, Write},
+    net::TcpStream,
     path::Path,
     rc::Rc,
     time::{Instant, SystemTime, UNIX_EPOCH},
@@ -32,7 +33,7 @@ pub mod phase2_host;
 use layer36_policy::SessionPolicy;
 use uapi::UapiGuard;
 use uapi_dispatch::{
-    AdapterError, DateStyle, FileHandle, FileStat, FsAdapter, HostAdapter, HttpRequest,
+    AdapterError, DateStyle, FileHandle, FileStat, FsAdapter, Header, HostAdapter, HttpRequest,
     HttpResponse, IoAdapter, LocaleAdapter, LocaleId, NetAdapter, OpenMode, TimeAdapter,
 };
 
@@ -640,8 +641,44 @@ impl FsAdapter for LocalPhase2Adapter {
 
 #[cfg(feature = "phase2-bindings")]
 impl NetAdapter for LocalPhase2Adapter {
-    fn fetch(&self, _req: HttpRequest) -> std::result::Result<HttpResponse, AdapterError> {
-        Err(AdapterError::Unsupported)
+    fn fetch(&self, req: HttpRequest) -> std::result::Result<HttpResponse, AdapterError> {
+        let url = ParsedHttpUrl::parse(&req.url)?;
+        if !matches!(req.method, uapi_dispatch::HttpMethod::Get) {
+            return Err(AdapterError::Unsupported);
+        }
+
+        let mut stream = TcpStream::connect((url.host.as_str(), url.port))
+            .map_err(|err| AdapterError::Network(err.to_string()))?;
+        if let Some(millis) = req.timeout_millis {
+            let timeout = std::time::Duration::from_millis(millis.into());
+            stream
+                .set_read_timeout(Some(timeout))
+                .map_err(map_io_error)?;
+            stream
+                .set_write_timeout(Some(timeout))
+                .map_err(map_io_error)?;
+        }
+
+        let mut request = format!(
+            "GET {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n",
+            url.path_and_query, url.host
+        )
+        .into_bytes();
+        for header in req.headers {
+            if header.name.contains(['\r', '\n']) || header.value.contains(['\r', '\n']) {
+                return Err(AdapterError::Network("invalid HTTP header".to_string()));
+            }
+            request.extend_from_slice(header.name.as_bytes());
+            request.extend_from_slice(b": ");
+            request.extend_from_slice(header.value.as_bytes());
+            request.extend_from_slice(b"\r\n");
+        }
+        request.extend_from_slice(b"\r\n");
+
+        stream.write_all(&request).map_err(map_io_error)?;
+        let mut response = Vec::new();
+        stream.read_to_end(&mut response).map_err(map_io_error)?;
+        parse_http_response(&response)
     }
 }
 
@@ -733,6 +770,85 @@ fn map_io_error(err: std::io::Error) -> AdapterError {
     }
 }
 
+struct ParsedHttpUrl {
+    host: String,
+    port: u16,
+    path_and_query: String,
+}
+
+impl ParsedHttpUrl {
+    fn parse(input: &str) -> std::result::Result<Self, AdapterError> {
+        let Some(rest) = input.strip_prefix("http://") else {
+            return Err(AdapterError::Unsupported);
+        };
+        let rest = rest.split_once('#').map_or(rest, |(before, _)| before);
+        let (authority, path) = match rest.find(['/', '?']) {
+            Some(index) => rest.split_at(index),
+            None => (rest, "/"),
+        };
+        if authority.is_empty() || authority.contains('@') {
+            return Err(AdapterError::InvalidPath);
+        }
+
+        let (host, port) = match authority.rsplit_once(':') {
+            Some((host, port)) if !host.is_empty() => {
+                let port = port.parse().map_err(|_| AdapterError::InvalidPath)?;
+                (host, port)
+            }
+            _ => (authority, 80),
+        };
+
+        let path_and_query = if path.starts_with('/') {
+            path.to_string()
+        } else {
+            format!("/{path}")
+        };
+
+        Ok(Self {
+            host: host.to_string(),
+            port,
+            path_and_query,
+        })
+    }
+}
+
+fn parse_http_response(bytes: &[u8]) -> std::result::Result<HttpResponse, AdapterError> {
+    let Some(header_end) = bytes.windows(4).position(|window| window == b"\r\n\r\n") else {
+        return Err(AdapterError::Network("invalid HTTP response".to_string()));
+    };
+    let header_bytes = &bytes[..header_end];
+    let body = bytes[header_end + 4..].to_vec();
+    let headers_text =
+        std::str::from_utf8(header_bytes).map_err(|err| AdapterError::Network(err.to_string()))?;
+    let mut lines = headers_text.split("\r\n");
+    let status_line = lines
+        .next()
+        .ok_or_else(|| AdapterError::Network("missing HTTP status".to_string()))?;
+    let status = status_line
+        .split_whitespace()
+        .nth(1)
+        .ok_or_else(|| AdapterError::Network("missing HTTP status code".to_string()))?
+        .parse()
+        .map_err(|_| AdapterError::Network("invalid HTTP status code".to_string()))?;
+
+    let mut headers = Vec::new();
+    for line in lines {
+        let Some((name, value)) = line.split_once(':') else {
+            continue;
+        };
+        headers.push(Header {
+            name: name.trim().to_string(),
+            value: value.trim().to_string(),
+        });
+    }
+
+    Ok(HttpResponse {
+        status,
+        headers,
+        body,
+    })
+}
+
 fn classify_limit_error(err: &wasmtime::Error) -> Option<String> {
     if err.downcast_ref::<Trap>() == Some(&Trap::OutOfFuel) {
         return Some("fuel exhausted".to_string());
@@ -781,6 +897,33 @@ mod tests {
             .expect_err("invalid bytes must fail");
 
         assert!(matches!(err, RuntimeError::InvalidComponent(_)));
+    }
+
+    #[test]
+    fn plain_http_url_parser_normalizes_query_only_paths() {
+        let parsed = ParsedHttpUrl::parse("http://127.0.0.1:8080?name=layer36#local")
+            .expect("parse HTTP URL");
+
+        assert_eq!(parsed.host, "127.0.0.1");
+        assert_eq!(parsed.port, 8080);
+        assert_eq!(parsed.path_and_query, "/?name=layer36");
+    }
+
+    #[test]
+    fn plain_http_response_parser_splits_headers_and_body() {
+        let response =
+            parse_http_response(b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nhello\n")
+                .expect("parse HTTP response");
+
+        assert_eq!(response.status, 200);
+        assert_eq!(
+            response.headers,
+            vec![Header {
+                name: "Content-Type".to_string(),
+                value: "text/plain".to_string()
+            }]
+        );
+        assert_eq!(response.body, b"hello\n");
     }
 
     #[cfg(feature = "phase2-bindings")]

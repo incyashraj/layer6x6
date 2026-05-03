@@ -571,6 +571,7 @@ interface types {
 interface http-client {
     use types.{request, response, net-error};
 
+    get: func(url: string) -> result<list<u8>, net-error>;
     fetch: func(req: request) -> result<response, net-error>;
 }
 
@@ -2024,7 +2025,7 @@ Save as `docs/book/src/phase2/retro.md` at the end of Phase 2.
 > **Phase Status:** Started
 > **Started:** 2026-05-03
 > **Completed:** pending
-> **Last Updated:** 2026-05-03
+> **Last Updated:** 2026-05-04
 
 ### Progress Summary
 
@@ -2040,13 +2041,15 @@ The generated WIT type bridge is also in place. `crates/runtime/src/phase2_bridg
 
 The generated import host exists now as well. `crates/runtime/src/phase2_host.rs` implements Wasmtime's generated Phase 2 host traits over `UapiDispatcher` for path-level filesystem calls, HTTP fetch, time, locale, logging, and stdio. It now has a small resource table too, so opened files and stdio streams get runtime-owned IDs before file read/write/seek/stat and stream read/write/flush calls reach the host adapter.
 
-`layer36 run` now has an initial Phase 2 execution path. The runtime still tries the Phase 1 `app` world first, then falls back to the Phase 2 `cli` world and installs the generated UAPI host into the Wasmtime linker. The local Phase 2 adapter is intentionally small: stdio, basic filesystem, time, and locale are wired; HTTP is still explicit `Unsupported` until a real network adapter lands.
+`layer36 run` now has an initial Phase 2 execution path. The runtime still tries the Phase 1 `app` world first, then falls back to the Phase 2 `cli` world and installs the generated UAPI host into the Wasmtime linker. The local Phase 2 adapter is intentionally small: stdio, basic filesystem, time, locale, and plain HTTP GET are wired. HTTP is only a first localhost/test-server slice right now; HTTPS, redirects, streaming, DNS policy details, response limits, and production hardening remain open.
 
 The first real Phase 2 component proof exists under `test/integration/phase2-smoke`. It targets the Phase 2 `cli` world, reads `phase2-smoke-input.txt` through `layer36:fs/files`, calls time and locale imports, and writes its result through `layer36:io/stdio`. CI can build this component as a shared fixture and run it through `layer36 run --grant fs.read:phase2-smoke-input.txt` on the cross-host test matrix. The local test suite now also checks the missing-grant path: without `fs.read`, the host maps the call to `permission-denied`, the component writes a short stderr message, and exits with a stable non-zero code.
 
 The first named sample app also exists now: `apps/layer36-clock`. It is a Rust component for the current binding path. It calls the Phase 2 time and locale imports, writes through UAPI stdout, and can run with `layer36 run --test-time` so tests can compare stable output instead of racing the real clock. The original TypeScript/jco sample plan is still useful for the language-binding track, but the Rust sample lets the runtime path mature first.
 
 `apps/layer36-cat` has started too. The CLI can now forward app arguments after `--`, the runtime exposes them through `layer36:io/args.raw`, and the cat sample uses those args plus `fs.read` grants to concatenate fixture files. The test suite checks both the granted path and the missing-grant denial path.
+
+`apps/layer36-curl` has started now as well. It reads its URL from Layer36 app args, calls `layer36:net/http-client.get`, and writes the response body through UAPI stdout. The first test uses a local HTTP server and an exact `net.connect:127.0.0.1:PORT` grant. The matching denial test runs without that grant and exits cleanly before the adapter can open a socket.
 
 GitHub Actions is now in budget-aware mode. Normal pushes run the cheap checks:
 format, clippy, Linux workspace tests, and docs. The expensive full path builds
@@ -2069,10 +2072,10 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | 3 | Rust bindings generated and usable (`cargo add layer36 && use layer36::fs` works) | Started: host-side Wasmtime binding checkpoint, generated type bridge, and import host trait wiring exist; SDK crate remains |
 | 4 | Go (TinyGo) bindings generated and usable; sample builds and runs | Not done |
 | 5 | TypeScript (jco) bindings generated and usable; sample builds and runs | Not done |
-| 6 | `layer36-curl <url>` works identically on all three hosts | Not done |
+| 6 | `layer36-curl <url>` works identically on all three hosts | Started: Rust sample builds locally and has granted/denied localhost HTTP tests; full cross-host run remains |
 | 7 | `layer36-cat <file>` works identically on all three hosts | Started: Rust sample builds locally and has granted/denied fixture tests; full cross-host run remains |
 | 8 | `layer36-clock` prints time in user locale on all three hosts | Started: Rust sample builds locally and has fixed-time integration coverage; full cross-host run remains |
-| 9 | UCap v0.1: manifest-declared caps enforced; unauthorized calls trap cleanly | Started: CLI preflight, runtime UAPI guard, dispatcher scaffold, generated WIT type bridge, generated host wiring, resource table, runtime linker install, Phase 2 smoke happy path, missing-grant proof, app args, `layer36-clock`, and first `layer36-cat` exist; HTTP and remaining sample work remain |
+| 9 | UCap v0.1: manifest-declared caps enforced; unauthorized calls trap cleanly | Started: CLI preflight, runtime UAPI guard, dispatcher scaffold, generated WIT type bridge, generated host wiring, resource table, runtime linker install, Phase 2 smoke happy path, missing-grant proof, app args, `layer36-clock`, first `layer36-cat`, first `layer36-curl`, and a plain HTTP adapter slice exist; cross-host and hardening work remain |
 | 10 | Startup overhead for a UAPI-using app < 150 ms | Not done |
 | 11 | UAPI hot-path dispatch < 1 µs (microbenchmark) | Not done |
 | 12 | Developer who knows Rust but not WASM can write a CLI in < 30 min using docs | Not done |
@@ -2106,6 +2109,8 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-APP-03A | First `layer36-clock` sample path | 2026-05-04 | Added `apps/layer36-clock`, a Rust Phase 2 component using time, locale, and stdout, plus `layer36 run --test-time` for deterministic sample tests. |
 | P2-UAPI-06 | Layer36 app arguments | 2026-05-04 | Added `layer36:io/args.raw`, default `io.args` grants, CLI forwarding through `layer36 run ... -- <args>`, and host dispatch wiring. |
 | P2-APP-02A | First `layer36-cat` sample path | 2026-05-04 | Added `apps/layer36-cat`, a Rust Phase 2 component that reads app args, opens granted files, writes stdout, and fails cleanly without `fs.read`. |
+| P2-NET-01 | Plain HTTP GET adapter slice | 2026-05-04 | Added a minimal `http://` GET adapter for test servers and localhost-style requests, with policy still checked before socket access. |
+| P2-APP-01A | First `layer36-curl` sample path | 2026-05-04 | Added `apps/layer36-curl`, a Rust Phase 2 component that reads a URL from app args, fetches through `net.http-client.get`, writes stdout, and fails cleanly without `net.connect`. |
 
 ---
 
@@ -2113,7 +2118,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
-| P2-APP-01C | Add remaining named sample app and cross-host fixture assertions | 2026-05-04 | `layer36-clock` and first `layer36-cat` exist; `layer36-curl`, full cross-host fixture assertions, and language-binding variants still remain. |
+| P2-APP-01C | Add cross-host fixture assertions and language sample variants | 2026-05-04 | Rust versions of `layer36-clock`, `layer36-cat`, and `layer36-curl` exist locally; full cross-host fixture assertions and language-binding variants still remain. |
 | P2-BIND-01A | Rust SDK crate skeleton | 2026-05-03 | Host binding shape is known; app-facing wrapper crate still needs design. |
 
 ---

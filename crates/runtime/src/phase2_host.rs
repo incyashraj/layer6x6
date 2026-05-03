@@ -322,6 +322,22 @@ impl io::log::Host for Phase2Host<'_> {
 }
 
 impl net::http_client::Host for Phase2Host<'_> {
+    fn get(&mut self, url: String) -> wasmtime::Result<Result<Vec<u8>, net::types::NetError>> {
+        let req = crate::uapi_dispatch::HttpRequest {
+            method: crate::uapi_dispatch::HttpMethod::Get,
+            url,
+            headers: Vec::new(),
+            body: Vec::new(),
+            timeout_millis: Some(5000),
+        };
+
+        Ok(self
+            .dispatcher()
+            .net_fetch(req)
+            .map(|response| response.body)
+            .map_err(bridge::net_error_to_wit))
+    }
+
     fn fetch(
         &mut self,
         req: net::types::Request,

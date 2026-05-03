@@ -2507,6 +2507,162 @@ pub mod layer36 {
             pub type Response = super::super::super::layer36::net::types::Response;
             pub type NetError = super::super::super::layer36::net::types::NetError;
             #[allow(unused_unsafe, clippy::all)]
+            pub fn get(url: &str) -> Result<_rt::Vec<u8>, NetError> {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 4 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 4
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let vec0 = url;
+                    let ptr0 = vec0.as_ptr().cast::<u8>();
+                    let len0 = vec0.len();
+                    let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "layer36:net/http-client@0.1.0")]
+                    unsafe extern "C" {
+                        #[link_name = "get"]
+                        fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import2(_: *mut u8, _: usize, _: *mut u8) {
+                        unreachable!()
+                    }
+                    unsafe { wit_import2(ptr0.cast_mut(), len0, ptr1) };
+                    let l3 = i32::from(*ptr1.add(0).cast::<u8>());
+                    let result24 = match l3 {
+                        0 => {
+                            let e = {
+                                let l4 = *ptr1
+                                    .add(::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l5 = *ptr1
+                                    .add(2 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len6 = l5;
+                                _rt::Vec::from_raw_parts(l4.cast(), len6, len6)
+                            };
+                            Ok(e)
+                        }
+                        1 => {
+                            let e = {
+                                let l7 = i32::from(
+                                    *ptr1.add(::core::mem::size_of::<*const u8>()).cast::<u8>(),
+                                );
+                                use super::super::super::layer36::net::types::NetError as V23;
+                                let v23 = match l7 {
+                                    0 => V23::InvalidUrl,
+                                    1 => {
+                                        let e23 = {
+                                            let l8 = *ptr1
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l9 = *ptr1
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len10 = l9;
+                                            let bytes10 = _rt::Vec::from_raw_parts(
+                                                l8.cast(),
+                                                len10,
+                                                len10,
+                                            );
+                                            _rt::string_lift(bytes10)
+                                        };
+                                        V23::DnsFailure(e23)
+                                    }
+                                    2 => {
+                                        let e23 = {
+                                            let l11 = *ptr1
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l12 = *ptr1
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len13 = l12;
+                                            let bytes13 = _rt::Vec::from_raw_parts(
+                                                l11.cast(),
+                                                len13,
+                                                len13,
+                                            );
+                                            _rt::string_lift(bytes13)
+                                        };
+                                        V23::ConnectFailure(e23)
+                                    }
+                                    3 => {
+                                        let e23 = {
+                                            let l14 = *ptr1
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l15 = *ptr1
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len16 = l15;
+                                            let bytes16 = _rt::Vec::from_raw_parts(
+                                                l14.cast(),
+                                                len16,
+                                                len16,
+                                            );
+                                            _rt::string_lift(bytes16)
+                                        };
+                                        V23::TlsFailure(e23)
+                                    }
+                                    4 => V23::Timeout,
+                                    5 => V23::BodyTooLarge,
+                                    6 => V23::PermissionDenied,
+                                    7 => {
+                                        let e23 = {
+                                            let l17 = *ptr1
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l18 = *ptr1
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len19 = l18;
+                                            let bytes19 = _rt::Vec::from_raw_parts(
+                                                l17.cast(),
+                                                len19,
+                                                len19,
+                                            );
+                                            _rt::string_lift(bytes19)
+                                        };
+                                        V23::Protocol(e23)
+                                    }
+                                    n => {
+                                        debug_assert_eq!(n, 8, "invalid enum discriminant");
+                                        let e23 = {
+                                            let l20 = *ptr1
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l21 = *ptr1
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len22 = l21;
+                                            let bytes22 = _rt::Vec::from_raw_parts(
+                                                l20.cast(),
+                                                len22,
+                                                len22,
+                                            );
+                                            _rt::string_lift(bytes22)
+                                        };
+                                        V23::Other(e23)
+                                    }
+                                };
+                                v23
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    };
+                    result24
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
             pub fn fetch(req: &Request) -> Result<Response, NetError> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -3133,8 +3289,8 @@ pub(crate) use __export_cli_impl as export;
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 2945] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x87\x16\x01A\x02\x01\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 2972] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xa2\x16\x01A\x02\x01\
 A+\x01B\x04\x01m\x05\x05trace\x05debug\x04info\x04warn\x05error\x04\0\x09log-lev\
 el\x03\0\0\x01q\x05\x06closed\0\0\x0binterrupted\0\0\x0eunexpected-eof\0\0\x0cin\
 valid-utf8\0\0\x05other\x01s\0\x04\0\x08io-error\x03\0\x02\x03\0\x16layer36:io/t\
@@ -3182,26 +3338,27 @@ d\x01\x03urls\x07headers\x04\x04body\x05\x0etimeout-millis\x06\x04\0\x07request\
 tls-failure\x01s\0\x07timeout\0\0\x0ebody-too-large\0\0\x11permission-denied\0\0\
 \x08protocol\x01s\0\x05other\x01s\0\x04\0\x09net-error\x03\0\x0b\x03\0\x17layer3\
 6:net/types@0.1.0\x05\x0e\x02\x03\0\x07\x07request\x02\x03\0\x07\x08response\x02\
-\x03\0\x07\x09net-error\x01B\x09\x02\x03\x02\x01\x0f\x04\0\x07request\x03\0\0\x02\
+\x03\0\x07\x09net-error\x01B\x0d\x02\x03\x02\x01\x0f\x04\0\x07request\x03\0\0\x02\
 \x03\x02\x01\x10\x04\0\x08response\x03\0\x02\x02\x03\x02\x01\x11\x04\0\x09net-er\
-ror\x03\0\x04\x01j\x01\x03\x01\x05\x01@\x01\x03req\x01\0\x06\x04\0\x05fetch\x01\x07\
-\x03\0\x1dlayer36:net/http-client@0.1.0\x05\x12\x01B\x03\x01@\0\0w\x04\0\x0anow-\
-millis\x01\0\x04\0\x0fmonotonic-nanos\x01\0\x03\0\x18layer36:time/clock@0.1.0\x05\
-\x13\x01B\x02\x01@\x01\x06millisy\x01\0\x04\0\x0csleep-millis\x01\0\x03\0\x18lay\
-er36:time/sleep@0.1.0\x05\x14\x01B\x06\x01r\x01\x05bcp47s\x04\0\x09locale-id\x03\
-\0\0\x01m\x04\x05short\x06medium\x04long\x04full\x04\0\x0adate-style\x03\0\x02\x01\
-m\x03\x07decimal\x07percent\x08currency\x04\0\x0cnumber-style\x03\0\x04\x03\0\x1a\
-layer36:locale/types@0.1.0\x05\x15\x02\x03\0\x0b\x09locale-id\x01B\x06\x02\x03\x02\
-\x01\x16\x04\0\x09locale-id\x03\0\0\x01@\0\0\x01\x04\0\x07current\x01\x02\x01@\0\
-\0s\x04\0\x08timezone\x01\x03\x03\0\x19layer36:locale/info@0.1.0\x05\x17\x02\x03\
-\0\x0b\x0adate-style\x02\x03\0\x0b\x0cnumber-style\x01B\x0a\x02\x03\x02\x01\x16\x04\
-\0\x09locale-id\x03\0\0\x02\x03\x02\x01\x18\x04\0\x0adate-style\x03\0\x02\x02\x03\
-\x02\x01\x19\x04\0\x0cnumber-style\x03\0\x04\x01@\x04\x06millisw\x02tzs\x05style\
-\x03\x03loc\x01\0s\x04\0\x0bformat-date\x01\x06\x01@\x03\x05valueu\x05style\x05\x03\
-loc\x01\0s\x04\0\x0dformat-number\x01\x07\x03\0\x1blayer36:locale/format@0.1.0\x05\
-\x1a\x01@\0\0z\x04\0\x03run\x01\x1b\x04\0\x15layer36:app/cli@0.1.0\x04\0\x0b\x09\
-\x01\0\x03cli\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x07\
-0.227.1\x10wit-bindgen-rust\x060.41.0";
+ror\x03\0\x04\x01p}\x01j\x01\x06\x01\x05\x01@\x01\x03urls\0\x07\x04\0\x03get\x01\
+\x08\x01j\x01\x03\x01\x05\x01@\x01\x03req\x01\0\x09\x04\0\x05fetch\x01\x0a\x03\0\
+\x1dlayer36:net/http-client@0.1.0\x05\x12\x01B\x03\x01@\0\0w\x04\0\x0anow-millis\
+\x01\0\x04\0\x0fmonotonic-nanos\x01\0\x03\0\x18layer36:time/clock@0.1.0\x05\x13\x01\
+B\x02\x01@\x01\x06millisy\x01\0\x04\0\x0csleep-millis\x01\0\x03\0\x18layer36:tim\
+e/sleep@0.1.0\x05\x14\x01B\x06\x01r\x01\x05bcp47s\x04\0\x09locale-id\x03\0\0\x01\
+m\x04\x05short\x06medium\x04long\x04full\x04\0\x0adate-style\x03\0\x02\x01m\x03\x07\
+decimal\x07percent\x08currency\x04\0\x0cnumber-style\x03\0\x04\x03\0\x1alayer36:\
+locale/types@0.1.0\x05\x15\x02\x03\0\x0b\x09locale-id\x01B\x06\x02\x03\x02\x01\x16\
+\x04\0\x09locale-id\x03\0\0\x01@\0\0\x01\x04\0\x07current\x01\x02\x01@\0\0s\x04\0\
+\x08timezone\x01\x03\x03\0\x19layer36:locale/info@0.1.0\x05\x17\x02\x03\0\x0b\x0a\
+date-style\x02\x03\0\x0b\x0cnumber-style\x01B\x0a\x02\x03\x02\x01\x16\x04\0\x09l\
+ocale-id\x03\0\0\x02\x03\x02\x01\x18\x04\0\x0adate-style\x03\0\x02\x02\x03\x02\x01\
+\x19\x04\0\x0cnumber-style\x03\0\x04\x01@\x04\x06millisw\x02tzs\x05style\x03\x03\
+loc\x01\0s\x04\0\x0bformat-date\x01\x06\x01@\x03\x05valueu\x05style\x05\x03loc\x01\
+\0s\x04\0\x0dformat-number\x01\x07\x03\0\x1blayer36:locale/format@0.1.0\x05\x1a\x01\
+@\0\0z\x04\0\x03run\x01\x1b\x04\0\x15layer36:app/cli@0.1.0\x04\0\x0b\x09\x01\0\x03\
+cli\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10\
+wit-bindgen-rust\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

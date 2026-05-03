@@ -46,8 +46,9 @@ and flushes can route through the adapter without exposing raw host IDs.
 The runtime also has an initial Phase 2 execution path now. `layer36 run` keeps
 supporting the Phase 1 proof world, then falls back to the Phase 2 `cli` world
 and installs the generated UAPI imports. The local adapter currently covers
-stdio, basic filesystem calls, time, and locale. Network is still deliberately
-unsupported until the real HTTP adapter is added.
+stdio, basic filesystem calls, time, locale, and a first plain HTTP GET path.
+That HTTP path is still small on purpose: it is for localhost and test-server
+proofs while HTTPS, redirects, streaming, and production hardening stay open.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2
@@ -66,6 +67,12 @@ The second sample path has started as well. `apps/layer36-cat` reads app
 arguments through `layer36:io/args.raw`, opens files through `layer36:fs/files`,
 and writes bytes to UAPI stdout. The tests prove both sides: it reads files with
 the right `fs.read` grant, and gets permission denied without that grant.
+
+The third sample path has started now too. `apps/layer36-curl` reads a URL from
+Layer36 app args, calls `layer36:net/http-client.get`, and writes the response
+body through UAPI stdout. Its first tests use a local HTTP server: with
+`net.connect:127.0.0.1:PORT` it fetches, without that grant it exits before the
+runtime opens a socket.
 
 The proof apps are:
 

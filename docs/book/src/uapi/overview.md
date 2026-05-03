@@ -114,8 +114,9 @@ flowchart LR
     CHECK -- no --> DENY["Permission denied"]
 ```
 
-Today this guard is tested inside the runtime. The generated Phase 2 dispatcher
-still needs to call it for each real WIT import.
+Today this guard is in the real Phase 2 path for the imports we have wired so
+far. That is why the sample apps can prove both outcomes: granted calls reach a
+host adapter, denied calls return a UAPI error first.
 
 ## Dispatcher Scaffold
 
@@ -125,8 +126,7 @@ The runtime now has the first dispatcher layer too:
 WIT import -> UapiDispatcher -> UapiGuard -> HostAdapter trait -> native OS
 ```
 
-Right now, the host adapter traits are still stubs. That is expected. The value
-of this step is that the boundary is testable:
+The value of this step is that the boundary is testable:
 
 - a denied `fs.open` does not call the file adapter
 - a denied `net.fetch` does not call the network adapter
@@ -161,8 +161,10 @@ not match, it tries the Phase 2 `cli` world and installs the generated UAPI
 imports.
 
 The local adapter is still small on purpose. It can handle stdio, basic files,
-time, and locale. HTTP returns a clear unsupported error until we add the real
-network adapter.
+time, locale, and plain HTTP GET. The HTTP path is only a first useful slice:
+good enough for localhost and fixed test servers, not yet a full web client.
+HTTPS, redirects, streaming, body limits, and deeper protocol work are still
+open.
 
 The first proof component lives at `test/integration/phase2-smoke`. It reads a
 file, checks time and locale, and writes output through the Phase 2 imports.
@@ -185,6 +187,17 @@ layer36 run --grant fs.read:fixtures/** layer36_cat.wasm -- fixtures/a.txt fixtu
 Inside the component, those arguments come from `layer36:io/args.raw`. The first
 draft returns a newline-separated string. That is intentionally simple while the
 CLI UAPI is still taking shape.
+
+The third sample is `apps/layer36-curl`. It uses those same app arguments for a
+URL, then calls `layer36:net/http-client.get`:
+
+```bash
+layer36 run --grant net.connect:127.0.0.1:8080 layer36_curl.wasm -- http://127.0.0.1:8080/file.txt
+```
+
+The important part is the grant. Layer36 checks `net.connect:HOST:PORT` before
+the adapter opens a socket. If the grant is missing, the app gets permission
+denied and the host network is never touched.
 
 ## Rust Binding Checkpoint
 

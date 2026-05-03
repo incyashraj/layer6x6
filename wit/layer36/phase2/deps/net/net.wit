@@ -46,5 +46,6 @@ interface types {
 interface http-client {
   use types.{request, response, net-error};
 
+  get: func(url: string) -> result<list<u8>, net-error>;
   fetch: func(req: request) -> result<response, net-error>;
 }

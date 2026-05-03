@@ -1,5 +1,9 @@
+use std::io::{Read, Write};
+use std::net::{SocketAddr, TcpListener};
 use std::path::PathBuf;
 use std::process::Command;
+use std::thread;
+use std::time::{Duration, Instant};
 
 use sha2::{Digest, Sha256};
 
@@ -320,6 +324,53 @@ fn configured_layer36_cat_component_denies_missing_file_grant() {
 }
 
 #[test]
+fn configured_layer36_curl_component_fetches_granted_http_url() {
+    let Some(path) = configured_layer36_curl_component() else {
+        return;
+    };
+
+    let body = b"hello from curl\n";
+    let (addr, server) = spawn_http_fixture(body);
+    let url = format!("http://{addr}/fixture.txt");
+
+    let output = layer36()
+        .args(["run", "--grant", &format!("net.connect:{addr}")])
+        .arg(path)
+        .args(["--", &url])
+        .output()
+        .expect("run layer36-curl component");
+    server.join().expect("HTTP fixture thread completed");
+
+    assert!(
+        output.status.success(),
+        "layer36-curl failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(output.stdout, body);
+    assert!(output.stderr.is_empty());
+}
+
+#[test]
+fn configured_layer36_curl_component_denies_missing_net_grant() {
+    let Some(path) = configured_layer36_curl_component() else {
+        return;
+    };
+
+    let output = layer36()
+        .args(["run"])
+        .arg(path)
+        .args(["--", "http://127.0.0.1:80/blocked"])
+        .output()
+        .expect("run layer36-curl component without grant");
+
+    assert_eq!(output.status.code(), Some(25));
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("layer36-curl: permission denied"));
+}
+
+#[test]
 fn fuel_limit_exits_with_limit_code() {
     let Some(path) = configured_hello_component() else {
         return;
@@ -511,6 +562,57 @@ fn configured_layer36_cat_component() -> Option<PathBuf> {
     };
 
     Some(workspace_path(PathBuf::from(path)))
+}
+
+fn configured_layer36_curl_component() -> Option<PathBuf> {
+    let Some(path) = std::env::var_os("LAYER36_CURL_WASM") else {
+        eprintln!("skipping layer36-curl component test: LAYER36_CURL_WASM is not set");
+        return None;
+    };
+
+    Some(workspace_path(PathBuf::from(path)))
+}
+
+fn spawn_http_fixture(body: &'static [u8]) -> (SocketAddr, thread::JoinHandle<()>) {
+    let listener = TcpListener::bind("127.0.0.1:0").expect("bind HTTP fixture");
+    listener
+        .set_nonblocking(true)
+        .expect("set HTTP fixture nonblocking");
+    let addr = listener.local_addr().expect("read HTTP fixture address");
+    let handle = thread::spawn(move || {
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let mut stream = loop {
+            match listener.accept() {
+                Ok((stream, _)) => break stream,
+                Err(err) if err.kind() == std::io::ErrorKind::WouldBlock => {
+                    assert!(
+                        Instant::now() < deadline,
+                        "timed out waiting for HTTP fixture connection"
+                    );
+                    thread::sleep(Duration::from_millis(10));
+                }
+                Err(err) => panic!("accept HTTP fixture connection: {err}"),
+            }
+        };
+        stream
+            .set_nonblocking(false)
+            .expect("set HTTP fixture stream blocking");
+        let mut request = [0_u8; 1024];
+        let _ = stream
+            .read(&mut request)
+            .expect("read HTTP fixture request");
+        write!(
+            stream,
+            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n",
+            body.len()
+        )
+        .expect("write HTTP fixture headers");
+        stream
+            .write_all(body)
+            .expect("write HTTP fixture response body");
+    });
+
+    (addr, handle)
 }
 
 fn expected_hello_hash() -> Option<String> {
