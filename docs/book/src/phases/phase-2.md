@@ -32,6 +32,12 @@ Wasmtime to generate bindings for the new `cli` world and checks a few important
 names. So far the shape is usable: `run` returns an `i32`, `OpenMode::Read`
 exists, and `HttpMethod::Get` exists.
 
+There is also a first Rust guest SDK crate now. It lives at
+`crates/bindings-rust`, builds as package `layer36`, and gives app code simple
+module names such as `layer36::io`, `layer36::time`, and `layer36::locale`.
+`apps/layer36-clock` now uses that SDK facade, so one real component no longer
+talks to the raw generated bindings directly.
+
 The latest runtime piece is the generated type bridge. It maps WIT records and
 errors into the dispatcher's Rust types, then back again. Put simply: the
 runtime now understands the words that generated WIT code will use when it asks

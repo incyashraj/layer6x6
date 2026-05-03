@@ -211,3 +211,19 @@ cargo test -p layer36-runtime --features phase2-bindings
 This is not the public SDK yet. It is a safety check for us while the WIT is
 still moving. It tells us whether the current WIT names turn into usable Rust
 names before we build adapter code on top of them.
+
+The first guest-side Rust SDK crate has started now too:
+
+```rust
+use layer36::{
+    io::stdio,
+    locale::{format, info, DateStyle},
+    time::clock,
+    Guest,
+};
+```
+
+It lives at `crates/bindings-rust` and builds as package `layer36`. For now it
+is a thin facade over generated WIT imports. That is enough to move
+`apps/layer36-clock` away from raw generated module paths, while keeping the
+door open for nicer helpers as the UAPI settles.

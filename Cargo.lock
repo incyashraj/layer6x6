@@ -913,6 +913,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "layer36"
+version = "0.1.0-dev"
+dependencies = [
+ "wit-bindgen-rt",
+]
+
+[[package]]
 name = "layer36-cli"
 version = "0.1.0-dev"
 dependencies = [
@@ -2325,6 +2332,15 @@ dependencies = [
  "anyhow",
  "heck",
  "wit-parser 0.244.0",
+]
+
+[[package]]
+name = "wit-bindgen-rt"
+version = "0.44.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "653c85dd7aee6fe6f4bded0d242406deadae9819029ce6f7d258c920c384358a"
+dependencies = [
+ "bitflags",
 ]
 
 [[package]]

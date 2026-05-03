@@ -1,0 +1,11 @@
+[package]
+name = "layer36"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Rust guest SDK for Layer36 UAPI components."
+
+[dependencies]
+wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }

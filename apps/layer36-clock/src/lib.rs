@@ -1,12 +1,9 @@
-#[allow(warnings)]
-mod bindings;
-
-use bindings::layer36::{
-    io::stdio,
-    locale::{format, info, types::DateStyle},
+use layer36::{
+    io::{stdio, streams::OutputStream},
+    locale::{format, info, DateStyle},
     time::clock,
+    Guest,
 };
-use bindings::Guest;
 
 struct Component;
 
@@ -31,18 +28,14 @@ impl Guest for Component {
     }
 }
 
-fn write_line(stream: &bindings::layer36::io::streams::OutputStream, value: &str) -> bool {
+fn write_line(stream: &OutputStream, value: &str) -> bool {
     stream.write_all(value.as_bytes()).is_ok() && stream.write_all(b"\n").is_ok()
 }
 
-fn write_pair(
-    stream: &bindings::layer36::io::streams::OutputStream,
-    key: &str,
-    value: &str,
-) -> bool {
+fn write_pair(stream: &OutputStream, key: &str, value: &str) -> bool {
     stream.write_all(key.as_bytes()).is_ok()
         && stream.write_all(b"=").is_ok()
         && write_line(stream, value)
 }
 
-bindings::export!(Component with_types_in bindings);
+layer36::export!(Component);
