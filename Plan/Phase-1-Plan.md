@@ -1245,7 +1245,7 @@ Tick every box. No exceptions.
 - [x] All Phase 1 benchmarks recorded, published.
 - [x] Threat Model v0.1 published.
 - [ ] One external user has completed the quickstart in ≤ 10 minutes.
-- [ ] Retrospective written (`docs/book/src/phase1/retro.md`).
+- [x] Retrospective written (`docs/book/src/phase1/retro.md`).
 
 ### Governance
 - [ ] No P0 issues open.
@@ -1579,6 +1579,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 - 2026-05-03: Shared-fixture CI is green on run `25267714585`; Linux, macOS, and Windows all executed the same uploaded hello `.wasm` bytes through `layer36`.
 - 2026-05-03: Cut and pushed `v0.1.0-rc1`. Release run `25268003713` published a prerelease with five platform archives plus `SHA256SUMS`: Linux x64, Linux ARM64, macOS Intel, macOS Apple Silicon, and Windows x64.
 - 2026-05-03: Verified ADR-0002 and ADR-0003 are present on `main` under `docs/adr/`; Phase 1 ADR exit criteria are closed.
+- 2026-05-03: Wrote the Phase 1 engineering retrospective at `docs/book/src/phase1/retro.md`. External quickstart timing and governance closeout remain pending.
 
 ---
 

@@ -35,10 +35,12 @@ Phase 1 has started with the runtime and CLI scaffold:
 - Baseline runtime benchmarks are published at
   `docs/book/src/phase1/benchmarks.md` and checked in CI as warning-only
   regression signals.
+- The Phase 1 engineering retrospective is published at
+  `docs/book/src/phase1/retro.md`.
 
 The runtime now registers the temporary `layer36:phase1/host` WIT interface for
 `print` and `exit`. The Linux/macOS/Windows CI matrix is green, the first RC
-release artifact proof is green, and volunteer quickstart timing is still
-pending.
+release artifact proof is green, and the engineering retrospective is written.
+Volunteer quickstart timing and final governance closeout are still pending.
 
 See [`Plan/Phase-1-Plan.md`](https://github.com/incyashraj/layer6x6/blob/main/Plan/Phase-1-Plan.md).
