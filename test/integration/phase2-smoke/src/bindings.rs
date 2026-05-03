@@ -1856,6 +1856,49 @@ pub mod layer36 {
             }
         }
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
+        pub mod args {
+            #[used]
+            #[doc(hidden)]
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
+            use super::super::super::_rt;
+            #[allow(unused_unsafe, clippy::all)]
+            pub fn raw() -> _rt::String {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 2 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 2
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "layer36:io/args@0.1.0")]
+                    unsafe extern "C" {
+                        #[link_name = "raw"]
+                        fn wit_import1(_: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import1(_: *mut u8) {
+                        unreachable!()
+                    }
+                    unsafe { wit_import1(ptr0) };
+                    let l2 = *ptr0.add(0).cast::<*mut u8>();
+                    let l3 = *ptr0
+                        .add(::core::mem::size_of::<*const u8>())
+                        .cast::<usize>();
+                    let len4 = l3;
+                    let bytes4 = _rt::Vec::from_raw_parts(l2.cast(), len4, len4);
+                    let result5 = _rt::string_lift(bytes4);
+                    result5
+                }
+            }
+        }
+        #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod log {
             #[used]
             #[doc(hidden)]
@@ -3090,9 +3133,9 @@ pub(crate) use __export_cli_impl as export;
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 2903] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xdd\x15\x01A\x02\x01\
-A)\x01B\x04\x01m\x05\x05trace\x05debug\x04info\x04warn\x05error\x04\0\x09log-lev\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 2945] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x87\x16\x01A\x02\x01\
+A+\x01B\x04\x01m\x05\x05trace\x05debug\x04info\x04warn\x05error\x04\0\x09log-lev\
 el\x03\0\0\x01q\x05\x06closed\0\0\x0binterrupted\0\0\x0eunexpected-eof\0\0\x0cin\
 valid-utf8\0\0\x05other\x01s\0\x04\0\x08io-error\x03\0\x02\x03\0\x16layer36:io/t\
 ypes@0.1.0\x05\0\x02\x03\0\0\x08io-error\x01B\x15\x02\x03\x02\x01\x01\x04\0\x08i\
@@ -3107,18 +3150,19 @@ e-all\x01\x0e\x01@\x01\x04self\x0a\0\x0d\x04\0\x1b[method]output-stream.flush\x0
 \x03\0\x01\x0doutput-stream\x01B\x0b\x02\x03\x02\x01\x03\x04\0\x0cinput-stream\x03\
 \0\0\x02\x03\x02\x01\x04\x04\0\x0doutput-stream\x03\0\x02\x01i\x01\x01@\0\0\x04\x04\
 \0\x05stdin\x01\x05\x01i\x03\x01@\0\0\x06\x04\0\x06stdout\x01\x07\x04\0\x06stder\
-r\x01\x07\x03\0\x16layer36:io/stdio@0.1.0\x05\x05\x02\x03\0\0\x09log-level\x01B\x07\
-\x02\x03\x02\x01\x06\x04\0\x09log-level\x03\0\0\x01r\x02\x03keys\x05values\x04\0\
+r\x01\x07\x03\0\x16layer36:io/stdio@0.1.0\x05\x05\x01B\x02\x01@\0\0s\x04\0\x03ra\
+w\x01\0\x03\0\x15layer36:io/args@0.1.0\x05\x06\x02\x03\0\0\x09log-level\x01B\x07\
+\x02\x03\x02\x01\x07\x04\0\x09log-level\x03\0\0\x01r\x02\x03keys\x05values\x04\0\
 \x05field\x03\0\x02\x01p\x03\x01@\x03\x05level\x01\x07messages\x06fields\x04\x01\
-\0\x04\0\x04emit\x01\x05\x03\0\x14layer36:io/log@0.1.0\x05\x07\x01B\x06\x01r\x03\
+\0\x04\0\x04emit\x01\x05\x03\0\x14layer36:io/log@0.1.0\x05\x08\x01B\x06\x01r\x03\
 \x04sizew\x0fmodified-millisw\x06is-dir\x7f\x04\0\x09file-stat\x03\0\0\x01q\x04\x04\
 read\0\0\x05write\0\0\x0aread-write\0\0\x06append\0\0\x04\0\x09open-mode\x03\0\x02\
 \x01q\x07\x09not-found\0\0\x11permission-denied\0\0\x0ealready-exists\0\0\x0cinv\
 alid-path\0\0\x0fnot-a-directory\0\0\x0eis-a-directory\0\0\x02io\x01s\0\x04\0\x08\
-fs-error\x03\0\x04\x03\0\x16layer36:fs/types@0.1.0\x05\x08\x02\x03\0\x04\x09file\
--stat\x02\x03\0\x04\x09open-mode\x02\x03\0\x04\x08fs-error\x01B(\x02\x03\x02\x01\
-\x09\x04\0\x09file-stat\x03\0\0\x02\x03\x02\x01\x0a\x04\0\x09open-mode\x03\0\x02\
-\x02\x03\x02\x01\x0b\x04\0\x08fs-error\x03\0\x04\x04\0\x04file\x03\x01\x01h\x06\x01\
+fs-error\x03\0\x04\x03\0\x16layer36:fs/types@0.1.0\x05\x09\x02\x03\0\x05\x09file\
+-stat\x02\x03\0\x05\x09open-mode\x02\x03\0\x05\x08fs-error\x01B(\x02\x03\x02\x01\
+\x0a\x04\0\x09file-stat\x03\0\0\x02\x03\x02\x01\x0b\x04\0\x09open-mode\x03\0\x02\
+\x02\x03\x02\x01\x0c\x04\0\x08fs-error\x03\0\x04\x04\0\x04file\x03\x01\x01h\x06\x01\
 p}\x01j\x01\x08\x01\x05\x01@\x02\x04self\x07\x01ny\0\x09\x04\0\x11[method]file.r\
 ead\x01\x0a\x01j\x01y\x01\x05\x01@\x02\x04self\x07\x05bytes\x08\0\x0b\x04\0\x12[\
 method]file.write\x01\x0c\x01j\x01w\x01\x05\x01@\x02\x04self\x07\x03posw\0\x0d\x04\
@@ -3129,7 +3173,7 @@ method]file.stat\x01\x11\x01i\x06\x01j\x01\x12\x01\x05\x01@\x02\x04paths\x04mode
 ps\x01j\x01\x16\x01\x05\x01@\x01\x04paths\0\x17\x04\0\x04list\x01\x18\x01j\0\x01\
 \x05\x01@\x01\x04paths\0\x19\x04\0\x0bremove-file\x01\x1a\x04\0\x0aremove-dir\x01\
 \x1a\x04\0\x05mkdir\x01\x1a\x01@\x02\x04froms\x02tos\0\x19\x04\0\x06rename\x01\x1b\
-\x03\0\x16layer36:fs/files@0.1.0\x05\x0c\x01B\x0d\x01m\x07\x03get\x04post\x03put\
+\x03\0\x16layer36:fs/files@0.1.0\x05\x0d\x01B\x0d\x01m\x07\x03get\x04post\x03put\
 \x06delete\x05patch\x04head\x07options\x04\0\x0bhttp-method\x03\0\0\x01r\x02\x04\
 names\x05values\x04\0\x06header\x03\0\x02\x01p\x03\x01p}\x01ky\x01r\x05\x06metho\
 d\x01\x03urls\x07headers\x04\x04body\x05\x0etimeout-millis\x06\x04\0\x07request\x03\
@@ -3137,25 +3181,25 @@ d\x01\x03urls\x07headers\x04\x04body\x05\x0etimeout-millis\x06\x04\0\x07request\
 \x01q\x09\x0binvalid-url\0\0\x0bdns-failure\x01s\0\x0fconnect-failure\x01s\0\x0b\
 tls-failure\x01s\0\x07timeout\0\0\x0ebody-too-large\0\0\x11permission-denied\0\0\
 \x08protocol\x01s\0\x05other\x01s\0\x04\0\x09net-error\x03\0\x0b\x03\0\x17layer3\
-6:net/types@0.1.0\x05\x0d\x02\x03\0\x06\x07request\x02\x03\0\x06\x08response\x02\
-\x03\0\x06\x09net-error\x01B\x09\x02\x03\x02\x01\x0e\x04\0\x07request\x03\0\0\x02\
-\x03\x02\x01\x0f\x04\0\x08response\x03\0\x02\x02\x03\x02\x01\x10\x04\0\x09net-er\
+6:net/types@0.1.0\x05\x0e\x02\x03\0\x07\x07request\x02\x03\0\x07\x08response\x02\
+\x03\0\x07\x09net-error\x01B\x09\x02\x03\x02\x01\x0f\x04\0\x07request\x03\0\0\x02\
+\x03\x02\x01\x10\x04\0\x08response\x03\0\x02\x02\x03\x02\x01\x11\x04\0\x09net-er\
 ror\x03\0\x04\x01j\x01\x03\x01\x05\x01@\x01\x03req\x01\0\x06\x04\0\x05fetch\x01\x07\
-\x03\0\x1dlayer36:net/http-client@0.1.0\x05\x11\x01B\x03\x01@\0\0w\x04\0\x0anow-\
+\x03\0\x1dlayer36:net/http-client@0.1.0\x05\x12\x01B\x03\x01@\0\0w\x04\0\x0anow-\
 millis\x01\0\x04\0\x0fmonotonic-nanos\x01\0\x03\0\x18layer36:time/clock@0.1.0\x05\
-\x12\x01B\x02\x01@\x01\x06millisy\x01\0\x04\0\x0csleep-millis\x01\0\x03\0\x18lay\
-er36:time/sleep@0.1.0\x05\x13\x01B\x06\x01r\x01\x05bcp47s\x04\0\x09locale-id\x03\
+\x13\x01B\x02\x01@\x01\x06millisy\x01\0\x04\0\x0csleep-millis\x01\0\x03\0\x18lay\
+er36:time/sleep@0.1.0\x05\x14\x01B\x06\x01r\x01\x05bcp47s\x04\0\x09locale-id\x03\
 \0\0\x01m\x04\x05short\x06medium\x04long\x04full\x04\0\x0adate-style\x03\0\x02\x01\
 m\x03\x07decimal\x07percent\x08currency\x04\0\x0cnumber-style\x03\0\x04\x03\0\x1a\
-layer36:locale/types@0.1.0\x05\x14\x02\x03\0\x0a\x09locale-id\x01B\x06\x02\x03\x02\
-\x01\x15\x04\0\x09locale-id\x03\0\0\x01@\0\0\x01\x04\0\x07current\x01\x02\x01@\0\
-\0s\x04\0\x08timezone\x01\x03\x03\0\x19layer36:locale/info@0.1.0\x05\x16\x02\x03\
-\0\x0a\x0adate-style\x02\x03\0\x0a\x0cnumber-style\x01B\x0a\x02\x03\x02\x01\x15\x04\
-\0\x09locale-id\x03\0\0\x02\x03\x02\x01\x17\x04\0\x0adate-style\x03\0\x02\x02\x03\
-\x02\x01\x18\x04\0\x0cnumber-style\x03\0\x04\x01@\x04\x06millisw\x02tzs\x05style\
+layer36:locale/types@0.1.0\x05\x15\x02\x03\0\x0b\x09locale-id\x01B\x06\x02\x03\x02\
+\x01\x16\x04\0\x09locale-id\x03\0\0\x01@\0\0\x01\x04\0\x07current\x01\x02\x01@\0\
+\0s\x04\0\x08timezone\x01\x03\x03\0\x19layer36:locale/info@0.1.0\x05\x17\x02\x03\
+\0\x0b\x0adate-style\x02\x03\0\x0b\x0cnumber-style\x01B\x0a\x02\x03\x02\x01\x16\x04\
+\0\x09locale-id\x03\0\0\x02\x03\x02\x01\x18\x04\0\x0adate-style\x03\0\x02\x02\x03\
+\x02\x01\x19\x04\0\x0cnumber-style\x03\0\x04\x01@\x04\x06millisw\x02tzs\x05style\
 \x03\x03loc\x01\0s\x04\0\x0bformat-date\x01\x06\x01@\x03\x05valueu\x05style\x05\x03\
 loc\x01\0s\x04\0\x0dformat-number\x01\x07\x03\0\x1blayer36:locale/format@0.1.0\x05\
-\x19\x01@\0\0z\x04\0\x03run\x01\x1a\x04\0\x15layer36:app/cli@0.1.0\x04\0\x0b\x09\
+\x1a\x01@\0\0z\x04\0\x03run\x01\x1b\x04\0\x15layer36:app/cli@0.1.0\x04\0\x0b\x09\
 \x01\0\x03cli\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x07\
 0.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]

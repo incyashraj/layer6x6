@@ -261,6 +261,65 @@ fn configured_layer36_clock_component_uses_fixed_test_time() {
 }
 
 #[test]
+fn configured_layer36_cat_component_reads_granted_files() {
+    let Some(path) = configured_layer36_cat_component() else {
+        return;
+    };
+
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let fixtures = dir.path().join("fixtures");
+    std::fs::create_dir(&fixtures).expect("create fixtures dir");
+    std::fs::write(fixtures.join("a.txt"), "hello from A\n").expect("write fixture A");
+    std::fs::write(fixtures.join("b.txt"), "hello from B\n").expect("write fixture B");
+
+    let output = layer36()
+        .current_dir(dir.path())
+        .args(["run", "--grant", "fs.read:fixtures/**"])
+        .arg(path)
+        .args(["--", "fixtures/a.txt", "fixtures/b.txt"])
+        .output()
+        .expect("run layer36-cat component");
+
+    assert!(
+        output.status.success(),
+        "layer36-cat failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        "hello from A\nhello from B\n"
+    );
+    assert!(output.stderr.is_empty());
+}
+
+#[test]
+fn configured_layer36_cat_component_denies_missing_file_grant() {
+    let Some(path) = configured_layer36_cat_component() else {
+        return;
+    };
+
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let fixtures = dir.path().join("fixtures");
+    std::fs::create_dir(&fixtures).expect("create fixtures dir");
+    std::fs::write(fixtures.join("secret.txt"), "not granted\n").expect("write fixture");
+
+    let output = layer36()
+        .current_dir(dir.path())
+        .args(["run"])
+        .arg(path)
+        .args(["--", "fixtures/secret.txt"])
+        .output()
+        .expect("run layer36-cat component without grant");
+
+    assert_eq!(output.status.code(), Some(25));
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("layer36-cat: permission denied: fixtures/secret.txt"));
+}
+
+#[test]
 fn fuel_limit_exits_with_limit_code() {
     let Some(path) = configured_hello_component() else {
         return;
@@ -439,6 +498,15 @@ fn configured_phase2_smoke_component() -> Option<PathBuf> {
 fn configured_layer36_clock_component() -> Option<PathBuf> {
     let Some(path) = std::env::var_os("LAYER36_CLOCK_WASM") else {
         eprintln!("skipping layer36-clock component test: LAYER36_CLOCK_WASM is not set");
+        return None;
+    };
+
+    Some(workspace_path(PathBuf::from(path)))
+}
+
+fn configured_layer36_cat_component() -> Option<PathBuf> {
+    let Some(path) = std::env::var_os("LAYER36_CAT_WASM") else {
+        eprintln!("skipping layer36-cat component test: LAYER36_CAT_WASM is not set");
         return None;
     };
 

@@ -41,6 +41,10 @@ interface stdio {
   stderr: func() -> output-stream;
 }
 
+interface args {
+  raw: func() -> string;
+}
+
 interface log {
   use types.{log-level};
 

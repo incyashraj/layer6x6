@@ -62,6 +62,11 @@ component that reads time and locale through UAPI, then prints through UAPI
 stdout. The CLI now has a hidden `--test-time` flag, so tests can freeze the
 clock and check stable output.
 
+The second sample path has started as well. `apps/layer36-cat` reads app
+arguments through `layer36:io/args.raw`, opens files through `layer36:fs/files`,
+and writes bytes to UAPI stdout. The tests prove both sides: it reads files with
+the right `fs.read` grant, and gets permission denied without that grant.
+
 The proof apps are:
 
 - `layer36-curl`

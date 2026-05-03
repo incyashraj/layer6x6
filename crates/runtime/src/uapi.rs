@@ -40,6 +40,7 @@ pub enum IoCall {
     Stdin,
     Stdout,
     Stderr,
+    Args,
     Log,
 }
 
@@ -49,6 +50,7 @@ impl fmt::Display for IoCall {
             Self::Stdin => "stdin",
             Self::Stdout => "stdout",
             Self::Stderr => "stderr",
+            Self::Args => "args",
             Self::Log => "log",
         })
     }

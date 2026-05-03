@@ -141,6 +141,7 @@ pub trait IoAdapter {
     fn stdin(&self) -> std::result::Result<FileHandle, AdapterError>;
     fn stdout(&self) -> std::result::Result<FileHandle, AdapterError>;
     fn stderr(&self) -> std::result::Result<FileHandle, AdapterError>;
+    fn args_raw(&self) -> std::result::Result<String, AdapterError>;
     fn read_stream(
         &self,
         handle: &FileHandle,
@@ -230,6 +231,11 @@ impl<'a> UapiDispatcher<'a> {
     pub fn stderr(&self) -> DispatchResult<FileHandle> {
         self.check(&UapiCall::Io(IoCall::Stderr))?;
         self.adapter.io().stderr().map_err(Into::into)
+    }
+
+    pub fn args_raw(&self) -> DispatchResult<String> {
+        self.check(&UapiCall::Io(IoCall::Args))?;
+        self.adapter.io().args_raw().map_err(Into::into)
     }
 
     pub fn log(&self, level: &str, message: &str) -> DispatchResult<()> {
@@ -518,6 +524,7 @@ mod tests {
 
     #[derive(Default)]
     struct Calls {
+        args: usize,
         fs_open: usize,
         net_fetch: usize,
         stdout: usize,
@@ -563,6 +570,11 @@ mod tests {
 
         fn stderr(&self) -> std::result::Result<FileHandle, AdapterError> {
             Ok(FileHandle { id: 3 })
+        }
+
+        fn args_raw(&self) -> std::result::Result<String, AdapterError> {
+            self.calls.borrow_mut().args += 1;
+            Ok("notes.txt".to_string())
         }
 
         fn read_stream(
@@ -746,6 +758,18 @@ mod tests {
         dispatcher.stdout().expect("stdout is default-granted");
 
         assert_eq!(adapter.calls.borrow().stdout, 1);
+    }
+
+    #[test]
+    fn default_args_grant_reaches_adapter() {
+        let adapter = RecordingAdapter::default();
+        let guard = UapiGuard::new(SessionPolicy::default());
+        let dispatcher = UapiDispatcher::new(&guard, &adapter);
+
+        let args = dispatcher.args_raw().expect("args are default-granted");
+
+        assert_eq!(args, "notes.txt");
+        assert_eq!(adapter.calls.borrow().args, 1);
     }
 
     #[test]

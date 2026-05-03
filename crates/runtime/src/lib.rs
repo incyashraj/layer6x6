@@ -52,6 +52,8 @@ pub struct Config {
     pub session_policy: SessionPolicy,
     /// Optional fixed wall-clock time for deterministic test runs.
     pub test_time_millis: Option<u64>,
+    /// Arguments exposed to Phase 2 apps through `layer36:io/args`.
+    pub app_args: Vec<String>,
 }
 
 impl Default for Config {
@@ -61,6 +63,7 @@ impl Default for Config {
             memory_bytes: 256 * 1024 * 1024,
             session_policy: SessionPolicy::default(),
             test_time_millis: None,
+            app_args: Vec::new(),
         }
     }
 }
@@ -274,7 +277,11 @@ impl HostState {
             #[cfg(feature = "phase2-bindings")]
             phase2: phase2_host::Phase2Host::new(
                 UapiGuard::new(config.session_policy.clone()),
-                Box::new(LocalPhase2Adapter::new(output, config.test_time_millis)),
+                Box::new(LocalPhase2Adapter::new(
+                    output,
+                    config.test_time_millis,
+                    config.app_args.clone(),
+                )),
             ),
         })
     }
@@ -366,16 +373,22 @@ struct LocalPhase2Adapter {
     state: RefCell<LocalPhase2AdapterState>,
     started: Instant,
     test_time_millis: Option<u64>,
+    app_args: Vec<String>,
 }
 
 #[cfg(feature = "phase2-bindings")]
 impl LocalPhase2Adapter {
-    fn new(output: Rc<RefCell<OutputMode>>, test_time_millis: Option<u64>) -> Self {
+    fn new(
+        output: Rc<RefCell<OutputMode>>,
+        test_time_millis: Option<u64>,
+        app_args: Vec<String>,
+    ) -> Self {
         Self {
             output,
             state: RefCell::new(LocalPhase2AdapterState::default()),
             started: Instant::now(),
             test_time_millis,
+            app_args,
         }
     }
 
@@ -438,6 +451,10 @@ impl IoAdapter for LocalPhase2Adapter {
 
     fn stderr(&self) -> std::result::Result<FileHandle, AdapterError> {
         Ok(self.insert_resource(LocalResource::Stderr))
+    }
+
+    fn args_raw(&self) -> std::result::Result<String, AdapterError> {
+        Ok(self.app_args.join("\n"))
     }
 
     fn read_stream(

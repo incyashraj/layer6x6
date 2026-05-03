@@ -37,6 +37,13 @@ impl<'a> Phase2Host<'a> {
 
 impl io::types::Host for Phase2Host<'_> {}
 impl io::streams::Host for Phase2Host<'_> {}
+impl io::args::Host for Phase2Host<'_> {
+    fn raw(&mut self) -> wasmtime::Result<String> {
+        self.dispatcher()
+            .args_raw()
+            .map_err(bridge::dispatch_error_to_trap)
+    }
+}
 impl fs::types::Host for Phase2Host<'_> {}
 impl net::types::Host for Phase2Host<'_> {}
 impl locale::types::Host for Phase2Host<'_> {}
@@ -527,6 +534,10 @@ mod tests {
 
         fn stderr(&self) -> Result<FileHandle, AdapterError> {
             Ok(FileHandle { id: 12 })
+        }
+
+        fn args_raw(&self) -> Result<String, AdapterError> {
+            Ok("fixtures/a.txt".to_string())
         }
 
         fn read_stream(&self, handle: &FileHandle, _n: u32) -> Result<Vec<u8>, AdapterError> {

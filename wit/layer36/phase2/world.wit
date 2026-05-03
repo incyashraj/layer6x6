@@ -2,6 +2,7 @@ package layer36:app@0.1.0;
 
 world cli {
   import layer36:io/stdio@0.1.0;
+  import layer36:io/args@0.1.0;
   import layer36:io/log@0.1.0;
   import layer36:fs/files@0.1.0;
   import layer36:net/http-client@0.1.0;

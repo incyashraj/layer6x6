@@ -25,3 +25,6 @@ world = "cli"
 "layer36:net" = { path = "../../../wit/layer36/phase2/deps/net" }
 "layer36:time" = { path = "../../../wit/layer36/phase2/deps/time" }
 "layer36:locale" = { path = "../../../wit/layer36/phase2/deps/locale" }
+
+[profile.release]
+panic = "abort"

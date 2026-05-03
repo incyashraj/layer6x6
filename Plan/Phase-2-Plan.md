@@ -376,6 +376,7 @@ These five WIT files are the core deliverable of Phase 2. Each is presented with
 
 **Design notes:**
 - `stdin`, `stdout`, `stderr` are opened as resources, not raw functions.
+- `args.raw` exposes app arguments passed after `--` as a simple newline-separated string while the draft API is still moving.
 - Binary-safe: no implicit encoding conversion.
 - `log` is structured: level + message + key-value pairs.
 
@@ -422,6 +423,10 @@ interface stdio {
     stdin:  func() -> input-stream;
     stdout: func() -> output-stream;
     stderr: func() -> output-stream;
+}
+
+interface args {
+    raw: func() -> string;
 }
 
 interface log {
@@ -950,7 +955,8 @@ The three sample apps drive the UAPI design backward: if a common CLI pattern is
 
 **Implementation language:** Go (TinyGo).
 **Caps required:** `fs.read:<each input path>`.
-**Reason Go:** tests the TinyGo pipeline on a real app; cat is small enough that TinyGo's subset is comfortable.
+**Current implementation:** Rust first, Go/TinyGo variant later.
+**Reason:** the Rust binding path is already usable, so the file/args behavior can harden now. The Go version still matters for the language-binding track.
 
 ### 11.3 `layer36-clock`
 
@@ -1163,7 +1169,7 @@ Each task targets approximately one engineer-week unless noted. Task IDs match B
 **Branch:** `p2-app-02-cat`.
 
 **Acceptance:**
-- Source in `apps/layer36-cat/` (Go via TinyGo).
+- Source in `apps/layer36-cat/` (Rust first; Go/TinyGo variant later).
 - Behaves as §11.2.
 - Cross-host stdout-identical against fixtures.
 
@@ -2040,6 +2046,8 @@ The first real Phase 2 component proof exists under `test/integration/phase2-smo
 
 The first named sample app also exists now: `apps/layer36-clock`. It is a Rust component for the current binding path. It calls the Phase 2 time and locale imports, writes through UAPI stdout, and can run with `layer36 run --test-time` so tests can compare stable output instead of racing the real clock. The original TypeScript/jco sample plan is still useful for the language-binding track, but the Rust sample lets the runtime path mature first.
 
+`apps/layer36-cat` has started too. The CLI can now forward app arguments after `--`, the runtime exposes them through `layer36:io/args.raw`, and the cat sample uses those args plus `fs.read` grants to concatenate fixture files. The test suite checks both the granted path and the missing-grant denial path.
+
 GitHub Actions is now in budget-aware mode. Normal pushes run the cheap checks:
 format, clippy, Linux workspace tests, and docs. The expensive full path builds
 the shared component fixtures, runs Linux/macOS/Windows, benchmarks, cargo-deny,
@@ -2062,9 +2070,9 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | 4 | Go (TinyGo) bindings generated and usable; sample builds and runs | Not done |
 | 5 | TypeScript (jco) bindings generated and usable; sample builds and runs | Not done |
 | 6 | `layer36-curl <url>` works identically on all three hosts | Not done |
-| 7 | `layer36-cat <file>` works identically on all three hosts | Not done |
+| 7 | `layer36-cat <file>` works identically on all three hosts | Started: Rust sample builds locally and has granted/denied fixture tests; full cross-host run remains |
 | 8 | `layer36-clock` prints time in user locale on all three hosts | Started: Rust sample builds locally and has fixed-time integration coverage; full cross-host run remains |
-| 9 | UCap v0.1: manifest-declared caps enforced; unauthorized calls trap cleanly | Started: CLI preflight, runtime UAPI guard, dispatcher scaffold, generated WIT type bridge, generated host wiring, resource table, runtime linker install, Phase 2 smoke happy path, missing-grant proof, and first named sample exist; real adapters, HTTP, and remaining sample apps remain |
+| 9 | UCap v0.1: manifest-declared caps enforced; unauthorized calls trap cleanly | Started: CLI preflight, runtime UAPI guard, dispatcher scaffold, generated WIT type bridge, generated host wiring, resource table, runtime linker install, Phase 2 smoke happy path, missing-grant proof, app args, `layer36-clock`, and first `layer36-cat` exist; HTTP and remaining sample work remain |
 | 10 | Startup overhead for a UAPI-using app < 150 ms | Not done |
 | 11 | UAPI hot-path dispatch < 1 µs (microbenchmark) | Not done |
 | 12 | Developer who knows Rust but not WASM can write a CLI in < 30 min using docs | Not done |
@@ -2096,6 +2104,8 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-CI-01 | Budget-aware CI mode | 2026-05-04 | Normal push CI now runs cheap Linux checks only; full cross-host matrix, benchmarks, cargo-deny, fixtures, and the dedicated Phase 2 binding checkpoint run manually with `full = true` or a `[full-ci]` commit marker. |
 | P2-SEC-01F | Phase 2 smoke missing-grant proof | 2026-05-04 | Added a CLI integration test proving the smoke component receives `fs.permission-denied` without `fs.read`, writes a clear stderr message, and exits non-zero without reading host files. |
 | P2-APP-03A | First `layer36-clock` sample path | 2026-05-04 | Added `apps/layer36-clock`, a Rust Phase 2 component using time, locale, and stdout, plus `layer36 run --test-time` for deterministic sample tests. |
+| P2-UAPI-06 | Layer36 app arguments | 2026-05-04 | Added `layer36:io/args.raw`, default `io.args` grants, CLI forwarding through `layer36 run ... -- <args>`, and host dispatch wiring. |
+| P2-APP-02A | First `layer36-cat` sample path | 2026-05-04 | Added `apps/layer36-cat`, a Rust Phase 2 component that reads app args, opens granted files, writes stdout, and fails cleanly without `fs.read`. |
 
 ---
 
@@ -2103,7 +2113,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
-| P2-APP-01B | Add remaining named sample apps | 2026-05-04 | `layer36-clock` exists; `layer36-cat`, `layer36-curl`, cross-host fixture assertions, and language-binding variants still remain. |
+| P2-APP-01C | Add remaining named sample app and cross-host fixture assertions | 2026-05-04 | `layer36-clock` and first `layer36-cat` exist; `layer36-curl`, full cross-host fixture assertions, and language-binding variants still remain. |
 | P2-BIND-01A | Rust SDK crate skeleton | 2026-05-03 | Host binding shape is known; app-facing wrapper crate still needs design. |
 
 ---

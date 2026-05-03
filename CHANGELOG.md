@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Phase 2 `io.args` import and `layer36 run ... -- <args>` forwarding, used by the new `apps/layer36-cat` sample.
 - First named Phase 2 sample app, `apps/layer36-clock`, plus a hidden `layer36 run --test-time` flag for deterministic clock tests.
 - Phase 2 smoke missing-grant test proving UCap maps an ungranted filesystem read to a visible permission-denied path.
 - Phase 2 smoke component and CI fixture path proving that `layer36 run` can execute a Phase 2 `cli` app using UAPI stdio, filesystem, time, and locale calls.

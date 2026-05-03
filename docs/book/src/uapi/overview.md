@@ -175,6 +175,17 @@ world but focuses on time, locale, and stdout. A hidden `--test-time` runner
 flag lets the test suite freeze wall-clock time, which keeps the sample output
 stable across machines.
 
+The next sample is `apps/layer36-cat`. It forced one important addition:
+Layer36-native app arguments. You pass app arguments after `--`:
+
+```bash
+layer36 run --grant fs.read:fixtures/** layer36_cat.wasm -- fixtures/a.txt fixtures/b.txt
+```
+
+Inside the component, those arguments come from `layer36:io/args.raw`. The first
+draft returns a newline-separated string. That is intentionally simple while the
+CLI UAPI is still taking shape.
+
 ## Rust Binding Checkpoint
 
 The runtime has a feature named `phase2-bindings` that asks Wasmtime to generate

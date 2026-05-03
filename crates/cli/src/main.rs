@@ -48,6 +48,10 @@ enum Command {
         /// Fixed wall-clock time in milliseconds since Unix epoch. Intended for deterministic tests.
         #[arg(long, hide = true)]
         test_time: Option<u64>,
+
+        /// Arguments passed to the Layer36 app. Put them after `--`.
+        #[arg(last = true, value_name = "ARG")]
+        app_args: Vec<String>,
     },
     /// Print version information.
     Version,
@@ -99,9 +103,17 @@ fn run() -> Result<u8> {
             grant,
             auto_grant,
             test_time,
-        } => run_component(
-            file, fuel, mem_limit, manifest, grant, auto_grant, test_time,
-        ),
+            app_args,
+        } => run_component(RunRequest {
+            file,
+            fuel,
+            mem_limit,
+            manifest_path: manifest,
+            grants: grant,
+            auto_grant,
+            test_time_millis: test_time,
+            app_args,
+        }),
         Command::Version => {
             print_version();
             Ok(0)
@@ -113,7 +125,7 @@ fn run() -> Result<u8> {
     }
 }
 
-fn run_component(
+struct RunRequest {
     file: PathBuf,
     fuel: Option<u64>,
     mem_limit: u64,
@@ -121,13 +133,16 @@ fn run_component(
     grants: Vec<String>,
     auto_grant: bool,
     test_time_millis: Option<u64>,
-) -> Result<u8> {
-    if !file.exists() {
-        anyhow::bail!("input file does not exist: {}", file.display());
+    app_args: Vec<String>,
+}
+
+fn run_component(request: RunRequest) -> Result<u8> {
+    if !request.file.exists() {
+        anyhow::bail!("input file does not exist: {}", request.file.display());
     }
 
-    let manifest = load_run_manifest(&file, manifest_path.as_deref())?;
-    let policy = resolve_session_policy(manifest.as_ref(), &grants, auto_grant)?;
+    let manifest = load_run_manifest(&request.file, request.manifest_path.as_deref())?;
+    let policy = resolve_session_policy(manifest.as_ref(), &request.grants, request.auto_grant)?;
 
     if let Some(manifest) = &manifest {
         let missing = policy.missing_required_for_manifest(manifest)?;
@@ -141,16 +156,18 @@ fn run_component(
     }
 
     let config = Config {
-        fuel,
-        memory_bytes: mem_limit
+        fuel: request.fuel,
+        memory_bytes: request
+            .mem_limit
             .checked_mul(1024 * 1024)
             .context("memory limit is too large")?,
         session_policy: policy,
-        test_time_millis,
+        test_time_millis: request.test_time_millis,
+        app_args: request.app_args,
     };
     let runtime = Runtime::new(&config)?;
 
-    match runtime.run_file(&file, &config) {
+    match runtime.run_file(&request.file, &config) {
         Ok(RunOutcome::Exited(code)) => Ok(code.clamp(0, 255) as u8),
         Ok(RunOutcome::LimitExceeded(message)) => {
             eprintln!("limit exceeded: {message}");

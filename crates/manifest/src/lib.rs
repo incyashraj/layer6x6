@@ -19,6 +19,7 @@ pub const PHASE2_CLI_WORLD: &str = "layer36:app/cli@0.1.0";
 const DEFAULT_GRANTED_CAPS: &[&str] = &[
     "io.stdout",
     "io.stderr",
+    "io.args",
     "io.log",
     "time.clock",
     "time.monotonic",
@@ -315,7 +316,7 @@ fn validate_ident(field: &'static str, value: &str) -> Result<()> {
 
 fn capability_resource_required(module: &str, action: &str) -> Option<bool> {
     match (module, action) {
-        ("io", "stdin" | "stdout" | "stderr" | "log") => Some(false),
+        ("io", "stdin" | "stdout" | "stderr" | "args" | "log") => Some(false),
         ("fs", "read" | "write" | "list" | "remove" | "mkdir") => Some(true),
         ("net", "connect") => Some(true),
         ("time", "clock" | "monotonic" | "sleep") => Some(false),
