@@ -1,46 +1,50 @@
-# Phase 1 — POC Runtime
+# Phase 1: Runtime Proof
 
-**Status:** In Progress  
-**Duration:** Months 2–3  
-**Sentence:** *Prove one `.wasm` binary runs identically on three desktop hosts.*
+**Status:** Engineering done; exit checks still open
+**Estimate:** done
+**Goal:** Prove one `.wasm` file runs through Layer36 on Linux, macOS, and
+Windows.
 
-## Current slice
+## Done
 
-Phase 1 has started with the runtime and CLI scaffold:
+- `crates/runtime` embeds Wasmtime.
+- `crates/cli` builds the `layer36` command.
+- `layer36 run`, `layer36 version`, and `layer36 doctor` work.
+- A small hello-world WASM component prints `Hello, Layer36!`.
+- Runtime fuel and memory limits fail with clear errors.
+- CI builds one hello `.wasm` artifact and runs the same bytes on Linux, macOS,
+  and Windows.
+- `v0.1.0-rc1` is published with five archives and `SHA256SUMS`.
+- Quickstart, architecture notes, benchmarks, threat model, and retrospective
+  are published.
+- ADR-0002 and ADR-0003 are merged.
 
-- `crates/runtime` initializes Wasmtime with Component Model support.
-- `crates/cli` builds the `layer36` binary.
-- `layer36 --help`, `layer36 version`, and `layer36 doctor` work locally.
-- `layer36 run <file>` validates input paths and routes component execution
-  through the runtime crate.
-- `scripts/build-hello-component.sh` builds the Rust hello-world component.
-- `layer36 run test/integration/hello-world/target/wasm32-wasip1/release/hello_world.wasm`
-  prints `Hello, Layer36!` locally.
-- `layer36 run --fuel 1 ...` and `layer36 run --mem-limit 0 ...` fail
-  cleanly with exit code 4 and a limit-exceeded message.
-- CI builds the hello-world component once on Ubuntu, uploads that exact
-  `.wasm` as a workflow artifact, verifies its SHA-256 hash, and runs the same
-  bytes through the real `layer36` binary on Linux, macOS, and Windows.
-- `scripts/test-phase1.sh` can either build the hello-world fixture locally or
-  consume a prebuilt `LAYER36_HELLO_WASM` fixture with an expected
-  `LAYER36_HELLO_SHA256`.
-- `.github/workflows/release.yml` packages the five planned Phase 1 release
-  artifacts on `v*` tags and publishes a `SHA256SUMS` file.
-- `v0.1.0-rc1` is published as a GitHub prerelease with Linux x64, Linux
-  ARM64, macOS Intel, macOS Apple Silicon, Windows x64, and `SHA256SUMS`
-  assets.
-- The Phase 1 quickstart is published at `docs/book/src/quickstart.md` and
-  walks from a fresh checkout to `Hello, Layer36!`.
-- Threat Model v0.1 is published at `docs/book/src/phase1/threat-model.md`.
-- Baseline runtime benchmarks are published at
-  `docs/book/src/phase1/benchmarks.md` and checked in CI as warning-only
-  regression signals.
-- The Phase 1 engineering retrospective is published at
-  `docs/book/src/phase1/retro.md`.
+## What This Means
 
-The runtime now registers the temporary `layer36:phase1/host` WIT interface for
-`print` and `exit`. The Linux/macOS/Windows CI matrix is green, the first RC
-release artifact proof is green, and the engineering retrospective is written.
-Volunteer quickstart timing and final governance closeout are still pending.
+We have proven the base runtime path:
 
-See [`Plan/Phase-1-Plan.md`](https://github.com/incyashraj/layer6x6/blob/main/Plan/Phase-1-Plan.md).
+```mermaid
+flowchart LR
+    W["One WASM file"] --> R["Layer36 runtime"]
+    R --> L["Linux"]
+    R --> M["macOS"]
+    R --> X["Windows"]
+
+    classDef done fill:#d9fbe3,stroke:#16833a,color:#102a17,stroke-width:2px;
+    class W,R,L,M,X done;
+```
+
+That is a real milestone. It does not mean Layer36 can run full apps yet. It
+means the engine can load a portable component and execute it consistently on
+three desktop hosts.
+
+## Still Important
+
+- Keep `main` green for five consecutive days.
+- Ask one external user to run the quickstart and record whether it takes 10
+  minutes or less.
+- Confirm there are no open P0 issues.
+- Open the Phase 2 kickoff issue.
+
+These are governance and validation gates. The engineering base is ready for
+Phase 2.

@@ -1,65 +1,70 @@
 # Vision
 
-## The first-principles insight
+Layer36 exists because app portability is still broken.
 
-Every scalable computing abstraction has solved fragmentation the same way:
-insert a universal intermediate layer.
+A text file can move from one device to another. A photo can move. A web page
+can move. A serious native app usually cannot. It has to be rebuilt for each
+platform, then tested, packaged, signed, distributed, and maintained again.
 
-| Fragmentation | Intermediate layer | Result |
-|---|---|---|
-| Multiple CPUs | LLVM IR | Any backend |
-| Multiple OSes (server) | JVM bytecode / .NET CLR | Any OS |
-| Multiple devices (web) | HTML / JS / CSS | Any browser |
+Layer36 is a plan to put one runtime layer between apps and operating systems.
 
-Each time, the N² problem became 2N.
+## The 6 x 6 Problem
 
-Layer36 applies the same transformation to native apps: one portable bytecode,
-one standard library, one permission model at the center; a thin adapter per
-host on the outside.
+The dream is a full matrix:
 
-## Why now
+| App origin | Runs on |
+|------------|---------|
+| Windows app | Windows, Linux, ChromeOS, Android, macOS, iOS |
+| Linux app | Windows, Linux, ChromeOS, Android, macOS, iOS |
+| Web app | Windows, Linux, ChromeOS, Android, macOS, iOS |
+| Android app | Windows, Linux, ChromeOS, Android, macOS, iOS |
+| macOS app | Windows, Linux, ChromeOS, Android, macOS, iOS |
+| iOS app | Windows, Linux, ChromeOS, Android, macOS, iOS |
 
-Four forces are converging in 2026:
+Layer36 does not magically run every existing native app today. The path is more
+practical: define a new portable app target that can become good enough for new
+apps, then build bridges and tooling over time.
 
-1. **WebAssembly is production-ready.** The bytecode is stable. The Component
-   Model has shipped. WASI Preview 2 exists. Tooling for Rust, Go, C++, JS, and
-   Python is mature.
+## The Bet
 
-2. **Device fragmentation is worse than ever.** Laptops (x86/ARM), phones
-   (iOS/Android), tablets, watches, cars, TVs, XR headsets — each with a
-   different SDK. No dev wants to ship seven codebases.
+The same pattern has worked before:
 
-3. **Native cross-platform solutions are incomplete.** Flutter is UI-only.
-   React Native is JS-only. Electron is bloated. None deliver true native
-   capability + performance + cross-platform in one package.
+| Old problem | Middle layer | What changed |
+|-------------|--------------|--------------|
+| Many CPUs | LLVM IR | One compiler front end can reach many chips. |
+| Many servers | JVM and .NET bytecode | One backend app can run on many OSes. |
+| Many browsers | HTML, CSS, and JS | One site can reach almost every device. |
 
-4. **Hardware converges on ARM.** When every device runs the same ISA family,
-   the primary reason to target different CPU backends evaporates. Only the OS
-   layer differs, which is exactly what we abstract.
+Layer36 tries to bring that pattern to native apps:
 
-## Our wedge
+1. WebAssembly is the portable program format.
+2. UAPI is the standard app API.
+3. UCap is the permission model.
+4. Host adapters translate Layer36 calls into native OS calls.
+5. A bundle format and marketplace make apps installable.
 
-We do not compete with Flutter, React Native, or Electron. We **complete
-WASM + WASI** for native app scenarios.
+## Why This Might Work Now
 
-Specifically:
+- WebAssembly is stable and widely understood.
+- The Component Model makes host APIs cleaner than raw WASM imports.
+- Rust, Go, TypeScript, C, and other languages can target WASM.
+- Desktop and mobile hardware are closer than they used to be.
+- Developers are tired of maintaining the same product in many stacks.
 
-1. We ship the UI, GPU, and hardware UAPIs that WASI doesn't have yet.
-2. We ship a productized runtime + SDK developers install in five minutes.
-3. We have an anchor tenant (ParkSure) that forces us to dogfood
-   production-quality from day one.
+## What Success Looks Like
 
-## Success criteria at v1.0
+At v1.0, a developer should be able to build one Layer36 app and ship it to the
+main desktop and mobile platforms with platform specific adapters doing the
+native work.
 
-At v1.0 (end of month 24), Layer36 must be able to:
+The hard requirements are:
 
-| # | Criterion | Target |
-|---|-----------|--------|
-| 1 | Run the same `.l36app` binary on | Windows 11+, macOS 13+, Ubuntu 22.04+, iOS 16+, Android 12+, browsers |
-| 2 | Hello-world startup | < 100 ms cold, < 20 ms warm |
-| 3 | GUI frame budget | 16.7 ms (60 fps) on M1 / Snapdragon 8 Gen 2 |
-| 4 | Binary size overhead vs native | < 3× for a typical productivity app |
-| 5 | Source languages | Rust, Go, TypeScript (first-class); C/C++, Python, Swift (compatible) |
-| 6 | Anchor tenant | ParkSure migrated end-to-end |
-| 7 | Developer docs | 100% UAPI coverage with examples |
-| 8 | CI pass | Nightly green on all target hosts for ≥ 7 consecutive days |
+| Area | Target |
+|------|--------|
+| Hosts | Windows, macOS, Linux, iOS, Android, and web where possible |
+| App format | `.l36app` bundle |
+| Runtime | Fast cold start and predictable memory use |
+| APIs | Files, network, time, locale, UI, graphics, sensors, identity |
+| Permissions | Clear grants instead of silent host access |
+| Developer flow | New project to running app in about a minute |
+| Real proof | ParkSure or another real product running on Layer36 |

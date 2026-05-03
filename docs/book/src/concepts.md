@@ -1,16 +1,34 @@
 # Core Concepts
 
-Every concept here has a one-sentence canonical definition. Use them in every
-RFC, ADR, and PR description.
+These words show up everywhere in Layer36. This page keeps them plain.
 
-| Concept | Definition |
-|---------|-----------|
-| **UIR** (Universal IR) | The portable bytecode every Layer36 app compiles to. Base: WebAssembly Core + Component Model. |
-| **UAPI** (Universal API) | The standard library every Layer36 app calls. Defined as WIT interfaces; implemented per host by the runtime. |
-| **UCap** (Universal Capabilities) | The capability-based permission model. Apps declare required capabilities; the runtime issues unforgeable handles only to granted capabilities. |
-| **Runtime** | The binary installed on each host OS that loads and executes `.l36app` bundles. |
-| **Host Adapter** | The per-OS module inside the runtime that translates UAPI calls into native OS calls. |
-| **App Bundle** | The `.l36app` distributable package: a zip-structured container holding WASM component, manifest, assets, and signature. |
-| **Marketplace** | Distribution channel and user identity layer. |
+| Concept | Meaning |
+|---------|---------|
+| **WASM component** | The portable program file that Layer36 runs. |
+| **Runtime** | The `layer36` engine installed on a host machine. |
+| **UAPI** | The common app API. Apps call this instead of calling each OS directly. |
+| **UCap** | The permission system. It decides what an app is allowed to use. |
+| **Host adapter** | The code that turns a Layer36 API call into a native OS call. |
+| **`.l36app` bundle** | The future app package containing code, assets, manifest, and signature. |
+| **Manifest** | The file that describes an app and the permissions it asks for. |
+| **Marketplace** | The future distribution, update, and identity layer. |
 
-For full definitions see [`Plan/Build-Plan.md §3`](https://github.com/incyashraj/layer6x6/blob/main/Plan/Build-Plan.md#3-core-concepts).
+## How They Fit
+
+```mermaid
+flowchart LR
+    APP["WASM component"] --> UAPI["UAPI call"]
+    UAPI --> UCAP["UCap check"]
+    UCAP --> ADAPTER["Host adapter"]
+    ADAPTER --> OS["Native OS"]
+```
+
+Example: a Layer36 app wants to read a file.
+
+1. The app calls the Layer36 file API.
+2. UCap checks whether that app has a grant for the file path.
+3. The host adapter calls the native file API for the current OS.
+4. The app gets a result that looks the same on every host.
+
+Phase 1 only proves the runtime path. Phase 2 begins the real UAPI and UCap
+work.

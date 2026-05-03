@@ -1,33 +1,31 @@
-# Phase 0 — Foundation
+# Phase 0: Foundation
 
-**Status:** In Progress  
-**Duration:** Weeks 1–4  
-**Sentence:** *Get the project bones set up so real work can start.*
+**Status:** Mostly done
+**Estimate:** mostly complete; external launch items remain
+**Goal:** Make the project real enough that work can happen in public.
 
-## What was done
+## Done
 
-- Repo skeleton: licenses (MIT + Apache-2.0), README, .gitignore, .gitattributes
-- Cargo workspace sentinel + `rust-toolchain.toml` + `deny.toml`
-- GitHub Actions CI: fmt, clippy, test (matrix: Linux/macOS/Windows), cargo-deny
-- GitHub Pages deploy workflow for this docs site
-- Issue + PR templates
-- This mdBook site
-- ADR-0001: Rust for the runtime
-- CONTRIBUTING, CODE_OF_CONDUCT, SECURITY documents
-- First-contributor guide
-- Legal and launch draft scaffolding
+- Dual license files are in place.
+- The Rust workspace builds.
+- CI runs format, lint, tests, docs, and dependency checks.
+- GitHub Pages publishes this book.
+- Issues, labels, templates, contributor docs, and security docs exist.
+- ADR-0001 records the Rust runtime decision.
+- The project name moved to Layer36 after the first naming screen.
+- The repo has been pushed to `incyashraj/layer6x6`.
 
-## Still pending
+## Still Important
 
-- Confirm GitHub branch protection and repository metadata.
-- Publish GitHub Pages and verify the public docs URL.
-- Create the Discord server and replace placeholder invite links.
-- Complete the trademark search from official databases.
-- Publish the announcement post/thread after review.
-- Merge at least one external contributor PR.
+- Keep branch protection strict on `main`.
+- Confirm public repo visibility, social preview, and repo metadata.
+- Have one outside reader review the README.
+- Create Discord or another community home before a public announcement.
+- Secure `layer36.dev` or another chosen domain.
+- Finish official naming and trademark checks.
+- Get one external contributor PR opened and merged.
 
-## Exit criteria
+These are mostly public launch tasks. They should not stop Phase 2 design work,
+but they should be finished before we claim Phase 0 is fully closed.
 
-See [`Plan/Phase-0-Plan.md §2`](https://github.com/incyashraj/layer6x6/blob/main/Plan/Phase-0-Plan.md#2-success-criteria).
-
-The current checklist state is tracked in [Phase 0 Status](phase-0-status.md).
+See the detailed checklist in [Phase 0 Status](phase-0-status.md).

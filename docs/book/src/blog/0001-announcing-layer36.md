@@ -1,6 +1,6 @@
 # Announcing Layer36
 
-**Status:** Draft  
+**Status:** Draft
 **Target:** Week 4 of Phase 0
 
 Layer36 is an experiment in making native application development portable again.
@@ -16,7 +16,7 @@ This is not a new kernel and it is not an emulator. It is a meta-platform: a
 runtime, standard library, permission model, bundle format, and distribution
 layer that sit above existing operating systems.
 
-Phase 0 is intentionally quiet. We are setting up the repository, documentation,
+Phase 0 is quiet on purpose. We are setting up the repository, documentation,
 CI, contribution path, licensing, and first architecture decision before writing
 runtime code. A platform that wants trust has to practice it in the repo before
 it asks for it at runtime.

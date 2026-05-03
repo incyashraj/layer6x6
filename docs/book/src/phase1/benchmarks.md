@@ -54,6 +54,6 @@ runners are noisy.
 - The host output is routed to an in-process sink for microbenchmarks so terminal
   I/O does not dominate host-call dispatch measurements.
 - There is no AOT cache yet. Phase 2 can use this baseline to prove cache wins.
-- The benchmark suite is intentionally small enough to run in CI, but the
+- The benchmark suite is small enough to run in CI, but the
   published baseline should be refreshed only from the documented reference
   machine.

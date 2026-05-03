@@ -1,7 +1,7 @@
 # ADR process
 
 Architecture Decision Records (ADRs) capture the significant technical
-decisions made in Layer36 — what was decided, why, and what the consequences are.
+decisions made in Layer36: what was decided, why, and what the consequences are.
 
 ## When to write an ADR
 

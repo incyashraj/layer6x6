@@ -1592,9 +1592,9 @@ Save as `docs/book/src/phase0/retro.md` at the end of Phase 0.
 
 ## Development Log
 
-> **Phase Status:** In Progress  
-> **Started:** 2026-05-01  
-> **Completed:** —  
+> **Phase Status:** Mostly done; external gates pending
+> **Started:** 2026-05-01
+> **Completed:** pending external gates
 > **Last Updated:** 2026-05-02
 
 ### Progress Summary

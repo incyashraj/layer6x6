@@ -6,9 +6,9 @@
 - **Git**
 
 Optional (needed for specific phases):
-- `cargo-component` — for building WASM components (Phase 1+)
-- `wasm-tools` — for WASM inspection and optimization (Phase 1+)
-- `mdbook` — for building the docs site (`cargo install mdbook`)
+- `cargo-component`: for building WASM components (Phase 1+)
+- `wasm-tools`: for WASM inspection and optimization (Phase 1+)
+- `mdbook`: for building the docs site (`cargo install mdbook`)
 
 ## Clone and build
 
@@ -20,7 +20,7 @@ scripts/test-phase1.sh
 ```
 
 This should work in under 10 minutes on a fresh machine. If it doesn't,
-[open an issue](https://github.com/incyashraj/layer6x6/issues/new?template=bug_report.md) — that's a bug.
+[open an issue](https://github.com/incyashraj/layer6x6/issues/new?template=bug_report.md): that's a bug.
 
 ## Run the docs site locally
 

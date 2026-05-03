@@ -12,10 +12,10 @@ Thanks for your interest. Layer36 is young and every contribution compounds.
 
 ## Guides
 
-- [Your first PR](first-pr.md) — from zero to merged
-- [ADR process](adrs.md) — when and how to write an Architecture Decision Record
+- [Your first PR](first-pr.md): from zero to merged
+- [ADR process](adrs.md): when and how to write an Architecture Decision Record
 - [Setting up your environment](setup.md)
-- [WIT style guide](wit-style.md) — how we write WIT interfaces
+- [WIT style guide](wit-style.md): how we write WIT interfaces
 
 ## Quick links
 

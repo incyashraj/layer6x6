@@ -1,8 +1,8 @@
-Layer36 — Comprehensive Build Plan
+# Layer36 Build Plan
 
-> **Version:** 0.1 — Working draft
-> **Status:** Pre-phase-0 (planning)
-> **Horizon:** 24 months to v1.0
+> **Version:** 0.1: Working draft
+> **Status:** Phase 1 engineering proof complete; Phase 0 external launch items still pending.
+> **Horizon:** estimated. The plan is phase based, not a fixed 24 month promise.
 > **Name:** Layer36
 > **Development repo:** `incyashraj/layer6x6` while the 6x6 portability matrix is being built.
 > **Tagline:** Write once. Run on everything. Natively.
@@ -53,11 +53,11 @@ All task IDs follow the pattern `P{phase}-{area}-{n}` (e.g. `P2-UAPI-05`). Refer
 
 ### 1.1 What we're building
 
-**Layer36** is a universal application platform: a portable runtime, a universal standard library (UAPI), a capability-based permission system (UCap), a package format, and a distribution layer that together let developers write an app **once** and have it run natively — with access to each platform's hardware and performance — on Windows, macOS, Linux, iOS, Android, and the web.
+**Layer36** is a universal application platform: a portable runtime, a universal standard library (UAPI), a capability-based permission system (UCap), a package format, and a distribution layer that together let developers write an app **once** and have it run natively: with access to each platform's hardware and performance: on Windows, macOS, Linux, iOS, Android, and the web.
 
 It is not:
 - A new operating system in the Linux kernel sense
-- An emulator or compatibility layer for existing apps (that's Project B — separate track)
+- An emulator or compatibility layer for existing apps (that's Project B: separate track)
 - A browser or web framework
 
 It is:
@@ -70,30 +70,30 @@ It is:
 Four forces are converging:
 
 1. **WebAssembly is production-ready.** The bytecode is stable. The Component Model has shipped. WASI Preview 2 exists. Tooling for Rust, Go, C++, JS, and Python is mature.
-2. **Device fragmentation is worse than ever.** Laptops (x86/ARM), phones (iOS/Android), tablets, watches, cars, TVs, XR headsets — each with a different SDK. No dev wants to ship seven codebases.
+2. **Device fragmentation is worse than ever.** Laptops (x86/ARM), phones (iOS/Android), tablets, watches, cars, TVs, XR headsets: each with a different SDK. No dev wants to ship seven codebases.
 3. **Native cross-platform solutions are incomplete.** Flutter is UI-only. React Native is JS-only. Electron is bloated. None of them deliver true native capability + performance + cross-platform in one package.
 4. **Hardware converges on ARM.** When every device runs the same ISA family, the primary reason to target different CPU backends evaporates. Only the OS layer differs, which is exactly what we abstract.
 
 ### 1.3 Success criteria (v1.0)
 
-At v1.0 launch (end of month 24), Layer36 must be able to:
+At v1.0 launch, Layer36 must be able to:
 
 | # | Criterion | Target |
 |---|-----------|--------|
 | 1 | Run the same `.l36app` binary on | Windows 11+, macOS 13+, Ubuntu 22.04+, iOS 16+, Android 12+, browsers w/ WASM2 |
 | 2 | Hello-world startup time | < 100 ms cold, < 20 ms warm |
 | 3 | GUI app frame budget | 16.7 ms (60 fps) on M1/Snapdragon 8 Gen 2 |
-| 4 | Binary size overhead vs native | < 3× for a typical productivity app |
+| 4 | Binary size overhead vs native | < 3x for a typical productivity app |
 | 5 | Supported source languages | Rust, Go, TypeScript (first-class); C/C++, Python, Swift (compatible) |
 | 6 | Anchor tenant | ParkSure migrated end-to-end |
 | 7 | Developer docs coverage | 100% of UAPI + every phase gate has a walkthrough |
-| 8 | Passing CI on all target hosts | Nightly, zero red ≥7 consecutive days before release |
+| 8 | Passing CI on all target hosts | Nightly, zero red >=7 consecutive days before release |
 
 ### 1.4 Timeline at a glance
 
 ```mermaid
 gantt
-    title Layer36 — 24 Month Roadmap
+    title Layer36 estimated roadmap
     dateFormat  YYYY-MM-DD
     axisFormat  %b '%y
 
@@ -118,7 +118,7 @@ gantt
 
 ### 2.1 The problem
 
-An application today is coupled to six independent things: its CPU architecture, its kernel's syscall table, its system libraries, its framework APIs, its bundle format, and its security model. Supporting N operating systems requires N implementations of each layer — an O(N²) cost that compounds with every new device category.
+An application today is coupled to six independent things: its CPU architecture, its kernel's syscall table, its system libraries, its framework APIs, its bundle format, and its security model. Supporting N operating systems requires N implementations of each layer: an O(N²) cost that compounds with every new device category.
 
 The result is the Reddit compatibility chart users see: Android apps don't run on macOS, iOS apps don't run on Android, half the cells are "Not possible." Users pay for it in device lock-in. Developers pay for it in duplicated work. Innovation pays for it because new ideas have to be rewritten six times before they reach users.
 
@@ -126,25 +126,25 @@ The result is the Reddit compatibility chart users see: Android apps don't run o
 
 Every scalable computing abstraction has solved fragmentation the same way: **insert a universal intermediate layer.**
 
-- Multiple CPUs → **LLVM IR** → any backend
-- Multiple OSes (server) → **JVM bytecode / .NET CLR** → any OS
-- Multiple devices (web) → **HTML/JS/CSS** → any browser
+- Multiple CPUs -> **LLVM IR** -> any backend
+- Multiple OSes (server) -> **JVM bytecode / .NET CLR** -> any OS
+- Multiple devices (web) -> **HTML/JS/CSS** -> any browser
 
-Each time, the N² problem became 2N. Layer36 applies the same transformation to native apps: **one portable bytecode, one standard library, one permission model** at the center; a thin adapter per host on the outside.
+Each time, the N² problem became 2N. Layer36 applies the same change to native apps: **one portable bytecode, one standard library, one permission model** at the center; a thin adapter per host on the outside.
 
 ### 2.3 Prior art (what we learn from each)
 
 | System | What it got right | Why it didn't achieve full META-OS |
 |---|---|---|
 | **JVM** | Portable bytecode, rich stdlib, huge ecosystem | Enterprise server focus; desktop stalled (Swing/AWT); no mobile capture |
-| **.NET** | Strong tooling, multi-language | Microsoft-first; late cross-platform (Mono → .NET Core); tied to MS identity |
+| **.NET** | Strong tooling, multi-language | Microsoft-first; late cross-platform (Mono -> .NET Core); tied to MS identity |
 | **Flash / AIR** | Ubiquitous deployment, good graphics | Proprietary; Apple killed mobile in 2010; security reputation |
 | **Silverlight** | In-browser + desktop, good MVVM | Killed by MS before maturity; plugin-dependent |
 | **Browser + JS** | Universal reach, huge ecosystem | Sandbox too tight for native apps; perf ceiling; UI "not native" |
 | **Electron** | Actually shipped cross-platform desktop | 100MB+ binaries; one Chromium per app; heavy battery cost |
 | **Flutter** | Beautiful UI, consistent everywhere | Dart-only; doesn't use native controls; no iOS runtime, only compile-time |
 | **React Native** | JS devs ship mobile | Bridge overhead; fights platform conventions; JS-only |
-| **WASM + WASI** | Clean bytecode, emerging component model | **Missing UI, GPU, hardware capabilities — gaps we fill** |
+| **WASM + WASI** | Clean bytecode, emerging component model | **Missing UI, GPU, hardware capabilities: gaps we fill** |
 
 ### 2.4 Our wedge
 
@@ -159,7 +159,7 @@ Specifically:
 
 ## 3. Core Concepts
 
-Every concept here has a one-sentence canonical definition. Memorize them — they will appear in every RFC, ADR, and PR description.
+Every concept here has a one-sentence canonical definition. Memorize them: they will appear in every RFC, ADR, and PR description.
 
 ### 3.1 Universal IR (UIR)
 
@@ -173,23 +173,23 @@ UAPI modules (target set for v1.0):
 
 ```
 layer36:
-├── io/         # stdio, files, pipes, stdout, stderr
-├── net/        # TCP, UDP, QUIC, HTTP, WebSocket, DNS
-├── time/       # clocks, timers, scheduling
-├── fs/         # filesystem, paths, file metadata
-├── ui/         # window, widgets, layout, input, text rendering
-├── gfx/        # 2D canvas, 3D GPU (WebGPU-compat), shaders
-├── audio/      # playback, capture, mixing, MIDI
-├── sensors/    # accelerometer, gyro, GPS, camera, mic
-├── storage/    # key-value, SQL (SQLite), object store
-├── crypto/     # hash, symmetric, asymmetric, random, PQ-safe
-├── identity/   # DID-based user identity, signing, attestation
-├── ipc/        # intra-device messaging, cross-app calls
-├── notify/     # system notifications, toasts, badges
-├── locale/     # i18n, l10n, formatting
-├── accessibility/ # screen reader, high-contrast, reduced motion
-├── ai/         # local inference, model loading, embeddings
-└── platform/   # device info, capabilities query, power state
+  io/              # stdio, files, pipes, stdout, stderr
+  net/             # TCP, UDP, QUIC, HTTP, WebSocket, DNS
+  time/            # clocks, timers, scheduling
+  fs/              # filesystem, paths, file metadata
+  ui/              # window, widgets, layout, input, text rendering
+  gfx/             # 2D canvas, 3D GPU (WebGPU-compat), shaders
+  audio/           # playback, capture, mixing, MIDI
+  sensors/         # accelerometer, gyro, GPS, camera, mic
+  storage/         # key-value, SQL (SQLite), object store
+  crypto/          # hash, symmetric, asymmetric, random, PQ-safe
+  identity/        # DID-based user identity, signing, attestation
+  ipc/             # intra-device messaging, cross-app calls
+  notify/          # system notifications, toasts, badges
+  locale/          # i18n, l10n, formatting
+  accessibility/   # screen reader, high-contrast, reduced motion
+  ai/              # local inference, model loading, embeddings
+  platform/        # device info, capabilities query, power state
 ```
 
 ### 3.3 Universal Capabilities (UCap)
@@ -219,14 +219,14 @@ The distributable package. A zip-structured container:
 
 ```
 myapp.l36app/
-├── manifest.toml        # app id, version, capabilities, entry point, locale, deps
-├── code.wasm            # WASM component (main entry)
-├── modules/             # additional WASM components (lazy-loaded)
-├── assets/              # images, fonts, sounds, shaders
-├── locale/              # translations (TOML or fluent)
-├── schema/              # storage schemas (SQL migrations)
-├── signature.p7s        # developer signature (optional dev-mode skip)
-└── attest.json          # build attestation (reproducible build info)
+"""""" manifest.toml        # app id, version, capabilities, entry point, locale, deps
+"""""" code.wasm            # WASM component (main entry)
+"""""" modules/             # additional WASM components (lazy-loaded)
+"""""" assets/              # images, fonts, sounds, shaders
+"""""" locale/              # translations (TOML or fluent)
+"""""" schema/              # storage schemas (SQL migrations)
+"""""" signature.p7s        # developer signature (optional dev-mode skip)
+""""" attest.json          # build attestation (reproducible build info)
 ```
 
 ### 3.7 Marketplace & Identity
@@ -355,16 +355,16 @@ sequenceDiagram
 flowchart TB
     subgraph HA["Host Adapter (Linux example)"]
         direction LR
-        UI_L[ui → GTK4 / Wayland]
-        GFX_L[gfx → Vulkan / wgpu]
-        NET_L[net → tokio + hyper + quinn]
-        FS_L[fs → libc + io_uring]
-        AUDIO_L[audio → PipeWire]
-        SENS_L[sensors → udev / iio]
-        STOR_L[storage → SQLite + sled]
-        CRYPTO_L[crypto → ring / rustls]
-        NOTIFY_L[notify → freedesktop DBus]
-        AI_L[ai → ORT / candle]
+        UI_L[ui -> GTK4 / Wayland]
+        GFX_L[gfx -> Vulkan / wgpu]
+        NET_L[net -> tokio + hyper + quinn]
+        FS_L[fs -> libc + io_uring]
+        AUDIO_L[audio -> PipeWire]
+        SENS_L[sensors -> udev / iio]
+        STOR_L[storage -> SQLite + sled]
+        CRYPTO_L[crypto -> ring / rustls]
+        NOTIFY_L[notify -> freedesktop DBus]
+        AI_L[ai -> ORT / candle]
     end
 
     UAPI[UAPI dispatch table] --> HA
@@ -428,7 +428,7 @@ Every choice below is a **decision**, not a suggestion. Departing from it requir
 | 3 | TypeScript | ComponentizeJS / Jco | Smallest dev barrier, widest reach |
 | 4 | C / C++ | clang + wasi-sdk | Legacy ports, game engines |
 | 5 | Python | componentize-py | Data/AI workloads |
-| 6 | Swift | embedded Swift → WASM | Experimental; blocked on Apple tooling |
+| 6 | Swift | embedded Swift -> WASM | Experimental; blocked on Apple tooling |
 
 ### 5.5 UI stack
 
@@ -436,7 +436,7 @@ Every choice below is a **decision**, not a suggestion. Departing from it requir
   - Widget tree defined in WIT (abstract).
   - Runtime lowers tree to native controls where possible (NSView, UIView, Android View, HTMLElement, GTK widget).
   - Custom-drawn fallback via our 2D canvas (§5.6) for widgets the host doesn't have.
-- **Rationale:** Flutter rejects native widgets and pays with "not feeling native"; Electron uses web and pays with size/perf. We split the difference — structure abstract, chrome native.
+- **Rationale:** Flutter rejects native widgets and pays with "not feeling native"; Electron uses web and pays with size/perf. We split the difference: structure abstract, chrome native.
 - **Implementation reference:** Xilem (Rust), SwiftUI's layout engine, React Native's "Fabric" architecture.
 
 ### 5.6 GPU / 2D graphics
@@ -507,26 +507,26 @@ Every choice below is a **decision**, not a suggestion. Departing from it requir
 | Artifact hosting | GitHub Releases + OCI registry (ghcr.io) |
 | Docs hosting | GitHub Pages via mdBook + custom theme |
 | Marketplace backend | Rust + axum; Postgres; S3-compatible blob store |
-| CDN | Cloudflare (free tier → Pro when traffic warrants) |
+| CDN | Cloudflare (free tier -> Pro when traffic warrants) |
 
 ---
 
 ## 6. Phased Roadmap
 
-Eight phases, ~24 months. Each phase has a single sentence that encodes its purpose — if you can't map a task back to the current phase's sentence, it doesn't belong in the current phase.
+Eight phases. The timing below is an estimate, not a deadline. Each phase has a single sentence that encodes its purpose; if you cannot map a task back to the current phase sentence, it does not belong in the current phase.
 
-| # | Phase | Sentence | Duration |
+| # | Phase | Sentence | Estimate |
 |---|---|---|---|
-| 0 | Foundation | Get the project bones set up so real work can start. | Weeks 1–4 |
-| 1 | POC Runtime | Prove one binary runs identically on three desktop hosts. | Months 2–3 |
-| 2 | UAPI v0.1 (CLI) | Ship the first useful cross-platform CLI app through our runtime. | Months 4–6 |
-| 3 | UI + Graphics | First GUI app running natively on Win / macOS / Linux. | Months 7–10 |
-| 4 | Mobile Hosts | Same app runs on iOS and Android. | Months 11–14 |
-| 5 | Developer SDK | A dev can `layer36 new hello && layer36 run` in under 60 seconds. | Months 15–18 |
-| 6 | Distribution & Identity | Users discover, install, update, and sign in across devices. | Months 19–22 |
-| 7 | v1.0 Hardening | ParkSure migrated end-to-end; public launch. | Months 23–24 |
+| 0 | Foundation | Get the project bones set up so real work can start. | mostly done; external items pending |
+| 1 | POC Runtime | Prove one binary runs identically on three desktop hosts. | engineering done |
+| 2 | UAPI v0.1 (CLI) | Ship the first useful cross-platform CLI app through our runtime. | est. 4 to 8 weeks |
+| 3 | UI + Graphics | First GUI app running natively on Win / macOS / Linux. | est. 6 to 10 weeks |
+| 4 | Mobile Hosts | Same app runs on iOS and Android. | est. 8 to 12 weeks |
+| 5 | Developer SDK | A dev can `layer36 new hello && layer36 run` in under 60 seconds. | est. 6 to 10 weeks |
+| 6 | Distribution & Identity | Users discover, install, update, and sign in across devices. | est. 8 to 12 weeks |
+| 7 | v1.0 Hardening | ParkSure migrated end-to-end; public launch. | est. after Phase 6 |
 
-### Phase 0 — Foundation (Weeks 1–4)
+### Phase 0: Foundation (mostly done; external items pending)
 
 **Objective:** Everything a new contributor needs to start writing code on day 1.
 
@@ -541,11 +541,11 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 - Documentation site scaffolded (mdBook).
 
 **Exit criteria:**
-- `git clone && cargo build` succeeds on a fresh laptop in ≤ 10 minutes.
+- `git clone && cargo build` succeeds on a fresh laptop in <= 10 minutes.
 - CI green on `main`.
 - One external contributor (besides founder) has opened a PR and merged it.
 
-### Phase 1 — POC Runtime (Months 2–3)
+### Phase 1: POC Runtime (engineering done)
 
 **Objective:** "Same `.wasm` file runs via our CLI on Linux, macOS, Windows and prints Hello World. Nothing else."
 
@@ -556,11 +556,11 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 - ADR-0002: "We use Wasmtime." ADR-0003: "We adopt Component Model."
 
 **Exit criteria:**
-- One Rust file → `cargo component build` → `layer36 run foo.wasm` prints hello on all three desktop OSes.
+- One Rust file -> `cargo component build` -> `layer36 run foo.wasm` prints hello on all three desktop OSes.
 - Startup time < 200 ms cold on mid-range hardware.
 - Runtime binary size < 30 MB.
 
-### Phase 2 — UAPI v0.1 (Months 4–6)
+### Phase 2: UAPI v0.1 (est. 4 to 8 weeks)
 
 **Objective:** First CLI modules of UAPI defined, implemented on three hosts, and used by a real small app.
 
@@ -577,7 +577,7 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 - All three sample apps pass on all three hosts in CI.
 - A dev who knows Rust but nothing about WASM can write a new CLI app in < 30 minutes using our docs.
 
-### Phase 3 — UI + Graphics (Months 7–10)
+### Phase 3: UI + Graphics (est. 6 to 10 weeks)
 
 **Objective:** First windowed GUI app running natively on three desktop hosts with consistent layout and native-feeling chrome.
 
@@ -586,19 +586,19 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 **Deliverables:**
 - `ui.wit` defining widget protocol (Window, Stack, Button, Text, Input, Image, List).
 - Retained-mode widget lowering:
-  - macOS adapter → AppKit.
-  - Windows adapter → Win32 + XAML Islands or native Win32.
-  - Linux adapter → GTK4.
+  - macOS adapter -> AppKit.
+  - Windows adapter -> Win32 + XAML Islands or native Win32.
+  - Linux adapter -> GTK4.
 - 2D canvas fallback (vello / wgpu) for custom-drawn widgets.
 - Layout engine (flexbox subset based on Taffy).
 - Input (keyboard, mouse, touch surrogate).
-- Sample app: `layer36-notes` — minimal note-taking app with list, editor, save to disk.
+- Sample app: `layer36-notes`: minimal note-taking app with list, editor, save to disk.
 
 **Exit criteria:**
 - `layer36-notes` runs on all three desktop OSes and feels native (no Electron-style "web app in a chrome").
 - 60 fps steady on 2020+ hardware.
 
-### Phase 4 — Mobile Hosts (Months 11–14)
+### Phase 4: Mobile Hosts (est. 8 to 12 weeks)
 
 **Objective:** The same `.l36app` that ran on desktop in Phase 3 runs on iOS and Android without source changes, only with mobile-appropriate layout.
 
@@ -606,15 +606,15 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 - Runtime port to iOS (via Embedded Swift bridge + Wasmtime-on-iOS).
 - Runtime port to Android (via JNI + Wasmtime-on-Android).
 - Touch input, gesture recognition (`uapi::ui::input::gesture`).
-- `sensors` UAPI module (accelerometer, GPS, camera — read-only in v0.1).
+- `sensors` UAPI module (accelerometer, GPS, camera: read-only in v0.1).
 - Mobile-specific lifecycle (background, suspend, resume).
 - Mobile CI (GitHub Actions macOS runners for iOS; Linux for Android via AVD).
 
 **Exit criteria:**
 - `layer36-notes` runs on iPhone and Android phone.
-- Battery usage comparable to a native Swift/Kotlin equivalent of the same app (≤ 1.5× acceptable for v0.1).
+- Battery usage comparable to a native Swift/Kotlin equivalent of the same app (<= 1.5x acceptable for v0.1).
 
-### Phase 5 — Developer SDK (Months 15–18)
+### Phase 5: Developer SDK (est. 6 to 10 weeks)
 
 **Objective:** A developer's first 60 seconds.
 
@@ -630,28 +630,28 @@ Eight phases, ~24 months. Each phase has a single sentence that encodes its purp
 - `layer36 new hello --lang rust && cd hello && layer36 run` produces a running GUI on the dev's machine in under 60 seconds.
 - Stack traces in app crashes point to app source, not WASM offsets.
 
-### Phase 6 — Distribution & Identity (Months 19–22)
+### Phase 6: Distribution & Identity (est. 8 to 12 weeks)
 
-**Objective:** Users and developers have a real platform — apps are published, discovered, installed, updated, and sign in with one identity across devices.
+**Objective:** Users and developers have a real platform: apps are published, discovered, installed, updated, and sign in with one identity across devices.
 
 **Deliverables:**
 - Marketplace backend (axum + Postgres + S3).
-- Marketplace frontend (itself a Layer36 app — deep dogfood).
+- Marketplace frontend (itself a Layer36 app: deep dogfood).
 - Signing infrastructure (developer keypairs, revocation, transparency log).
 - Delta updates (`.l36app` diff format).
 - Identity: `did:key` support in runtime, `uapi::identity` module, DID resolution UI.
 - Age-rating, content guidelines, moderation tooling (basic).
 
 **Exit criteria:**
-- A new user can install runtime, sign in, install 3 apps, and each app recognizes them as same user — on two different devices — without manual account setup in each app.
+- A new user can install runtime, sign in, install 3 apps, and each app recognizes them as same user: on two different devices: without manual account setup in each app.
 - Developer can `layer36 deploy` and the update reaches users' devices within 24 hours.
 
-### Phase 7 — v1.0 Hardening (Months 23–24)
+### Phase 7: v1.0 Hardening (est. after Phase 6)
 
 **Objective:** Ship.
 
 **Deliverables:**
-- ParkSure migrated to Layer36 (all 6 client apps → 1 codebase).
+- ParkSure migrated to Layer36 (all 6 client apps -> 1 codebase).
 - Security audit by external firm (Trail of Bits or similar).
 - Performance work: meet all §1.3 + §11 targets.
 - Documentation pass: every UAPI function documented with examples.
@@ -671,49 +671,49 @@ Each phase's tasks are listed with an ID. Tasks are independent enough to be ass
 
 ```
 layer36/
-├── Cargo.toml              # workspace
-├── rust-toolchain.toml     # pinned stable + wasm32 targets
-├── .github/
-│   ├── workflows/
-│   │   ├── ci.yml
-│   │   ├── nightly.yml
-│   │   └── release.yml
-│   ├── ISSUE_TEMPLATE/
-│   └── PULL_REQUEST_TEMPLATE.md
-├── crates/
-│   ├── runtime/            # the host runtime (Phase 1+)
-│   ├── cli/                # `layer36` command (Phase 1+)
-│   ├── bundle/             # .l36app format (Phase 6)
-│   ├── policy/             # UCap policy engine (Phase 2+)
-│   └── host-adapter/
-│       ├── linux/
-│       ├── macos/
-│       ├── windows/
-│       ├── ios/            # Phase 4
-│       └── android/        # Phase 4
-├── wit/
-│   └── layer36/
-│       ├── io.wit
-│       ├── net.wit
-│       └── ...             # one file per UAPI module
-├── apps/                   # sample & dogfood apps
-│   ├── layer36-curl/
-│   ├── layer36-notes/
-│   └── marketplace/        # Phase 6
-├── docs/
-│   ├── adr/                # decision records
-│   ├── book/               # mdBook source
-│   └── rfc/                # proposals
-├── scripts/
-├── test/
-│   ├── integration/
-│   └── fixtures/
-├── LICENSE-MIT
-├── LICENSE-APACHE
-├── README.md
-├── CONTRIBUTING.md
-├── SECURITY.md
-└── CODE_OF_CONDUCT.md
+"""""" Cargo.toml              # workspace
+"""""" rust-toolchain.toml     # pinned stable + wasm32 targets
+"""""" .github/
+"   """""" workflows/
+"   "   """""" ci.yml
+"   "   """""" nightly.yml
+"   "   """"" release.yml
+"   """""" ISSUE_TEMPLATE/
+"   """"" PULL_REQUEST_TEMPLATE.md
+"""""" crates/
+"   """""" runtime/            # the host runtime (Phase 1+)
+"   """""" cli/                # `layer36` command (Phase 1+)
+"   """""" bundle/             # .l36app format (Phase 6)
+"   """""" policy/             # UCap policy engine (Phase 2+)
+"   """"" host-adapter/
+"       """""" linux/
+"       """""" macos/
+"       """""" windows/
+"       """""" ios/            # Phase 4
+"       """"" android/        # Phase 4
+"""""" wit/
+"   """"" layer36/
+"       """""" io.wit
+"       """""" net.wit
+"       """"" ...             # one file per UAPI module
+"""""" apps/                   # sample & dogfood apps
+"   """""" layer36-curl/
+"   """""" layer36-notes/
+"   """"" marketplace/        # Phase 6
+"""""" docs/
+"   """""" adr/                # decision records
+"   """""" book/               # mdBook source
+"   """"" rfc/                # proposals
+"""""" scripts/
+"""""" test/
+"   """""" integration/
+"   """"" fixtures/
+"""""" LICENSE-MIT
+"""""" LICENSE-APACHE
+"""""" README.md
+"""""" CONTRIBUTING.md
+"""""" SECURITY.md
+""""" CODE_OF_CONDUCT.md
 ```
 
 ### 7.1 Phase 0 tasks
@@ -928,10 +928,10 @@ flowchart LR
 
 Every phase owns a benchmark suite. Results published to a dashboard.
 
-- `bench_startup` — cold start, warm start, first frame.
-- `bench_uapi_hot_path` — UAPI call overhead (measured in ns).
-- `bench_ui_frame` — build + render a 1000-widget tree.
-- `bench_bundle_install` — extract + verify `.l36app`.
+- `bench_startup`: cold start, warm start, first frame.
+- `bench_uapi_hot_path`: UAPI call overhead (measured in ns).
+- `bench_ui_frame`: build + render a 1000-widget tree.
+- `bench_bundle_install`: extract + verify `.l36app`.
 
 CI fails if benchmarks regress > 5% without an approved ADR.
 
@@ -1012,7 +1012,7 @@ Wildcards `*` allowed only in documented positions (host, path suffix). Never in
 - Categorized: "Always / Just this session / Ask every time / Deny".
 - Shows human-readable explanation (manifest provides `rationale` field per cap).
 - Shows publisher identity with trust signals (new publisher, known good, revoked).
-- Cannot be summoned by app code — runtime-driven only.
+- Cannot be summoned by app code: runtime-driven only.
 - Sensitive capabilities (camera, microphone, location, identity, background net) require elevated confirmation (biometric / password / OS-native prompt).
 
 ### 10.4 Manifest excerpt
@@ -1071,7 +1071,7 @@ CREATE INDEX idx_grant_app ON ucap_grant(app_id);
 | Bundle install time (10 MB) | < 2 s | `layer36 install` wall time |
 | Bundle delta update (1 MB) | < 500 ms | Download + apply |
 | Memory overhead (runtime + empty app) | < 40 MB RSS | `ps` after hello-world exits |
-| Binary size overhead vs native equivalent | < 3× | Size of `.l36app` vs hand-written native |
+| Binary size overhead vs native equivalent | < 3x | Size of `.l36app` vs hand-written native |
 
 Every phase has a subset of these to hit. §7 tasks link to the relevant target.
 
@@ -1083,12 +1083,12 @@ Three tiers, lives in `docs/book/` built by mdBook.
 
 ### 12.1 Tiers
 
-1. **Tutorials** — guided, complete walkthroughs. Each ends with a working app.
-2. **How-to guides** — recipe style, for people who already know what they're doing.
-3. **Reference** — exhaustive, auto-generated from WIT + Rustdoc.
-4. **Explanation** — why things are the way they are; links to ADRs.
+1. **Tutorials**: guided, complete walkthroughs. Each ends with a working app.
+2. **How-to guides**: recipe style, for people who already know what they're doing.
+3. **Reference**: exhaustive, auto-generated from WIT + Rustdoc.
+4. **Explanation**: why things are the way they are; links to ADRs.
 
-(This is the Divio documentation taxonomy — worth adopting wholesale.)
+(This is the Divio documentation taxonomy: worth adopting wholesale.)
 
 ### 12.2 Documentation quality gate
 
@@ -1116,9 +1116,9 @@ Dual MIT / Apache-2.0, the standard in the Rust ecosystem. Bundle format and WIT
 
 ### 13.2 Ownership model
 
-- **Benevolent dictator → foundation track.**
-  - Months 0–18: Y is BDFL. All calls land with Y.
-  - Months 18–24: establish steering committee (5 seats). BDFL retains veto on bytecode + UAPI compat.
+- **Benevolent dictator -> foundation track.**
+  - Early project: Y is BDFL. All calls land with Y.
+  - After real adoption: establish a steering committee. BDFL retains veto on bytecode and UAPI compatibility.
   - Post-v1.0: transfer trademark + release process to a neutral foundation (Apache, Bytecode Alliance, or standalone).
 
 ### 13.3 RFC process
@@ -1162,17 +1162,17 @@ Any change to UIR, UAPI, UCap, or bundle format requires an RFC:
 | Developer cold-start problem | High | Critical | Anchor tenant (ParkSure); pay first 10 migrations; flagship app we own |
 | Apple App Store policy blocks us | High | High | Start with developer mode + TestFlight; follow Swift Playgrounds / Pyto precedent; compile-to-native fallback for production |
 | Google Play policy blocks us | Medium | High | APK sideload viable on Android; Play Store is nice-to-have, not critical |
-| Platform vendors build their own | Medium | Medium | Open standards + governance → no one owns it → reduces vendor incentive to kill it |
+| Platform vendors build their own | Medium | Medium | Open standards + governance -> no one owns it -> reduces vendor incentive to kill it |
 | Community fragmentation (hard fork) | Low | High | Clear governance + liberal contribution + trademark held by foundation |
 
 ### 14.3 Organizational risks
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Founder-only team cannot ship 24-month plan | High | Critical | Recruit co-founder (systems or DeFi+security background) by end of Phase 1 |
+| Founder-only team cannot ship the full plan alone | High | Critical | Recruit co-founder or first key systems contributor by end of Phase 1 |
 | Funding runway | Medium | Critical | Build MVP (Phase 2) before fundraising; OSS + sponsorships supplement |
 | Burnout | Medium | High | Hard 40h/wk default; explicit rest weeks between phases |
-| ParkSure time conflict | High | High | Schedule Layer36 work around ParkSure milestones; use Phase 7 to migrate ParkSure itself — one-stone-two-birds |
+| ParkSure time conflict | High | High | Schedule Layer36 work around ParkSure milestones; use Phase 7 to migrate ParkSure itself: one-stone-two-birds |
 
 ### 14.4 Legal (deferred per founder instruction; tracked)
 
@@ -1197,7 +1197,7 @@ flowchart LR
     S3 -.->|months 24+| S3
 ```
 
-### 15.2 Stage 1 (months 0–12): OSS credibility
+### 15.2 Stage 1 (months 0-12): OSS credibility
 
 - Open source from day one. Public repo, public roadmap, public Discord.
 - Regular (monthly) blog posts about what we're building.
@@ -1206,12 +1206,12 @@ flowchart LR
 - Target audience: WASM insiders, Rust systems folks, Bytecode Alliance.
 - Goal: 5k GitHub stars, 500 Discord members, 30 external contributors.
 
-### 15.3 Stage 2 (months 12–24): Developer adoption
+### 15.3 Stage 2 (months 12-24): Developer adoption
 
 - Launch Phase 5 SDK publicly with strong DX.
 - Target 5 flagship apps built by external teams (subsidize if needed).
 - Partnership program: startups get free builds + marketing in exchange for case study.
-- Target audience: devs tired of maintaining 3–6 codebases.
+- Target audience: devs tired of maintaining 3-6 codebases.
 - Goal: 10k installs of the dev toolchain, 100 apps shipped.
 
 ### 15.4 Stage 3 (months 24+): End-user platform
@@ -1231,25 +1231,25 @@ flowchart LR
 | Phase | Team size | Critical roles |
 |---|---|---|
 | 0 | 1 (founder) | Founder, generalist |
-| 1 | 1–2 | + Rust systems engineer (possibly part-time) |
-| 2 | 2–3 | + 2nd systems engineer or contractor for per-host adapters |
-| 3 | 3–5 | + UI engineer (graphics/UX), + designer (part-time) |
-| 4 | 5–7 | + iOS specialist, + Android specialist |
-| 5 | 6–9 | + DX / devtools engineer, + docs engineer |
-| 6 | 8–12 | + backend engineer (marketplace), + security engineer, + community manager |
-| 7 | 10–15 | + QA lead, + marketing, + support |
+| 1 | 1-2 | + Rust systems engineer (possibly part-time) |
+| 2 | 2-3 | + 2nd systems engineer or contractor for per-host adapters |
+| 3 | 3-5 | + UI engineer (graphics/UX), + designer (part-time) |
+| 4 | 5-7 | + iOS specialist, + Android specialist |
+| 5 | 6-9 | + DX / devtools engineer, + docs engineer |
+| 6 | 8-12 | + backend engineer (marketplace), + security engineer, + community manager |
+| 7 | 10-15 | + QA lead, + marketing, + support |
 
 ### 16.2 First hire priorities
 
 Rank order for the next three hires after founder:
 
-1. **Senior systems engineer (Rust)** — ideally with WASM runtime experience. Look: Wasmtime contributors, Shopify Functions team alumni, Fermyon ex-eng.
-2. **UI engineer** — experience with cross-platform UI systems (Flutter / React Native / Avalonia / Slint). Graphics background is a plus.
-3. **Security engineer** — capability-based security experience (a rare bird). Failing that, someone from macOS kernel team, iOS security, or any sandboxing project. Consulting OK for Phase 0–3.
+1. **Senior systems engineer (Rust)**: ideally with WASM runtime experience. Look: Wasmtime contributors, Shopify Functions team alumni, Fermyon ex-eng.
+2. **UI engineer**: experience with cross-platform UI systems (Flutter / React Native / Avalonia / Slint). Graphics background is a plus.
+3. **Security engineer**: capability-based security experience (a rare bird). Failing that, someone from macOS kernel team, iOS security, or any sandboxing project. Consulting OK for Phase 0-3.
 
 ### 16.3 Co-founder question
 
-Y's existing memory says a technical co-founder with DeFi or security background is the highest-leverage hire for Bouclier. For Layer36 the best co-founder profile is different: **systems / compiler / OS kernel background**. Not the same person. If Bouclier and Layer36 both need a co-founder, these are two different people and time has to be allocated to recruiting both separately.
+Y's existing memory says a technical co-founder with DeFi or security background is the highest-impact hire for Bouclier. For Layer36 the best co-founder profile is different: **systems / compiler / OS kernel background**. Not the same person. If Bouclier and Layer36 both need a co-founder, these are two different people and time has to be allocated to recruiting both separately.
 
 ---
 
@@ -1270,7 +1270,7 @@ Y's existing memory says a technical co-founder with DeFi or security background
 | Chat | Discord (or Matrix for purists) | #general, #dev, #help, #design, #rfc |
 | Forum | GitHub Discussions | For long-form topics |
 | Analytics | Plausible (self-hosted or cloud) | Privacy-respecting |
-| Metrics / monitoring | Grafana Cloud (free tier) → self-host | For marketplace backend |
+| Metrics / monitoring | Grafana Cloud (free tier) -> self-host | For marketplace backend |
 | Error tracking | Sentry (open source, self-hosted) | For runtime crashes |
 | Secrets | 1Password / doppler | For team |
 | Project management | Linear or GitHub Projects | Whichever wins after 2 weeks |
@@ -1284,15 +1284,15 @@ Y's existing memory says a technical co-founder with DeFi or security background
 - Windows required to test the Windows adapter locally (or Parallels).
 - All three OS VMs recommended for anyone working on the host adapter.
 
-### 17.3 Budget estimate (first 24 months, lean)
+### 17.3 Budget estimate (lean early path)
 
 | Item | Monthly | Notes |
 |---|---|---|
-| GitHub org (Team) | $4 × team size | Team plan |
-| CI minutes | $0–200 | Free tier + occasional top-ups |
-| Cloud (marketplace Phase 6+) | $50–500 | Scale with users |
-| Cloudflare | $20–200 | Pro → Business |
-| Error + monitoring | $0–100 | Self-host where possible |
+| GitHub org (Team) | $4 x team size | Team plan |
+| CI minutes | $0-200 | Free tier + occasional top-ups |
+| Cloud (marketplace Phase 6+) | $50-500 | Scale with users |
+| Cloudflare | $20-200 | Pro -> Business |
+| Error + monitoring | $0-100 | Self-host where possible |
 | Domain, certificates | $20 | Multiple domains |
 | Legal (trademark + counsel) | Variable, defer | Phase 6+ |
 | Salaries | Largest line | Depends on hiring model |
@@ -1303,22 +1303,22 @@ Total infra without salaries: < $1k/month for 18 months, < $2k/month after launc
 
 ## 18. Glossary
 
-- **ABI** — Application Binary Interface. The contract between caller and callee in compiled code.
-- **ADR** — Architecture Decision Record. A short document capturing a decision and its context.
-- **AOT** — Ahead-Of-Time compilation.
-- **Capability** — An unforgeable token granting the right to perform an operation on a resource.
-- **Component Model** — WebAssembly specification adding typed interfaces and composition to WASM modules.
-- **DID** — Decentralized Identifier. A W3C standard for self-sovereign identity.
-- **Host Adapter** — The per-OS module inside the Layer36 runtime that maps UAPI to native calls.
-- **JIT** — Just-In-Time compilation.
-- **Manifest** — `manifest.toml` describing a Layer36 app's metadata and required capabilities.
-- **Layer36** — Product name for the META-OS described here.
-- **UAPI** — Universal API. The standard library exposed to every Layer36 app.
-- **UCap** — Universal Capabilities. The permission model.
-- **UIR** — Universal Intermediate Representation. The bytecode every app compiles to (= WASM).
-- **WASI** — WebAssembly System Interface. A standard set of host interfaces for WASM.
-- **WASM** — WebAssembly.
-- **WIT** — WebAssembly Interface Types. The IDL for Component Model interfaces.
+- **ABI**: Application Binary Interface. The contract between caller and callee in compiled code.
+- **ADR**: Architecture Decision Record. A short document capturing a decision and its context.
+- **AOT**: Ahead-Of-Time compilation.
+- **Capability**: An unforgeable token granting the right to perform an operation on a resource.
+- **Component Model**: WebAssembly specification adding typed interfaces and composition to WASM modules.
+- **DID**: Decentralized Identifier. A W3C standard for self-sovereign identity.
+- **Host Adapter**: The per-OS module inside the Layer36 runtime that maps UAPI to native calls.
+- **JIT**: Just-In-Time compilation.
+- **Manifest**: `manifest.toml` describing a Layer36 app's metadata and required capabilities.
+- **Layer36**: Product name for the META-OS described here.
+- **UAPI**: Universal API. The standard library exposed to every Layer36 app.
+- **UCap**: Universal Capabilities. The permission model.
+- **UIR**: Universal Intermediate Representation. The bytecode every app compiles to (= WASM).
+- **WASI**: WebAssembly System Interface. A standard set of host interfaces for WASM.
+- **WASM**: WebAssembly.
+- **WIT**: WebAssembly Interface Types. The IDL for Component Model interfaces.
 
 ---
 
@@ -1369,7 +1369,7 @@ Total infra without salaries: < $1k/month for 18 months, < $2k/month after launc
 
 ## 20. Appendices
 
-### Appendix A — Example WIT file (`wit/layer36/fs.wit`)
+### Appendix A: Example WIT file (`wit/layer36/fs.wit`)
 
 ```wit
 package layer36:fs@0.1.0;
@@ -1418,7 +1418,7 @@ world fs-consumer {
 }
 ```
 
-### Appendix B — Example manifest (`manifest.toml`)
+### Appendix B: Example manifest (`manifest.toml`)
 
 ```toml
 [app]
@@ -1464,7 +1464,7 @@ icon       = "assets/icon.png"
 splash     = "assets/splash.png"
 ```
 
-### Appendix C — Example UAPI use in Rust
+### Appendix C: Example UAPI use in Rust
 
 ```rust
 // myapp/src/main.rs
@@ -1491,7 +1491,7 @@ fn save(_ev: layer36::ui::Event) {
 }
 ```
 
-### Appendix D — ADR template
+### Appendix D: ADR template
 
 ```markdown
 # ADR-NNNN: <short title>
@@ -1515,15 +1515,15 @@ What becomes easier? What becomes harder? What do we give up?
 
 ## Alternatives considered
 
-- **Alt A** — why rejected
-- **Alt B** — why rejected
+- **Alt A**: why rejected
+- **Alt B**: why rejected
 
 ## References
 
 Links, prior art, discussion threads.
 ```
 
-### Appendix E — First-week checklist
+### Appendix E: First-week checklist
 
 Day-by-day for Phase 0 week 1, no room for "what do I do next?"
 
@@ -1544,12 +1544,12 @@ Day-by-day for Phase 0 week 1, no room for "what do I do next?"
 - [x] Add GitHub Actions: `ci.yml` with fmt + clippy + test
 - [ ] Set up branch protection on `main`
 - [x] Add issue + PR templates
-- [x] Add labels (phase:0…7, area:runtime, area:uapi, …)
+- [x] Add labels (phase:0""7, area:runtime, area:uapi, "")
 
 **Thursday**
 - [ ] Create Discord server; write rules and channel descriptions
-- [ ] Cross-link Discord ↔ repo in all files
-- [x] mdBook skeleton with TOC matching §1–§20 of this plan
+- [ ] Cross-link Discord " repo in all files
+- [x] mdBook skeleton with TOC matching §1-§20 of this plan
 - [ ] Commit this plan as `docs/book/src/BUILD_PLAN.md`
 
 **Friday**
@@ -1558,7 +1558,7 @@ Day-by-day for Phase 0 week 1, no room for "what do I do next?"
 - [x] Twitter/X announcement thread draft
 - [x] Retrospective: what took longer than expected; update this plan
 
-### Appendix F — Nomenclature cheat sheet
+### Appendix F: Nomenclature cheat sheet
 
 What we call things vs. what the ecosystem calls them. Keep these consistent in docs and code.
 
@@ -1577,10 +1577,10 @@ What we call things vs. what the ecosystem calls them. Keep these consistent in 
 
 ## 21. Development Status
 
-> **Current Phase:** Phase 1 — POC Runtime, with account-bound Phase 0 items still pending  
-> **Project Status:** In Progress  
-> **Phase 0 Start:** 2026-05-01  
-> **v1.0 Target:** ~April 2028  
+> **Current Phase:** Phase 1: POC Runtime, with account-bound Phase 0 items still pending
+> **Project Status:** In Progress
+> **Phase 0 Start:** 2026-05-01
+> **v1.0 Target:** ~April 2028
 > **Last Updated:** 2026-05-03
 
 This section is the living status board for all of Layer36. Update it at every phase boundary, major milestone, and architectural pivot. It is the first thing a returning contributor should read.
@@ -1591,14 +1591,14 @@ This section is the living status board for all of Layer36. Update it at every p
 
 | # | Phase | Status | Started | Completed | Notes |
 |---|-------|--------|---------|-----------|-------|
-| 0 | Foundation | In Progress | 2026-05-01 | — | Renamed from OneOS to Layer36 on 2026-05-02; local scaffold, docs, Pages, labels/issues, and CI are green. |
-| 1 | POC Runtime | In Progress | 2026-05-02 | — | Runtime, CLI, WIT host imports, shared hello-world fixture, CI harness, fuel/memory limits, release packaging, quickstart, and threat model are in place; `v0.1.0-rc1` release proof is green; external timing remains. |
-| 2 | UAPI v0.1 (CLI) | Not started | — | — | |
-| 3 | UI + Graphics | Not started | — | — | |
-| 4 | Mobile Hosts | Not started | — | — | |
-| 5 | Developer SDK | Not started | — | — | |
-| 6 | Distribution & Identity | Not started | — | — | |
-| 7 | v1.0 Hardening | Not started | — | — | |
+| 0 | Foundation | Mostly done | 2026-05-01 | pending external gates | Renamed from OneOS to Layer36 on 2026-05-02; local scaffold, docs, Pages, labels/issues, and CI are green. |
+| 1 | POC Runtime | Engineering done | 2026-05-02 | pending formal exit gates | Runtime, CLI, WIT host imports, shared hello-world fixture, CI harness, fuel/memory limits, release packaging, quickstart, threat model, benchmarks, ADRs, retrospective, and `v0.1.0-rc1` are in place. |
+| 2 | UAPI v0.1 (CLI) | Next | pending | pending | |
+| 3 | UI + Graphics | Not started | pending | pending | |
+| 4 | Mobile Hosts | Not started | pending | pending | |
+| 5 | Developer SDK | Not started | pending | pending | |
+| 6 | Distribution & Identity | Not started | pending | pending | |
+| 7 | v1.0 Hardening | Not started | pending | pending | |
 
 ---
 
@@ -1606,16 +1606,16 @@ This section is the living status board for all of Layer36. Update it at every p
 
 | Milestone | Target Phase | Status | Date | Notes |
 |-----------|-------------|--------|------|-------|
-| First external contributor PR merged | 0 | Pending | — | |
+| First external contributor PR merged | 0 | Pending | pending | |
 | `layer36 run hello.wasm` green on 3 desktop OSes | 1 | Done | 2026-05-03 | GitHub CI confirmed Linux, macOS, and Windows with one shared `.wasm` artifact across all three. |
-| `layer36-curl` byte-identical across Linux/macOS/Win | 2 | Pending | — | |
-| `layer36-notes` GUI running on Win/macOS/Linux | 3 | Pending | — | |
-| `layer36-notes` running on iOS + Android | 4 | Pending | — | |
-| 60-second `layer36 new && layer36 run` walkthrough | 5 | Pending | — | |
-| First app published via external developer | 6 | Pending | — | |
-| ParkSure fully migrated to Layer36 | 7 | Pending | — | |
-| Co-founder / first key hire onboarded | Phase 1 target | Pending | — | |
-| v1.0 public launch | 7 | Pending | — | |
+| `layer36-curl` byte-identical across Linux/macOS/Win | 2 | Pending | pending | |
+| `layer36-notes` GUI running on Win/macOS/Linux | 3 | Pending | pending | |
+| `layer36-notes` running on iOS + Android | 4 | Pending | pending | |
+| 60-second `layer36 new && layer36 run` walkthrough | 5 | Pending | pending | |
+| First app published via external developer | 6 | Pending | pending | |
+| ParkSure fully migrated to Layer36 | 7 | Pending | pending | |
+| Co-founder / first key hire onboarded | Phase 1 target | Pending | pending | |
+| v1.0 public launch | 7 | Pending | pending | |
 
 ---
 
@@ -1625,7 +1625,7 @@ Append as each ADR is drafted and merged. Full ADR files live in `docs/adr/`.
 
 | ADR | Title | Phase | Status | Merged |
 |-----|-------|-------|--------|--------|
-| ADR-0001 | Rust for the runtime | 0 | Accepted locally | — |
+| ADR-0001 | Rust for the runtime | 0 | Accepted locally | pending |
 | ADR-0002 | Wasmtime as runtime engine | 1 | Accepted | 2026-05-02 |
 | ADR-0003 | Adopt WASM Component Model from day one | 1 | Accepted | 2026-05-02 |
 
@@ -1647,13 +1647,13 @@ Decisions actively under discussion, not yet resolved into an ADR.
 
 | # | Question | Context | Target By |
 |---|----------|---------|----------|
-| — | — | — | — |
+| none | none | none | none |
 
 ---
 
 ### 21.6 Running Log
 
-Short time-stamped entries for anything significant — ecosystem developments, pivots, key learnings, notable contributor events.
+Short time-stamped entries for anything significant: ecosystem developments, pivots, key learnings, notable contributor events.
 
 | Date | Entry |
 |------|-------|
@@ -1679,6 +1679,7 @@ Short time-stamped entries for anything significant — ecosystem developments, 
 | 2026-05-03 | Published `v0.1.0-rc1` as a GitHub prerelease with five platform archives and `SHA256SUMS`: Linux x64, Linux ARM64, macOS Intel, macOS Apple Silicon, and Windows x64. |
 | 2026-05-03 | Verified ADR-0002 and ADR-0003 are on `main`; Phase 1 ADR gate is closed. |
 | 2026-05-03 | Wrote the Phase 1 engineering retrospective. External quickstart timing and governance closeout remain pending. |
+| 2026-05-03 | Reworked public docs into simpler human language, added a left-to-right system timeline, and changed roadmap timing from fixed months to estimates. |
 
 ---
 
@@ -1688,4 +1689,4 @@ If you stop after Phase 2, you've built a better curl. If you stop after Phase 3
 
 Every great platform started as a weekend project that refused to die. Make the first commit this week. Revisit this plan in 90 days and again every 90 days after. Update it with reality. Good plans change; bad plans are abandoned. Don't abandon this one.
 
-— end of document —
+: end of document :

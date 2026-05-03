@@ -13,7 +13,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 
 ### Added
 - Initial repository scaffold: licenses, README, CI, ADR-0001.
-- Phase Plans (0–7) and Build Plan in `Plan/`.
+- Phase Plans (0-7) and Build Plan in `Plan/`.
 - `docs/adr/` with ADR template and ADR-0001.
 - `docs/book/` mdBook scaffold.
 - Phase 0 workspace sentinel so baseline Cargo commands succeed before runtime crates exist.
@@ -38,11 +38,14 @@ Pre-1.0: breaking changes may occur in any minor release.
 - Visible shared-fixture artifact path for GitHub Actions upload/download.
 - `v0.1.0-rc1` prerelease with Linux x64, Linux ARM64, macOS Intel, macOS Apple Silicon, Windows x64, and `SHA256SUMS` assets.
 
+### Changed
+- Reworked the public mdBook docs into clearer human language, added system flow diagrams, and changed the roadmap from fixed fixed-month language to estimates.
+
 ---
 
 <!-- Releases appear here as they are cut. Example format:
 
-## [0.1.0] — 2026-XX-XX
+## [0.1.0] : 2026-XX-XX
 
 ### Added
 - …

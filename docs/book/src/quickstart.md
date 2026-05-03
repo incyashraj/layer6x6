@@ -65,8 +65,7 @@ Hello, Layer36!
 
 ## Try the Limit Checks
 
-Fuel and memory limits are deliberately small here so the component fails
-cleanly:
+Fuel and memory limits are set very low here so you can see the failure path:
 
 ```bash
 cargo run -p layer36-cli -- run --fuel 1 test/integration/hello-world/target/wasm32-wasip1/release/hello_world.wasm
@@ -102,7 +101,7 @@ world app {
 }
 ```
 
-The component source is intentionally tiny:
+The component source is tiny by design:
 
 ```rust
 #[allow(warnings)]
@@ -158,5 +157,5 @@ cargo run -p layer36-cli -- doctor
 ```
 
 `doctor` reports your `cargo-component` version, `wasm32-wasip1` and
-`wasm32-wasip2` target status, and Layer36 state directory. It is intentionally
-basic in Phase 1.
+`wasm32-wasip2` target status, and Layer36 state directory. It is basic in
+Phase 1 because the runtime is still a proof.

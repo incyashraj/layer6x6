@@ -24,14 +24,14 @@
 
 ## UI frameworks (prior art)
 
-- [Xilem](https://github.com/linebender/xilem) — Rust reactive UI
-- [Slint](https://slint.dev/) — cross-platform, declarative
+- [Xilem](https://github.com/linebender/xilem): Rust reactive UI
+- [Slint](https://slint.dev/): cross-platform, declarative
 - [Flutter architecture](https://docs.flutter.dev/resources/architectural-overview)
 - [React Native Fabric](https://reactnative.dev/architecture/overview)
 
 ## Capability systems (prior art)
 
-- [seL4](https://sel4.systems/) — capability-kernel
+- [seL4](https://sel4.systems/): capability-kernel
 - [Fuchsia Zircon handles](https://fuchsia.dev/fuchsia-src/concepts/kernel)
 - [OpenBSD pledge/unveil](https://man.openbsd.org/pledge.2)
 

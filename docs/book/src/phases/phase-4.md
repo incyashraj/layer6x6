@@ -1,7 +1,17 @@
-# Phase 4 — Mobile Hosts
+# Phase 4: Mobile Hosts
 
-**Status:** Not started  
-**Duration:** Months 11–14  
-**Sentence:** *The same `.l36app` that runs on desktop runs on iOS and Android without source changes.*
+**Status:** Planned
+**Estimate:** est. 8 to 12 weeks
+**Goal:** Run the same app on iOS and Android.
 
-See [`Plan/Phase-4-Plan.md`](https://github.com/incyashraj/layer6x6/blob/main/Plan/Phase-4-Plan.md).
+Phase 4 brings the desktop proof to phones:
+
+- iOS host shell
+- Android host shell
+- touch input
+- app lifecycle
+- sensors where allowed
+- mobile packaging experiments
+
+This phase will be shaped by app store rules and device testing. The estimate is
+therefore rough.

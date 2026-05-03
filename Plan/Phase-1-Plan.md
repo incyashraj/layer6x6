@@ -1480,14 +1480,14 @@ Save as `docs/book/src/phase1/retro.md` at the end of Phase 1.
 
 ## Development Log
 
-> **Phase Status:** In Progress  
-> **Started:** 2026-05-02  
-> **Completed:** —  
+> **Phase Status:** Engineering complete; formal exit pending
+> **Started:** 2026-05-02
+> **Completed:** pending formal exit
 > **Last Updated:** 2026-05-03
 
 ### Progress Summary
 
-_Phase 1 has started under a local-development waiver for account-bound Phase 0 items. Runtime and CLI crates exist, Wasmtime 43.0.2 is pinned for Rust 1.91.1 compatibility, host `print`/`exit` imports are wired through WIT, the hello-world component runs through `layer36 run`, CI is green across Linux/macOS/Windows, the matrix consumes one shared hello `.wasm` fixture with SHA-256 verification, fuel/memory limits fail cleanly, `v0.1.0-rc1` publishes all five release artifacts plus `SHA256SUMS`, the first quickstart is published, Threat Model v0.1 is documented, and the first local benchmark baseline is recorded._
+_Phase 1 engineering is complete under a local-development waiver for account-bound Phase 0 items. Runtime and CLI crates exist, Wasmtime 43.0.2 is pinned for Rust 1.91.1 compatibility, host `print`/`exit` imports are wired through WIT, the hello-world component runs through `layer36 run`, CI is green across Linux/macOS/Windows, the matrix consumes one shared hello `.wasm` fixture with SHA-256 verification, fuel/memory limits fail cleanly, `v0.1.0-rc1` publishes all five release artifacts plus `SHA256SUMS`, the quickstart is published, Threat Model v0.1 is documented, benchmarks are recorded, ADR-0002/0003 are merged, and the retrospective is written. Formal exit still waits on external timing, five green days, P0 issue review, and the Phase 2 kickoff issue._
 
 ---
 

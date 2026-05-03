@@ -1,32 +1,43 @@
 # UAPI Overview
 
-> The UAPI modules will be defined as WIT interfaces starting in Phase 2.
+UAPI means Universal API.
 
-The Universal API (UAPI) is the standard library every Layer36 app calls.
-It is defined as [WIT](https://component-model.bytecodealliance.org/design/wit.html)
-interfaces, and each module is implemented natively per host platform.
+It is the standard app API every Layer36 app will call. Instead of calling
+Windows files, macOS files, Linux files, Android files, or iOS files directly,
+an app calls the Layer36 file API. The host adapter then does the native work.
 
-## Target modules for v1.0
+Phase 2 starts this layer.
 
-```
+## Planned Modules
+
+```text
 layer36:
-├── io/            # stdio, files, pipes
-├── net/           # TCP, UDP, QUIC, HTTP, WebSocket, DNS
-├── time/          # clocks, timers, scheduling
-├── fs/            # filesystem, paths, metadata
-├── ui/            # window, widgets, layout, input, text rendering
-├── gfx/           # 2D canvas, 3D GPU (WebGPU-compat), shaders
-├── audio/         # playback, capture, mixing
-├── sensors/       # accelerometer, gyro, GPS, camera, mic
-├── storage/       # key-value, SQL (SQLite), object store
-├── crypto/        # hash, symmetric, asymmetric, random, PQ-safe
-├── identity/      # DID-based user identity, signing, attestation
-├── ipc/           # intra-device messaging, cross-app calls
-├── notify/        # system notifications, toasts, badges
-├── locale/        # i18n, l10n, formatting
-├── accessibility/ # screen reader, high-contrast, reduced motion
-├── ai/            # local inference, model loading, embeddings
-└── platform/      # device info, capabilities query, power state
+  io/              stdio, pipes, stdout, stderr
+  fs/              files, paths, metadata
+  net/             HTTP first, more network APIs later
+  time/            clocks and timers
+  locale/          language, region, formatting
+  ui/              windows, widgets, layout, input
+  gfx/             2D drawing and GPU work
+  audio/           playback and capture
+  sensors/         motion, location, camera, mic
+  storage/         key-value, SQL, object storage
+  crypto/          hashes, signing, encryption, random
+  identity/        user identity and signing
+  notify/          system notifications
+  accessibility/   screen readers and reduced-motion settings
+  platform/        device info and host capabilities
 ```
 
-**Phase 2 scope:** `io`, `fs`, `net` (HTTP client), `time`, `locale`.
+## Phase 2 Scope
+
+Phase 2 only covers:
+
+- `io`
+- `fs`
+- `net`
+- `time`
+- `locale`
+
+That is enough to build the first useful CLI apps without pretending the whole
+platform is ready.

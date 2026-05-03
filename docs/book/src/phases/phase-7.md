@@ -1,7 +1,20 @@
-# Phase 7 — v1.0 Hardening
+# Phase 7: v1.0 Hardening
 
-**Status:** Not started  
-**Duration:** Months 23–24  
-**Sentence:** *Make every piece of Layer36 launch-quality, migrate ParkSure, and ship v1.0 in public.*
+**Status:** Planned
+**Estimate:** after Phase 6
+**Goal:** Prove Layer36 with a real product and prepare for public launch.
 
-See [`Plan/Phase-7-Plan.md`](https://github.com/incyashraj/layer6x6/blob/main/Plan/Phase-7-Plan.md).
+This is where the project stops being only a runtime project.
+
+The work includes:
+
+- migrating a real app
+- security audit
+- performance cleanup
+- accessibility pass
+- full API docs
+- launch site
+- public release
+
+The timing depends on how much real product work has already happened in earlier
+phases.

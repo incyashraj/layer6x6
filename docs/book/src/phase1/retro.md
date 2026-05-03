@@ -27,7 +27,7 @@ host-built `.wasm` hashes and failed for a reason that was true but not useful:
 different hosts can produce different component bytes. The real Layer36 promise
 is that one app artifact runs everywhere, so CI now tests that directly.
 
-Keeping Phase 1 intentionally narrow also helped. The runtime only has the
+Keeping Phase 1 narrow also helped. The runtime only has the
 temporary host interface it needs, and UAPI design is left for Phase 2 where it
 can be reviewed as a platform contract instead of a quick demo surface.
 

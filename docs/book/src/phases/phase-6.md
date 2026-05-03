@@ -1,7 +1,18 @@
-# Phase 6 — Distribution & Identity
+# Phase 6: Distribution
 
-**Status:** Not started  
-**Duration:** Months 19–22  
-**Sentence:** *Users discover, install, update, and sign in across devices.*
+**Status:** Planned
+**Estimate:** est. 8 to 12 weeks
+**Goal:** Make apps installable, signed, updated, and tied to identity.
 
-See [`Plan/Phase-6-Plan.md`](https://github.com/incyashraj/layer6x6/blob/main/Plan/Phase-6-Plan.md).
+This phase adds the platform pieces around the runtime:
+
+- `.l36app` bundle format
+- signing
+- update flow
+- developer identity
+- user identity
+- marketplace backend
+- marketplace app
+
+Security review becomes much more important here because users will be running
+apps from other people.

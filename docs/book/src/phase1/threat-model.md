@@ -4,7 +4,7 @@ Layer36 Phase 1 is a proof-of-concept runtime. It can load a WebAssembly
 component, register a temporary `layer36:phase1/host` interface, call the
 component's exported `run` function, and route `print`/`exit` back to the CLI.
 
-This threat model is intentionally narrow. It records what Phase 1 defends
+This threat model is narrow on purpose. It records what Phase 1 defends
 today, what it only partially defends, and what must wait for later phases.
 
 ## Scope

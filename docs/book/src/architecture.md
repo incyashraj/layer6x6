@@ -1,87 +1,111 @@
 # Architecture
 
-Layer36 is a portable app runtime. Apps compile to WebAssembly components and
-import Layer36 host capabilities through WIT interfaces. Host adapters implement
-those capabilities on each platform.
+Layer36 has one job: keep app code above the platform line.
 
-Phase 1 keeps that architecture deliberately thin: one component, one temporary
-host interface, one CLI command, and no app bundle format yet.
+An app should not need to know whether it is running on Linux, Windows, macOS,
+Android, or iOS for common work. It should call Layer36. The host adapter should
+do the platform work.
+
+## Full Shape Of The System
 
 ```mermaid
 flowchart LR
-    APP["Layer36 app component (.wasm)"]
-    WIT["WIT contract"]
-    RT["layer36-runtime"]
-    HOST["Phase 1 host imports"]
-    OS["Host OS"]
+    SRC["App source<br/>Rust, Go, TS, C, etc."]
+    WASM["WASM component<br/>portable app code"]
+    MAN["Manifest<br/>name, version, permissions"]
+    BUNDLE[".l36app bundle<br/>component, assets, signature"]
+    RT["Layer36 runtime"]
+    UAPI["UAPI<br/>files, net, UI, sensors"]
+    UCAP["UCap<br/>permission grants"]
+    ADAPT["Host adapter"]
+    OS["Native OS"]
+    HW["Hardware"]
 
-    APP --> WIT
-    WIT --> RT
-    RT --> HOST
-    HOST --> OS
+    SRC --> WASM
+    WASM --> BUNDLE
+    MAN --> BUNDLE
+    BUNDLE --> RT
+    RT --> UAPI
+    RT --> UCAP
+    UAPI --> ADAPT
+    UCAP --> ADAPT
+    ADAPT --> OS
+    OS --> HW
+
+    classDef done fill:#d9fbe3,stroke:#16833a,color:#102a17,stroke-width:2px;
+    classDef current fill:#fff3bf,stroke:#b7791f,color:#2d2100,stroke-width:2px;
+    classDef pending fill:#eeeeee,stroke:#999999,color:#777777,stroke-width:1px;
+
+    class SRC,WASM,RT current;
+    class MAN,BUNDLE,UAPI,UCAP,ADAPT,OS,HW pending;
 ```
 
-## Phase 1 Runtime
+Phase 1 has only the yellow part: a WASM component, the runtime, and a temporary
+host interface. The real UAPI, app bundle, permissions, and host adapters start
+in later phases.
 
-The Phase 1 runtime is the smallest useful proof of the future system:
+## Runtime Flow Today
 
-| Layer | Phase 1 implementation |
-|---|---|
-| App format | WebAssembly Component Model `.wasm` component |
-| Interface contract | `wit/layer36/phase1.wit` |
-| Runtime engine | Wasmtime 43.0.2 |
-| Host API | `print(string)` and `exit(s32)` |
-| Command surface | `layer36 run`, `layer36 version`, `layer36 doctor` |
-| Safety controls | No WASI filesystem/network/env imports, fuel limit, memory cap |
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI as layer36 CLI
+    participant Runtime
+    participant Wasmtime
+    participant App as WASM component
 
-The current execution path is:
+    User->>CLI: layer36 run hello.wasm
+    CLI->>Runtime: run_file(path, config)
+    Runtime->>Wasmtime: load component
+    Runtime->>Wasmtime: link print and exit
+    Wasmtime->>App: call run()
+    App->>Wasmtime: print("Hello, Layer36!")
+    Wasmtime->>Runtime: host print call
+    Runtime->>CLI: stdout and exit code
+```
 
-1. `layer36 run <file.wasm>` reads the component from disk.
-2. `layer36-runtime` creates a Wasmtime engine configured for the Component
-   Model.
-3. The runtime compiles the component and links only the Phase 1 host imports.
-4. The component's exported `run()` function is invoked.
-5. `print` writes through the host, and `exit` records the requested exit code.
+## What Phase 1 Proves
 
-## Cross-Host Proof
+Phase 1 proves that the loader works. The CI pipeline builds one hello-world
+component, stores its SHA-256 hash, and runs those exact bytes on:
 
-Phase 1 CI proves portability with one shared input. A Linux job builds the
-hello-world component once, records its SHA-256, and uploads that exact `.wasm`
-as a workflow artifact. The Linux, macOS, and Windows test jobs download the
-same artifact, assert the same hash, and run it through `layer36`.
+- Linux
+- macOS
+- Windows
 
-That split is intentional: source builds can vary by host, but the runtime proof
-requires the same component bytes on every desktop host.
+That matters because the promise is not """three hosts can build similar source."""
+The promise is """one app artifact can run on different hosts."""
 
-## Crates
+## Crates Today
 
 ```mermaid
 flowchart TD
     CLI["crates/cli"]
     RT["crates/runtime"]
     WIT["wit/layer36"]
-    FIX["test/integration/*"]
+    TEST["test/integration"]
 
     CLI --> RT
     RT --> WIT
-    FIX --> WIT
+    TEST --> WIT
 ```
 
-`crates/runtime` owns component loading, host import wiring, limits, and runtime
-errors. `crates/cli` owns command parsing, exit-code mapping, version output,
-and local developer diagnostics.
+`crates/runtime` owns loading, Wasmtime setup, host imports, fuel, memory
+limits, and runtime errors.
+
+`crates/cli` owns arguments, output, exit codes, and developer diagnostics.
 
 ## Trust Boundary
 
-The WebAssembly component is untrusted. The runtime and host imports are trusted
-Phase 1 code. The host OS is outside the project boundary.
+The WASM component is untrusted. The runtime and host imports are trusted
+project code. The operating system is outside the project boundary.
 
-Phase 1 does not claim an adversarial sandbox. It proves the execution model and
-records the exact limits in the [Phase 1 threat model](phase1/threat-model.md).
+Phase 1 is not a hardened security sandbox. It avoids filesystem, network, env,
+and process access, but it is still a developer proof. Real permission work
+starts with UCap in Phase 2.
 
 ## Later Phases
 
-Phase 2 replaces the temporary `phase1.wit` interface with the first real UAPI
-modules and capability policy. Phase 3 adds UI and graphics. Phases 4 through 7
-add mobile hosts, developer tooling, distribution, identity, signing, and
-hardening.
+Phase 2 replaces the temporary Phase 1 WIT file with real UAPI modules. Phase 3
+adds desktop UI and graphics. Phase 4 adds mobile hosts. Later phases add the
+SDK, app bundles, signing, identity, updates, and release hardening.

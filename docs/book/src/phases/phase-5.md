@@ -1,7 +1,18 @@
-# Phase 5 — Developer SDK
+# Phase 5: Developer SDK
 
-**Status:** Not started  
-**Duration:** Months 15–18  
-**Sentence:** *A developer runs `layer36 new hello && layer36 run` and has a working GUI in under 60 seconds.*
+**Status:** Planned
+**Estimate:** est. 6 to 10 weeks
+**Goal:** Make Layer36 pleasant to build with.
 
-See [`Plan/Phase-5-Plan.md`](https://github.com/incyashraj/layer6x6/blob/main/Plan/Phase-5-Plan.md).
+This phase turns the runtime into a developer workflow:
+
+- `layer36 new`
+- templates for first class languages
+- debug support
+- hot reload
+- profiling
+- editor support
+- better errors
+
+The target is simple: a developer should go from nothing to a running app in
+about a minute.
