@@ -99,6 +99,7 @@ jobs:
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
+          prerelease: ${{ contains(github.ref_name, '-rc') }}
           files: |
             dist/**/*.tar.gz
             dist/**/*.zip

@@ -34,6 +34,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 - Phase 1 test harness script that builds the hello component before running workspace tests.
 - Shared Phase 1 CI hello fixture artifact so Linux, macOS, and Windows run the same `.wasm` bytes and assert the same SHA-256.
 - Release workflow tag matching for both final and RC-style version tags.
+- Release workflow prerelease marking for RC-style tags.
 
 ---
 
