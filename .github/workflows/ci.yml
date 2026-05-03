@@ -78,21 +78,21 @@ jobs:
         shell: bash
         run: |
           wasm_path="$(scripts/build-hello-component.sh)"
-          mkdir -p .layer36-fixture
-          cp "$wasm_path" .layer36-fixture/hello_world.wasm
+          mkdir -p layer36-fixture
+          cp "$wasm_path" layer36-fixture/hello_world.wasm
       - name: Record fixture hash
         id: hash
         shell: bash
         run: |
-          sha256="$(sha256sum .layer36-fixture/hello_world.wasm | awk '{print $1}')"
-          printf '%s\n' "$sha256" > .layer36-fixture/hello_world.wasm.sha256
+          sha256="$(sha256sum layer36-fixture/hello_world.wasm | awk '{print $1}')"
+          printf '%s\n' "$sha256" > layer36-fixture/hello_world.wasm.sha256
           echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
           echo "hello fixture sha256: $sha256"
       - name: Upload hello fixture
         uses: actions/upload-artifact@v4
         with:
           name: phase1-hello-fixture
-          path: .layer36-fixture/
+          path: layer36-fixture/
           if-no-files-found: error
 
   # ──────────────────────────────────────────────
@@ -128,11 +128,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: phase1-hello-fixture
-          path: .layer36-fixture
+          path: layer36-fixture
       - name: Run Phase 1 tests
         shell: bash
         env:
-          LAYER36_HELLO_WASM: .layer36-fixture/hello_world.wasm
+          LAYER36_HELLO_WASM: layer36-fixture/hello_world.wasm
           LAYER36_HELLO_SHA256: ${{ needs.hello-fixture.outputs.sha256 }}
         run: scripts/test-phase1.sh
 
