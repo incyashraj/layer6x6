@@ -1626,8 +1626,8 @@ Append as each ADR is drafted and merged. Full ADR files live in `docs/adr/`.
 | ADR | Title | Phase | Status | Merged |
 |-----|-------|-------|--------|--------|
 | ADR-0001 | Rust for the runtime | 0 | Accepted locally | — |
-| ADR-0002 | Wasmtime as runtime engine | 1 | Accepted locally | — |
-| ADR-0003 | Adopt WASM Component Model from day one | 1 | Accepted locally | — |
+| ADR-0002 | Wasmtime as runtime engine | 1 | Accepted | 2026-05-02 |
+| ADR-0003 | Adopt WASM Component Model from day one | 1 | Accepted | 2026-05-02 |
 
 _ADRs 0004 onward will be added here as they are drafted and merged across phases._
 
@@ -1677,6 +1677,7 @@ Short time-stamped entries for anything significant — ecosystem developments, 
 | 2026-05-02 | GitHub CLI setup completed for `incyashraj`; repository homepage/topics, labels, five good-first issues, Phase 1 kickoff issue, and Pages URL were configured for `incyashraj/layer6x6`. |
 | 2026-05-03 | Phase 1 shared-fixture CI is green: one uploaded hello `.wasm` artifact is verified by SHA-256 and executed through `layer36` on Linux, macOS, and Windows. |
 | 2026-05-03 | Published `v0.1.0-rc1` as a GitHub prerelease with five platform archives and `SHA256SUMS`: Linux x64, Linux ARM64, macOS Intel, macOS Apple Silicon, and Windows x64. |
+| 2026-05-03 | Verified ADR-0002 and ADR-0003 are on `main`; Phase 1 ADR gate is closed. |
 
 ---
 

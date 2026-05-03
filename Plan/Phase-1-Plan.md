@@ -1236,8 +1236,8 @@ Tick every box. No exceptions.
 ### Docs
 - [x] Quickstart merged and published to docs site.
 - [x] Architecture overview merged.
-- [ ] ADR-0002 merged.
-- [ ] ADR-0003 merged.
+- [x] ADR-0002 merged.
+- [x] ADR-0003 merged.
 - [x] README updated to reflect Phase 1 reality.
 - [x] Changelog started (`CHANGELOG.md` following Keep a Changelog format).
 
@@ -1504,7 +1504,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | 5 | Release binary size < 30 MB (compressed) | Green on `v0.1.0-rc1`; largest archive is ~5.7 MB compressed |
 | 6 | Memory RSS < 40 MB after hello-world exits | Locally green on macOS at ~14.9 MiB; cross-host baselines pending |
 | 7 | Release artifacts build and upload correctly on `v*` tag | Green on `v0.1.0-rc1`; GitHub prerelease has five platform archives and `SHA256SUMS` |
-| 8 | ADR-0002 (Wasmtime) and ADR-0003 (Component Model) merged | Accepted locally; merge pending |
+| 8 | ADR-0002 (Wasmtime) and ADR-0003 (Component Model) merged | Merged on `main` in `docs/adr/` |
 | 9 | Threat Model v0.1 published in `docs/book/` | Published through mdBook/Pages; redeploy after latest status edits |
 | 10 | Quickstart tutorial exists; new user can run hello-world in ≤ 10 min | Tutorial exists; volunteer timing pending |
 
@@ -1526,7 +1526,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P1-PERF-01 | Baseline benchmarks | 2026-05-02 | Criterion suite added in `crates/runtime/benches/startup.rs`; local Apple M4 baseline published in `docs/book/src/phase1/benchmarks.md`; CI warns on >10% regression. |
 | P1-TEST-01 | Integration test: hello-world.wasm runs on all hosts | 2026-05-03 | GitHub-hosted Linux/macOS/Windows run the same uploaded hello `.wasm` artifact and assert its SHA-256 before executing through `layer36`. |
 | P1-CI-02 | Release artifacts | 2026-05-03 | `v0.1.0-rc1` prerelease published with Linux x64, Linux ARM64, macOS Intel, macOS Apple Silicon, Windows x64, and `SHA256SUMS`. |
-| P1-ADR-01 | ADR-0002 and ADR-0003 | 2026-05-02 | Accepted locally. |
+| P1-ADR-01 | ADR-0002 and ADR-0003 | 2026-05-02 | Merged on `main` in `docs/adr/`. |
 
 ---
 
@@ -1542,8 +1542,8 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | ADR | Title | Status | Merged |
 |-----|-------|--------|--------|
-| ADR-0002 | Wasmtime as runtime engine | Accepted locally | — |
-| ADR-0003 | Adopt WASM Component Model from day one | Accepted locally | — |
+| ADR-0002 | Wasmtime as runtime engine | Accepted | 2026-05-02 |
+| ADR-0003 | Adopt WASM Component Model from day one | Accepted | 2026-05-02 |
 
 ---
 
@@ -1578,6 +1578,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 - 2026-05-03: GitHub CI is green across Linux, macOS, and Windows. Follow-up CI now builds the hello component once on Ubuntu, uploads it as an artifact, and makes every OS assert the same SHA-256 before running it.
 - 2026-05-03: Shared-fixture CI is green on run `25267714585`; Linux, macOS, and Windows all executed the same uploaded hello `.wasm` bytes through `layer36`.
 - 2026-05-03: Cut and pushed `v0.1.0-rc1`. Release run `25268003713` published a prerelease with five platform archives plus `SHA256SUMS`: Linux x64, Linux ARM64, macOS Intel, macOS Apple Silicon, and Windows x64.
+- 2026-05-03: Verified ADR-0002 and ADR-0003 are present on `main` under `docs/adr/`; Phase 1 ADR exit criteria are closed.
 
 ---
 
