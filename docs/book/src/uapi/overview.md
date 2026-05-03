@@ -155,8 +155,14 @@ Later reads, writes, seeks, stats, and flushes use that ID to find the real host
 handle and call the adapter. This keeps handles inside the runtime instead of
 letting guest code pass around raw host IDs.
 
-The next runtime wiring step is installing this host into the actual Wasmtime
-linker path used by `layer36 run`.
+This host is now installed into the real `layer36 run` path. The runtime still
+tries the Phase 1 world first for the original proof app. If that world does
+not match, it tries the Phase 2 `cli` world and installs the generated UAPI
+imports.
+
+The local adapter is still small on purpose. It can handle stdio, basic files,
+time, and locale. HTTP returns a clear unsupported error until we add the real
+network adapter.
 
 ## Rust Binding Checkpoint
 

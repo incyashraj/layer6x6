@@ -16,18 +16,30 @@ use crate::{
 use wasmtime::component::Resource;
 
 pub struct Phase2Host<'a> {
-    dispatcher: UapiDispatcher<'a>,
+    guard: UapiGuard,
+    adapter: Box<dyn HostAdapter + 'a>,
     resources: Phase2ResourceTable,
 }
 
 impl<'a> Phase2Host<'a> {
-    pub fn new(guard: &'a UapiGuard, adapter: &'a dyn HostAdapter) -> Self {
+    pub fn new(guard: UapiGuard, adapter: Box<dyn HostAdapter + 'a>) -> Self {
         Self {
-            dispatcher: UapiDispatcher::new(guard, adapter),
+            guard,
+            adapter,
             resources: Phase2ResourceTable::default(),
         }
     }
+
+    fn dispatcher(&self) -> UapiDispatcher<'_> {
+        UapiDispatcher::new(&self.guard, self.adapter.as_ref())
+    }
 }
+
+impl io::types::Host for Phase2Host<'_> {}
+impl io::streams::Host for Phase2Host<'_> {}
+impl fs::types::Host for Phase2Host<'_> {}
+impl net::types::Host for Phase2Host<'_> {}
+impl locale::types::Host for Phase2Host<'_> {}
 
 impl fs::files::Host for Phase2Host<'_> {
     fn open(
@@ -36,7 +48,7 @@ impl fs::files::Host for Phase2Host<'_> {
         mode: fs::types::OpenMode,
     ) -> wasmtime::Result<Result<Resource<fs::files::File>, fs::types::FsError>> {
         let mode = bridge::open_mode_from_wit(mode);
-        let handle = match self.dispatcher.fs_open(&path, mode) {
+        let handle = match self.dispatcher().fs_open(&path, mode) {
             Ok(handle) => handle,
             Err(err) => return Ok(Err(bridge::fs_error_to_wit(err))),
         };
@@ -49,7 +61,7 @@ impl fs::files::Host for Phase2Host<'_> {
         path: String,
     ) -> wasmtime::Result<Result<fs::types::FileStat, fs::types::FsError>> {
         Ok(self
-            .dispatcher
+            .dispatcher()
             .fs_stat(&path)
             .map(bridge::file_stat_to_wit)
             .map_err(bridge::fs_error_to_wit))
@@ -57,28 +69,28 @@ impl fs::files::Host for Phase2Host<'_> {
 
     fn list(&mut self, path: String) -> wasmtime::Result<Result<Vec<String>, fs::types::FsError>> {
         Ok(self
-            .dispatcher
+            .dispatcher()
             .fs_list(&path)
             .map_err(bridge::fs_error_to_wit))
     }
 
     fn remove_file(&mut self, path: String) -> wasmtime::Result<Result<(), fs::types::FsError>> {
         Ok(self
-            .dispatcher
+            .dispatcher()
             .fs_remove_file(&path)
             .map_err(bridge::fs_error_to_wit))
     }
 
     fn remove_dir(&mut self, path: String) -> wasmtime::Result<Result<(), fs::types::FsError>> {
         Ok(self
-            .dispatcher
+            .dispatcher()
             .fs_remove_dir(&path)
             .map_err(bridge::fs_error_to_wit))
     }
 
     fn mkdir(&mut self, path: String) -> wasmtime::Result<Result<(), fs::types::FsError>> {
         Ok(self
-            .dispatcher
+            .dispatcher()
             .fs_mkdir(&path)
             .map_err(bridge::fs_error_to_wit))
     }
@@ -89,7 +101,7 @@ impl fs::files::Host for Phase2Host<'_> {
         to: String,
     ) -> wasmtime::Result<Result<(), fs::types::FsError>> {
         Ok(self
-            .dispatcher
+            .dispatcher()
             .fs_rename(&from, &to)
             .map_err(bridge::fs_error_to_wit))
     }
@@ -101,13 +113,13 @@ impl fs::files::HostFile for Phase2Host<'_> {
         self_: Resource<fs::files::File>,
         n: u32,
     ) -> wasmtime::Result<Result<Vec<u8>, fs::types::FsError>> {
-        let Some(handle) = self.resources.file(self_.rep()) else {
+        let Some(handle) = self.resources.file(self_.rep()).cloned() else {
             return Ok(Err(missing_file_resource()));
         };
 
         Ok(self
-            .dispatcher
-            .fs_read(handle, n)
+            .dispatcher()
+            .fs_read(&handle, n)
             .map_err(bridge::fs_error_to_wit))
     }
 
@@ -116,13 +128,13 @@ impl fs::files::HostFile for Phase2Host<'_> {
         self_: Resource<fs::files::File>,
         bytes: Vec<u8>,
     ) -> wasmtime::Result<Result<u32, fs::types::FsError>> {
-        let Some(handle) = self.resources.file(self_.rep()) else {
+        let Some(handle) = self.resources.file(self_.rep()).cloned() else {
             return Ok(Err(missing_file_resource()));
         };
 
         Ok(self
-            .dispatcher
-            .fs_write(handle, &bytes)
+            .dispatcher()
+            .fs_write(&handle, &bytes)
             .map_err(bridge::fs_error_to_wit))
     }
 
@@ -131,13 +143,13 @@ impl fs::files::HostFile for Phase2Host<'_> {
         self_: Resource<fs::files::File>,
         pos: u64,
     ) -> wasmtime::Result<Result<u64, fs::types::FsError>> {
-        let Some(handle) = self.resources.file(self_.rep()) else {
+        let Some(handle) = self.resources.file(self_.rep()).cloned() else {
             return Ok(Err(missing_file_resource()));
         };
 
         Ok(self
-            .dispatcher
-            .fs_seek_set(handle, pos)
+            .dispatcher()
+            .fs_seek_set(&handle, pos)
             .map_err(bridge::fs_error_to_wit))
     }
 
@@ -145,13 +157,13 @@ impl fs::files::HostFile for Phase2Host<'_> {
         &mut self,
         self_: Resource<fs::files::File>,
     ) -> wasmtime::Result<Result<u64, fs::types::FsError>> {
-        let Some(handle) = self.resources.file(self_.rep()) else {
+        let Some(handle) = self.resources.file(self_.rep()).cloned() else {
             return Ok(Err(missing_file_resource()));
         };
 
         Ok(self
-            .dispatcher
-            .fs_seek_end(handle)
+            .dispatcher()
+            .fs_seek_end(&handle)
             .map_err(bridge::fs_error_to_wit))
     }
 
@@ -159,13 +171,13 @@ impl fs::files::HostFile for Phase2Host<'_> {
         &mut self,
         self_: Resource<fs::files::File>,
     ) -> wasmtime::Result<Result<fs::types::FileStat, fs::types::FsError>> {
-        let Some(handle) = self.resources.file(self_.rep()) else {
+        let Some(handle) = self.resources.file(self_.rep()).cloned() else {
             return Ok(Err(missing_file_resource()));
         };
 
         Ok(self
-            .dispatcher
-            .fs_stat_handle(handle)
+            .dispatcher()
+            .fs_stat_handle(&handle)
             .map(bridge::file_stat_to_wit)
             .map_err(bridge::fs_error_to_wit))
     }
@@ -179,7 +191,7 @@ impl fs::files::HostFile for Phase2Host<'_> {
 impl io::stdio::Host for Phase2Host<'_> {
     fn stdin(&mut self) -> wasmtime::Result<Resource<io::streams::InputStream>> {
         let handle = self
-            .dispatcher
+            .dispatcher()
             .stdin()
             .map_err(bridge::dispatch_error_to_trap)?;
         self.resources.insert_input(handle)
@@ -187,7 +199,7 @@ impl io::stdio::Host for Phase2Host<'_> {
 
     fn stdout(&mut self) -> wasmtime::Result<Resource<io::streams::OutputStream>> {
         let handle = self
-            .dispatcher
+            .dispatcher()
             .stdout()
             .map_err(bridge::dispatch_error_to_trap)?;
         self.resources.insert_output(handle)
@@ -195,7 +207,7 @@ impl io::stdio::Host for Phase2Host<'_> {
 
     fn stderr(&mut self) -> wasmtime::Result<Resource<io::streams::OutputStream>> {
         let handle = self
-            .dispatcher
+            .dispatcher()
             .stderr()
             .map_err(bridge::dispatch_error_to_trap)?;
         self.resources.insert_output(handle)
@@ -208,13 +220,13 @@ impl io::streams::HostInputStream for Phase2Host<'_> {
         self_: Resource<io::streams::InputStream>,
         n: u32,
     ) -> wasmtime::Result<Result<Vec<u8>, io::types::IoError>> {
-        let Some(handle) = self.resources.input(self_.rep()) else {
+        let Some(handle) = self.resources.input(self_.rep()).cloned() else {
             return Ok(Err(missing_stream_resource()));
         };
 
         Ok(self
-            .dispatcher
-            .read_stream(handle, n)
+            .dispatcher()
+            .read_stream(&handle, n)
             .map_err(bridge::io_error_to_wit))
     }
 
@@ -222,13 +234,13 @@ impl io::streams::HostInputStream for Phase2Host<'_> {
         &mut self,
         self_: Resource<io::streams::InputStream>,
     ) -> wasmtime::Result<Result<String, io::types::IoError>> {
-        let Some(handle) = self.resources.input(self_.rep()) else {
+        let Some(handle) = self.resources.input(self_.rep()).cloned() else {
             return Ok(Err(missing_stream_resource()));
         };
 
         Ok(self
-            .dispatcher
-            .read_stream_to_string(handle)
+            .dispatcher()
+            .read_stream_to_string(&handle)
             .map_err(bridge::io_error_to_wit))
     }
 
@@ -244,13 +256,13 @@ impl io::streams::HostOutputStream for Phase2Host<'_> {
         self_: Resource<io::streams::OutputStream>,
         bytes: Vec<u8>,
     ) -> wasmtime::Result<Result<u32, io::types::IoError>> {
-        let Some(handle) = self.resources.output(self_.rep()) else {
+        let Some(handle) = self.resources.output(self_.rep()).cloned() else {
             return Ok(Err(missing_stream_resource()));
         };
 
         Ok(self
-            .dispatcher
-            .write_stream(handle, &bytes)
+            .dispatcher()
+            .write_stream(&handle, &bytes)
             .map_err(bridge::io_error_to_wit))
     }
 
@@ -259,13 +271,13 @@ impl io::streams::HostOutputStream for Phase2Host<'_> {
         self_: Resource<io::streams::OutputStream>,
         bytes: Vec<u8>,
     ) -> wasmtime::Result<Result<(), io::types::IoError>> {
-        let Some(handle) = self.resources.output(self_.rep()) else {
+        let Some(handle) = self.resources.output(self_.rep()).cloned() else {
             return Ok(Err(missing_stream_resource()));
         };
 
         Ok(self
-            .dispatcher
-            .write_all_stream(handle, &bytes)
+            .dispatcher()
+            .write_all_stream(&handle, &bytes)
             .map_err(bridge::io_error_to_wit))
     }
 
@@ -273,13 +285,13 @@ impl io::streams::HostOutputStream for Phase2Host<'_> {
         &mut self,
         self_: Resource<io::streams::OutputStream>,
     ) -> wasmtime::Result<Result<(), io::types::IoError>> {
-        let Some(handle) = self.resources.output(self_.rep()) else {
+        let Some(handle) = self.resources.output(self_.rep()).cloned() else {
             return Ok(Err(missing_stream_resource()));
         };
 
         Ok(self
-            .dispatcher
-            .flush_stream(handle)
+            .dispatcher()
+            .flush_stream(&handle)
             .map_err(bridge::io_error_to_wit))
     }
 
@@ -296,7 +308,7 @@ impl io::log::Host for Phase2Host<'_> {
         message: String,
         _fields: Vec<io::log::Field>,
     ) -> wasmtime::Result<()> {
-        self.dispatcher
+        self.dispatcher()
             .log(bridge::log_level_to_str(level), &message)
             .map_err(bridge::dispatch_error_to_trap)
     }
@@ -308,7 +320,7 @@ impl net::http_client::Host for Phase2Host<'_> {
         req: net::types::Request,
     ) -> wasmtime::Result<Result<net::types::Response, net::types::NetError>> {
         Ok(self
-            .dispatcher
+            .dispatcher()
             .net_fetch(bridge::request_from_wit(req))
             .map(bridge::response_to_wit)
             .map_err(bridge::net_error_to_wit))
@@ -317,13 +329,13 @@ impl net::http_client::Host for Phase2Host<'_> {
 
 impl time::clock::Host for Phase2Host<'_> {
     fn now_millis(&mut self) -> wasmtime::Result<u64> {
-        self.dispatcher
+        self.dispatcher()
             .now_millis()
             .map_err(bridge::dispatch_error_to_trap)
     }
 
     fn monotonic_nanos(&mut self) -> wasmtime::Result<u64> {
-        self.dispatcher
+        self.dispatcher()
             .monotonic_nanos()
             .map_err(bridge::dispatch_error_to_trap)
     }
@@ -331,7 +343,7 @@ impl time::clock::Host for Phase2Host<'_> {
 
 impl time::sleep::Host for Phase2Host<'_> {
     fn sleep_millis(&mut self, millis: u32) -> wasmtime::Result<()> {
-        self.dispatcher
+        self.dispatcher()
             .sleep_millis(millis)
             .map_err(bridge::dispatch_error_to_trap)
     }
@@ -339,14 +351,14 @@ impl time::sleep::Host for Phase2Host<'_> {
 
 impl locale::info::Host for Phase2Host<'_> {
     fn current(&mut self) -> wasmtime::Result<locale::types::LocaleId> {
-        self.dispatcher
+        self.dispatcher()
             .current_locale()
             .map(bridge::locale_to_wit)
             .map_err(bridge::dispatch_error_to_trap)
     }
 
     fn timezone(&mut self) -> wasmtime::Result<String> {
-        self.dispatcher
+        self.dispatcher()
             .timezone()
             .map_err(bridge::dispatch_error_to_trap)
     }
@@ -361,7 +373,7 @@ impl locale::format::Host for Phase2Host<'_> {
         loc: locale::types::LocaleId,
     ) -> wasmtime::Result<String> {
         let loc = bridge::locale_from_wit(loc);
-        self.dispatcher
+        self.dispatcher()
             .format_date(millis, &tz, bridge::date_style_from_wit(style), &loc)
             .map_err(bridge::dispatch_error_to_trap)
     }
@@ -373,7 +385,7 @@ impl locale::format::Host for Phase2Host<'_> {
         loc: locale::types::LocaleId,
     ) -> wasmtime::Result<String> {
         let loc = bridge::locale_from_wit(loc);
-        self.dispatcher
+        self.dispatcher()
             .format_number(value, bridge::number_style_from_wit(style), &loc)
             .map_err(bridge::dispatch_error_to_trap)
     }
@@ -677,7 +689,7 @@ mod tests {
         let guard = UapiGuard::new(SessionPolicy::from_grants(["net.connect:example.com:443"
             .parse()
             .unwrap()]));
-        let mut host = Phase2Host::new(&guard, &adapter);
+        let mut host = Phase2Host::new(guard, Box::new(adapter.clone()));
 
         let response = net::http_client::Host::fetch(
             &mut host,
@@ -700,7 +712,7 @@ mod tests {
     fn generated_net_host_returns_wit_permission_error() {
         let adapter = RecordingAdapter::default();
         let guard = UapiGuard::new(SessionPolicy::default());
-        let mut host = Phase2Host::new(&guard, &adapter);
+        let mut host = Phase2Host::new(guard, Box::new(adapter.clone()));
 
         let err = net::http_client::Host::fetch(
             &mut host,
@@ -726,7 +738,7 @@ mod tests {
             "fs.read:/tmp/data.txt".parse().unwrap(),
             "io.stdin".parse().unwrap(),
         ]));
-        let mut host = Phase2Host::new(&guard, &adapter);
+        let mut host = Phase2Host::new(guard, Box::new(adapter.clone()));
 
         let stat = fs::files::Host::stat(&mut host, "/tmp/data.txt".to_string())
             .unwrap()
@@ -742,7 +754,7 @@ mod tests {
     fn generated_time_locale_and_log_hosts_call_dispatcher() {
         let adapter = RecordingAdapter::default();
         let guard = UapiGuard::new(SessionPolicy::default());
-        let mut host = Phase2Host::new(&guard, &adapter);
+        let mut host = Phase2Host::new(guard, Box::new(adapter.clone()));
 
         assert_eq!(time::clock::Host::now_millis(&mut host).unwrap(), 100);
         time::sleep::Host::sleep_millis(&mut host, 1).unwrap();
@@ -769,7 +781,7 @@ mod tests {
             "fs.read:/tmp/data.txt".parse().unwrap(),
             "io.stdout".parse().unwrap(),
         ]));
-        let mut host = Phase2Host::new(&guard, &adapter);
+        let mut host = Phase2Host::new(guard, Box::new(adapter.clone()));
 
         let file = fs::files::Host::open(
             &mut host,
@@ -796,7 +808,7 @@ mod tests {
     fn unknown_resources_return_clear_errors() {
         let adapter = RecordingAdapter::default();
         let guard = UapiGuard::new(SessionPolicy::default());
-        let mut host = Phase2Host::new(&guard, &adapter);
+        let mut host = Phase2Host::new(guard, Box::new(adapter.clone()));
 
         let err = io::streams::HostOutputStream::write_all(
             &mut host,

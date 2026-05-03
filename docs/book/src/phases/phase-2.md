@@ -43,6 +43,12 @@ dispatcher, which means UCap sits in front of those calls. A small resource
 table now owns opened file and stdio handles, so reads, writes, seeks, stats,
 and flushes can route through the adapter without exposing raw host IDs.
 
+The runtime also has an initial Phase 2 execution path now. `layer36 run` keeps
+supporting the Phase 1 proof world, then falls back to the Phase 2 `cli` world
+and installs the generated UAPI imports. The local adapter currently covers
+stdio, basic filesystem calls, time, and locale. Network is still deliberately
+unsupported until the real HTTP adapter is added.
+
 The proof apps are:
 
 - `layer36-curl`
