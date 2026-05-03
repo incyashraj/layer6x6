@@ -442,7 +442,8 @@ Sized for a founder working ~15–25 h/week on this project alongside ParkSure a
 **Branch:** `p1-ci-02-release`.
 
 **Acceptance:**
-- `.github/workflows/release.yml` triggered on tags matching `v[0-9]+.[0-9]+.[0-9]+`.
+- `.github/workflows/release.yml` triggered on version tags such as `v0.1.0` and
+  `v0.1.0-rc1`.
 - Produces:
   - `layer36-<version>-x86_64-unknown-linux-gnu.tar.gz`
   - `layer36-<version>-aarch64-unknown-linux-gnu.tar.gz`
