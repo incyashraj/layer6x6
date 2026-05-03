@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Phase 2 generated import host trait wiring over the UAPI dispatcher for HTTP, path-level fs, time, locale, logging, and stdio handles.
 - Phase 2 generated WIT type/error bridge for runtime dispatcher wiring.
 - Phase 2 runtime UAPI dispatcher scaffold with host-adapter traits and policy-before-adapter tests.
 - Phase 2 Rust host binding checkpoint behind the `phase2-bindings` runtime feature and CI coverage.

@@ -139,8 +139,19 @@ WIT module errors into the runtime's internal structs and enums. That keeps the
 future import code simple: receive a WIT value, convert it, call the dispatcher,
 convert the result back.
 
-The next step is to implement the generated Wasmtime host traits so real
-component imports call these dispatcher methods.
+The first generated host implementation now exists as well. It wires Wasmtime's
+generated Phase 2 traits to the dispatcher for:
+
+- HTTP fetch
+- path-level filesystem calls such as `stat`, `list`, `mkdir`, and `rename`
+- time and sleep
+- locale info and formatting
+- logging
+- stdio handle creation
+
+File and stream resource read/write calls are intentionally not implemented yet.
+They need a resource table so the runtime can own handles safely instead of just
+passing IDs around. That is the next runtime wiring step.
 
 ## Rust Binding Checkpoint
 

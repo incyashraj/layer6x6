@@ -37,6 +37,12 @@ errors into the dispatcher's Rust types, then back again. Put simply: the
 runtime now understands the words that generated WIT code will use when it asks
 for files, network, time, locale, and logs.
 
+The generated host traits are also wired for the first useful slice. HTTP,
+path-level filesystem operations, time, locale, logs, and stdio handles now call
+the dispatcher, which means UCap sits in front of those calls. File and stream
+read/write resources still need a real resource table before they can be safely
+used by apps.
+
 The proof apps are:
 
 - `layer36-curl`

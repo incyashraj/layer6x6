@@ -2030,6 +2030,8 @@ The Rust host-binding checkpoint is in place behind the `phase2-bindings` runtim
 
 The generated WIT type bridge is also in place. `crates/runtime/src/phase2_bridge.rs` maps generated WIT records, enums, and module errors into the runtime dispatcher shapes. This is a small step, but it removes guesswork from the next one: the Wasmtime import traits can now call the dispatcher and return the right WIT-shaped values.
 
+The generated import host exists now as well. `crates/runtime/src/phase2_host.rs` implements Wasmtime's generated Phase 2 host traits over `UapiDispatcher` for path-level filesystem calls, HTTP fetch, time, locale, logging, and stdio handle creation. File and stream resource read/write methods are deliberately wired as "not implemented yet" until the runtime has a resource table that can safely own handles.
+
 This does not freeze UAPI v0.1 yet. It gives us a real contract to review, generate bindings from, and wire into host adapters.
 
 ---
@@ -2042,13 +2044,13 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 |---|-----------|--------|
 | 1 | All five UAPI modules (`io`, `fs`, `net`, `time`, `locale`) frozen as stable v0.1 WIT | Drafted, not frozen |
 | 2 | Each module implemented in Linux, macOS, Windows host adapters; CI green on all | Not done |
-| 3 | Rust bindings generated and usable (`cargo add layer36 && use layer36::fs` works) | Started: host-side Wasmtime binding checkpoint and generated type bridge exist; SDK crate remains |
+| 3 | Rust bindings generated and usable (`cargo add layer36 && use layer36::fs` works) | Started: host-side Wasmtime binding checkpoint, generated type bridge, and import host trait wiring exist; SDK crate remains |
 | 4 | Go (TinyGo) bindings generated and usable; sample builds and runs | Not done |
 | 5 | TypeScript (jco) bindings generated and usable; sample builds and runs | Not done |
 | 6 | `layer36-curl <url>` works identically on all three hosts | Not done |
 | 7 | `layer36-cat <file>` works identically on all three hosts | Not done |
 | 8 | `layer36-clock` prints time in user locale on all three hosts | Not done |
-| 9 | UCap v0.1: manifest-declared caps enforced; unauthorized calls trap cleanly | Started: CLI preflight, runtime UAPI guard, dispatcher scaffold, and generated WIT type bridge exist; import trait wiring remains |
+| 9 | UCap v0.1: manifest-declared caps enforced; unauthorized calls trap cleanly | Started: CLI preflight, runtime UAPI guard, dispatcher scaffold, generated WIT type bridge, and value-level import host wiring exist; resource table and runtime linker install remain |
 | 10 | Startup overhead for a UAPI-using app < 150 ms | Not done |
 | 11 | UAPI hot-path dispatch < 1 µs (microbenchmark) | Not done |
 | 12 | Developer who knows Rust but not WASM can write a CLI in < 30 min using docs | Not done |
@@ -2073,6 +2075,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-UAPI-REVIEW | Rust host binding checkpoint | 2026-05-03 | Added `phase2-bindings` feature and CI job; confirms Phase 2 WIT generates usable host-side Rust names. |
 | P2-SEC-01D | Runtime UAPI dispatcher scaffold | 2026-05-03 | Added adapter traits and dispatcher methods that map policy denial to module-level errors before adapter calls run. |
 | P2-SEC-01E-a | Generated WIT type/error bridge | 2026-05-03 | Added `phase2_bridge` to convert generated WIT records, enums, and module errors to and from runtime dispatcher types. |
+| P2-SEC-01E-b | Generated import host trait wiring | 2026-05-03 | Added `phase2_host` so generated Wasmtime traits call `UapiDispatcher` for HTTP, path-level fs, time, locale, logging, and stdio handle creation. |
 
 ---
 
@@ -2080,7 +2083,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
-| P2-SEC-01E | Generated WIT import wiring | 2026-05-03 | Type/error bridge is done; next step is implementing the generated Wasmtime host traits over `UapiDispatcher`. |
+| P2-SEC-01E | Generated WIT import wiring | 2026-05-03 | Value-level host traits are wired; resource table ownership and runtime linker installation remain. |
 | P2-BIND-01A | Rust SDK crate skeleton | 2026-05-03 | Host binding shape is known; app-facing wrapper crate still needs design. |
 
 ---
