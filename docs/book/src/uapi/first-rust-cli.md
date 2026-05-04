@@ -157,6 +157,12 @@ If you want a local record of the grants used for a run, add:
 --log-grants layer36-grants.log
 ```
 
+If you want a script-readable preview before the component starts, use:
+
+```bash
+--dump-caps --dump-caps-format json
+```
+
 ## 6. Run It
 
 Create a test file:

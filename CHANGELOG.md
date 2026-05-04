@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- `layer36 run --dump-caps-format json` to print effective run grants, app identity, and component path as structured data before starting a component.
 - A 1 MiB response-size guard in the Phase 2 plain HTTP adapter so early network tests have deterministic host-side bounds.
 - `layer36 manifest check --format json` and `layer36 manifest capabilities --format json`, making all manifest inspection commands script-friendly.
 - `layer36 manifest explain --format json` for tools that need a structured view of app identity, requested capabilities, default grants, resources, and launch-grant needs.

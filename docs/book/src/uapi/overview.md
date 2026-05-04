@@ -145,6 +145,7 @@ cargo run -p layer36-cli -- run app.wasm --grant 'fs.read:~/Documents/notes/**'
 cargo run -p layer36-cli -- run app.wasm --auto-grant
 cargo run -p layer36-cli -- run --prompt app.wasm
 cargo run -p layer36-cli -- run --dump-caps app.wasm
+cargo run -p layer36-cli -- run --dump-caps --dump-caps-format json app.wasm
 ```
 
 For now, this starts as a launch-time session check. If a required capability is
@@ -159,7 +160,9 @@ a manifest from accidentally applying to the wrong component.
 
 `--dump-caps` is for debugging. It resolves the same session policy as a real
 run, prints the effective capabilities, and exits before the component starts.
-That makes it easier to understand why a UAPI call is allowed or denied.
+That makes it easier to understand why a UAPI call is allowed or denied. Use
+`--dump-caps-format json` when a script needs the resolved grants, app identity,
+and component path.
 
 For a local audit trail, pass `--log-grants`:
 

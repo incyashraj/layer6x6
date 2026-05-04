@@ -976,6 +976,67 @@ fn run_dump_caps_prints_effective_policy_without_running_component() {
 }
 
 #[test]
+fn run_dump_caps_json_reports_effective_policy_without_running_component() {
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let wasm_path = dir.path().join("app.wasm");
+    let manifest_path = dir.path().join("manifest.toml");
+    std::fs::write(&wasm_path, b"not actually wasm").expect("write wasm placeholder");
+    std::fs::write(
+        &manifest_path,
+        r#"
+            [app]
+            id = "com.example.dump"
+            name = "Dump"
+            version = "1.0.0"
+            entry = "app.wasm"
+            world = "layer36:app/cli@0.1.0"
+
+            [[capabilities]]
+            cap = "io.stdout"
+            rationale = "Print output"
+            required = true
+
+            [[capabilities]]
+            cap = "fs.read:./data/**"
+            rationale = "Read data"
+            required = true
+        "#,
+    )
+    .expect("write manifest");
+
+    let output = layer36()
+        .args([
+            "run",
+            "--auto-grant",
+            "--dump-caps",
+            "--dump-caps-format",
+            "json",
+            "--manifest",
+            manifest_path.to_str().expect("manifest path"),
+        ])
+        .arg(&wasm_path)
+        .output()
+        .expect("run layer36 dump caps json");
+
+    assert!(
+        output.status.success(),
+        "dump caps json failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stdout.contains(r#""wasm":"#));
+    assert!(stdout.contains(r#""id": "com.example.dump""#));
+    assert!(stdout.contains(r#""name": "Dump""#));
+    assert!(stdout.contains(r#""capabilities":"#));
+    assert!(stdout.contains(r#""io.stdout""#));
+    assert!(stdout.contains(r#""fs.read:./data/**""#));
+    assert!(!stderr.contains("invalid wasm component"));
+}
+
+#[test]
 fn run_log_grants_records_effective_session_policy() {
     let dir = tempfile::tempdir().expect("create temp dir");
     let wasm_path = dir.path().join("app.wasm");

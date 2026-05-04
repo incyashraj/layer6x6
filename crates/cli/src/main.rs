@@ -58,6 +58,10 @@ enum Command {
         #[arg(long)]
         dump_caps: bool,
 
+        /// Output format used with --dump-caps.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+        dump_caps_format: OutputFormat,
+
         /// Append the effective session grants to a local audit log file.
         #[arg(long, value_name = "FILE")]
         log_grants: Option<PathBuf>,
@@ -89,8 +93,8 @@ enum ManifestCommand {
         file: PathBuf,
 
         /// Output format.
-        #[arg(long, value_enum, default_value_t = ManifestOutputFormat::Text)]
-        format: ManifestOutputFormat,
+        #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+        format: OutputFormat,
     },
     /// Explain app identity and capability grants in a manifest.toml file.
     Explain {
@@ -98,8 +102,8 @@ enum ManifestCommand {
         file: PathBuf,
 
         /// Output format.
-        #[arg(long, value_enum, default_value_t = ManifestOutputFormat::Text)]
-        format: ManifestOutputFormat,
+        #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+        format: OutputFormat,
     },
     /// Create a starter Phase 2 manifest.toml.
     Init {
@@ -134,13 +138,13 @@ enum ManifestCommand {
     /// Print the Phase 2 capability strings understood by this runtime.
     Capabilities {
         /// Output format.
-        #[arg(long, value_enum, default_value_t = ManifestOutputFormat::Text)]
-        format: ManifestOutputFormat,
+        #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+        format: OutputFormat,
     },
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]
-enum ManifestOutputFormat {
+enum OutputFormat {
     Text,
     Json,
 }
@@ -176,6 +180,7 @@ fn run() -> Result<u8> {
             auto_grant,
             prompt,
             dump_caps,
+            dump_caps_format,
             log_grants,
             test_time,
             app_args,
@@ -188,6 +193,7 @@ fn run() -> Result<u8> {
             auto_grant,
             prompt,
             dump_caps,
+            dump_caps_format,
             log_grants,
             test_time_millis: test_time,
             app_args,
@@ -231,6 +237,7 @@ struct RunRequest {
     auto_grant: bool,
     prompt: bool,
     dump_caps: bool,
+    dump_caps_format: OutputFormat,
     log_grants: Option<PathBuf>,
     test_time_millis: Option<u64>,
     app_args: Vec<String>,
@@ -288,7 +295,7 @@ fn run_component(request: RunRequest) -> Result<u8> {
     }
 
     if request.dump_caps {
-        print_effective_capabilities(&policy);
+        print_effective_capabilities(&request.file, manifest, &policy, request.dump_caps_format)?;
         return Ok(0);
     }
 
@@ -394,10 +401,53 @@ fn parse_grant_response(input: &str, caps: &[Capability]) -> Result<Vec<Capabili
     Ok(selected)
 }
 
-fn print_effective_capabilities(policy: &SessionPolicy) {
+fn print_effective_capabilities(
+    wasm_file: &Path,
+    manifest: Option<&Manifest>,
+    policy: &SessionPolicy,
+    format: OutputFormat,
+) -> Result<()> {
+    if format == OutputFormat::Json {
+        let dump = RunCapsDump {
+            wasm: wasm_file.display().to_string(),
+            app: manifest.map(RunCapsApp::from_manifest),
+            capabilities: policy.grants().iter().map(ToString::to_string).collect(),
+        };
+        println!("{}", serde_json::to_string_pretty(&dump)?);
+        return Ok(());
+    }
+
     println!("Effective capabilities");
     for cap in policy.grants() {
         println!("  - {cap}");
+    }
+
+    Ok(())
+}
+
+#[derive(Debug, Serialize)]
+struct RunCapsDump {
+    wasm: String,
+    app: Option<RunCapsApp>,
+    capabilities: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct RunCapsApp {
+    id: String,
+    name: String,
+    version: String,
+    world: String,
+}
+
+impl RunCapsApp {
+    fn from_manifest(manifest: &Manifest) -> Self {
+        Self {
+            id: manifest.app.id.clone(),
+            name: manifest.app.name.clone(),
+            version: manifest.app.version.clone(),
+            world: manifest.app.world.clone(),
+        }
     }
 }
 
@@ -504,12 +554,12 @@ fn doctor() -> Result<u8> {
     Ok(0)
 }
 
-fn check_manifest(file: &Path, format: ManifestOutputFormat) -> Result<u8> {
+fn check_manifest(file: &Path, format: OutputFormat) -> Result<u8> {
     let manifest = Manifest::parse_file(file)?;
     let declared_caps = manifest.declared_capabilities()?;
     let required_caps = manifest.required_capabilities()?;
 
-    if format == ManifestOutputFormat::Json {
+    if format == OutputFormat::Json {
         let summary = ManifestCheckSummary {
             ok: true,
             app: ManifestAppExplanation::from_manifest(&manifest),
@@ -531,11 +581,11 @@ fn check_manifest(file: &Path, format: ManifestOutputFormat) -> Result<u8> {
     Ok(0)
 }
 
-fn explain_manifest(file: &Path, format: ManifestOutputFormat) -> Result<u8> {
+fn explain_manifest(file: &Path, format: OutputFormat) -> Result<u8> {
     let manifest = Manifest::parse_file(file)?;
     let declared_caps = manifest.declared_capabilities()?;
 
-    if format == ManifestOutputFormat::Json {
+    if format == OutputFormat::Json {
         let explanation = ManifestExplanation::from_manifest(&manifest, &declared_caps);
         println!("{}", serde_json::to_string_pretty(&explanation)?);
         return Ok(0);
@@ -696,8 +746,8 @@ fn init_manifest(request: ManifestInitRequest) -> Result<u8> {
     Ok(0)
 }
 
-fn print_manifest_capabilities(format: ManifestOutputFormat) -> Result<u8> {
-    if format == ManifestOutputFormat::Json {
+fn print_manifest_capabilities(format: OutputFormat) -> Result<u8> {
+    if format == OutputFormat::Json {
         let specs = supported_capability_specs()
             .iter()
             .map(|spec| CapabilitySpecExplanation {
