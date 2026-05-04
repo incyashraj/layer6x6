@@ -262,8 +262,15 @@ pub fn normalize_locale_tag(raw: Option<&str>) -> String {
 }
 
 pub fn normalize_timezone(raw: Option<&str>) -> String {
+    const MAX_TIMEZONE_BYTES: usize = 128;
     raw.map(str::trim)
-        .filter(|value| !value.is_empty() && !value.chars().any(|ch| ch == '\0' || ch.is_control()))
+        .filter(|value| {
+            !value.is_empty()
+                && value.len() <= MAX_TIMEZONE_BYTES
+                && value
+                    .chars()
+                    .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '/' | '_' | '+' | '-'))
+        })
         .unwrap_or("UTC")
         .to_string()
 }
@@ -427,5 +434,14 @@ mod tests {
     fn timezone_rejects_control_characters() {
         assert_eq!(normalize_timezone(Some("UTC\nInjected")), "UTC");
         assert_eq!(normalize_timezone(Some("Asia/Singapore")), "Asia/Singapore");
+    }
+
+    #[test]
+    fn timezone_rejects_unsafe_characters_and_long_values() {
+        assert_eq!(normalize_timezone(Some("America/New York")), "UTC");
+        assert_eq!(normalize_timezone(Some("../UTC")), "UTC");
+        assert_eq!(normalize_timezone(Some("UTC*")), "UTC");
+        assert_eq!(normalize_timezone(Some(&"A".repeat(129))), "UTC");
+        assert_eq!(normalize_timezone(Some("Etc/GMT+1")), "Etc/GMT+1");
     }
 }

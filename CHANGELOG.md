@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Shared Phase 2 timezone-shape normalization hardening in `adapter-common`: timezone normalization now accepts only conservative ASCII timezone-name characters with a length cap in this phase, and falls back to `UTC` for invalid input.
 - Shared Phase 2 ASCII-only URL input hardening in `adapter-common`: plain-HTTP URL parsing and shared endpoint extraction now reject non-ASCII URL input so early request-line framing and capability checks stay deterministic.
 - Shared Phase 2 locale-tag canonicalization hardening in `adapter-common`: locale normalization now canonicalizes subtag casing (language/script/region), rejects malformed locale-tag shapes, and falls back to `en-US`; timezone normalization now rejects control-character values and falls back to `UTC`.
 - Shared Phase 2 URL scheme-case parsing parity in `adapter-common`: `http`/`https` scheme handling is now case-insensitive in endpoint parsing, and mixed-case `HTTP://` plain URL inputs are accepted by the shared plain HTTP parser.
