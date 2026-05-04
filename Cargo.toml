@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/adapter-common",
     "crates/bindings-rust",
     "crates/manifest",
     "crates/policy",

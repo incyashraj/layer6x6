@@ -2121,8 +2121,8 @@ formal exit gates.
 
 | Area | Current read | What remains |
 |------|--------------|--------------|
-| Core Phase 2 engineering | About 60-65% through the first useful CLI slice | WIT freeze review, stronger adapter split, cross-host identity runs, and network hardening. |
-| Formal Phase 2 exit | About 40-45% complete | Language runtime proofs, seven-day CI evidence, fuzzing, full benchmark gate, threat model v0.2, ADR-0009 through ADR-0012, and external validation. |
+| Core Phase 2 engineering | About 65-70% through the first useful CLI slice | WIT freeze review, more shared adapter slices, cross-host identity runs, and network hardening. |
+| Formal Phase 2 exit | About 45-50% complete | Language runtime proofs, seven-day CI evidence, fuzzing, full benchmark gate, threat model v0.2, ADR-0009 through ADR-0012, and external validation. |
 | UAPI and UCap | Strong shape, not frozen | Review default grants, path normalization, network policy details, and freeze rules before `0.1.0`. |
 | SDKs | Rust is usable; Go and TypeScript are scaffolded | Publish-ready Rust after freeze, TinyGo runtime proof, and jco runtime proof. |
 
@@ -2174,6 +2174,7 @@ formal exit gates.
 | P2-NET-04 | Typed oversized HTTP response error | 2026-05-04 | Oversized Phase 2 HTTP responses now map through the host bridge as WIT `net-error.body-too-large` instead of a generic connection failure. |
 | P2-NET-05 | Typed HTTP timeout and protocol errors | 2026-05-04 | Phase 2 HTTP timeout and malformed-response paths now map through the host bridge as WIT `net-error.timeout` and `net-error.protocol`. |
 | P2-NET-06 | Plain HTTP request framing | 2026-05-04 | The Phase 2 plain HTTP adapter now builds lower-level `fetch(req)` requests with the selected method, app headers, and buffered body, while rejecting host-controlled transport headers before socket access. |
+| P2-ADPT-COMMON-01 | First shared adapter-common crate | 2026-05-04 | Added `crates/adapter-common` and moved plain HTTP URL parsing plus HTTP/1.1 request framing into shared code. The runtime now calls this crate, keeping future Linux, macOS, and Windows adapters on the same network behavior. |
 | P2-APP-01A | First `layer36-curl` sample path | 2026-05-04 | Added `apps/layer36-curl`, a Rust Phase 2 component that reads a URL from app args, fetches through `net.http-client.get`, writes stdout, and fails cleanly without `net.connect`. |
 | P2-APP-01E | Clear `layer36-curl` network failures | 2026-05-04 | `layer36-curl` now prints distinct messages for response-too-large, timeout, and protocol errors while keeping its fetch-failure exit behavior stable. |
 | P2-APP-01B | Pure Layer36 imports for cat/curl samples | 2026-05-04 | `layer36-cat` and `layer36-curl` now parse `io.args.raw` directly. Their rebuilt components no longer import `wasi:*`, and the explicit fixture-backed CLI tests pass for hello, smoke, clock, cat, and curl. |
@@ -2206,6 +2207,7 @@ formal exit gates.
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
 | P2-APP-01C | Add cross-host fixture assertions and language sample variants | 2026-05-04 | Rust versions of `layer36-clock`, `layer36-cat`, and `layer36-curl` exist locally; full cross-host fixture assertions and language-binding variants still remain. |
+| P2-ADPT-COMMON-02 | Expand shared adapter-common beyond HTTP framing | 2026-05-04 | Path normalization, time arithmetic, ICU/locale helpers, and the final per-OS adapter split remain before the adapter-common exit box can be checked. |
 | P2-BIND-01E | Rust SDK crates.io publication | 2026-05-04 | Package shape, API docs, and outside-workspace smoke are ready locally; actual crates.io publication remains blocked until UAPI v0.1 is intentionally frozen. |
 
 ---

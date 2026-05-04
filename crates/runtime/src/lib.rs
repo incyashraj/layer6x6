@@ -30,6 +30,11 @@ pub mod phase2_bridge;
 #[cfg(feature = "phase2-bindings")]
 pub mod phase2_host;
 
+#[cfg(feature = "phase2-bindings")]
+use layer36_adapter_common::net::{
+    build_plain_http_request, PlainHttpError, PlainHttpHeader, PlainHttpMethod, PlainHttpRequest,
+    PlainHttpUrl,
+};
 use layer36_policy::SessionPolicy;
 use uapi::UapiGuard;
 use uapi_dispatch::{
@@ -651,8 +656,9 @@ impl FsAdapter for LocalPhase2Adapter {
 #[cfg(feature = "phase2-bindings")]
 impl NetAdapter for LocalPhase2Adapter {
     fn fetch(&self, req: HttpRequest) -> std::result::Result<HttpResponse, AdapterError> {
-        let url = ParsedHttpUrl::parse(&req.url)?;
-        let request = build_plain_http_request(&req, &url)?;
+        let url = PlainHttpUrl::parse(&req.url).map_err(map_plain_http_error)?;
+        let plain_req = plain_http_request_from_dispatch(&req);
+        let request = build_plain_http_request(&plain_req, &url).map_err(map_plain_http_error)?;
 
         let mut stream = TcpStream::connect((url.host.as_str(), url.port))
             .map_err(|err| AdapterError::Network(err.to_string()))?;
@@ -673,85 +679,44 @@ impl NetAdapter for LocalPhase2Adapter {
 }
 
 #[cfg(feature = "phase2-bindings")]
-fn build_plain_http_request(
-    req: &HttpRequest,
-    url: &ParsedHttpUrl,
-) -> std::result::Result<Vec<u8>, AdapterError> {
-    let method = http_method_name(req.method);
-    let mut request = format!(
-        "{method} {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n",
-        url.path_and_query, url.host
-    )
-    .into_bytes();
-
-    for header in &req.headers {
-        if !is_valid_plain_http_header_name(&header.name) || header.value.contains(['\r', '\n']) {
-            return Err(AdapterError::Protocol("invalid HTTP header".to_string()));
-        }
-        if is_host_controlled_http_header(&header.name) {
-            return Err(AdapterError::Protocol(
-                "host-controlled HTTP header".to_string(),
-            ));
-        }
-        request.extend_from_slice(header.name.as_bytes());
-        request.extend_from_slice(b": ");
-        request.extend_from_slice(header.value.as_bytes());
-        request.extend_from_slice(b"\r\n");
+fn plain_http_request_from_dispatch(req: &HttpRequest) -> PlainHttpRequest {
+    PlainHttpRequest {
+        method: plain_http_method_from_dispatch(req.method),
+        headers: req
+            .headers
+            .iter()
+            .map(|header| PlainHttpHeader {
+                name: header.name.clone(),
+                value: header.value.clone(),
+            })
+            .collect(),
+        body: req.body.clone(),
     }
-    if !req.body.is_empty() {
-        request.extend_from_slice(format!("Content-Length: {}\r\n", req.body.len()).as_bytes());
-    }
-    request.extend_from_slice(b"\r\n");
-    request.extend_from_slice(&req.body);
-
-    Ok(request)
 }
 
 #[cfg(feature = "phase2-bindings")]
-fn http_method_name(method: uapi_dispatch::HttpMethod) -> &'static str {
+fn plain_http_method_from_dispatch(method: uapi_dispatch::HttpMethod) -> PlainHttpMethod {
     match method {
-        uapi_dispatch::HttpMethod::Get => "GET",
-        uapi_dispatch::HttpMethod::Post => "POST",
-        uapi_dispatch::HttpMethod::Put => "PUT",
-        uapi_dispatch::HttpMethod::Delete => "DELETE",
-        uapi_dispatch::HttpMethod::Patch => "PATCH",
-        uapi_dispatch::HttpMethod::Head => "HEAD",
-        uapi_dispatch::HttpMethod::Options => "OPTIONS",
+        uapi_dispatch::HttpMethod::Get => PlainHttpMethod::Get,
+        uapi_dispatch::HttpMethod::Post => PlainHttpMethod::Post,
+        uapi_dispatch::HttpMethod::Put => PlainHttpMethod::Put,
+        uapi_dispatch::HttpMethod::Delete => PlainHttpMethod::Delete,
+        uapi_dispatch::HttpMethod::Patch => PlainHttpMethod::Patch,
+        uapi_dispatch::HttpMethod::Head => PlainHttpMethod::Head,
+        uapi_dispatch::HttpMethod::Options => PlainHttpMethod::Options,
     }
 }
 
 #[cfg(feature = "phase2-bindings")]
-fn is_valid_plain_http_header_name(name: &str) -> bool {
-    !name.is_empty()
-        && name.bytes().all(|byte| {
-            matches!(
-                byte,
-                b'!' | b'#'
-                    | b'$'
-                    | b'%'
-                    | b'&'
-                    | b'\''
-                    | b'*'
-                    | b'+'
-                    | b'-'
-                    | b'.'
-                    | b'^'
-                    | b'_'
-                    | b'`'
-                    | b'|'
-                    | b'~'
-                    | b'0'..=b'9'
-                    | b'a'..=b'z'
-                    | b'A'..=b'Z'
-            )
-        })
-}
-
-#[cfg(feature = "phase2-bindings")]
-fn is_host_controlled_http_header(name: &str) -> bool {
-    name.eq_ignore_ascii_case("host")
-        || name.eq_ignore_ascii_case("connection")
-        || name.eq_ignore_ascii_case("content-length")
+fn map_plain_http_error(err: PlainHttpError) -> AdapterError {
+    match err {
+        PlainHttpError::UnsupportedScheme => AdapterError::Unsupported,
+        PlainHttpError::InvalidUrl => AdapterError::InvalidPath,
+        PlainHttpError::InvalidHeader => AdapterError::Protocol("invalid HTTP header".to_string()),
+        PlainHttpError::HostControlledHeader => {
+            AdapterError::Protocol("host-controlled HTTP header".to_string())
+        }
+    }
 }
 
 #[cfg(feature = "phase2-bindings")]
@@ -847,48 +812,6 @@ fn map_net_io_error(err: std::io::Error) -> AdapterError {
     match err.kind() {
         std::io::ErrorKind::TimedOut | std::io::ErrorKind::WouldBlock => AdapterError::Timeout,
         _ => map_io_error(err),
-    }
-}
-
-struct ParsedHttpUrl {
-    host: String,
-    port: u16,
-    path_and_query: String,
-}
-
-impl ParsedHttpUrl {
-    fn parse(input: &str) -> std::result::Result<Self, AdapterError> {
-        let Some(rest) = input.strip_prefix("http://") else {
-            return Err(AdapterError::Unsupported);
-        };
-        let rest = rest.split_once('#').map_or(rest, |(before, _)| before);
-        let (authority, path) = match rest.find(['/', '?']) {
-            Some(index) => rest.split_at(index),
-            None => (rest, "/"),
-        };
-        if authority.is_empty() || authority.contains('@') {
-            return Err(AdapterError::InvalidPath);
-        }
-
-        let (host, port) = match authority.rsplit_once(':') {
-            Some((host, port)) if !host.is_empty() => {
-                let port = port.parse().map_err(|_| AdapterError::InvalidPath)?;
-                (host, port)
-            }
-            _ => (authority, 80),
-        };
-
-        let path_and_query = if path.starts_with('/') {
-            path.to_string()
-        } else {
-            format!("/{path}")
-        };
-
-        Ok(Self {
-            host: host.to_string(),
-            port,
-            path_and_query,
-        })
     }
 }
 
@@ -1004,9 +927,10 @@ mod tests {
         assert!(matches!(err, RuntimeError::InvalidComponent(_)));
     }
 
+    #[cfg(feature = "phase2-bindings")]
     #[test]
     fn plain_http_url_parser_normalizes_query_only_paths() {
-        let parsed = ParsedHttpUrl::parse("http://127.0.0.1:8080?name=layer36#local")
+        let parsed = PlainHttpUrl::parse("http://127.0.0.1:8080?name=layer36#local")
             .expect("parse HTTP URL");
 
         assert_eq!(parsed.host, "127.0.0.1");
@@ -1017,7 +941,7 @@ mod tests {
     #[cfg(feature = "phase2-bindings")]
     #[test]
     fn plain_http_request_builder_forwards_method_headers_and_body() {
-        let url = ParsedHttpUrl::parse("http://127.0.0.1:8080/submit?name=layer36")
+        let url = PlainHttpUrl::parse("http://127.0.0.1:8080/submit?name=layer36")
             .expect("parse HTTP URL");
         let req = HttpRequest {
             method: uapi_dispatch::HttpMethod::Post,
@@ -1030,7 +954,8 @@ mod tests {
             timeout_millis: Some(1000),
         };
 
-        let request = build_plain_http_request(&req, &url).expect("build HTTP request");
+        let request = build_plain_http_request(&plain_http_request_from_dispatch(&req), &url)
+            .expect("build HTTP request");
         let request = String::from_utf8(request).expect("request is UTF-8");
 
         assert!(request.starts_with("POST /submit?name=layer36 HTTP/1.1\r\n"));
@@ -1044,7 +969,7 @@ mod tests {
     #[cfg(feature = "phase2-bindings")]
     #[test]
     fn plain_http_request_builder_rejects_host_controlled_headers() {
-        let url = ParsedHttpUrl::parse("http://127.0.0.1:8080/").expect("parse HTTP URL");
+        let url = PlainHttpUrl::parse("http://127.0.0.1:8080/").expect("parse HTTP URL");
         let req = HttpRequest {
             method: uapi_dispatch::HttpMethod::Get,
             url: "http://127.0.0.1:8080/".to_string(),
@@ -1056,7 +981,8 @@ mod tests {
             timeout_millis: None,
         };
 
-        let err = build_plain_http_request(&req, &url)
+        let err = build_plain_http_request(&plain_http_request_from_dispatch(&req), &url)
+            .map_err(map_plain_http_error)
             .expect_err("host-controlled headers should be rejected");
 
         assert!(
