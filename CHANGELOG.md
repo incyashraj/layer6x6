@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Shared Phase 2 URL scheme-case parsing parity in `adapter-common`: `http`/`https` scheme handling is now case-insensitive in endpoint parsing, and mixed-case `HTTP://` plain URL inputs are accepted by the shared plain HTTP parser.
 - Shared Phase 2 filesystem path trailing-segment hardening in `adapter-common`: path parsing now rejects segments ending in `.` or a trailing space before sandbox resolution and host I/O, reducing Windows normalization edge cases.
 - Shared Phase 2 plain HTTP request-target size guard in `adapter-common`: oversized path/query targets are now rejected during URL parsing before request framing and socket writes.
 - Runtime network-policy parity test for host-case normalization: mixed-case URL hosts are now explicitly covered in dispatcher tests to confirm lowercase `net.connect` grants still match.

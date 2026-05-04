@@ -108,7 +108,8 @@ Shared host parsing now also rejects invalid domain-label forms and invalid
 numeric IPv4 literals so URL and capability-path validation stay aligned.
 Host names are now normalized to lowercase in shared URL parsing, so capability
 checks stay stable across input case differences like `EXAMPLE.com` and
-`example.com`.
+`example.com`. URL scheme checks are now case-insensitive as well, so
+`HTTP://` and `HTTPS://` forms follow the same grant matching path.
 Request targets now also have a shared size limit before request framing so
 this early plain-HTTP path rejects oversized path/query payloads up front.
 The runtime's network capability gate now also uses a shared endpoint parser for

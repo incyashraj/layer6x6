@@ -20,7 +20,7 @@ impl PlainHttpUrl {
             return Err(PlainHttpError::InvalidUrl);
         }
 
-        let Some(rest) = input.strip_prefix("http://") else {
+        let Some(rest) = strip_ascii_case_prefix(input, "http://") else {
             return Err(PlainHttpError::UnsupportedScheme);
         };
         let rest = rest.split_once('#').map_or(rest, |(before, _)| before);
@@ -78,10 +78,12 @@ pub fn parse_url_endpoint(input: &str) -> Result<UrlEndpoint, UrlEndpointError> 
     let (scheme, rest) = input
         .split_once("://")
         .ok_or(UrlEndpointError::InvalidUrl)?;
-    let default_port = match scheme {
-        "http" => 80,
-        "https" => 443,
-        _ => return Err(UrlEndpointError::UnsupportedScheme),
+    let default_port = if scheme.eq_ignore_ascii_case("http") {
+        80
+    } else if scheme.eq_ignore_ascii_case("https") {
+        443
+    } else {
+        return Err(UrlEndpointError::UnsupportedScheme);
     };
 
     parse_url_endpoint_with_default(rest, default_port)
@@ -127,6 +129,15 @@ fn parse_url_endpoint_with_default(
         host: host.to_ascii_lowercase(),
         port,
     })
+}
+
+fn strip_ascii_case_prefix<'a>(input: &'a str, prefix: &str) -> Option<&'a str> {
+    let (candidate, rest) = input.split_at_checked(prefix.len())?;
+    if candidate.eq_ignore_ascii_case(prefix) {
+        Some(rest)
+    } else {
+        None
+    }
 }
 
 /// HTTP methods supported by the Phase 2 request-framing helper.
@@ -496,6 +507,15 @@ mod tests {
     }
 
     #[test]
+    fn url_parser_accepts_mixed_case_http_scheme() {
+        let parsed = PlainHttpUrl::parse("HTTP://example.com/path").expect("parse HTTP URL");
+
+        assert_eq!(parsed.host, "example.com");
+        assert_eq!(parsed.port, 80);
+        assert_eq!(parsed.path_and_query, "/path");
+    }
+
+    #[test]
     fn url_parser_rejects_request_line_injection_characters() {
         assert_eq!(
             PlainHttpUrl::parse("http://127.0.0.1:8080/path\r\nX-Bad: yes").unwrap_err(),
@@ -669,6 +689,8 @@ mod tests {
         let http = parse_url_endpoint("http://example.com/path").expect("HTTP endpoint");
         let https = parse_url_endpoint("https://example.com/path").expect("HTTPS endpoint");
         let mixed = parse_url_endpoint("https://ExAmPle.Com/path").expect("mixed-case endpoint");
+        let mixed_scheme =
+            parse_url_endpoint("HTTPS://example.com/path").expect("mixed-case scheme endpoint");
 
         assert_eq!(http.host, "example.com");
         assert_eq!(http.port, 80);
@@ -676,6 +698,8 @@ mod tests {
         assert_eq!(https.port, 443);
         assert_eq!(mixed.host, "example.com");
         assert_eq!(mixed.port, 443);
+        assert_eq!(mixed_scheme.host, "example.com");
+        assert_eq!(mixed_scheme.port, 443);
     }
 
     #[test]
