@@ -72,6 +72,9 @@ parent for new files, before host I/O. If a symlink would take the path outside
 the sandbox root, the adapter denies the call. On Unix hosts, file open also
 uses a no-follow final-symlink flag, so the final filename cannot be a symlink
 at open time.
+Destructive filesystem operations now go through a shared operation-intent check
+too. That means remove and rename cannot target root-like paths such as `.` or
+`/` before the adapter reaches native host I/O.
 
 The HTTP path is still small on purpose: it is for localhost and
 test-server proofs while HTTPS, redirects, streaming, and production hardening

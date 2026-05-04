@@ -61,6 +61,39 @@ impl LogicalPath {
     pub fn to_path_buf(&self) -> PathBuf {
         PathBuf::from(&self.normalized)
     }
+
+    pub fn is_root_like(&self) -> bool {
+        matches!(self.normalized.as_str(), "." | "/")
+    }
+}
+
+/// Filesystem operation shape used before host adapters touch native paths.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FsOperation {
+    Existing,
+    CreateLeaf,
+    RemoveLeaf,
+    RenameSource,
+    RenameDestination,
+}
+
+impl FsOperation {
+    pub fn allows_missing_leaf(self) -> bool {
+        matches!(self, Self::CreateLeaf | Self::RenameDestination)
+    }
+
+    pub fn validate_target(self, path: &LogicalPath) -> Result<(), PathError> {
+        if path.is_root_like()
+            && matches!(
+                self,
+                Self::RemoveLeaf | Self::RenameSource | Self::RenameDestination
+            )
+        {
+            return Err(PathError::UnsafeRootOperation);
+        }
+
+        Ok(())
+    }
 }
 
 /// Errors returned by shared path helpers.
@@ -72,6 +105,8 @@ pub enum PathError {
     ControlCharacter,
     #[error("path contains parent traversal")]
     ParentTraversal,
+    #[error("operation cannot target the filesystem root")]
+    UnsafeRootOperation,
 }
 
 #[cfg(test)]
@@ -118,5 +153,31 @@ mod tests {
             LogicalPath::parse("notes/../secret.txt").unwrap_err(),
             PathError::ParentTraversal
         );
+    }
+
+    #[test]
+    fn operation_intents_report_missing_leaf_rules() {
+        assert!(!FsOperation::Existing.allows_missing_leaf());
+        assert!(FsOperation::CreateLeaf.allows_missing_leaf());
+        assert!(!FsOperation::RemoveLeaf.allows_missing_leaf());
+        assert!(!FsOperation::RenameSource.allows_missing_leaf());
+        assert!(FsOperation::RenameDestination.allows_missing_leaf());
+    }
+
+    #[test]
+    fn destructive_operations_reject_root_like_targets() {
+        let current = LogicalPath::parse(".").expect("current path");
+        let root = LogicalPath::parse("/").expect("root path");
+
+        assert_eq!(
+            FsOperation::RemoveLeaf.validate_target(&current),
+            Err(PathError::UnsafeRootOperation)
+        );
+        assert_eq!(
+            FsOperation::RenameSource.validate_target(&root),
+            Err(PathError::UnsafeRootOperation)
+        );
+        assert!(FsOperation::Existing.validate_target(&current).is_ok());
+        assert!(FsOperation::CreateLeaf.validate_target(&current).is_ok());
     }
 }

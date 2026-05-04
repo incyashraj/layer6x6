@@ -275,6 +275,9 @@ parent inside the sandbox root. That keeps a simple `fixtures/file.txt` style
 path from quietly following a symlink to another part of the host. On Unix
 hosts, file open also refuses a final symlink during the actual open call. That
 shrinks the race between checking a path and opening it.
+Remove and rename calls now have a shared operation-intent check as well, so a
+component cannot use `.` or `/` as a destructive target before native filesystem
+I/O begins.
 
 The HTTP path is only a first useful slice: good enough for localhost and fixed
 test servers, not yet a full web client. `get(url)` remains the simple body-only

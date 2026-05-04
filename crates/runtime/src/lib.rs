@@ -41,7 +41,7 @@ use layer36_adapter_common::net::{
     PlainHttpUrl,
 };
 #[cfg(feature = "phase2-bindings")]
-use layer36_adapter_common::path::{LogicalPath, PathError};
+use layer36_adapter_common::path::{FsOperation, LogicalPath, PathError};
 #[cfg(feature = "phase2-bindings")]
 use layer36_adapter_common::time::{HostClock, TimeError};
 use layer36_policy::SessionPolicy;
@@ -435,10 +435,14 @@ impl LocalPhase2Adapter {
     fn resolve_fs_path(
         &self,
         path: &str,
-        missing_leaf: MissingLeaf,
+        operation: FsOperation,
     ) -> std::result::Result<PathBuf, AdapterError> {
         let logical = normalize_fs_path(path)?;
+        operation
+            .validate_target(&logical)
+            .map_err(map_path_error)?;
         let path = logical.to_path_buf();
+        let missing_leaf = missing_leaf_for_operation(operation);
         if path.is_absolute() {
             Ok(path)
         } else {
@@ -481,6 +485,15 @@ impl LocalPhase2Adapter {
 enum MissingLeaf {
     Deny,
     Allow,
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn missing_leaf_for_operation(operation: FsOperation) -> MissingLeaf {
+    if operation.allows_missing_leaf() {
+        MissingLeaf::Allow
+    } else {
+        MissingLeaf::Deny
+    }
 }
 
 #[cfg(feature = "phase2-bindings")]
@@ -643,8 +656,8 @@ impl IoAdapter for LocalPhase2Adapter {
 impl FsAdapter for LocalPhase2Adapter {
     fn open(&self, path: &str, mode: OpenMode) -> std::result::Result<FileHandle, AdapterError> {
         let missing_leaf = match mode {
-            OpenMode::Read => MissingLeaf::Deny,
-            OpenMode::Write | OpenMode::ReadWrite | OpenMode::Append => MissingLeaf::Allow,
+            OpenMode::Read => FsOperation::Existing,
+            OpenMode::Write | OpenMode::ReadWrite | OpenMode::Append => FsOperation::CreateLeaf,
         };
         let path = self.resolve_fs_path(path, missing_leaf)?;
         let mut opts = std::fs::OpenOptions::new();
@@ -714,14 +727,14 @@ impl FsAdapter for LocalPhase2Adapter {
     }
 
     fn stat(&self, path: &str) -> std::result::Result<FileStat, AdapterError> {
-        let path = self.resolve_fs_path(path, MissingLeaf::Deny)?;
+        let path = self.resolve_fs_path(path, FsOperation::Existing)?;
         std::fs::metadata(path)
             .map(file_stat_from_metadata)
             .map_err(map_io_error)
     }
 
     fn list(&self, path: &str) -> std::result::Result<Vec<String>, AdapterError> {
-        let path = self.resolve_fs_path(path, MissingLeaf::Deny)?;
+        let path = self.resolve_fs_path(path, FsOperation::Existing)?;
         let mut entries = Vec::new();
         for entry in std::fs::read_dir(path).map_err(map_io_error)? {
             let entry = entry.map_err(map_io_error)?;
@@ -736,23 +749,23 @@ impl FsAdapter for LocalPhase2Adapter {
     }
 
     fn remove_file(&self, path: &str) -> std::result::Result<(), AdapterError> {
-        let path = self.resolve_fs_path(path, MissingLeaf::Deny)?;
+        let path = self.resolve_fs_path(path, FsOperation::RemoveLeaf)?;
         std::fs::remove_file(path).map_err(map_io_error)
     }
 
     fn remove_dir(&self, path: &str) -> std::result::Result<(), AdapterError> {
-        let path = self.resolve_fs_path(path, MissingLeaf::Deny)?;
+        let path = self.resolve_fs_path(path, FsOperation::RemoveLeaf)?;
         std::fs::remove_dir(path).map_err(map_io_error)
     }
 
     fn mkdir(&self, path: &str) -> std::result::Result<(), AdapterError> {
-        let path = self.resolve_fs_path(path, MissingLeaf::Allow)?;
+        let path = self.resolve_fs_path(path, FsOperation::CreateLeaf)?;
         std::fs::create_dir(path).map_err(map_io_error)
     }
 
     fn rename(&self, from: &str, to: &str) -> std::result::Result<(), AdapterError> {
-        let from = self.resolve_fs_path(from, MissingLeaf::Deny)?;
-        let to = self.resolve_fs_path(to, MissingLeaf::Allow)?;
+        let from = self.resolve_fs_path(from, FsOperation::RenameSource)?;
+        let to = self.resolve_fs_path(to, FsOperation::RenameDestination)?;
         std::fs::rename(from, to).map_err(map_io_error)
     }
 }
@@ -841,9 +854,10 @@ fn normalize_fs_path(path: &str) -> std::result::Result<LogicalPath, AdapterErro
 #[cfg(feature = "phase2-bindings")]
 fn map_path_error(err: PathError) -> AdapterError {
     match err {
-        PathError::Empty | PathError::ControlCharacter | PathError::ParentTraversal => {
-            AdapterError::InvalidPath
-        }
+        PathError::Empty
+        | PathError::ControlCharacter
+        | PathError::ParentTraversal
+        | PathError::UnsafeRootOperation => AdapterError::InvalidPath,
     }
 }
 
@@ -1139,6 +1153,47 @@ mod tests {
         drop(handle);
         drop(adapter);
         std::fs::remove_file(file).expect("remove fixture file");
+        std::fs::remove_dir_all(temp).expect("remove fixture directory");
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn local_fs_adapter_rejects_destructive_root_targets() {
+        let unique = std::time::SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos();
+        let temp = std::env::temp_dir().join(format!(
+            "layer36-root-target-{}-{unique}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&temp).expect("create sandbox");
+        std::fs::write(temp.join("source.txt"), b"source").expect("write source file");
+
+        let adapter = LocalPhase2Adapter::new(
+            Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            Vec::new(),
+            1024,
+            temp.clone(),
+        );
+
+        let remove_err = adapter
+            .remove_dir(".")
+            .expect_err("remove_dir must not target sandbox root");
+        let rename_err = adapter
+            .rename(".", "renamed-root")
+            .expect_err("rename source must not target sandbox root");
+        let rename_to_err = adapter
+            .rename("source.txt", ".")
+            .expect_err("rename destination must not target sandbox root");
+
+        assert_eq!(remove_err, AdapterError::InvalidPath);
+        assert_eq!(rename_err, AdapterError::InvalidPath);
+        assert_eq!(rename_to_err, AdapterError::InvalidPath);
+        assert!(temp.exists(), "sandbox root should still exist");
+
+        drop(adapter);
         std::fs::remove_dir_all(temp).expect("remove fixture directory");
     }
 
