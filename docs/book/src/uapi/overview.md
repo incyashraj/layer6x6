@@ -96,6 +96,12 @@ You can validate the file today:
 cargo run -p layer36-cli -- manifest check manifest.toml
 ```
 
+You can also print the capability strings this runtime understands:
+
+```bash
+cargo run -p layer36-cli -- manifest capabilities
+```
+
 `layer36 run` also reads `manifest.toml` when it sits next to the `.wasm` file:
 
 ```bash

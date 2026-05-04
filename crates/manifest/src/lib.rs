@@ -16,16 +16,23 @@ use thiserror::Error;
 
 pub const PHASE2_CLI_WORLD: &str = "layer36:app/cli@0.1.0";
 
-const DEFAULT_GRANTED_CAPS: &[&str] = &[
-    "io.stdout",
-    "io.stderr",
-    "io.args",
-    "io.log",
-    "time.clock",
-    "time.monotonic",
-    "time.sleep",
-    "locale.info",
-    "locale.format",
+const PHASE2_CAPABILITY_SPECS: &[CapabilitySpec] = &[
+    CapabilitySpec::resource_free("io", "stdin", true),
+    CapabilitySpec::resource_free("io", "stdout", true),
+    CapabilitySpec::resource_free("io", "stderr", true),
+    CapabilitySpec::resource_free("io", "args", true),
+    CapabilitySpec::resource_free("io", "log", true),
+    CapabilitySpec::resource_scoped("fs", "read", "<path-glob>"),
+    CapabilitySpec::resource_scoped("fs", "write", "<path-glob>"),
+    CapabilitySpec::resource_scoped("fs", "list", "<path-glob>"),
+    CapabilitySpec::resource_scoped("fs", "remove", "<path-glob>"),
+    CapabilitySpec::resource_scoped("fs", "mkdir", "<path-glob>"),
+    CapabilitySpec::resource_scoped("net", "connect", "<host>:<port>"),
+    CapabilitySpec::resource_free("time", "clock", true),
+    CapabilitySpec::resource_free("time", "monotonic", true),
+    CapabilitySpec::resource_free("time", "sleep", true),
+    CapabilitySpec::resource_free("locale", "info", true),
+    CapabilitySpec::resource_free("locale", "format", true),
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -111,6 +118,69 @@ pub struct CapabilityRequest {
     pub cap: String,
     pub rationale: String,
     pub required: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CapabilitySpec {
+    module: &'static str,
+    action: &'static str,
+    resource: Option<&'static str>,
+    default_granted: bool,
+}
+
+impl CapabilitySpec {
+    const fn resource_free(
+        module: &'static str,
+        action: &'static str,
+        default_granted: bool,
+    ) -> Self {
+        Self {
+            module,
+            action,
+            resource: None,
+            default_granted,
+        }
+    }
+
+    const fn resource_scoped(
+        module: &'static str,
+        action: &'static str,
+        resource: &'static str,
+    ) -> Self {
+        Self {
+            module,
+            action,
+            resource: Some(resource),
+            default_granted: false,
+        }
+    }
+
+    pub fn module(&self) -> &'static str {
+        self.module
+    }
+
+    pub fn action(&self) -> &'static str {
+        self.action
+    }
+
+    pub fn resource(&self) -> Option<&'static str> {
+        self.resource
+    }
+
+    pub fn name(&self) -> String {
+        format!("{}.{}", self.module, self.action)
+    }
+
+    pub fn display_pattern(&self) -> String {
+        match self.resource {
+            Some(resource) => format!("{}:{resource}", self.name()),
+            None => self.name(),
+        }
+    }
+
+    pub fn default_granted(&self) -> bool {
+        self.default_granted
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -218,10 +288,18 @@ impl fmt::Display for Capability {
 }
 
 pub fn default_granted_capabilities() -> BTreeSet<Capability> {
-    DEFAULT_GRANTED_CAPS
+    PHASE2_CAPABILITY_SPECS
         .iter()
-        .map(|cap| cap.parse().expect("default capability strings are valid"))
+        .filter(|spec| spec.default_granted())
+        .map(|spec| {
+            Capability::new(spec.module(), spec.action(), None)
+                .expect("default capability specs are valid")
+        })
         .collect()
+}
+
+pub fn supported_capability_specs() -> &'static [CapabilitySpec] {
+    PHASE2_CAPABILITY_SPECS
 }
 
 #[derive(Debug, Error)]
@@ -315,14 +393,10 @@ fn validate_ident(field: &'static str, value: &str) -> Result<()> {
 }
 
 fn capability_resource_required(module: &str, action: &str) -> Option<bool> {
-    match (module, action) {
-        ("io", "stdin" | "stdout" | "stderr" | "args" | "log") => Some(false),
-        ("fs", "read" | "write" | "list" | "remove" | "mkdir") => Some(true),
-        ("net", "connect") => Some(true),
-        ("time", "clock" | "monotonic" | "sleep") => Some(false),
-        ("locale", "info" | "format") => Some(false),
-        _ => None,
-    }
+    supported_capability_specs()
+        .iter()
+        .find(|spec| spec.module == module && spec.action == action)
+        .map(|spec| spec.resource.is_some())
 }
 
 #[cfg(test)]
@@ -423,10 +497,27 @@ mod tests {
 
     #[test]
     fn tracks_default_grants() {
+        let stdin: Capability = "io.stdin".parse().expect("parse stdin cap");
         let stdout: Capability = "io.stdout".parse().expect("parse stdout cap");
         let fs_read: Capability = "fs.read:./data/**".parse().expect("parse fs cap");
 
+        assert!(stdin.is_default_granted());
         assert!(stdout.is_default_granted());
         assert!(!fs_read.is_default_granted());
+    }
+
+    #[test]
+    fn exposes_canonical_phase_2_capability_specs() {
+        let specs = supported_capability_specs();
+
+        assert!(specs
+            .iter()
+            .any(|spec| spec.display_pattern() == "io.args" && spec.default_granted()));
+        assert!(specs.iter().any(|spec| {
+            spec.display_pattern() == "fs.read:<path-glob>" && !spec.default_granted()
+        }));
+        assert!(specs.iter().any(|spec| {
+            spec.display_pattern() == "net.connect:<host>:<port>" && !spec.default_granted()
+        }));
     }
 }

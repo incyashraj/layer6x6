@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- `layer36 manifest capabilities` to print the canonical Phase 2 capability strings and default-grant status from the manifest crate.
 - Phase 2 UAPI contract checker for the current WIT package shape, wired into hosted and self-hosted CI.
 - Full WIT style guide for Layer36 UAPI naming, resource design, typed errors, capability mapping, comments, versioning, and review checks.
 - Rust SDK API polish: crate-level docs, rustdoc comments for the helper layer, owned argument helpers, sample app usage of those helpers, and a self-hosted SDK doc build check.

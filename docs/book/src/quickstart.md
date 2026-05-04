@@ -172,6 +172,12 @@ cargo run -p layer36-cli -- manifest check path/to/manifest.toml
 For now this checks the TOML schema, app world, app id, duplicate capabilities,
 and capability string format.
 
+To see the Phase 2 capability strings accepted by this runtime:
+
+```bash
+cargo run -p layer36-cli -- manifest capabilities
+```
+
 When a manifest sits next to an app component, `layer36 run` also checks
 required capabilities before the component starts:
 
@@ -180,5 +186,5 @@ cargo run -p layer36-cli -- run path/to/app.wasm --grant fs.read:./data/**
 cargo run -p layer36-cli -- run path/to/app.wasm --auto-grant
 ```
 
-This is session-only. Persistent permission storage and runtime UAPI call
-checks come after the Phase 2 dispatcher is wired.
+This is session-only. The runtime also checks granted file and network
+capabilities at UAPI call sites. Persistent permission storage comes later.

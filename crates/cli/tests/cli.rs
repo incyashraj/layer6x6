@@ -130,6 +130,22 @@ fn manifest_check_rejects_bad_capability() {
 }
 
 #[test]
+fn manifest_capabilities_lists_phase_2_cap_table() {
+    let output = layer36()
+        .args(["manifest", "capabilities"])
+        .output()
+        .expect("run manifest capabilities");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Phase 2 capabilities"));
+    assert!(stdout.contains("io.args"));
+    assert!(stdout.contains("fs.read:<path-glob>"));
+    assert!(stdout.contains("net.connect:<host>:<port>"));
+    assert!(stdout.contains("locale.format"));
+}
+
+#[test]
 fn missing_input_returns_clear_error() {
     let output = layer36()
         .args(["run", "/definitely/not/a/component.wasm"])

@@ -1699,6 +1699,7 @@ Short time-stamped entries for anything significant: ecosystem developments, piv
 | 2026-05-04 | Polished the Rust SDK surface with crate docs, rustdoc comments, owned argument helpers, sample app cleanup, and a self-hosted SDK doc build check. |
 | 2026-05-04 | Published the Phase 2 WIT style guide with rules for UAPI naming, resources, errors, capability mapping, comments, versioning, and review. |
 | 2026-05-04 | Added a Phase 2 UAPI contract checker and wired it into hosted and self-hosted CI so WIT package shape changes are caught early. |
+| 2026-05-04 | Moved the Phase 2 capability table into the manifest crate and exposed it through `layer36 manifest capabilities`. |
 
 ---
 

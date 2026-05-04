@@ -4,7 +4,7 @@ use std::process::{Command as ProcessCommand, ExitCode};
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use layer36_manifest::{Capability, Manifest};
+use layer36_manifest::{supported_capability_specs, Capability, Manifest};
 use layer36_policy::{resolve_session_policy, SessionPolicy};
 use layer36_runtime::{Config, RunOutcome, Runtime, RuntimeError};
 
@@ -80,6 +80,8 @@ enum ManifestCommand {
         /// Path to manifest.toml.
         file: PathBuf,
     },
+    /// Print the Phase 2 capability strings understood by this runtime.
+    Capabilities,
 }
 
 fn main() -> ExitCode {
@@ -134,6 +136,7 @@ fn run() -> Result<u8> {
         Command::Doctor => doctor(),
         Command::Manifest { command } => match command {
             ManifestCommand::Check { file } => check_manifest(&file),
+            ManifestCommand::Capabilities => print_manifest_capabilities(),
         },
     }
 }
@@ -378,6 +381,20 @@ fn check_manifest(file: &Path) -> Result<u8> {
     println!("world           {}", manifest.app.world);
     println!("capabilities    {}", declared_caps.len());
     println!("required caps   {}", required_caps.len());
+
+    Ok(0)
+}
+
+fn print_manifest_capabilities() -> Result<u8> {
+    println!("Phase 2 capabilities");
+    println!("capability                         default");
+    for spec in supported_capability_specs() {
+        println!(
+            "{:<34} {}",
+            spec.display_pattern(),
+            if spec.default_granted() { "yes" } else { "no" }
+        );
+    }
 
     Ok(0)
 }
