@@ -137,6 +137,10 @@ pub enum AdapterError {
     Io(String),
     #[error("host network error: {0}")]
     Network(String),
+    #[error("network operation timed out")]
+    Timeout,
+    #[error("network protocol error: {0}")]
+    Protocol(String),
     #[error("HTTP response body is too large")]
     BodyTooLarge,
 }

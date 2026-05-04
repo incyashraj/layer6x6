@@ -797,6 +797,57 @@ mod tests {
     }
 
     #[test]
+    fn generated_net_host_returns_wit_timeout_error() {
+        let adapter = RecordingAdapter::with_net_error(AdapterError::Timeout);
+        let guard = UapiGuard::new(SessionPolicy::from_grants(["net.connect:example.com:443"
+            .parse()
+            .unwrap()]));
+        let mut host = Phase2Host::new(guard, Box::new(adapter.clone()));
+
+        let err = net::http_client::Host::fetch(
+            &mut host,
+            net::types::Request {
+                method: net::types::HttpMethod::Get,
+                url: "https://example.com/path".to_string(),
+                headers: Vec::new(),
+                body: Vec::new(),
+                timeout_millis: Some(1),
+            },
+        )
+        .unwrap()
+        .unwrap_err();
+
+        assert!(matches!(err, net::types::NetError::Timeout));
+        assert_eq!(adapter.calls.borrow().net_fetch, 1);
+    }
+
+    #[test]
+    fn generated_net_host_returns_wit_protocol_error() {
+        let adapter =
+            RecordingAdapter::with_net_error(AdapterError::Protocol("bad status".to_string()));
+        let guard = UapiGuard::new(SessionPolicy::from_grants(["net.connect:example.com:443"
+            .parse()
+            .unwrap()]));
+        let mut host = Phase2Host::new(guard, Box::new(adapter.clone()));
+
+        let err = net::http_client::Host::fetch(
+            &mut host,
+            net::types::Request {
+                method: net::types::HttpMethod::Get,
+                url: "https://example.com/path".to_string(),
+                headers: Vec::new(),
+                body: Vec::new(),
+                timeout_millis: None,
+            },
+        )
+        .unwrap()
+        .unwrap_err();
+
+        assert!(matches!(err, net::types::NetError::Protocol(message) if message == "bad status"));
+        assert_eq!(adapter.calls.borrow().net_fetch, 1);
+    }
+
+    #[test]
     fn generated_fs_and_stdio_hosts_call_dispatcher() {
         let adapter = RecordingAdapter::default();
         let guard = UapiGuard::new(SessionPolicy::from_grants([

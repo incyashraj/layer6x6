@@ -141,9 +141,10 @@ fn fs_adapter_error_to_wit(err: dispatch::AdapterError) -> fs::types::FsError {
         dispatch::AdapterError::InvalidPath => fs::types::FsError::InvalidPath,
         dispatch::AdapterError::NotFound => fs::types::FsError::NotFound,
         dispatch::AdapterError::PermissionDenied => fs::types::FsError::PermissionDenied,
-        dispatch::AdapterError::Io(message) | dispatch::AdapterError::Network(message) => {
-            fs::types::FsError::Io(message)
-        }
+        dispatch::AdapterError::Io(message)
+        | dispatch::AdapterError::Network(message)
+        | dispatch::AdapterError::Protocol(message) => fs::types::FsError::Io(message),
+        dispatch::AdapterError::Timeout => fs::types::FsError::Io("timed out".to_string()),
         dispatch::AdapterError::BodyTooLarge => {
             fs::types::FsError::Io("HTTP response body is too large".to_string())
         }
@@ -161,6 +162,8 @@ fn net_adapter_error_to_wit(err: dispatch::AdapterError) -> net::types::NetError
         }
         dispatch::AdapterError::PermissionDenied => net::types::NetError::PermissionDenied,
         dispatch::AdapterError::Network(message) => net::types::NetError::ConnectFailure(message),
+        dispatch::AdapterError::Timeout => net::types::NetError::Timeout,
+        dispatch::AdapterError::Protocol(message) => net::types::NetError::Protocol(message),
         dispatch::AdapterError::Io(message) => net::types::NetError::Other(message),
         dispatch::AdapterError::BodyTooLarge => net::types::NetError::BodyTooLarge,
         dispatch::AdapterError::Unsupported => net::types::NetError::Other(
@@ -178,6 +181,8 @@ fn io_adapter_error_to_wit(err: dispatch::AdapterError) -> io::types::IoError {
         dispatch::AdapterError::InvalidPath
         | dispatch::AdapterError::Unsupported
         | dispatch::AdapterError::Network(_)
+        | dispatch::AdapterError::Timeout
+        | dispatch::AdapterError::Protocol(_)
         | dispatch::AdapterError::BodyTooLarge => io::types::IoError::Other(err.to_string()),
         dispatch::AdapterError::Io(message) => io::types::IoError::Other(message),
     }
@@ -258,6 +263,18 @@ mod tests {
                 dispatch::AdapterError::BodyTooLarge
             )),
             net::types::NetError::BodyTooLarge
+        ));
+        assert!(matches!(
+            net_error_to_wit(dispatch::NetDispatchError::Adapter(
+                dispatch::AdapterError::Timeout
+            )),
+            net::types::NetError::Timeout
+        ));
+        assert!(matches!(
+            net_error_to_wit(dispatch::NetDispatchError::Adapter(
+                dispatch::AdapterError::Protocol("bad status".to_string())
+            )),
+            net::types::NetError::Protocol(message) if message == "bad status"
         ));
     }
 

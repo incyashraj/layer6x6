@@ -675,7 +675,7 @@ impl NetAdapter for LocalPhase2Adapter {
         .into_bytes();
         for header in req.headers {
             if header.name.contains(['\r', '\n']) || header.value.contains(['\r', '\n']) {
-                return Err(AdapterError::Network("invalid HTTP header".to_string()));
+                return Err(AdapterError::Protocol("invalid HTTP header".to_string()));
             }
             request.extend_from_slice(header.name.as_bytes());
             request.extend_from_slice(b": ");
@@ -684,7 +684,7 @@ impl NetAdapter for LocalPhase2Adapter {
         }
         request.extend_from_slice(b"\r\n");
 
-        stream.write_all(&request).map_err(map_io_error)?;
+        stream.write_all(&request).map_err(map_net_io_error)?;
         let response = read_http_response_limited(&mut stream, self.max_http_response_bytes)?;
         parse_http_response(&response)
     }
@@ -778,6 +778,14 @@ fn map_io_error(err: std::io::Error) -> AdapterError {
     }
 }
 
+#[cfg(feature = "phase2-bindings")]
+fn map_net_io_error(err: std::io::Error) -> AdapterError {
+    match err.kind() {
+        std::io::ErrorKind::TimedOut | std::io::ErrorKind::WouldBlock => AdapterError::Timeout,
+        _ => map_io_error(err),
+    }
+}
+
 struct ParsedHttpUrl {
     host: String,
     port: u16,
@@ -828,7 +836,7 @@ fn read_http_response_limited(
     let mut chunk = [0; 8192];
 
     loop {
-        let read = reader.read(&mut chunk).map_err(map_io_error)?;
+        let read = reader.read(&mut chunk).map_err(map_net_io_error)?;
         if read == 0 {
             return Ok(response);
         }
@@ -843,22 +851,22 @@ fn read_http_response_limited(
 
 fn parse_http_response(bytes: &[u8]) -> std::result::Result<HttpResponse, AdapterError> {
     let Some(header_end) = bytes.windows(4).position(|window| window == b"\r\n\r\n") else {
-        return Err(AdapterError::Network("invalid HTTP response".to_string()));
+        return Err(AdapterError::Protocol("invalid HTTP response".to_string()));
     };
     let header_bytes = &bytes[..header_end];
     let body = bytes[header_end + 4..].to_vec();
     let headers_text =
-        std::str::from_utf8(header_bytes).map_err(|err| AdapterError::Network(err.to_string()))?;
+        std::str::from_utf8(header_bytes).map_err(|err| AdapterError::Protocol(err.to_string()))?;
     let mut lines = headers_text.split("\r\n");
     let status_line = lines
         .next()
-        .ok_or_else(|| AdapterError::Network("missing HTTP status".to_string()))?;
+        .ok_or_else(|| AdapterError::Protocol("missing HTTP status".to_string()))?;
     let status = status_line
         .split_whitespace()
         .nth(1)
-        .ok_or_else(|| AdapterError::Network("missing HTTP status code".to_string()))?
+        .ok_or_else(|| AdapterError::Protocol("missing HTTP status code".to_string()))?
         .parse()
-        .map_err(|_| AdapterError::Network("invalid HTTP status code".to_string()))?;
+        .map_err(|_| AdapterError::Protocol("invalid HTTP status code".to_string()))?;
 
     let mut headers = Vec::new();
     for line in lines {
@@ -957,6 +965,16 @@ mod tests {
             }]
         );
         assert_eq!(response.body, b"hello\n");
+    }
+
+    #[test]
+    fn plain_http_response_parser_reports_protocol_errors() {
+        let err =
+            parse_http_response(b"not http").expect_err("malformed response should be rejected");
+
+        assert!(
+            matches!(err, AdapterError::Protocol(message) if message == "invalid HTTP response")
+        );
     }
 
     #[test]
