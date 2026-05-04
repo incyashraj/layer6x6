@@ -59,6 +59,8 @@ const MAX_PHASE2_READ_BYTES: usize = 8 * 1024 * 1024;
 const MAX_PHASE2_WRITE_BYTES: usize = 8 * 1024 * 1024;
 #[cfg(feature = "phase2-bindings")]
 const MAX_PHASE2_LIST_ENTRIES: usize = 4096;
+#[cfg(feature = "phase2-bindings")]
+const MAX_PHASE2_ARGS_RAW_BYTES: usize = 64 * 1024;
 
 wasmtime::component::bindgen!({
     path: "../../wit/layer36",
@@ -535,6 +537,31 @@ fn bounded_write_len(n: usize) -> std::result::Result<u32, AdapterError> {
 }
 
 #[cfg(feature = "phase2-bindings")]
+fn encode_args_raw(app_args: &[String]) -> std::result::Result<String, AdapterError> {
+    let mut raw = String::new();
+    for arg in app_args {
+        if arg.is_empty() {
+            return Err(AdapterError::Io(
+                "app arguments cannot contain empty entries in Phase 2 raw args".to_string(),
+            ));
+        }
+        if arg.contains('\0') || arg.contains('\n') {
+            return Err(AdapterError::Io(
+                "app argument contains unsupported raw args delimiter characters".to_string(),
+            ));
+        }
+        raw.push_str(arg);
+        raw.push('\n');
+        if raw.len() > MAX_PHASE2_ARGS_RAW_BYTES {
+            return Err(AdapterError::Io(format!(
+                "app arguments exceed raw args limit ({MAX_PHASE2_ARGS_RAW_BYTES} bytes)"
+            )));
+        }
+    }
+    Ok(raw)
+}
+
+#[cfg(feature = "phase2-bindings")]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum MissingLeaf {
     Deny,
@@ -627,7 +654,7 @@ impl IoAdapter for LocalPhase2Adapter {
     }
 
     fn args_raw(&self) -> std::result::Result<String, AdapterError> {
-        Ok(self.app_args.join("\n"))
+        encode_args_raw(&self.app_args)
     }
 
     fn read_stream(
@@ -1264,6 +1291,84 @@ mod tests {
         drop(adapter);
         std::fs::remove_file(file).expect("remove fixture file");
         std::fs::remove_dir_all(temp).expect("remove fixture directory");
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn local_io_adapter_formats_args_raw_with_newline_separator() {
+        let adapter = LocalPhase2Adapter::new(
+            Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            None,
+            None,
+            vec!["clock".to_string(), "--utc".to_string()],
+            1024,
+            PathBuf::from("."),
+        );
+
+        let raw = adapter.args_raw().expect("encode raw args");
+        assert_eq!(raw, "clock\n--utc\n");
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn local_io_adapter_rejects_invalid_raw_argument_shapes() {
+        let empty_arg_adapter = LocalPhase2Adapter::new(
+            Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            None,
+            None,
+            vec!["ok".to_string(), "".to_string()],
+            1024,
+            PathBuf::from("."),
+        );
+        let empty_err = empty_arg_adapter
+            .args_raw()
+            .expect_err("empty argument should be rejected");
+        assert!(
+            matches!(empty_err, AdapterError::Io(ref message) if message.contains("empty entries")),
+            "unexpected empty-arg error: {empty_err:?}"
+        );
+
+        let newline_arg_adapter = LocalPhase2Adapter::new(
+            Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            None,
+            None,
+            vec!["bad\narg".to_string()],
+            1024,
+            PathBuf::from("."),
+        );
+        let newline_err = newline_arg_adapter
+            .args_raw()
+            .expect_err("newline argument should be rejected");
+        assert!(
+            matches!(newline_err, AdapterError::Io(ref message) if message.contains("delimiter characters")),
+            "unexpected newline-arg error: {newline_err:?}"
+        );
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn local_io_adapter_rejects_oversized_raw_args() {
+        let oversized = "x".repeat(MAX_PHASE2_ARGS_RAW_BYTES + 1);
+        let adapter = LocalPhase2Adapter::new(
+            Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            None,
+            None,
+            vec![oversized],
+            1024,
+            PathBuf::from("."),
+        );
+
+        let err = adapter
+            .args_raw()
+            .expect_err("oversized raw args should be rejected");
+        assert!(
+            matches!(err, AdapterError::Io(ref message) if message.contains("raw args limit")),
+            "unexpected oversized-args error: {err:?}"
+        );
     }
 
     #[cfg(feature = "phase2-bindings")]

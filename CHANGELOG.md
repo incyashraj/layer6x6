@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Runtime Phase 2 raw app-argument guardrails: `io.args.raw` now rejects empty args, newline/NUL delimiter characters, and oversized raw payloads above 64 KiB, with runtime tests covering valid and invalid argument shapes.
 - Runtime Phase 2 write guardrails: local adapter stream writes and filesystem writes now reject per-call sizes above 8 MiB, with deterministic runtime errors and runtime tests covering oversized write requests.
 - Runtime Phase 2 filesystem resource guardrails: local adapter reads now reject per-call sizes above 8 MiB, and directory listings now reject responses above 4096 entries, with deterministic runtime errors and test coverage for both bounds.
 - Runtime Phase 2 sandbox hardening for absolute logical paths: local filesystem resolution now treats absolute logical paths as sandbox-rooted paths instead of host-root paths, so they run through the same sandbox checks as relative paths.

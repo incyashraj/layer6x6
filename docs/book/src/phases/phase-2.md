@@ -167,7 +167,10 @@ arguments through `layer36:io/args.raw`, opens files through `layer36:fs/files`,
 and writes bytes to UAPI stdout. The tests prove both sides: it reads files with
 the right `fs.read` grant, and gets permission denied without that grant. It
 also denies a file outside the granted glob with exit code `5`, matching the
-CLI's permission-denied convention.
+CLI's permission-denied convention. In this phase, raw app-argument transport
+is intentionally conservative: empty arguments, newline/NUL delimiter
+characters, and oversized raw payloads are rejected before they reach guest
+argument parsing.
 
 The third sample path has started now too. `apps/layer36-curl` reads a URL from
 Layer36 app args, calls `layer36:net/http-client.get`, and writes the response
