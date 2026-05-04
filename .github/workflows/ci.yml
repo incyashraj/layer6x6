@@ -309,6 +309,8 @@ jobs:
         run: scripts/build-phase1-components.sh
       - name: Run Phase 1 runtime benchmarks
         run: cargo bench -p layer36-runtime --bench startup
+      - name: Run Phase 2 UAPI dispatch benchmarks
+        run: cargo bench -p layer36-runtime --bench uapi_dispatch
       - name: Check against recorded baseline
         if: always()
         run: scripts/check-benchmark-regression.sh
