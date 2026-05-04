@@ -2121,7 +2121,7 @@ formal exit gates.
 
 | Area | Current read | What remains |
 |------|--------------|--------------|
-| Core Phase 2 engineering | About 79-84% through the first useful CLI slice | WIT freeze review, more shared adapter slices, cross-host identity runs, and network hardening. |
+| Core Phase 2 engineering | About 80-85% through the first useful CLI slice | WIT freeze review, more shared adapter slices, cross-host identity runs, and network hardening. |
 | Formal Phase 2 exit | About 45-50% complete | Language runtime proofs, seven-day CI evidence, fuzzing, full benchmark gate, threat model v0.2, ADR-0009 through ADR-0012, and external validation. |
 | UAPI and UCap | Strong shape, not frozen | Review default grants, path normalization, network policy details, and freeze rules before `0.1.0`. |
 | SDKs | Rust is usable; Go and TypeScript are scaffolded | Publish-ready Rust after freeze, TinyGo runtime proof, and jco runtime proof. |
@@ -2177,6 +2177,7 @@ formal exit gates.
 | P2-NET-07 | Plain HTTP request-line validation | 2026-05-04 | The shared plain HTTP URL parser now rejects whitespace and control characters before they can enter the request line. Empty ports and port `0` are also rejected before socket access, with adapter-common tests and the existing curl fixture still passing. |
 | P2-NET-08 | Plain HTTP authority and header-value hardening | 2026-05-04 | Shared plain HTTP parsing now rejects unsupported authority forms (extra colon segments and bracketed IPv6 literals in this early slice), rejects control characters in app header values, and keeps `Transfer-Encoding` in the host-controlled header denylist. |
 | P2-NET-09 | Shared endpoint parser for policy checks | 2026-05-04 | Added `adapter-common::net::parse_url_endpoint` for `http://` and `https://` capability endpoint extraction, then wired runtime `net_fetch` policy checks to use the shared parser. This removes duplicate URL parsing logic and keeps endpoint validation behavior aligned between shared helpers and runtime policy gates. |
+| P2-NET-10 | Shared authority parser reuse and runtime endpoint tests | 2026-05-04 | Refactored plain `http://` URL parsing to reuse the shared endpoint authority parser so host/port validation no longer drifts between request framing and policy checks. Added runtime tests proving invalid net URLs fail before adapter calls and default `http://` port 80 capability grants are honored. |
 | P2-ADPT-COMMON-01 | First shared adapter-common crate | 2026-05-04 | Added `crates/adapter-common` and moved plain HTTP URL parsing plus HTTP/1.1 request framing into shared code. The runtime now calls this crate, keeping future Linux, macOS, and Windows adapters on the same network behavior. |
 | P2-ADPT-COMMON-02A | Shared filesystem logical path helper | 2026-05-04 | Added `adapter-common::path::LogicalPath`, wired local filesystem calls through it, and made filesystem policy resource matching use the same normalization. Paths now reject empty strings, control characters, `..` traversal, and colon-based prefix forms before host I/O. |
 | P2-ADPT-COMMON-02B | Runtime filesystem sandbox root | 2026-05-04 | Runtime config now carries a sandbox root, local filesystem calls resolve relative paths through that root, and `layer36 run --sandbox-root <dir>` exposes the setting for CLI runs and tests. |

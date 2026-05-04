@@ -22,31 +22,13 @@ impl PlainHttpUrl {
             return Err(PlainHttpError::UnsupportedScheme);
         };
         let rest = rest.split_once('#').map_or(rest, |(before, _)| before);
+        let endpoint =
+            parse_url_endpoint_with_default(rest, 80).map_err(|_| PlainHttpError::InvalidUrl)?;
         let (authority, path) = match rest.find(['/', '?']) {
             Some(index) => rest.split_at(index),
             None => (rest, "/"),
         };
-        if authority.is_empty() || authority.contains('@') {
-            return Err(PlainHttpError::InvalidUrl);
-        }
-        if authority.starts_with('[') || authority.contains("]:") {
-            return Err(PlainHttpError::InvalidUrl);
-        }
-        if authority.matches(':').count() > 1 {
-            return Err(PlainHttpError::InvalidUrl);
-        }
-
-        let (host, port) = match authority.rsplit_once(':') {
-            Some((host, port)) if !host.is_empty() => {
-                let port = port.parse().map_err(|_| PlainHttpError::InvalidUrl)?;
-                if port == 0 {
-                    return Err(PlainHttpError::InvalidUrl);
-                }
-                (host, port)
-            }
-            _ => (authority, 80),
-        };
-        if host.is_empty() {
+        if authority.is_empty() {
             return Err(PlainHttpError::InvalidUrl);
         }
 
@@ -57,8 +39,8 @@ impl PlainHttpUrl {
         };
 
         Ok(Self {
-            host: host.to_string(),
-            port,
+            host: endpoint.host,
+            port: endpoint.port,
             path_and_query,
         })
     }
@@ -90,6 +72,13 @@ pub fn parse_url_endpoint(input: &str) -> Result<UrlEndpoint, UrlEndpointError> 
         _ => return Err(UrlEndpointError::UnsupportedScheme),
     };
 
+    parse_url_endpoint_with_default(rest, default_port)
+}
+
+fn parse_url_endpoint_with_default(
+    rest: &str,
+    default_port: u16,
+) -> Result<UrlEndpoint, UrlEndpointError> {
     let authority = rest.split(['/', '?', '#']).next().unwrap_or_default();
     if authority.is_empty() || authority.contains('@') {
         return Err(UrlEndpointError::InvalidUrl);

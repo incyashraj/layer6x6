@@ -1364,6 +1364,52 @@ mod tests {
     }
 
     #[test]
+    fn net_fetch_rejects_invalid_url_before_adapter() {
+        let adapter = RecordingAdapter::default();
+        let policy =
+            SessionPolicy::from_cli_grants(&["net.connect:api.example.com:443".to_string()])
+                .expect("policy");
+        let guard = UapiGuard::new(policy);
+        let dispatcher = UapiDispatcher::new(&guard, &adapter);
+        let req = HttpRequest {
+            method: HttpMethod::Get,
+            url: "https://api.example.com:0/v1/ping".to_string(),
+            headers: Vec::new(),
+            body: Vec::new(),
+            timeout_millis: None,
+        };
+        let err = dispatcher
+            .net_fetch(req)
+            .expect_err("invalid endpoint should fail before adapter");
+
+        assert!(matches!(err, NetDispatchError::InvalidUrl));
+        assert_eq!(adapter.calls.borrow().net_fetch, 0);
+    }
+
+    #[test]
+    fn net_fetch_http_default_port_matches_grant() {
+        let adapter = RecordingAdapter::default();
+        let policy =
+            SessionPolicy::from_cli_grants(&["net.connect:api.example.com:80".to_string()])
+                .expect("policy");
+        let guard = UapiGuard::new(policy);
+        let dispatcher = UapiDispatcher::new(&guard, &adapter);
+        let req = HttpRequest {
+            method: HttpMethod::Get,
+            url: "http://api.example.com/v1/ping".to_string(),
+            headers: Vec::new(),
+            body: Vec::new(),
+            timeout_millis: None,
+        };
+
+        dispatcher
+            .net_fetch(req)
+            .expect("default HTTP port grant should pass");
+
+        assert_eq!(adapter.calls.borrow().net_fetch, 1);
+    }
+
+    #[test]
     fn sleep_requires_time_sleep_grant() {
         let adapter = RecordingAdapter::default();
         let guard = UapiGuard::new(SessionPolicy::default());

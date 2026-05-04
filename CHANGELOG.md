@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Shared Phase 2 authority parser reuse across network paths: plain `http://` URL parsing now reuses the same host/port parser used by runtime endpoint policy checks, with extra runtime tests for invalid-URL short-circuiting and default port grant behavior.
 - Shared Phase 2 URL endpoint parsing for policy checks: `adapter-common` now provides `parse_url_endpoint` for `http://` and `https://`, and runtime network capability checks use this shared parser instead of separate endpoint parsing logic.
 - Shared Phase 2 filesystem path prefix hardening in `adapter-common`: colon-based path forms are now rejected before host I/O, including Windows drive-style prefixes and alternate-data-stream style suffixes.
 - Shared Phase 2 plain HTTP authority and header-value hardening in `adapter-common`: unsupported authority forms are rejected in this early slice, control characters in app header values are denied, and `Transfer-Encoding` is treated as host-controlled.

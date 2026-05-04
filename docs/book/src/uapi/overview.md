@@ -295,7 +295,9 @@ slice. App-provided header values now reject control characters, and
 `Transfer-Encoding` is now host-controlled with `Host`, `Connection`, and
 `Content-Length`. Policy-side endpoint extraction now also uses a shared parser
 for `http://` and `https://`, so capability checks and adapter-side URL parsing
-stay aligned. HTTPS, redirects, streaming, and deeper protocol work are
+stay aligned. The plain `http://` request parser now reuses that same authority
+path, so host/port validation logic is no longer duplicated across net layers.
+HTTPS, redirects, streaming, and deeper protocol work are
 still open.
 
 The time adapter now uses shared host-clock code for the first clock slice:

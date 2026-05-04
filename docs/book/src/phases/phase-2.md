@@ -92,7 +92,9 @@ characters in app-provided header values. `Transfer-Encoding` is now treated as
 host-controlled with `Host`, `Connection`, and `Content-Length`.
 The runtime's network capability gate now also uses a shared endpoint parser for
 `http://` and `https://` URLs, so policy checks and adapter-side URL validation
-no longer drift as separate parsers evolve.
+no longer drift as separate parsers evolve. The plain `http://` URL parser now
+reuses that same authority parsing path to keep host/port validation in one
+place.
 
 Time is also starting to move into shared adapter code. The local runtime now
 uses a common host clock helper for fixed test time, Unix-epoch milliseconds,
