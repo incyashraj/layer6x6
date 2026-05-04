@@ -290,7 +290,10 @@ response is too large, the app receives `net-error.body-too-large`, not a vague
 network failure. Timeouts and malformed responses also cross the WIT boundary as
 `net-error.timeout` and `net-error.protocol`. The shared parser now rejects
 whitespace, control characters, empty ports, and port `0` before the host builds
-the request line. HTTPS, redirects, streaming, and deeper protocol work are
+the request line. It also rejects unsupported authority forms in this early
+slice. App-provided header values now reject control characters, and
+`Transfer-Encoding` is now host-controlled with `Host`, `Connection`, and
+`Content-Length`. HTTPS, redirects, streaming, and deeper protocol work are
 still open.
 
 The time adapter now uses shared host-clock code for the first clock slice:

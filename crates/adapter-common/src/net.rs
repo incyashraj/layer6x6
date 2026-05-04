@@ -29,6 +29,12 @@ impl PlainHttpUrl {
         if authority.is_empty() || authority.contains('@') {
             return Err(PlainHttpError::InvalidUrl);
         }
+        if authority.starts_with('[') || authority.contains("]:") {
+            return Err(PlainHttpError::InvalidUrl);
+        }
+        if authority.matches(':').count() > 1 {
+            return Err(PlainHttpError::InvalidUrl);
+        }
 
         let (host, port) = match authority.rsplit_once(':') {
             Some((host, port)) if !host.is_empty() => {
@@ -115,7 +121,9 @@ pub fn build_plain_http_request(
     .into_bytes();
 
     for header in &req.headers {
-        if !is_valid_plain_http_header_name(&header.name) || header.value.contains(['\r', '\n']) {
+        if !is_valid_plain_http_header_name(&header.name)
+            || !is_safe_plain_http_header_value(&header.value)
+        {
             return Err(PlainHttpError::InvalidHeader);
         }
         if is_host_controlled_http_header(&header.name) {
@@ -165,12 +173,19 @@ fn is_host_controlled_http_header(name: &str) -> bool {
     name.eq_ignore_ascii_case("host")
         || name.eq_ignore_ascii_case("connection")
         || name.eq_ignore_ascii_case("content-length")
+        || name.eq_ignore_ascii_case("transfer-encoding")
 }
 
 fn contains_http_unsafe_ascii(input: &str) -> bool {
     input
         .bytes()
         .any(|byte| byte.is_ascii_control() || byte.is_ascii_whitespace())
+}
+
+fn is_safe_plain_http_header_value(value: &str) -> bool {
+    value
+        .bytes()
+        .all(|byte| byte.is_ascii() && !byte.is_ascii_control())
 }
 
 /// Errors returned by shared plain HTTP helpers.
@@ -225,6 +240,18 @@ mod tests {
     }
 
     #[test]
+    fn url_parser_rejects_unsupported_authority_forms() {
+        assert_eq!(
+            PlainHttpUrl::parse("http://127.0.0.1:8080:99/").unwrap_err(),
+            PlainHttpError::InvalidUrl
+        );
+        assert_eq!(
+            PlainHttpUrl::parse("http://[::1]:8080/").unwrap_err(),
+            PlainHttpError::InvalidUrl
+        );
+    }
+
+    #[test]
     fn request_builder_forwards_method_headers_and_body() {
         let url = PlainHttpUrl::parse("http://127.0.0.1:8080/submit?name=layer36")
             .expect("parse HTTP URL");
@@ -264,5 +291,23 @@ mod tests {
             .expect_err("host-controlled headers should be rejected");
 
         assert_eq!(err, PlainHttpError::HostControlledHeader);
+    }
+
+    #[test]
+    fn request_builder_rejects_control_characters_in_header_values() {
+        let url = PlainHttpUrl::parse("http://127.0.0.1:8080/").expect("parse HTTP URL");
+        let req = PlainHttpRequest {
+            method: PlainHttpMethod::Get,
+            headers: vec![PlainHttpHeader {
+                name: "X-Layer36".to_string(),
+                value: "safe\tno".to_string(),
+            }],
+            body: Vec::new(),
+        };
+
+        let err = build_plain_http_request(&req, &url)
+            .expect_err("control characters should be rejected in header values");
+
+        assert_eq!(err, PlainHttpError::InvalidHeader);
     }
 }
