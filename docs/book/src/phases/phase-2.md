@@ -134,10 +134,12 @@ Locale has the same first shared path now. The runtime uses common helper code
 for `LC_ALL`/`LANG` locale detection, `TZ` fallback, basic locale normalization,
 deterministic baseline date/number formatting, and locale-tag canonicalization
 to stable language/script/region casing with a safe fallback for malformed
-values. Timezone normalization is now conservative too, accepting only simple
-timezone-name shapes for this phase and falling back to `UTC` on invalid input.
-Real ICU4X formatting and native per-OS locale discovery are still open, but
-the early behavior now has one home instead of being copied in the runtime.
+values, including stricter primary locale-subtag and bounded-subtag checks so
+invalid locale-tag shapes fall back to `en-US`. Timezone normalization is now
+conservative too, accepting only simple timezone-name shapes for this phase and
+falling back to `UTC` on invalid input. Real ICU4X formatting and native per-OS
+locale discovery are still open, but the early behavior now has one home
+instead of being copied in the runtime.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2

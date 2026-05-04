@@ -280,7 +280,7 @@ fn canonicalize_locale_tag(tag: &str) -> Option<String> {
     let mut pieces = portable.split('-');
     let language = pieces.next()?;
 
-    if language.is_empty() || !is_ascii_alnum(language) {
+    if !is_valid_language_subtag(language) {
         return None;
     }
 
@@ -288,7 +288,7 @@ fn canonicalize_locale_tag(tag: &str) -> Option<String> {
     normalized.push(language.to_ascii_lowercase());
 
     for piece in pieces {
-        if piece.is_empty() || !is_ascii_alnum(piece) {
+        if !is_valid_locale_subtag(piece) {
             return None;
         }
 
@@ -310,6 +310,14 @@ fn canonicalize_locale_tag(tag: &str) -> Option<String> {
 
 fn is_ascii_alnum(value: &str) -> bool {
     value.chars().all(|ch| ch.is_ascii_alphanumeric())
+}
+
+fn is_valid_language_subtag(value: &str) -> bool {
+    (2..=8).contains(&value.len()) && value.chars().all(|ch| ch.is_ascii_alphabetic())
+}
+
+fn is_valid_locale_subtag(value: &str) -> bool {
+    (1..=8).contains(&value.len()) && is_ascii_alnum(value)
 }
 
 fn title_case_ascii(value: &str) -> String {
@@ -428,6 +436,9 @@ mod tests {
         assert_eq!(normalize_locale_tag(Some("en--US")), "en-US");
         assert_eq!(normalize_locale_tag(Some("_")), "en-US");
         assert_eq!(normalize_locale_tag(Some("en_US@bad*mod")), "en-US");
+        assert_eq!(normalize_locale_tag(Some("123")), "en-US");
+        assert_eq!(normalize_locale_tag(Some("englishlong")), "en-US");
+        assert_eq!(normalize_locale_tag(Some("en-superlongsubtag")), "en-US");
     }
 
     #[test]
