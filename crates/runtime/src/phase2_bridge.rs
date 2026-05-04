@@ -144,6 +144,9 @@ fn fs_adapter_error_to_wit(err: dispatch::AdapterError) -> fs::types::FsError {
         dispatch::AdapterError::Io(message) | dispatch::AdapterError::Network(message) => {
             fs::types::FsError::Io(message)
         }
+        dispatch::AdapterError::BodyTooLarge => {
+            fs::types::FsError::Io("HTTP response body is too large".to_string())
+        }
         dispatch::AdapterError::Unsupported => fs::types::FsError::Io(
             "operation is not supported by this host adapter yet".to_string(),
         ),
@@ -159,6 +162,7 @@ fn net_adapter_error_to_wit(err: dispatch::AdapterError) -> net::types::NetError
         dispatch::AdapterError::PermissionDenied => net::types::NetError::PermissionDenied,
         dispatch::AdapterError::Network(message) => net::types::NetError::ConnectFailure(message),
         dispatch::AdapterError::Io(message) => net::types::NetError::Other(message),
+        dispatch::AdapterError::BodyTooLarge => net::types::NetError::BodyTooLarge,
         dispatch::AdapterError::Unsupported => net::types::NetError::Other(
             "operation is not supported by this host adapter yet".to_string(),
         ),
@@ -173,7 +177,8 @@ fn io_adapter_error_to_wit(err: dispatch::AdapterError) -> io::types::IoError {
         }
         dispatch::AdapterError::InvalidPath
         | dispatch::AdapterError::Unsupported
-        | dispatch::AdapterError::Network(_) => io::types::IoError::Other(err.to_string()),
+        | dispatch::AdapterError::Network(_)
+        | dispatch::AdapterError::BodyTooLarge => io::types::IoError::Other(err.to_string()),
         dispatch::AdapterError::Io(message) => io::types::IoError::Other(message),
     }
 }
@@ -247,6 +252,12 @@ mod tests {
         assert!(matches!(
             net_error_to_wit(dispatch::NetDispatchError::PermissionDenied),
             net::types::NetError::PermissionDenied
+        ));
+        assert!(matches!(
+            net_error_to_wit(dispatch::NetDispatchError::Adapter(
+                dispatch::AdapterError::BodyTooLarge
+            )),
+            net::types::NetError::BodyTooLarge
         ));
     }
 

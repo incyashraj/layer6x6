@@ -505,6 +505,16 @@ mod tests {
     #[derive(Clone, Default)]
     struct RecordingAdapter {
         calls: Rc<RefCell<Calls>>,
+        net_error: Option<AdapterError>,
+    }
+
+    impl RecordingAdapter {
+        fn with_net_error(error: AdapterError) -> Self {
+            Self {
+                calls: Rc::default(),
+                net_error: Some(error),
+            }
+        }
     }
 
     #[derive(Default)]
@@ -653,6 +663,9 @@ mod tests {
     impl NetAdapter for RecordingAdapter {
         fn fetch(&self, req: HttpRequest) -> Result<HttpResponse, AdapterError> {
             self.calls.borrow_mut().net_fetch += 1;
+            if let Some(error) = &self.net_error {
+                return Err(error.clone());
+            }
             Ok(HttpResponse {
                 status: 200,
                 headers: vec![Header {
@@ -756,6 +769,31 @@ mod tests {
 
         assert!(matches!(err, net::types::NetError::PermissionDenied));
         assert_eq!(adapter.calls.borrow().net_fetch, 0);
+    }
+
+    #[test]
+    fn generated_net_host_returns_wit_body_too_large_error() {
+        let adapter = RecordingAdapter::with_net_error(AdapterError::BodyTooLarge);
+        let guard = UapiGuard::new(SessionPolicy::from_grants(["net.connect:example.com:443"
+            .parse()
+            .unwrap()]));
+        let mut host = Phase2Host::new(guard, Box::new(adapter.clone()));
+
+        let err = net::http_client::Host::fetch(
+            &mut host,
+            net::types::Request {
+                method: net::types::HttpMethod::Get,
+                url: "https://example.com/path".to_string(),
+                headers: Vec::new(),
+                body: Vec::new(),
+                timeout_millis: None,
+            },
+        )
+        .unwrap()
+        .unwrap_err();
+
+        assert!(matches!(err, net::types::NetError::BodyTooLarge));
+        assert_eq!(adapter.calls.borrow().net_fetch, 1);
     }
 
     #[test]

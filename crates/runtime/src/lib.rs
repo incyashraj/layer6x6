@@ -834,9 +834,7 @@ fn read_http_response_limited(
         }
 
         if response.len() + read > max_bytes {
-            return Err(AdapterError::Network(format!(
-                "HTTP response exceeds {max_bytes} byte limit"
-            )));
+            return Err(AdapterError::BodyTooLarge);
         }
 
         response.extend_from_slice(&chunk[..read]);
@@ -967,10 +965,7 @@ mod tests {
         let err = read_http_response_limited(&mut response, 4)
             .expect_err("oversized response should be rejected");
 
-        assert_eq!(
-            err,
-            AdapterError::Network("HTTP response exceeds 4 byte limit".to_string())
-        );
+        assert_eq!(err, AdapterError::BodyTooLarge);
     }
 
     #[test]

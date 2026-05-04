@@ -137,6 +137,8 @@ pub enum AdapterError {
     Io(String),
     #[error("host network error: {0}")]
     Network(String),
+    #[error("HTTP response body is too large")]
+    BodyTooLarge,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]

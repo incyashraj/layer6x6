@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Phase 2 HTTP oversized-response errors now map to the WIT `net-error.body-too-large` variant instead of a generic connection failure.
 - `layer36 run --max-http-response-bytes` to tune the Phase 2 plain HTTP adapter response-size guard per run.
 - `layer36 run --log-grants-format jsonl` to append one structured grant audit record per line for scripts and local tooling.
 - `layer36 run --dump-caps-format json` to print effective run grants, app identity, and component path as structured data before starting a component.
