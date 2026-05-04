@@ -120,7 +120,7 @@ fn parse_url_endpoint_with_default(
     }
 
     Ok(UrlEndpoint {
-        host: host.to_string(),
+        host: host.to_ascii_lowercase(),
         port,
     })
 }
@@ -483,6 +483,15 @@ mod tests {
     }
 
     #[test]
+    fn url_parser_normalizes_mixed_case_host() {
+        let parsed = PlainHttpUrl::parse("http://ExAmPle.Com:8080/path").expect("parse HTTP URL");
+
+        assert_eq!(parsed.host, "example.com");
+        assert_eq!(parsed.port, 8080);
+        assert_eq!(parsed.path_and_query, "/path");
+    }
+
+    #[test]
     fn url_parser_rejects_request_line_injection_characters() {
         assert_eq!(
             PlainHttpUrl::parse("http://127.0.0.1:8080/path\r\nX-Bad: yes").unwrap_err(),
@@ -642,11 +651,14 @@ mod tests {
     fn endpoint_parser_supports_http_and_https_default_ports() {
         let http = parse_url_endpoint("http://example.com/path").expect("HTTP endpoint");
         let https = parse_url_endpoint("https://example.com/path").expect("HTTPS endpoint");
+        let mixed = parse_url_endpoint("https://ExAmPle.Com/path").expect("mixed-case endpoint");
 
         assert_eq!(http.host, "example.com");
         assert_eq!(http.port, 80);
         assert_eq!(https.host, "example.com");
         assert_eq!(https.port, 443);
+        assert_eq!(mixed.host, "example.com");
+        assert_eq!(mixed.port, 443);
     }
 
     #[test]
