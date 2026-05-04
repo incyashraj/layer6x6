@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Shared Phase 2 strict buffered `Content-Length` validation: shared plain HTTP response parsing now rejects any truncated body, including empty buffered bodies when a non-zero length is declared.
 - Shared Phase 2 plain HTTP request-body guard in `adapter-common`: buffered request framing now rejects bodies above a fixed early-phase cap and maps them through runtime fetch as `body-too-large`.
 - Shared Phase 2 plain HTTP response integrity checks in `adapter-common`: the shared response parser now rejects unsupported response `Transfer-Encoding`, conflicting `Content-Length` headers, and mismatched buffered body lengths in this early plain-HTTP slice.
 - Shared Phase 2 HTTP response read-loop hardening in `adapter-common`: full-response reads now use one helper that enforces byte limits and maps timeout-style socket reads before response parsing.

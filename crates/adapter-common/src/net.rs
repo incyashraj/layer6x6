@@ -297,7 +297,7 @@ pub fn parse_plain_http_response(bytes: &[u8]) -> Result<PlainHttpResponse, Plai
         if body.len() > content_length {
             return Err(PlainHttpError::InvalidResponse);
         }
-        if !body.is_empty() && body.len() < content_length {
+        if body.len() < content_length {
             return Err(PlainHttpError::InvalidResponse);
         }
     }
@@ -758,6 +758,10 @@ mod tests {
         assert_eq!(
             parse_plain_http_response(b"HTTP/1.1 200 OK\r\nContent-Length: 8\r\n\r\nbody")
                 .unwrap_err(),
+            PlainHttpError::InvalidResponse
+        );
+        assert_eq!(
+            parse_plain_http_response(b"HTTP/1.1 200 OK\r\nContent-Length: 1\r\n\r\n").unwrap_err(),
             PlainHttpError::InvalidResponse
         );
     }
