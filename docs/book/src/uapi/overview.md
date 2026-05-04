@@ -272,7 +272,9 @@ do not change permission behavior, and `..` traversal is rejected before host
 I/O. Relative sandbox paths also get a first symlink escape check: existing
 targets must resolve inside the sandbox root, and new files must have a real
 parent inside the sandbox root. That keeps a simple `fixtures/file.txt` style
-path from quietly following a symlink to another part of the host.
+path from quietly following a symlink to another part of the host. On Unix
+hosts, file open also refuses a final symlink during the actual open call. That
+shrinks the race between checking a path and opening it.
 
 The HTTP path is only a first useful slice: good enough for localhost and fixed
 test servers, not yet a full web client. `get(url)` remains the simple body-only

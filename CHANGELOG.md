@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Unix host file opens now use a no-follow final-symlink flag for Phase 2 sandbox paths, reducing open-time symlink race risk.
 - Symlink escape checks for relative Phase 2 filesystem paths resolved through the runtime sandbox root.
 - `layer36 run --sandbox-root <dir>` and runtime sandbox-root resolution for relative Phase 2 filesystem paths.
 - Shared Phase 2 filesystem path normalization in `adapter-common`, with runtime filesystem calls and policy resource matching using the same rules.

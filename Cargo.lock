@@ -969,6 +969,7 @@ dependencies = [
  "layer36-adapter-common",
  "layer36-manifest",
  "layer36-policy",
+ "libc",
  "thiserror 2.0.18",
  "tracing",
  "wasmtime",

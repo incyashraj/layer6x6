@@ -641,6 +641,7 @@ impl FsAdapter for LocalPhase2Adapter {
         };
         let path = self.resolve_fs_path(path, missing_leaf)?;
         let mut opts = std::fs::OpenOptions::new();
+        apply_no_follow_final_symlink(&mut opts);
         match mode {
             OpenMode::Read => {
                 opts.read(true);
@@ -748,6 +749,16 @@ impl FsAdapter for LocalPhase2Adapter {
         std::fs::rename(from, to).map_err(map_io_error)
     }
 }
+
+#[cfg(all(feature = "phase2-bindings", unix))]
+fn apply_no_follow_final_symlink(opts: &mut std::fs::OpenOptions) {
+    use std::os::unix::fs::OpenOptionsExt;
+
+    opts.custom_flags(libc::O_NOFOLLOW);
+}
+
+#[cfg(all(feature = "phase2-bindings", not(unix)))]
+fn apply_no_follow_final_symlink(_opts: &mut std::fs::OpenOptions) {}
 
 #[cfg(feature = "phase2-bindings")]
 impl NetAdapter for LocalPhase2Adapter {
@@ -908,6 +919,11 @@ fn file_stat_from_metadata(metadata: std::fs::Metadata) -> FileStat {
 
 #[cfg(feature = "phase2-bindings")]
 fn map_io_error(err: std::io::Error) -> AdapterError {
+    #[cfg(unix)]
+    if err.raw_os_error() == Some(libc::ELOOP) {
+        return AdapterError::PermissionDenied;
+    }
+
     match err.kind() {
         std::io::ErrorKind::NotFound => AdapterError::NotFound,
         std::io::ErrorKind::PermissionDenied => AdapterError::PermissionDenied,
@@ -1107,7 +1123,10 @@ mod tests {
 
         let outside_file = outside.join("secret.txt");
         std::fs::write(&outside_file, b"secret").expect("write outside file");
+        let inside_file = sandbox.join("inside.txt");
+        std::fs::write(&inside_file, b"inside").expect("write inside file");
         symlink(&outside_file, sandbox.join("secret-link.txt")).expect("create file symlink");
+        symlink(&inside_file, sandbox.join("inside-link.txt")).expect("create inside file symlink");
         symlink(&outside, sandbox.join("outside-dir")).expect("create directory symlink");
         symlink(outside.join("missing.txt"), sandbox.join("broken-link.txt"))
             .expect("create broken file symlink");
@@ -1129,10 +1148,14 @@ mod tests {
         let broken_write_err = adapter
             .open("broken-link.txt", OpenMode::Write)
             .expect_err("write through broken symlink should be denied");
+        let inside_link_err = adapter
+            .open("inside-link.txt", OpenMode::Read)
+            .expect_err("final symlink should not be followed during open");
 
         assert_eq!(read_err, AdapterError::PermissionDenied);
         assert_eq!(write_err, AdapterError::PermissionDenied);
         assert_eq!(broken_write_err, AdapterError::PermissionDenied);
+        assert_eq!(inside_link_err, AdapterError::PermissionDenied);
 
         drop(adapter);
         std::fs::remove_dir_all(temp).expect("remove fixture directory");
