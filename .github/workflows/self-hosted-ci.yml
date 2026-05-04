@@ -28,6 +28,8 @@ jobs:
       - name: Install local CI tools
         shell: bash
         run: |
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.cargo/bin:$PATH"
           if ! command -v cargo-component >/dev/null 2>&1; then
             cargo install cargo-component --locked --version 0.21.1
           fi
@@ -72,4 +74,4 @@ jobs:
         run: cargo deny check advisories licenses bans sources
 
       - name: Docs
-        run: mdbook build docs/book
+        run: '"$HOME/.cargo/bin/mdbook" build docs/book'
