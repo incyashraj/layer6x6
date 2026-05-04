@@ -127,9 +127,11 @@ Unix-millisecond values fail with a clear conversion error.
 
 Locale has the same first shared path now. The runtime uses common helper code
 for `LC_ALL`/`LANG` locale detection, `TZ` fallback, basic locale normalization,
-and deterministic baseline date/number formatting. Real ICU4X formatting and
-native per-OS locale discovery are still open, but the early behavior now has
-one home instead of being copied in the runtime.
+deterministic baseline date/number formatting, and locale-tag canonicalization
+to stable language/script/region casing with a safe fallback for malformed
+values. Real ICU4X formatting and native per-OS locale discovery are still
+open, but the early behavior now has one home instead of being copied in the
+runtime.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2

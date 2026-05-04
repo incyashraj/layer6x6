@@ -258,14 +258,65 @@ pub fn normalize_locale_tag(raw: Option<&str>) -> String {
         return "en-US".to_string();
     }
 
-    tag.replace('_', "-")
+    canonicalize_locale_tag(tag).unwrap_or_else(|| "en-US".to_string())
 }
 
 pub fn normalize_timezone(raw: Option<&str>) -> String {
     raw.map(str::trim)
-        .filter(|value| !value.is_empty())
+        .filter(|value| !value.is_empty() && !value.chars().any(|ch| ch == '\0' || ch.is_control()))
         .unwrap_or("UTC")
         .to_string()
+}
+
+fn canonicalize_locale_tag(tag: &str) -> Option<String> {
+    let portable = tag.replace('_', "-");
+    let mut pieces = portable.split('-');
+    let language = pieces.next()?;
+
+    if language.is_empty() || !is_ascii_alnum(language) {
+        return None;
+    }
+
+    let mut normalized = Vec::new();
+    normalized.push(language.to_ascii_lowercase());
+
+    for piece in pieces {
+        if piece.is_empty() || !is_ascii_alnum(piece) {
+            return None;
+        }
+
+        let value = if piece.len() == 4 && piece.chars().all(|ch| ch.is_ascii_alphabetic()) {
+            title_case_ascii(piece)
+        } else if piece.len() == 2 && piece.chars().all(|ch| ch.is_ascii_alphabetic()) {
+            piece.to_ascii_uppercase()
+        } else if piece.len() == 3 && piece.chars().all(|ch| ch.is_ascii_digit()) {
+            piece.to_string()
+        } else {
+            piece.to_ascii_lowercase()
+        };
+
+        normalized.push(value);
+    }
+
+    Some(normalized.join("-"))
+}
+
+fn is_ascii_alnum(value: &str) -> bool {
+    value.chars().all(|ch| ch.is_ascii_alphanumeric())
+}
+
+fn title_case_ascii(value: &str) -> String {
+    let mut chars = value.chars();
+    let Some(first) = chars.next() else {
+        return String::new();
+    };
+
+    let mut out = String::new();
+    out.push(first.to_ascii_uppercase());
+    for ch in chars {
+        out.push(ch.to_ascii_lowercase());
+    }
+    out
 }
 
 #[cfg(test)]
@@ -353,5 +404,28 @@ mod tests {
             HostLocale::format_date(1_234_567_890, "UTC", DateStyle::Full, &locale),
             "Thu, 1970-01-15 06:56:07.890 UTC (de-DE)"
         );
+    }
+
+    #[test]
+    fn locale_canonicalization_normalizes_case_and_structure() {
+        assert_eq!(normalize_locale_tag(Some("EN_us")), "en-US");
+        assert_eq!(normalize_locale_tag(Some("zh_hant_tw")), "zh-Hant-TW");
+        assert_eq!(
+            normalize_locale_tag(Some("sr_latn_rs_revised")),
+            "sr-Latn-RS-revised"
+        );
+    }
+
+    #[test]
+    fn malformed_locale_falls_back_to_default() {
+        assert_eq!(normalize_locale_tag(Some("en--US")), "en-US");
+        assert_eq!(normalize_locale_tag(Some("_")), "en-US");
+        assert_eq!(normalize_locale_tag(Some("en_US@bad*mod")), "en-US");
+    }
+
+    #[test]
+    fn timezone_rejects_control_characters() {
+        assert_eq!(normalize_timezone(Some("UTC\nInjected")), "UTC");
+        assert_eq!(normalize_timezone(Some("Asia/Singapore")), "Asia/Singapore");
     }
 }
