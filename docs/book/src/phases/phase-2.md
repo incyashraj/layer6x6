@@ -101,6 +101,8 @@ limits use one helper across adapters.
 Response integrity checks now reject unsupported response `Transfer-Encoding`
 and conflicting or mismatched `Content-Length` shapes in this early plain-HTTP
 slice.
+Request framing now also enforces a shared buffered body size limit so this
+early plain-HTTP path cannot consume unbounded request payloads.
 Shared host parsing now also rejects invalid domain-label forms and invalid
 numeric IPv4 literals so URL and capability-path validation stay aligned.
 The runtime's network capability gate now also uses a shared endpoint parser for

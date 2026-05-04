@@ -876,6 +876,7 @@ fn map_plain_http_error(err: PlainHttpError) -> AdapterError {
         PlainHttpError::UnsupportedScheme => AdapterError::Unsupported,
         PlainHttpError::InvalidUrl => AdapterError::InvalidPath,
         PlainHttpError::InvalidHeader => AdapterError::Protocol("invalid HTTP header".to_string()),
+        PlainHttpError::BodyTooLarge => AdapterError::BodyTooLarge,
         PlainHttpError::InvalidResponse => {
             AdapterError::Protocol("invalid HTTP response".to_string())
         }

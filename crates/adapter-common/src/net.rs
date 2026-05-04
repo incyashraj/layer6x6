@@ -52,6 +52,7 @@ const MAX_HTTP_HEADERS: usize = 64;
 const MAX_HTTP_HEADER_NAME_BYTES: usize = 128;
 const MAX_HTTP_HEADER_VALUE_BYTES: usize = 4 * 1024;
 const MAX_HTTP_AUTHORITY_BYTES: usize = 255;
+const MAX_HTTP_BODY_BYTES: usize = 1024 * 1024;
 
 /// A parsed network endpoint used for capability checks.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -183,6 +184,9 @@ pub fn build_plain_http_request(
 ) -> Result<Vec<u8>, PlainHttpError> {
     if req.headers.len() > MAX_HTTP_HEADERS {
         return Err(PlainHttpError::InvalidHeader);
+    }
+    if req.body.len() > MAX_HTTP_BODY_BYTES {
+        return Err(PlainHttpError::BodyTooLarge);
     }
 
     let method = req.method.as_str();
@@ -436,6 +440,8 @@ pub enum PlainHttpError {
     InvalidUrl,
     #[error("invalid HTTP header")]
     InvalidHeader,
+    #[error("HTTP body exceeded byte limit")]
+    BodyTooLarge,
     #[error("invalid HTTP response")]
     InvalidResponse,
     #[error("host-controlled HTTP header")]
@@ -614,6 +620,21 @@ mod tests {
         assert_eq!(
             build_plain_http_request(&long_value, &url).unwrap_err(),
             PlainHttpError::InvalidHeader
+        );
+    }
+
+    #[test]
+    fn request_builder_rejects_body_limit() {
+        let url = PlainHttpUrl::parse("http://127.0.0.1:8080/").expect("parse HTTP URL");
+        let req = PlainHttpRequest {
+            method: PlainHttpMethod::Post,
+            headers: Vec::new(),
+            body: vec![b'x'; MAX_HTTP_BODY_BYTES + 1],
+        };
+
+        assert_eq!(
+            build_plain_http_request(&req, &url).unwrap_err(),
+            PlainHttpError::BodyTooLarge
         );
     }
 
