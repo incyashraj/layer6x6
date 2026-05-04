@@ -35,6 +35,8 @@ use layer36_adapter_common::net::{
     build_plain_http_request, PlainHttpError, PlainHttpHeader, PlainHttpMethod, PlainHttpRequest,
     PlainHttpUrl,
 };
+#[cfg(feature = "phase2-bindings")]
+use layer36_adapter_common::path::{LogicalPath, PathError};
 use layer36_policy::SessionPolicy;
 use uapi::UapiGuard;
 use uapi_dispatch::{
@@ -551,6 +553,7 @@ impl IoAdapter for LocalPhase2Adapter {
 #[cfg(feature = "phase2-bindings")]
 impl FsAdapter for LocalPhase2Adapter {
     fn open(&self, path: &str, mode: OpenMode) -> std::result::Result<FileHandle, AdapterError> {
+        let path = normalize_fs_path(path)?;
         let mut opts = std::fs::OpenOptions::new();
         match mode {
             OpenMode::Read => {
@@ -566,7 +569,7 @@ impl FsAdapter for LocalPhase2Adapter {
                 opts.append(true).create(true);
             }
         }
-        let file = opts.open(path).map_err(map_io_error)?;
+        let file = opts.open(path.to_path_buf()).map_err(map_io_error)?;
         Ok(self.insert_resource(LocalResource::File(file)))
     }
 
@@ -617,14 +620,16 @@ impl FsAdapter for LocalPhase2Adapter {
     }
 
     fn stat(&self, path: &str) -> std::result::Result<FileStat, AdapterError> {
-        std::fs::metadata(path)
+        let path = normalize_fs_path(path)?;
+        std::fs::metadata(path.to_path_buf())
             .map(file_stat_from_metadata)
             .map_err(map_io_error)
     }
 
     fn list(&self, path: &str) -> std::result::Result<Vec<String>, AdapterError> {
+        let path = normalize_fs_path(path)?;
         let mut entries = Vec::new();
-        for entry in std::fs::read_dir(path).map_err(map_io_error)? {
+        for entry in std::fs::read_dir(path.to_path_buf()).map_err(map_io_error)? {
             let entry = entry.map_err(map_io_error)?;
             let name = entry
                 .file_name()
@@ -637,19 +642,24 @@ impl FsAdapter for LocalPhase2Adapter {
     }
 
     fn remove_file(&self, path: &str) -> std::result::Result<(), AdapterError> {
-        std::fs::remove_file(path).map_err(map_io_error)
+        let path = normalize_fs_path(path)?;
+        std::fs::remove_file(path.to_path_buf()).map_err(map_io_error)
     }
 
     fn remove_dir(&self, path: &str) -> std::result::Result<(), AdapterError> {
-        std::fs::remove_dir(path).map_err(map_io_error)
+        let path = normalize_fs_path(path)?;
+        std::fs::remove_dir(path.to_path_buf()).map_err(map_io_error)
     }
 
     fn mkdir(&self, path: &str) -> std::result::Result<(), AdapterError> {
-        std::fs::create_dir(path).map_err(map_io_error)
+        let path = normalize_fs_path(path)?;
+        std::fs::create_dir(path.to_path_buf()).map_err(map_io_error)
     }
 
     fn rename(&self, from: &str, to: &str) -> std::result::Result<(), AdapterError> {
-        std::fs::rename(from, to).map_err(map_io_error)
+        let from = normalize_fs_path(from)?;
+        let to = normalize_fs_path(to)?;
+        std::fs::rename(from.to_path_buf(), to.to_path_buf()).map_err(map_io_error)
     }
 }
 
@@ -715,6 +725,20 @@ fn map_plain_http_error(err: PlainHttpError) -> AdapterError {
         PlainHttpError::InvalidHeader => AdapterError::Protocol("invalid HTTP header".to_string()),
         PlainHttpError::HostControlledHeader => {
             AdapterError::Protocol("host-controlled HTTP header".to_string())
+        }
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn normalize_fs_path(path: &str) -> std::result::Result<LogicalPath, AdapterError> {
+    LogicalPath::parse(path).map_err(map_path_error)
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn map_path_error(err: PathError) -> AdapterError {
+    match err {
+        PathError::Empty | PathError::ControlCharacter | PathError::ParentTraversal => {
+            AdapterError::InvalidPath
         }
     }
 }
@@ -936,6 +960,44 @@ mod tests {
         assert_eq!(parsed.host, "127.0.0.1");
         assert_eq!(parsed.port, 8080);
         assert_eq!(parsed.path_and_query, "/?name=layer36");
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn fs_path_normalizer_rejects_parent_traversal_before_host_io() {
+        let err = normalize_fs_path("fixtures/../secret.txt").expect_err("path should be rejected");
+
+        assert_eq!(err, AdapterError::InvalidPath);
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn local_fs_adapter_normalizes_portable_separators() {
+        let temp =
+            std::env::temp_dir().join(format!("layer36-path-normalize-{}", std::process::id()));
+        let nested = temp.join("fixtures").join("public");
+        std::fs::create_dir_all(&nested).expect("create fixture directory");
+        let file = nested.join("note.txt");
+        std::fs::write(&file, b"hello").expect("write fixture file");
+
+        let adapter = LocalPhase2Adapter::new(
+            Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            Vec::new(),
+            1024,
+        );
+        let path = format!("{}/./fixtures\\public//note.txt", temp.display());
+        let handle = adapter
+            .open(&path, OpenMode::Read)
+            .expect("normalized path should open");
+        let bytes = adapter.read(&handle, 5).expect("read file");
+
+        assert_eq!(bytes, b"hello");
+
+        drop(handle);
+        drop(adapter);
+        std::fs::remove_file(file).expect("remove fixture file");
+        std::fs::remove_dir_all(temp).expect("remove fixture directory");
     }
 
     #[cfg(feature = "phase2-bindings")]

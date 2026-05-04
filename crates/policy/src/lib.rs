@@ -6,6 +6,7 @@
 
 use std::{collections::BTreeSet, str::FromStr};
 
+use layer36_adapter_common::path::LogicalPath;
 use layer36_manifest::{default_granted_capabilities, Capability, Manifest, ManifestError};
 use thiserror::Error;
 
@@ -87,8 +88,27 @@ fn capability_allows(grant: &Capability, required: &Capability) -> bool {
 
     match (grant.resource(), required.resource()) {
         (None, None) => true,
-        (Some(grant), Some(required)) => resource_pattern_matches(grant, required),
+        (Some(grant_resource), Some(required_resource)) => {
+            let Some(grant_resource) = normalize_resource(grant.module(), grant_resource) else {
+                return false;
+            };
+            let Some(required_resource) = normalize_resource(required.module(), required_resource)
+            else {
+                return false;
+            };
+            resource_pattern_matches(&grant_resource, &required_resource)
+        }
         _ => false,
+    }
+}
+
+fn normalize_resource(module: &str, resource: &str) -> Option<String> {
+    if module == "fs" {
+        LogicalPath::parse(resource)
+            .ok()
+            .map(|path| path.as_str().to_string())
+    } else {
+        Some(resource.to_string())
     }
 }
 
@@ -195,6 +215,26 @@ mod tests {
         let required = "fs.read:./notes/today.txt".parse().expect("parse required");
 
         assert!(policy.allows(&required));
+    }
+
+    #[test]
+    fn fs_resource_matching_uses_shared_path_normalization() {
+        let grant = "fs.read:./notes/**".parse().expect("parse grant");
+        let policy = SessionPolicy::from_grants([grant]);
+        let required = "fs.read:notes\\today.txt".parse().expect("parse required");
+
+        assert!(policy.allows(&required));
+    }
+
+    #[test]
+    fn fs_resource_matching_rejects_parent_traversal() {
+        let grant = "fs.read:./notes/**".parse().expect("parse grant");
+        let policy = SessionPolicy::from_grants([grant]);
+        let required = "fs.read:./notes/../secret.txt"
+            .parse()
+            .expect("parse required");
+
+        assert!(!policy.allows(&required));
     }
 
     #[test]

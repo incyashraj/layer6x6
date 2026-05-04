@@ -956,6 +956,7 @@ dependencies = [
 name = "layer36-policy"
 version = "0.1.0-dev"
 dependencies = [
+ "layer36-adapter-common",
  "layer36-manifest",
  "thiserror 2.0.18",
 ]

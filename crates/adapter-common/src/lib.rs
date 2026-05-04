@@ -4,3 +4,4 @@
 //! macOS, Windows, and later mobile hosts.
 
 pub mod net;
+pub mod path;
