@@ -89,6 +89,7 @@ cargo run -p layer36-cli -- manifest check manifest.toml
 cargo run -p layer36-cli -- run app.wasm --grant fs.read:~/Documents/notes/**
 cargo run -p layer36-cli -- run app.wasm --auto-grant
 cargo run -p layer36-cli -- run --prompt app.wasm
+cargo run -p layer36-cli -- run --dump-caps app.wasm
 ```
 
 For now, this starts as a launch-time session check. If a required capability is
@@ -100,6 +101,10 @@ current run session.
 The manifest entry is checked too. If `manifest.toml` says `entry = "app.wasm"`
 but you run a different file, Layer36 stops before grant resolution. That keeps
 a manifest from accidentally applying to the wrong component.
+
+`--dump-caps` is for debugging. It resolves the same session policy as a real
+run, prints the effective capabilities, and exits before the component starts.
+That makes it easier to understand why a UAPI call is allowed or denied.
 
 The runtime now also has the next piece: a UAPI guard. It is small, but it is
 the path every future adapter should use before it touches the host OS.

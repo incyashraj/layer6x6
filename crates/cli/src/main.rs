@@ -50,6 +50,10 @@ enum Command {
         #[arg(long)]
         prompt: bool,
 
+        /// Print the effective session capabilities and exit before running the component.
+        #[arg(long)]
+        dump_caps: bool,
+
         /// Fixed wall-clock time in milliseconds since Unix epoch. Intended for deterministic tests.
         #[arg(long, hide = true)]
         test_time: Option<u64>,
@@ -108,6 +112,7 @@ fn run() -> Result<u8> {
             grant,
             auto_grant,
             prompt,
+            dump_caps,
             test_time,
             app_args,
         } => run_component(RunRequest {
@@ -118,6 +123,7 @@ fn run() -> Result<u8> {
             grants: grant,
             auto_grant,
             prompt,
+            dump_caps,
             test_time_millis: test_time,
             app_args,
         }),
@@ -140,6 +146,7 @@ struct RunRequest {
     grants: Vec<String>,
     auto_grant: bool,
     prompt: bool,
+    dump_caps: bool,
     test_time_millis: Option<u64>,
     app_args: Vec<String>,
 }
@@ -179,6 +186,11 @@ fn run_component(request: RunRequest) -> Result<u8> {
             }
             return Ok(5);
         }
+    }
+
+    if request.dump_caps {
+        print_effective_capabilities(&policy);
+        return Ok(0);
     }
 
     let config = Config {
@@ -281,6 +293,13 @@ fn parse_grant_response(input: &str, caps: &[Capability]) -> Result<Vec<Capabili
     }
 
     Ok(selected)
+}
+
+fn print_effective_capabilities(policy: &SessionPolicy) {
+    println!("Effective capabilities");
+    for cap in policy.grants() {
+        println!("  - {cap}");
+    }
 }
 
 struct LoadedManifest {

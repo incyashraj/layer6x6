@@ -505,6 +505,27 @@ fn run_with_manifest_and_explicit_grant_reaches_runtime() {
 }
 
 #[test]
+fn run_dump_caps_prints_effective_policy_without_running_component() {
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let wasm_path = dir.path().join("app.wasm");
+    std::fs::write(&wasm_path, b"not actually wasm").expect("write wasm placeholder");
+
+    let output = layer36()
+        .args(["run", "--dump-caps", "--grant", "fs.read:./data/**"])
+        .arg(&wasm_path)
+        .output()
+        .expect("run layer36 dump caps");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stdout.contains("Effective capabilities"));
+    assert!(stdout.contains("io.stdout"));
+    assert!(stdout.contains("fs.read:./data/**"));
+    assert!(!stderr.contains("invalid wasm component"));
+}
+
+#[test]
 fn run_with_manifest_auto_grant_reaches_runtime() {
     let dir = tempfile::tempdir().expect("create temp dir");
     let wasm_path = dir.path().join("app.wasm");

@@ -99,6 +99,10 @@ the app entry is `app.wasm`, then `layer36 run` must be pointed at that same
 file. Running a different component with that manifest is rejected before any
 grant prompt or runtime execution.
 
+For debugging, `layer36 run --dump-caps app.wasm` now prints the effective
+session capabilities and exits before the component starts. It is a simple way
+to see what the current grant resolution actually produced.
+
 The proof apps are:
 
 - `layer36-curl`
