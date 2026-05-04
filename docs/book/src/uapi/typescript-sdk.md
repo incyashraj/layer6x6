@@ -12,6 +12,8 @@ What exists now:
 - Type declarations for the Layer36 WIT import modules.
 - Helpers for arguments, stdout, stderr, file reads and writes, HTTP GET, time,
   and locale calls.
+- Example source files for a TypeScript clock and curl-style CLI.
+- A dependency-free shape check that guards the package layout and import names.
 
 What still needs proof:
 
@@ -34,6 +36,11 @@ if (!url) {
 
 io.print(net.getText(url));
 ```
+
+The longer examples live here:
+
+- `packages/sdk-ts/examples/layer36-clock.ts`
+- `packages/sdk-ts/examples/layer36-curl.ts`
 
 This code is meant to compile into a WebAssembly component with `jco`, then run
 inside Layer36. It should not call Node filesystem or network APIs directly.
@@ -65,3 +72,15 @@ npm install -D @bytecodealliance/jco typescript
 
 We are keeping that install out of the normal CI path for now so push checks stay
 cheap.
+
+## Current Check
+
+The normal CI path runs a small package shape check:
+
+```bash
+npm --prefix packages/sdk-ts run check:shape
+```
+
+This does not compile a component. It catches simple mistakes such as missing
+helper files, wrong package metadata, accidental `wasi:*` imports, or missing
+Layer36 import declarations.

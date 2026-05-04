@@ -288,6 +288,8 @@ jobs:
           echo "$HOME/bin" >> $GITHUB_PATH
       - name: Build docs
         run: mdbook build docs/book
+      - name: Check TypeScript SDK shape
+        run: npm --prefix packages/sdk-ts run check:shape
 
   # ──────────────────────────────────────────────
   # 10. Benchmark smoke + warning-only regression check

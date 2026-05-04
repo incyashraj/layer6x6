@@ -19,13 +19,15 @@
     }
   },
   "files": [
+    "examples",
     "src",
     "README.md",
     "package.json",
     "tsconfig.json"
   ],
   "scripts": {
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "check:shape": "node scripts/check-shape.mjs"
   },
   "peerDependencies": {
     "typescript": ">=5.4"

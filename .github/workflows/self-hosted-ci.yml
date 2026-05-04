@@ -95,3 +95,6 @@ jobs:
 
       - name: Docs
         run: '"$HOME/.cargo/bin/mdbook" build docs/book'
+
+      - name: Check TypeScript SDK shape
+        run: npm --prefix packages/sdk-ts run check:shape
