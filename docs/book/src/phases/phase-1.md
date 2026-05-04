@@ -48,3 +48,6 @@ three desktop hosts.
 
 These are governance and validation gates. The engineering base is ready for
 Phase 2.
+
+For new app work, use the Phase 2 UAPI path. See
+[Migrating From Phase 1 To Phase 2](../phase2/migrating-from-phase1.md).

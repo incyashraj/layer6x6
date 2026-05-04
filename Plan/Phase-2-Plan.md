@@ -1796,7 +1796,7 @@ Additional ADRs as decisions surface. Rule of thumb: if you have to ask "should 
 - [x] WIT style guide published.
 - [x] UAPI reference published.
 - [ ] Three tutorials published (one per language).
-- [ ] Migration note from Phase 1 published.
+- [x] Migration note from Phase 1 published.
 - [ ] Threat model v0.2 published.
 
 ### ADRs
@@ -2156,6 +2156,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-DEV-01 | Manifest generator | 2026-05-04 | Added `layer36 manifest init` to render a validated starter `manifest.toml` from app id, name, entry, and repeated `--cap` values, with stdout output by default and guarded file writes through `--output` plus `--force`. |
 | P2-DEV-02 | Manifest explanation | 2026-05-04 | Added `layer36 manifest explain` to print app identity and each requested capability with required/default-grant/launch-grant/resource/rationale details. |
 | P2-DOC-03A | First Rust UAPI walkthrough | 2026-05-04 | Added `docs/book/src/uapi/first-rust-cli.md`, a repo-local tutorial for building the Rust cat sample, generating and explaining a manifest, running with `--auto-grant`, and observing the missing-grant denial path. |
+| P2-DOC-04 | Phase 1 to Phase 2 migration note | 2026-05-04 | Added `docs/book/src/phase2/migrating-from-phase1.md`, explaining how the Phase 1 `print`/`exit` proof interface maps to Phase 2 UAPI stdout, `Guest::run` return codes, manifests, and session grants. |
 | P2-BIND-01A | Rust SDK crate skeleton | 2026-05-04 | Added `crates/bindings-rust` as package `layer36`, with first wrappers over generated guest bindings and the Rust sample apps migrated to the SDK facade. |
 | P2-BIND-01B | Rust SDK helper layer and guide | 2026-05-04 | Added app-facing helpers for args, stream text output, file read/write, HTTP text, time, and locale; documented them in `docs/book/src/uapi/rust-sdk.md`; verified samples still import only Layer36 UAPI. |
 | P2-BIND-01C | Rust SDK API docs and sample cleanup | 2026-05-04 | Added crate-level SDK docs, rustdoc comments for public helpers, owned argument helpers, sample usage of those helpers, and a self-hosted `cargo doc -p layer36 --no-deps --offline` check. |

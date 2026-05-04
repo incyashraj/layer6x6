@@ -41,6 +41,7 @@
   - [Phase 1 Retrospective](phase1/retro.md)
 - [Phase 2: UAPI v0.1](phases/phase-2.md)
   - [Dispatch Benchmarks](phase2/benchmarks.md)
+  - [Migrating From Phase 1](phase2/migrating-from-phase1.md)
 - [Phase 3: UI + Graphics](phases/phase-3.md)
 - [Phase 4: Mobile](phases/phase-4.md)
 - [Phase 5: Developer SDK](phases/phase-5.md)

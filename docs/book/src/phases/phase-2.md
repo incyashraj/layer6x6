@@ -114,4 +114,7 @@ The proof apps are:
 If Phase 2 works, those apps should produce the same output on Linux, macOS, and
 Windows while running through the same Layer36 runtime model.
 
+If you used the Phase 1 proof app, read
+[Migrating From Phase 1 To Phase 2](../phase2/migrating-from-phase1.md).
+
 See [`Plan/Phase-2-Plan.md`](https://github.com/incyashraj/layer6x6/blob/main/Plan/Phase-2-Plan.md).
