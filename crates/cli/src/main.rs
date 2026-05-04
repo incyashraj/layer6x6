@@ -87,6 +87,10 @@ enum ManifestCommand {
     Check {
         /// Path to manifest.toml.
         file: PathBuf,
+
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = ManifestOutputFormat::Text)]
+        format: ManifestOutputFormat,
     },
     /// Explain app identity and capability grants in a manifest.toml file.
     Explain {
@@ -94,8 +98,8 @@ enum ManifestCommand {
         file: PathBuf,
 
         /// Output format.
-        #[arg(long, value_enum, default_value_t = ManifestExplainFormat::Text)]
-        format: ManifestExplainFormat,
+        #[arg(long, value_enum, default_value_t = ManifestOutputFormat::Text)]
+        format: ManifestOutputFormat,
     },
     /// Create a starter Phase 2 manifest.toml.
     Init {
@@ -128,11 +132,15 @@ enum ManifestCommand {
         force: bool,
     },
     /// Print the Phase 2 capability strings understood by this runtime.
-    Capabilities,
+    Capabilities {
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = ManifestOutputFormat::Text)]
+        format: ManifestOutputFormat,
+    },
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]
-enum ManifestExplainFormat {
+enum ManifestOutputFormat {
     Text,
     Json,
 }
@@ -190,7 +198,7 @@ fn run() -> Result<u8> {
         }
         Command::Doctor => doctor(),
         Command::Manifest { command } => match command {
-            ManifestCommand::Check { file } => check_manifest(&file),
+            ManifestCommand::Check { file, format } => check_manifest(&file, format),
             ManifestCommand::Explain { file, format } => explain_manifest(&file, format),
             ManifestCommand::Init {
                 id,
@@ -209,7 +217,7 @@ fn run() -> Result<u8> {
                 output,
                 force,
             }),
-            ManifestCommand::Capabilities => print_manifest_capabilities(),
+            ManifestCommand::Capabilities { format } => print_manifest_capabilities(format),
         },
     }
 }
@@ -496,10 +504,21 @@ fn doctor() -> Result<u8> {
     Ok(0)
 }
 
-fn check_manifest(file: &Path) -> Result<u8> {
+fn check_manifest(file: &Path, format: ManifestOutputFormat) -> Result<u8> {
     let manifest = Manifest::parse_file(file)?;
     let declared_caps = manifest.declared_capabilities()?;
     let required_caps = manifest.required_capabilities()?;
+
+    if format == ManifestOutputFormat::Json {
+        let summary = ManifestCheckSummary {
+            ok: true,
+            app: ManifestAppExplanation::from_manifest(&manifest),
+            capabilities: declared_caps.len(),
+            required_capabilities: required_caps.len(),
+        };
+        println!("{}", serde_json::to_string_pretty(&summary)?);
+        return Ok(0);
+    }
 
     println!("Manifest OK");
     println!("app id          {}", manifest.app.id);
@@ -512,11 +531,11 @@ fn check_manifest(file: &Path) -> Result<u8> {
     Ok(0)
 }
 
-fn explain_manifest(file: &Path, format: ManifestExplainFormat) -> Result<u8> {
+fn explain_manifest(file: &Path, format: ManifestOutputFormat) -> Result<u8> {
     let manifest = Manifest::parse_file(file)?;
     let declared_caps = manifest.declared_capabilities()?;
 
-    if format == ManifestExplainFormat::Json {
+    if format == ManifestOutputFormat::Json {
         let explanation = ManifestExplanation::from_manifest(&manifest, &declared_caps);
         println!("{}", serde_json::to_string_pretty(&explanation)?);
         return Ok(0);
@@ -556,6 +575,14 @@ fn explain_manifest(file: &Path, format: ManifestExplainFormat) -> Result<u8> {
 }
 
 #[derive(Debug, Serialize)]
+struct ManifestCheckSummary {
+    ok: bool,
+    app: ManifestAppExplanation,
+    capabilities: usize,
+    required_capabilities: usize,
+}
+
+#[derive(Debug, Serialize)]
 struct ManifestExplanation {
     app: ManifestAppExplanation,
     capabilities: Vec<CapabilityExplanation>,
@@ -583,13 +610,7 @@ impl ManifestExplanation {
             .collect();
 
         Self {
-            app: ManifestAppExplanation {
-                id: manifest.app.id.clone(),
-                name: manifest.app.name.clone(),
-                version: manifest.app.version.clone(),
-                entry: manifest.app.entry.display().to_string(),
-                world: manifest.app.world.clone(),
-            },
+            app: ManifestAppExplanation::from_manifest(manifest),
             capabilities,
         }
     }
@@ -602,6 +623,18 @@ struct ManifestAppExplanation {
     version: String,
     entry: String,
     world: String,
+}
+
+impl ManifestAppExplanation {
+    fn from_manifest(manifest: &Manifest) -> Self {
+        Self {
+            id: manifest.app.id.clone(),
+            name: manifest.app.name.clone(),
+            version: manifest.app.version.clone(),
+            entry: manifest.app.entry.display().to_string(),
+            world: manifest.app.world.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -663,7 +696,22 @@ fn init_manifest(request: ManifestInitRequest) -> Result<u8> {
     Ok(0)
 }
 
-fn print_manifest_capabilities() -> Result<u8> {
+fn print_manifest_capabilities(format: ManifestOutputFormat) -> Result<u8> {
+    if format == ManifestOutputFormat::Json {
+        let specs = supported_capability_specs()
+            .iter()
+            .map(|spec| CapabilitySpecExplanation {
+                capability: spec.display_pattern(),
+                module: spec.module().to_string(),
+                action: spec.action().to_string(),
+                resource: spec.resource().map(ToOwned::to_owned),
+                default_grant: spec.default_granted(),
+            })
+            .collect::<Vec<_>>();
+        println!("{}", serde_json::to_string_pretty(&specs)?);
+        return Ok(0);
+    }
+
     println!("Phase 2 capabilities");
     println!("capability                         default");
     for spec in supported_capability_specs() {
@@ -675,6 +723,15 @@ fn print_manifest_capabilities() -> Result<u8> {
     }
 
     Ok(0)
+}
+
+#[derive(Debug, Serialize)]
+struct CapabilitySpecExplanation {
+    capability: String,
+    module: String,
+    action: String,
+    resource: Option<String>,
+    default_grant: bool,
 }
 
 fn yes_no(value: bool) -> &'static str {

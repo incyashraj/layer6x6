@@ -106,6 +106,10 @@ cargo run -p layer36-cli -- manifest explain apps/layer36-cat/manifest.toml
 For CI checks or editor tooling, use the JSON form:
 
 ```bash
+cargo run -p layer36-cli -- manifest check \
+  --format json \
+  apps/layer36-cat/manifest.toml
+
 cargo run -p layer36-cli -- manifest explain \
   --format json \
   apps/layer36-cat/manifest.toml

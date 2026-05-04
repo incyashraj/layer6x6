@@ -104,6 +104,48 @@ fn manifest_check_validates_phase_2_manifest() {
 }
 
 #[test]
+fn manifest_check_json_reports_summary() {
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let manifest_path = dir.path().join("manifest.toml");
+    std::fs::write(
+        &manifest_path,
+        r#"
+            [app]
+            id = "com.example.hello"
+            name = "Hello"
+            version = "1.0.0"
+            entry = "hello.wasm"
+            world = "layer36:app/cli@0.1.0"
+
+            [[capabilities]]
+            cap = "io.stdout"
+            rationale = "Print output"
+            required = true
+        "#,
+    )
+    .expect("write manifest");
+
+    let output = layer36()
+        .args(["manifest", "check", "--format", "json"])
+        .arg(&manifest_path)
+        .output()
+        .expect("run manifest check json");
+
+    assert!(
+        output.status.success(),
+        "manifest check json failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains(r#""ok": true"#));
+    assert!(stdout.contains(r#""id": "com.example.hello""#));
+    assert!(stdout.contains(r#""capabilities": 1"#));
+    assert!(stdout.contains(r#""required_capabilities": 1"#));
+}
+
+#[test]
 fn manifest_check_rejects_bad_capability() {
     let dir = tempfile::tempdir().expect("create temp dir");
     let manifest_path = dir.path().join("manifest.toml");
@@ -257,6 +299,23 @@ fn manifest_capabilities_lists_phase_2_cap_table() {
     assert!(stdout.contains("fs.read:<path-glob>"));
     assert!(stdout.contains("net.connect:<host>:<port>"));
     assert!(stdout.contains("locale.format"));
+}
+
+#[test]
+fn manifest_capabilities_json_lists_phase_2_cap_table() {
+    let output = layer36()
+        .args(["manifest", "capabilities", "--format", "json"])
+        .output()
+        .expect("run manifest capabilities json");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains(r#""capability": "io.args""#));
+    assert!(stdout.contains(r#""module": "fs""#));
+    assert!(stdout.contains(r#""action": "read""#));
+    assert!(stdout.contains(r#""resource": "<path-glob>""#));
+    assert!(stdout.contains(r#""capability": "net.connect:<host>:<port>""#));
+    assert!(stdout.contains(r#""default_grant": true"#));
 }
 
 #[test]

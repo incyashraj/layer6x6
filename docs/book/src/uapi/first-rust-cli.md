@@ -133,13 +133,16 @@ cargo run -p layer36-cli -- manifest explain apps/layer36-cat/manifest.toml
 You should see that `io.args`, `io.stdout`, and `io.stderr` are default grants.
 You should also see that `fs.read:./fixtures/**` needs a launch grant.
 
-If you want the same explanation as structured data, use:
+If you want the same explanation as structured data, use JSON:
 
 ```bash
 cargo run -p layer36-cli -- manifest explain \
   --format json \
   apps/layer36-cat/manifest.toml
 ```
+
+The check and capability table commands can print JSON too, which is useful
+when you start wiring your own CI scripts.
 
 That is the Phase 2 permission model in simple form:
 

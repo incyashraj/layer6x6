@@ -126,14 +126,17 @@ You can also print the capability strings this runtime understands:
 cargo run -p layer36-cli -- manifest capabilities
 ```
 
-For scripts and editor tools, `manifest explain` can print JSON too:
+For scripts and editor tools, the manifest inspection commands can print JSON
+too:
 
 ```bash
+cargo run -p layer36-cli -- manifest check --format json manifest.toml
 cargo run -p layer36-cli -- manifest explain --format json manifest.toml
+cargo run -p layer36-cli -- manifest capabilities --format json
 ```
 
-That JSON includes the app identity, each capability, whether it is a default
-grant, and whether a launch grant is needed.
+That JSON includes the app identity, capability counts, each requested
+capability, whether it is a default grant, and whether a launch grant is needed.
 
 `layer36 run` also reads `manifest.toml` when it sits next to the `.wasm` file:
 
