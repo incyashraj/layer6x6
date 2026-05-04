@@ -27,6 +27,20 @@ The app exports:
 
 ## `layer36:fs/files@0.1.0`
 
+Filesystem entry points. All host file access should pass through these functions and resource methods.
+
+### Capability Notes
+
+- `open`, `stat`, and `list` require a matching `fs.read:PATH` grant for read-style access.
+- Write, mkdir, remove, and rename operations are part of the Phase 2 shape, but the first runtime slice focuses on read grants.
+
+### Rust SDK Example
+
+```rust
+let text = layer36::fs::read_to_string("notes.txt")?;
+layer36::io::stdio::println(&text)?;
+```
+
 ### Functions
 
 - `open(path: string, mode: open-mode) -> result<own<file>, fs-error>`
@@ -51,6 +65,8 @@ The app exports:
 
 
 ## `layer36:fs/types@0.1.0`
+
+Shared filesystem records, modes, and error shapes.
 
 ### Types
 
@@ -80,12 +96,32 @@ The app exports:
 
 ## `layer36:io/args@0.1.0`
 
+Raw Layer36 app arguments. These are the arguments passed after `--` in `layer36 run`.
+
+### Capability Notes
+
+- `io.args` is granted by default for CLI apps.
+- The current draft encodes args as newline-separated text.
+
+### Rust SDK Example
+
+```rust
+let raw = layer36::io::args::raw();
+let first = layer36::io::args::first_raw(&raw);
+```
+
 ### Functions
 
 - `raw() -> string`
 
 
 ## `layer36:io/log@0.1.0`
+
+Structured app logs. Hosts can route these to native logs, developer consoles, or test captures.
+
+### Capability Notes
+
+- `io.log` is a low-risk default grant.
 
 ### Functions
 
@@ -101,6 +137,19 @@ The app exports:
 
 ## `layer36:io/stdio@0.1.0`
 
+Standard input, output, and error streams for CLI-style apps.
+
+### Capability Notes
+
+- `io.stdin`, `io.stdout`, and `io.stderr` are low-risk default grants for CLI apps.
+
+### Rust SDK Example
+
+```rust
+layer36::io::stdio::println("Hello from Layer36")?;
+layer36::io::stdio::eprintln("debug line")?;
+```
+
 ### Functions
 
 - `stdin() -> own<input-stream>`
@@ -109,6 +158,22 @@ The app exports:
 
 
 ## `layer36:io/streams@0.1.0`
+
+Byte streams used by stdio and other UAPI modules.
+
+### Capability Notes
+
+- `io.stdin`, `io.stdout`, and `io.stderr` are low-risk default grants for CLI apps.
+
+### Rust SDK Example
+
+```rust
+use layer36::io::streams::OutputStreamExt;
+
+let out = layer36::io::stdio::stdout();
+out.write_line("ok")?;
+out.flush()?;
+```
 
 ### Types
 
@@ -129,6 +194,8 @@ The app exports:
 
 
 ## `layer36:io/types@0.1.0`
+
+Shared IO log and error types.
 
 ### Types
 
@@ -151,6 +218,19 @@ The app exports:
 
 ## `layer36:locale/format@0.1.0`
 
+Host-backed date and number formatting.
+
+### Capability Notes
+
+- Locale reads and formatting are default grants for CLI apps.
+
+### Rust SDK Example
+
+```rust
+let locale = layer36::locale::current();
+let text = layer36::locale::format_number(42.0, layer36::locale::NumberStyle::Decimal, &locale);
+```
+
 ### Functions
 
 - `format-date(millis: u64, tz: string, style: date-style, loc: locale-id) -> string`
@@ -159,13 +239,32 @@ The app exports:
 
 ## `layer36:locale/info@0.1.0`
 
+The host user's current locale and timezone.
+
+### Capability Notes
+
+- Locale reads and formatting are default grants for CLI apps.
+
+### Rust SDK Example
+
+```rust
+let locale = layer36::locale::current();
+let timezone = layer36::locale::timezone();
+```
+
 ### Functions
 
+> The user's preferred locale as reported by the host.
+
 - `current() -> locale-id`
+> IANA timezone name, for example "Asia/Singapore".
+
 - `timezone() -> string`
 
 
 ## `layer36:locale/types@0.1.0`
+
+Locale and formatting type definitions.
 
 ### Types
 
@@ -189,6 +288,20 @@ The app exports:
 
 ## `layer36:net/http-client@0.1.0`
 
+HTTP client calls. Phase 2 starts with simple request and response bodies.
+
+### Capability Notes
+
+- `get` and `fetch` require a matching `net.connect:HOST:PORT` grant before the adapter opens a socket.
+- The current host adapter supports the plain HTTP test path first; HTTPS and richer network behavior are still Phase 2 work.
+
+### Rust SDK Example
+
+```rust
+let body = layer36::net::get_text("http://127.0.0.1:8080/data.txt")?;
+layer36::io::stdio::println(&body)?;
+```
+
 ### Functions
 
 - `get(url: string) -> result<list<u8>, net-error>`
@@ -196,6 +309,8 @@ The app exports:
 
 
 ## `layer36:net/types@0.1.0`
+
+Shared network request, response, and error types.
 
 ### Types
 
@@ -243,15 +358,47 @@ The app exports:
 
 ## `layer36:time/clock@0.1.0`
 
+Wall-clock and monotonic clock reads.
+
+### Capability Notes
+
+- `time.now` and `time.monotonic` are default grants.
+
+### Rust SDK Example
+
+```rust
+let now = layer36::time::now_millis();
+let tick = layer36::time::monotonic_nanos();
+```
+
 ### Functions
 
+> Milliseconds since Unix epoch. Wall-clock; can jump.
+
 - `now-millis() -> u64`
+> Monotonic nanoseconds since an arbitrary origin.
+> Guaranteed non-decreasing; suitable for measuring intervals.
+
 - `monotonic-nanos() -> u64`
 
 
 ## `layer36:time/sleep@0.1.0`
 
+Blocking sleep for CLI-style components.
+
+### Capability Notes
+
+- `sleep-millis` requires `time.sleep`.
+
+### Rust SDK Example
+
+```rust
+layer36::time::sleep_millis(100);
+```
+
 ### Functions
+
+> Block the calling task for at least `millis` milliseconds.
 
 - `sleep-millis(millis: u32)`
 

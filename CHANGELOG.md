@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Human-facing generated UAPI reference context: interface summaries, capability notes, Rust SDK examples, and WIT doc comments.
 - Generated Phase 2 UAPI reference seed from `wit/layer36/phase2`, linked in mdBook and checked in hosted and self-hosted CI.
 - Rust guest SDK package preparation: crate README, crates.io-facing metadata, package include list, local package proof, and CI/self-hosted package dry-runs.
 - Clear exit-code-5 permission-denied behavior for the Rust `layer36-cat` and `layer36-curl` samples, including an outside-granted-glob test for `layer36-cat`.

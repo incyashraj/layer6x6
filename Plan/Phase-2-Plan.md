@@ -2131,6 +2131,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-BIND-01A | Rust SDK crate skeleton | 2026-05-04 | Added `crates/bindings-rust` as package `layer36`, with first wrappers over generated guest bindings and the Rust sample apps migrated to the SDK facade. |
 | P2-BIND-01B | Rust SDK helper layer and guide | 2026-05-04 | Added app-facing helpers for args, stream text output, file read/write, HTTP text, time, and locale; documented them in `docs/book/src/uapi/rust-sdk.md`; verified samples still import only Layer36 UAPI. |
 | P2-DOC-02A | Generated UAPI reference seed | 2026-05-04 | Added `layer36-tools` reference generator using `wit-parser`; generated `docs/book/src/reference/uapi/index.md`; linked it in mdBook; hosted and self-hosted CI check the generated page is current. |
+| P2-DOC-02B | Generated UAPI reference context | 2026-05-04 | The generated reference now includes interface summaries, capability notes, Rust SDK examples, WIT doc comments, and a generator test that checks those sections stay present. |
 
 ---
 
@@ -2140,7 +2141,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 |---------|------|---------|----------|
 | P2-APP-01C | Add cross-host fixture assertions and language sample variants | 2026-05-04 | Rust versions of `layer36-clock`, `layer36-cat`, and `layer36-curl` exist locally; full cross-host fixture assertions and language-binding variants still remain. |
 | P2-BIND-01C | Prepare Rust SDK packaging and reference docs | 2026-05-04 | Added crate README, crates.io-facing metadata, package include list, local `cargo package -p layer36 --offline` proof, and CI/self-hosted package dry-runs. Richer Rust SDK API docs still remain. |
-| P2-DOC-02B | Improve generated UAPI reference prose and per-interface examples | 2026-05-04 | The first generated page is truthful and CI-backed; examples, capability notes, and richer per-function docs remain. |
+| P2-DOC-02C | Improve generated UAPI reference depth | 2026-05-04 | The page now has summaries, capability notes, and examples; richer per-function explanations and capability derivation directly from manifests/policy remain. |
 
 ---
 

@@ -114,6 +114,29 @@ fn render_interface(
     writeln!(out, "## `{name}`")?;
     writeln!(out)?;
 
+    if let Some(summary) = interface_summary(&name) {
+        writeln!(out, "{summary}")?;
+        writeln!(out)?;
+    }
+
+    if let Some(notes) = capability_notes(&name) {
+        writeln!(out, "### Capability Notes")?;
+        writeln!(out)?;
+        for note in notes {
+            writeln!(out, "- {note}")?;
+        }
+        writeln!(out)?;
+    }
+
+    if let Some(example) = rust_example(&name) {
+        writeln!(out, "### Rust SDK Example")?;
+        writeln!(out)?;
+        writeln!(out, "```rust")?;
+        write!(out, "{example}")?;
+        writeln!(out, "```")?;
+        writeln!(out)?;
+    }
+
     let resource_type_ids = interface
         .types
         .values()
@@ -131,6 +154,7 @@ fn render_interface(
         writeln!(out, "### Functions")?;
         writeln!(out)?;
         for func in freestanding {
+            write_docs(&func.docs, out)?;
             writeln!(out, "- `{}`", render_function(resolve, func))?;
         }
         writeln!(out)?;
@@ -165,6 +189,7 @@ fn render_interface(
         writeln!(out, "#### `{name}` methods")?;
         writeln!(out)?;
         for method in methods {
+            write_docs(&method.docs, out)?;
             writeln!(out, "- `{}`", render_function(resolve, method))?;
         }
         writeln!(out)?;
@@ -181,7 +206,9 @@ fn render_type_def(resolve: &Resolve, type_id: TypeId, out: &mut String) -> Resu
         TypeDefKind::Record(record) => {
             writeln!(out, "#### `{name}` record")?;
             writeln!(out)?;
+            write_docs(&ty.docs, out)?;
             for field in &record.fields {
+                write_docs(&field.docs, out)?;
                 writeln!(
                     out,
                     "- `{}`: `{}`",
@@ -194,7 +221,9 @@ fn render_type_def(resolve: &Resolve, type_id: TypeId, out: &mut String) -> Resu
         TypeDefKind::Enum(enum_) => {
             writeln!(out, "#### `{name}` enum")?;
             writeln!(out)?;
+            write_docs(&ty.docs, out)?;
             for case in &enum_.cases {
+                write_docs(&case.docs, out)?;
                 writeln!(out, "- `{}`", case.name)?;
             }
             writeln!(out)?;
@@ -202,7 +231,9 @@ fn render_type_def(resolve: &Resolve, type_id: TypeId, out: &mut String) -> Resu
         TypeDefKind::Variant(variant) => {
             writeln!(out, "#### `{name}` variant")?;
             writeln!(out)?;
+            write_docs(&ty.docs, out)?;
             for case in &variant.cases {
+                write_docs(&case.docs, out)?;
                 if let Some(ty) = &case.ty {
                     writeln!(out, "- `{}`: `{}`", case.name, render_type(resolve, ty))?;
                 } else {
@@ -214,16 +245,19 @@ fn render_type_def(resolve: &Resolve, type_id: TypeId, out: &mut String) -> Resu
         TypeDefKind::Resource => {
             writeln!(out, "#### `{name}` resource")?;
             writeln!(out)?;
+            write_docs(&ty.docs, out)?;
         }
         TypeDefKind::Type(inner) => {
             writeln!(out, "#### `{name}` type")?;
             writeln!(out)?;
+            write_docs(&ty.docs, out)?;
             writeln!(out, "`{}`", render_type(resolve, inner))?;
             writeln!(out)?;
         }
         _ => {
             writeln!(out, "#### `{name}` {}", ty.kind.as_str())?;
             writeln!(out)?;
+            write_docs(&ty.docs, out)?;
         }
     }
 
@@ -302,6 +336,128 @@ fn is_renderable_type_def(resolve: &Resolve, type_id: TypeId) -> bool {
     }
 }
 
+fn write_docs(docs: &wit_parser::Docs, out: &mut String) -> Result<()> {
+    let Some(contents) = docs.contents.as_deref() else {
+        return Ok(());
+    };
+
+    let trimmed = contents.trim();
+    if trimmed.is_empty() {
+        return Ok(());
+    }
+
+    for line in trimmed.lines() {
+        writeln!(out, "> {}", line.trim())?;
+    }
+    writeln!(out)?;
+
+    Ok(())
+}
+
+fn interface_summary(interface: &str) -> Option<&'static str> {
+    match interface {
+        "layer36:fs/files@0.1.0" => Some(
+            "Filesystem entry points. All host file access should pass through these functions and resource methods.",
+        ),
+        "layer36:fs/types@0.1.0" => {
+            Some("Shared filesystem records, modes, and error shapes.")
+        }
+        "layer36:io/args@0.1.0" => Some(
+            "Raw Layer36 app arguments. These are the arguments passed after `--` in `layer36 run`.",
+        ),
+        "layer36:io/log@0.1.0" => Some(
+            "Structured app logs. Hosts can route these to native logs, developer consoles, or test captures.",
+        ),
+        "layer36:io/stdio@0.1.0" => {
+            Some("Standard input, output, and error streams for CLI-style apps.")
+        }
+        "layer36:io/streams@0.1.0" => {
+            Some("Byte streams used by stdio and other UAPI modules.")
+        }
+        "layer36:io/types@0.1.0" => Some("Shared IO log and error types."),
+        "layer36:locale/format@0.1.0" => {
+            Some("Host-backed date and number formatting.")
+        }
+        "layer36:locale/info@0.1.0" => {
+            Some("The host user's current locale and timezone.")
+        }
+        "layer36:locale/types@0.1.0" => Some("Locale and formatting type definitions."),
+        "layer36:net/http-client@0.1.0" => {
+            Some("HTTP client calls. Phase 2 starts with simple request and response bodies.")
+        }
+        "layer36:net/types@0.1.0" => Some("Shared network request, response, and error types."),
+        "layer36:time/clock@0.1.0" => {
+            Some("Wall-clock and monotonic clock reads.")
+        }
+        "layer36:time/sleep@0.1.0" => Some("Blocking sleep for CLI-style components."),
+        _ => None,
+    }
+}
+
+fn capability_notes(interface: &str) -> Option<&'static [&'static str]> {
+    match interface {
+        "layer36:fs/files@0.1.0" => Some(&[
+            "`open`, `stat`, and `list` require a matching `fs.read:PATH` grant for read-style access.",
+            "Write, mkdir, remove, and rename operations are part of the Phase 2 shape, but the first runtime slice focuses on read grants.",
+        ]),
+        "layer36:io/args@0.1.0" => Some(&[
+            "`io.args` is granted by default for CLI apps.",
+            "The current draft encodes args as newline-separated text.",
+        ]),
+        "layer36:io/stdio@0.1.0" | "layer36:io/streams@0.1.0" => Some(&[
+            "`io.stdin`, `io.stdout`, and `io.stderr` are low-risk default grants for CLI apps.",
+        ]),
+        "layer36:io/log@0.1.0" => Some(&[
+            "`io.log` is a low-risk default grant.",
+        ]),
+        "layer36:net/http-client@0.1.0" => Some(&[
+            "`get` and `fetch` require a matching `net.connect:HOST:PORT` grant before the adapter opens a socket.",
+            "The current host adapter supports the plain HTTP test path first; HTTPS and richer network behavior are still Phase 2 work.",
+        ]),
+        "layer36:time/clock@0.1.0" => Some(&[
+            "`time.now` and `time.monotonic` are default grants.",
+        ]),
+        "layer36:time/sleep@0.1.0" => Some(&[
+            "`sleep-millis` requires `time.sleep`.",
+        ]),
+        "layer36:locale/info@0.1.0" | "layer36:locale/format@0.1.0" => Some(&[
+            "Locale reads and formatting are default grants for CLI apps.",
+        ]),
+        _ => None,
+    }
+}
+
+fn rust_example(interface: &str) -> Option<&'static str> {
+    match interface {
+        "layer36:fs/files@0.1.0" => Some(
+            "let text = layer36::fs::read_to_string(\"notes.txt\")?;\nlayer36::io::stdio::println(&text)?;\n",
+        ),
+        "layer36:io/args@0.1.0" => Some(
+            "let raw = layer36::io::args::raw();\nlet first = layer36::io::args::first_raw(&raw);\n",
+        ),
+        "layer36:io/stdio@0.1.0" => Some(
+            "layer36::io::stdio::println(\"Hello from Layer36\")?;\nlayer36::io::stdio::eprintln(\"debug line\")?;\n",
+        ),
+        "layer36:io/streams@0.1.0" => Some(
+            "use layer36::io::streams::OutputStreamExt;\n\nlet out = layer36::io::stdio::stdout();\nout.write_line(\"ok\")?;\nout.flush()?;\n",
+        ),
+        "layer36:net/http-client@0.1.0" => Some(
+            "let body = layer36::net::get_text(\"http://127.0.0.1:8080/data.txt\")?;\nlayer36::io::stdio::println(&body)?;\n",
+        ),
+        "layer36:time/clock@0.1.0" => Some(
+            "let now = layer36::time::now_millis();\nlet tick = layer36::time::monotonic_nanos();\n",
+        ),
+        "layer36:time/sleep@0.1.0" => Some("layer36::time::sleep_millis(100);\n"),
+        "layer36:locale/info@0.1.0" => Some(
+            "let locale = layer36::locale::current();\nlet timezone = layer36::locale::timezone();\n",
+        ),
+        "layer36:locale/format@0.1.0" => Some(
+            "let locale = layer36::locale::current();\nlet text = layer36::locale::format_number(42.0, layer36::locale::NumberStyle::Decimal, &locale);\n",
+        ),
+        _ => None,
+    }
+}
+
 fn render_type(resolve: &Resolve, ty: &Type) -> String {
     match ty {
         Type::Bool => "bool".to_string(),
@@ -366,5 +522,30 @@ fn interface_name(resolve: &Resolve, interface: &Interface) -> String {
         (Some(package_id), Some(name)) => resolve.packages[package_id].name.interface_id(name),
         (_, Some(name)) => name.to_string(),
         _ => "anonymous-interface".to_string(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generated_reference_includes_human_context() {
+        let root = workspace_root();
+        let mut resolve = Resolve::default();
+        let (app_package, _) = resolve
+            .push_dir(&root.join("wit/layer36/phase2"))
+            .expect("parse Phase 2 WIT");
+        let world_id = resolve
+            .select_world(&[app_package], Some("cli"))
+            .expect("select cli world");
+
+        let reference = render_reference(&resolve, world_id).expect("render reference");
+
+        assert!(reference.contains("### Capability Notes"));
+        assert!(reference.contains("### Rust SDK Example"));
+        assert!(reference.contains("`net.connect:HOST:PORT`"));
+        assert!(reference.contains("let text = layer36::fs::read_to_string"));
+        assert!(reference.contains("> Milliseconds since Unix epoch."));
     }
 }
