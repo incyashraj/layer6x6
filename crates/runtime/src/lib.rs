@@ -457,11 +457,7 @@ impl LocalPhase2Adapter {
             .map_err(map_path_error)?;
         let path = logical.to_path_buf();
         let missing_leaf = missing_leaf_for_operation(operation);
-        if path.is_absolute() {
-            Ok(path)
-        } else {
-            self.resolve_sandboxed_fs_path(path, missing_leaf)
-        }
+        self.resolve_sandboxed_fs_path(path, missing_leaf)
     }
 
     fn resolve_sandboxed_fs_path(
@@ -470,7 +466,8 @@ impl LocalPhase2Adapter {
         missing_leaf: MissingLeaf,
     ) -> std::result::Result<PathBuf, AdapterError> {
         let root = self.sandbox_root.canonicalize().map_err(map_io_error)?;
-        let host_path = root.join(path);
+        let sandbox_relative = logical_path_to_sandbox_relative(path)?;
+        let host_path = root.join(sandbox_relative);
 
         match host_path.canonicalize() {
             Ok(real_path) => {
@@ -491,6 +488,22 @@ impl LocalPhase2Adapter {
             }
             Err(err) => Err(map_io_error(err)),
         }
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn logical_path_to_sandbox_relative(path: PathBuf) -> std::result::Result<PathBuf, AdapterError> {
+    if path.is_absolute() {
+        let trimmed = path
+            .strip_prefix("/")
+            .map_err(|_| AdapterError::InvalidPath)?;
+        if trimmed.as_os_str().is_empty() {
+            Ok(PathBuf::from("."))
+        } else {
+            Ok(trimmed.to_path_buf())
+        }
+    } else {
+        Ok(path)
     }
 }
 
@@ -1171,6 +1184,45 @@ mod tests {
         let bytes = adapter.read(&handle, 5).expect("read file");
 
         assert_eq!(bytes, b"hello");
+
+        drop(handle);
+        drop(adapter);
+        std::fs::remove_file(file).expect("remove fixture file");
+        std::fs::remove_dir_all(temp).expect("remove fixture directory");
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn local_fs_adapter_treats_absolute_logical_paths_as_sandbox_relative() {
+        let unique = std::time::SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos();
+        let temp = std::env::temp_dir().join(format!(
+            "layer36-absolute-logical-path-{}-{unique}",
+            std::process::id(),
+        ));
+        let nested = temp.join("fixtures").join("public");
+        std::fs::create_dir_all(&nested).expect("create fixture directory");
+        let file = nested.join("note.txt");
+        std::fs::write(&file, b"inside").expect("write fixture file");
+
+        let adapter = LocalPhase2Adapter::new(
+            Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            None,
+            None,
+            Vec::new(),
+            1024,
+            temp.clone(),
+        );
+
+        let handle = adapter
+            .open("/fixtures/public/note.txt", OpenMode::Read)
+            .expect("absolute logical path should resolve inside sandbox");
+        let bytes = adapter.read(&handle, 6).expect("read file");
+
+        assert_eq!(bytes, b"inside");
 
         drop(handle);
         drop(adapter);
