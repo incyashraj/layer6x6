@@ -459,6 +459,76 @@ fn missing_input_returns_clear_error() {
 }
 
 #[test]
+fn run_rejects_empty_app_argument_before_runtime() {
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let wasm_path = dir.path().join("app.wasm");
+    std::fs::write(&wasm_path, b"not actually wasm").expect("write wasm placeholder");
+
+    let output = layer36()
+        .arg("run")
+        .arg(&wasm_path)
+        .arg("--")
+        .arg("")
+        .output()
+        .expect("run layer36 with empty app arg");
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("app arguments cannot contain empty values"));
+    assert!(
+        !stderr.contains("invalid wasm component"),
+        "runtime should not run when app args are invalid"
+    );
+}
+
+#[test]
+fn run_rejects_newline_app_argument_before_runtime() {
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let wasm_path = dir.path().join("app.wasm");
+    std::fs::write(&wasm_path, b"not actually wasm").expect("write wasm placeholder");
+
+    let output = layer36()
+        .arg("run")
+        .arg(&wasm_path)
+        .arg("--")
+        .arg("bad\narg")
+        .output()
+        .expect("run layer36 with newline app arg");
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("cannot contain newline or NUL characters"));
+    assert!(
+        !stderr.contains("invalid wasm component"),
+        "runtime should not run when app args are invalid"
+    );
+}
+
+#[test]
+fn run_rejects_oversized_raw_args_payload_before_runtime() {
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let wasm_path = dir.path().join("app.wasm");
+    std::fs::write(&wasm_path, b"not actually wasm").expect("write wasm placeholder");
+    let oversized = "x".repeat((64 * 1024) + 1);
+
+    let output = layer36()
+        .arg("run")
+        .arg(&wasm_path)
+        .arg("--")
+        .arg(oversized)
+        .output()
+        .expect("run layer36 with oversized app arg payload");
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("app arguments exceed raw args limit"));
+    assert!(
+        !stderr.contains("invalid wasm component"),
+        "runtime should not run when app args are invalid"
+    );
+}
+
+#[test]
 fn configured_hello_component_runs_and_matches_expected_fixture_hash() {
     let Some(path) = configured_hello_component() else {
         return;

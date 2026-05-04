@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- CLI Phase 2 app-argument preflight: `layer36 run` now rejects empty args, newline/NUL delimiter characters, and oversized raw app-argument payloads above 64 KiB before runtime startup, with integration tests covering each rejection path.
 - Runtime Phase 2 raw app-argument guardrails: `io.args.raw` now rejects empty args, newline/NUL delimiter characters, and oversized raw payloads above 64 KiB, with runtime tests covering valid and invalid argument shapes.
 - Runtime Phase 2 write guardrails: local adapter stream writes and filesystem writes now reject per-call sizes above 8 MiB, with deterministic runtime errors and runtime tests covering oversized write requests.
 - Runtime Phase 2 filesystem resource guardrails: local adapter reads now reject per-call sizes above 8 MiB, and directory listings now reject responses above 4096 entries, with deterministic runtime errors and test coverage for both bounds.

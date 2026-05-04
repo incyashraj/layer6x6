@@ -170,7 +170,8 @@ also denies a file outside the granted glob with exit code `5`, matching the
 CLI's permission-denied convention. In this phase, raw app-argument transport
 is intentionally conservative: empty arguments, newline/NUL delimiter
 characters, and oversized raw payloads are rejected before they reach guest
-argument parsing.
+argument parsing. Layer36 CLI now also does the same check as a preflight step,
+so these invalid argument shapes fail before runtime startup.
 
 The third sample path has started now too. `apps/layer36-curl` reads a URL from
 Layer36 app args, calls `layer36:net/http-client.get`, and writes the response

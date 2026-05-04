@@ -12,6 +12,8 @@ use layer36_policy::{resolve_session_policy, SessionPolicy};
 use layer36_runtime::{Config, RunOutcome, Runtime, RuntimeError, DEFAULT_MAX_HTTP_RESPONSE_BYTES};
 use serde::Serialize;
 
+const MAX_PHASE2_ARGS_RAW_BYTES: usize = 64 * 1024;
+
 #[derive(Debug, Parser)]
 #[command(
     name = "layer36",
@@ -299,6 +301,8 @@ fn run_component(request: RunRequest) -> Result<u8> {
         anyhow::bail!("input file does not exist: {}", request.file.display());
     }
 
+    validate_app_args(&request.app_args)?;
+
     let loaded_manifest = load_run_manifest(&request.file, request.manifest_path.as_deref())?;
     if let Some(loaded) = &loaded_manifest {
         if !manifest_entry_matches(&request.file, loaded)? {
@@ -378,6 +382,29 @@ fn run_component(request: RunRequest) -> Result<u8> {
         }
         Err(err) => Err(err.into()),
     }
+}
+
+fn validate_app_args(app_args: &[String]) -> Result<()> {
+    let mut encoded_len = 0usize;
+    for arg in app_args {
+        if arg.is_empty() {
+            anyhow::bail!("app arguments cannot contain empty values in Phase 2 raw args");
+        }
+        if arg.contains('\n') || arg.contains('\0') {
+            anyhow::bail!(
+                "app arguments cannot contain newline or NUL characters in Phase 2 raw args"
+            );
+        }
+        encoded_len += arg.len() + 1;
+        if encoded_len > MAX_PHASE2_ARGS_RAW_BYTES {
+            anyhow::bail!(
+                "app arguments exceed raw args limit ({} bytes)",
+                MAX_PHASE2_ARGS_RAW_BYTES
+            );
+        }
+    }
+
+    Ok(())
 }
 
 fn prompt_for_session_grants(manifest: &Manifest, policy: &SessionPolicy) -> Result<SessionPolicy> {
