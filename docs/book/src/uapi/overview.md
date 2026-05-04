@@ -149,6 +149,19 @@ a manifest from accidentally applying to the wrong component.
 run, prints the effective capabilities, and exits before the component starts.
 That makes it easier to understand why a UAPI call is allowed or denied.
 
+For a local audit trail, pass `--log-grants`:
+
+```bash
+cargo run -p layer36-cli -- run \
+  --manifest manifest.toml \
+  --auto-grant \
+  --log-grants layer36-grants.log \
+  app.wasm
+```
+
+This appends the app identity and effective session grants to a text log. Full
+signed audit records are later work; this is the Phase 2 developer-facing proof.
+
 The runtime now also has the next piece: a UAPI guard. It is small, but it is
 the path every future adapter should use before it touches the host OS.
 

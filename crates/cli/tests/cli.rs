@@ -864,6 +864,66 @@ fn run_dump_caps_prints_effective_policy_without_running_component() {
 }
 
 #[test]
+fn run_log_grants_records_effective_session_policy() {
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let wasm_path = dir.path().join("app.wasm");
+    let manifest_path = dir.path().join("manifest.toml");
+    let log_path = dir.path().join("grants.log");
+    std::fs::write(&wasm_path, b"not actually wasm").expect("write wasm placeholder");
+    std::fs::write(
+        &manifest_path,
+        r#"
+            [app]
+            id = "com.example.audit"
+            name = "Audit"
+            version = "1.0.0"
+            entry = "app.wasm"
+            world = "layer36:app/cli@0.1.0"
+
+            [[capabilities]]
+            cap = "io.stdout"
+            rationale = "Print output"
+            required = true
+
+            [[capabilities]]
+            cap = "fs.read:./data/**"
+            rationale = "Read data"
+            required = true
+        "#,
+    )
+    .expect("write manifest");
+
+    let output = layer36()
+        .args([
+            "run",
+            "--auto-grant",
+            "--dump-caps",
+            "--manifest",
+            manifest_path.to_str().expect("manifest path"),
+            "--log-grants",
+            log_path.to_str().expect("log path"),
+        ])
+        .arg(&wasm_path)
+        .output()
+        .expect("run dump caps with grant log");
+
+    assert!(
+        output.status.success(),
+        "grant log run failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let log = std::fs::read_to_string(&log_path).expect("read grant log");
+    assert!(log.contains("Layer36 grant log"));
+    assert!(log.contains("app id           com.example.audit"));
+    assert!(log.contains("app name         Audit"));
+    assert!(log.contains("manifest world   layer36:app/cli@0.1.0"));
+    assert!(log.contains("  - io.stdout"));
+    assert!(log.contains("  - fs.read:./data/**"));
+}
+
+#[test]
 fn run_with_manifest_auto_grant_reaches_runtime() {
     let dir = tempfile::tempdir().expect("create temp dir");
     let wasm_path = dir.path().join("app.wasm");

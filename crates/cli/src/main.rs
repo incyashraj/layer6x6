@@ -1,3 +1,4 @@
+use std::fs::OpenOptions;
 use std::io::{self, IsTerminal, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command as ProcessCommand, ExitCode};
@@ -55,6 +56,10 @@ enum Command {
         /// Print the effective session capabilities and exit before running the component.
         #[arg(long)]
         dump_caps: bool,
+
+        /// Append the effective session grants to a local audit log file.
+        #[arg(long, value_name = "FILE")]
+        log_grants: Option<PathBuf>,
 
         /// Fixed wall-clock time in milliseconds since Unix epoch. Intended for deterministic tests.
         #[arg(long, hide = true)]
@@ -152,6 +157,7 @@ fn run() -> Result<u8> {
             auto_grant,
             prompt,
             dump_caps,
+            log_grants,
             test_time,
             app_args,
         } => run_component(RunRequest {
@@ -163,6 +169,7 @@ fn run() -> Result<u8> {
             auto_grant,
             prompt,
             dump_caps,
+            log_grants,
             test_time_millis: test_time,
             app_args,
         }),
@@ -205,6 +212,7 @@ struct RunRequest {
     auto_grant: bool,
     prompt: bool,
     dump_caps: bool,
+    log_grants: Option<PathBuf>,
     test_time_millis: Option<u64>,
     app_args: Vec<String>,
 }
@@ -254,6 +262,10 @@ fn run_component(request: RunRequest) -> Result<u8> {
             }
             return Ok(5);
         }
+    }
+
+    if let Some(log_path) = &request.log_grants {
+        write_grant_log(log_path, &request.file, manifest, &policy)?;
     }
 
     if request.dump_caps {
@@ -368,6 +380,36 @@ fn print_effective_capabilities(policy: &SessionPolicy) {
     for cap in policy.grants() {
         println!("  - {cap}");
     }
+}
+
+fn write_grant_log(
+    path: &Path,
+    wasm_file: &Path,
+    manifest: Option<&Manifest>,
+    policy: &SessionPolicy,
+) -> Result<()> {
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+        .with_context(|| format!("failed to open grant log {}", path.display()))?;
+
+    writeln!(file, "Layer36 grant log")?;
+    writeln!(file, "wasm             {}", wasm_file.display())?;
+    if let Some(manifest) = manifest {
+        writeln!(file, "app id           {}", manifest.app.id)?;
+        writeln!(file, "app name         {}", manifest.app.name)?;
+        writeln!(file, "manifest world   {}", manifest.app.world)?;
+    } else {
+        writeln!(file, "app id           <no manifest>")?;
+    }
+    writeln!(file, "grants")?;
+    for cap in policy.grants() {
+        writeln!(file, "  - {cap}")?;
+    }
+    writeln!(file)?;
+
+    Ok(())
 }
 
 struct LoadedManifest {

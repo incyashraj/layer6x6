@@ -103,6 +103,17 @@ And you can inspect what grants it will need:
 cargo run -p layer36-cli -- manifest explain apps/layer36-cat/manifest.toml
 ```
 
+If you need a local audit trail while testing, run with `--log-grants`:
+
+```bash
+cargo run -p layer36-cli -- run \
+  --manifest apps/layer36-cat/manifest.toml \
+  --auto-grant \
+  --log-grants layer36-grants.log \
+  apps/layer36-cat/target/wasm32-wasip1/release/layer36_cat.wasm \
+  -- ./fixtures/hello.txt
+```
+
 ## What Replaces The Phase 1 World
 
 Phase 1 component metadata pointed at:

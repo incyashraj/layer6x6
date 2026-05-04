@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- `layer36 run --log-grants <file>` to append app identity and effective session capabilities to a local grant audit log.
 - Phase 1 to Phase 2 migration note explaining how the temporary `print`/`exit` proof path maps to the real UAPI, manifest, and grant model.
 - Phase 2 Rust walkthrough showing the current SDK, component build, manifest generation, manifest explanation, granted run, and denial path.
 - `layer36 manifest explain` to show app identity, requested capabilities, default grants, launch-grant needs, resources, and rationales in human-readable form.

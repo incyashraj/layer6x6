@@ -140,6 +140,12 @@ low-risk app plumbing -> default grant
 host file/network access -> explicit launch grant
 ```
 
+If you want a local record of the grants used for a run, add:
+
+```bash
+--log-grants layer36-grants.log
+```
+
 ## 6. Run It
 
 Create a test file:
