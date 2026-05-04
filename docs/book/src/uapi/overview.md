@@ -48,6 +48,16 @@ draft, not a frozen compatibility promise yet.
 The generated reference page is built from those WIT files:
 [UAPI Reference](../reference/uapi/index.md).
 
+The contract checker validates the current package shape:
+
+```bash
+sh scripts/check-uapi.sh
+```
+
+It parses the WIT package, checks the `cli` world imports and `run` export,
+checks package versions and kebab-case names, and verifies protected filesystem
+and network errors include `permission-denied`.
+
 ## App Manifest
 
 Phase 2 apps can also carry a sidecar `manifest.toml`.

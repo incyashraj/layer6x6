@@ -2071,6 +2071,12 @@ machine without relying on hosted runner availability.
 
 The WIT style guide is now published in the book as well. It gives us concrete rules for package names, interface names, function names, resources, typed errors, capability mapping, comments, versioning, and review checks before we freeze UAPI v0.1.
 
+The Phase 2 UAPI contract checker exists now too. `scripts/check-uapi.sh` parses
+`wit/layer36/phase2`, checks the expected package set, the `cli` world imports,
+the `run` export, kebab-case naming, and the `permission-denied` variants needed
+for protected filesystem and network calls. Hosted and self-hosted CI both run it
+before regenerating the UAPI reference.
+
 This does not freeze UAPI v0.1 yet. It gives us a real contract to review, generate bindings from, and wire into host adapters.
 
 ---
@@ -2081,7 +2087,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | # | Criterion | Status |
 |---|-----------|--------|
-| 1 | All five UAPI modules (`io`, `fs`, `net`, `time`, `locale`) frozen as stable v0.1 WIT | Drafted, not frozen |
+| 1 | All five UAPI modules (`io`, `fs`, `net`, `time`, `locale`) frozen as stable v0.1 WIT | Drafted, not frozen; CI now checks the current package shape before freeze |
 | 2 | Each module implemented in Linux, macOS, Windows host adapters; CI green on all | Not done |
 | 3 | Rust bindings generated and usable (`cargo add layer36 && use layer36::fs` works) | Started: host-side Wasmtime binding checkpoint, generated type bridge, import host trait wiring, guest SDK crate, sample-app migration, helper layer, crate README, crate docs, rustdoc comments, package metadata, package dry-run, SDK doc build check, and Rust SDK guide exist; crates.io publication and external smoke remain |
 | 4 | Go (TinyGo) bindings generated and usable; sample builds and runs | Not done |
@@ -2127,6 +2133,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-SEC-01F | Phase 2 smoke missing-grant proof | 2026-05-04 | Added a CLI integration test proving the smoke component receives `fs.permission-denied` without `fs.read`, writes a clear stderr message, and exits non-zero without reading host files. |
 | P2-APP-03A | First `layer36-clock` sample path | 2026-05-04 | Added `apps/layer36-clock`, a Rust Phase 2 component using time, locale, and stdout, plus `layer36 run --test-time` for deterministic sample tests. |
 | P2-UAPI-06 | Layer36 app arguments | 2026-05-04 | Added `layer36:io/args.raw`, default `io.args` grants, CLI forwarding through `layer36 run ... -- <args>`, and host dispatch wiring. |
+| P2-UAPI-07 | UAPI contract checker | 2026-05-04 | Added `scripts/check-uapi.sh` and `layer36-tools --bin check-uapi` to validate the Phase 2 package set, `cli` world shape, naming, and permission-denied error variants in hosted and self-hosted CI. |
 | P2-APP-02A | First `layer36-cat` sample path | 2026-05-04 | Added `apps/layer36-cat`, a Rust Phase 2 component that reads app args, opens granted files, writes stdout, and fails cleanly without `fs.read`. |
 | P2-NET-01 | Plain HTTP GET adapter slice | 2026-05-04 | Added a minimal `http://` GET adapter for test servers and localhost-style requests, with policy still checked before socket access. |
 | P2-APP-01A | First `layer36-curl` sample path | 2026-05-04 | Added `apps/layer36-curl`, a Rust Phase 2 component that reads a URL from app args, fetches through `net.http-client.get`, writes stdout, and fails cleanly without `net.connect`. |
