@@ -69,6 +69,10 @@ pub struct Config {
     pub session_policy: SessionPolicy,
     /// Optional fixed wall-clock time for deterministic test runs.
     pub test_time_millis: Option<u64>,
+    /// Optional locale override for deterministic test runs.
+    pub test_locale: Option<String>,
+    /// Optional timezone override for deterministic test runs.
+    pub test_timezone: Option<String>,
     /// Arguments exposed to Phase 2 apps through `layer36:io/args`.
     pub app_args: Vec<String>,
     /// Maximum full HTTP response size accepted by the local Phase 2 adapter.
@@ -84,6 +88,8 @@ impl Default for Config {
             memory_bytes: 256 * 1024 * 1024,
             session_policy: SessionPolicy::default(),
             test_time_millis: None,
+            test_locale: None,
+            test_timezone: None,
             app_args: Vec::new(),
             max_http_response_bytes: DEFAULT_MAX_HTTP_RESPONSE_BYTES,
             sandbox_root: PathBuf::from("."),
@@ -304,6 +310,8 @@ impl HostState {
                 Box::new(LocalPhase2Adapter::new(
                     output,
                     config.test_time_millis,
+                    config.test_locale.clone(),
+                    config.test_timezone.clone(),
                     config.app_args.clone(),
                     config.max_http_response_bytes,
                     config.sandbox_root.clone(),
@@ -409,6 +417,8 @@ impl LocalPhase2Adapter {
     fn new(
         output: Rc<RefCell<OutputMode>>,
         test_time_millis: Option<u64>,
+        test_locale: Option<String>,
+        test_timezone: Option<String>,
         app_args: Vec<String>,
         max_http_response_bytes: usize,
         sandbox_root: PathBuf,
@@ -417,7 +427,10 @@ impl LocalPhase2Adapter {
             output,
             state: RefCell::new(LocalPhase2AdapterState::default()),
             clock: HostClock::new(test_time_millis),
-            locale: HostLocale::from_env(),
+            locale: HostLocale::from_env_with_overrides(
+                test_locale.as_deref(),
+                test_timezone.as_deref(),
+            ),
             app_args,
             max_http_response_bytes,
             sandbox_root,
@@ -1138,6 +1151,30 @@ mod tests {
 
     #[cfg(feature = "phase2-bindings")]
     #[test]
+    fn local_phase2_adapter_applies_test_locale_and_timezone_overrides() {
+        let adapter = LocalPhase2Adapter::new(
+            Rc::new(RefCell::new(OutputMode::Sink)),
+            Some(1_234_567_890),
+            Some("en_GB.UTF-8".to_string()),
+            Some("UTC".to_string()),
+            Vec::new(),
+            1024,
+            PathBuf::from("."),
+        );
+
+        let locale = adapter.current().expect("read locale");
+        let timezone = adapter.timezone().expect("read timezone");
+        let date = adapter
+            .format_date(1_234_567_890, &timezone, DateStyle::Medium, &locale)
+            .expect("format date");
+
+        assert_eq!(locale.bcp47, "en-GB");
+        assert_eq!(timezone, "UTC");
+        assert_eq!(date, "1234567890:UTC:Medium:en-GB");
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
     fn local_fs_adapter_normalizes_portable_separators() {
         let temp =
             std::env::temp_dir().join(format!("layer36-path-normalize-{}", std::process::id()));
@@ -1148,6 +1185,8 @@ mod tests {
 
         let adapter = LocalPhase2Adapter::new(
             Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            None,
             None,
             Vec::new(),
             1024,
@@ -1183,6 +1222,8 @@ mod tests {
 
         let adapter = LocalPhase2Adapter::new(
             Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            None,
             None,
             Vec::new(),
             1024,
@@ -1238,6 +1279,8 @@ mod tests {
 
         let adapter = LocalPhase2Adapter::new(
             Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            None,
             None,
             Vec::new(),
             1024,
@@ -1360,6 +1403,8 @@ mod tests {
 
         let adapter = LocalPhase2Adapter::new(
             Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            None,
             None,
             Vec::new(),
             1024,

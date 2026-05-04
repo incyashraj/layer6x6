@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Hidden Phase 2 deterministic clock-fixture controls: `layer36 run --test-locale` and `--test-timezone`, runtime wiring for locale/timezone overrides, and a strict `layer36-clock` snapshot test with fixed time + locale + timezone for cross-host output comparison.
 - Shared Phase 2 Windows reserved-name path hardening in `adapter-common`: path segments that map to device-style names (`CON`, `PRN`, `AUX`, `NUL`, `COM1`-`COM9`, `LPT1`-`LPT9`) are now rejected before sandbox resolution and host I/O.
 - Shared Phase 2 authority parser reuse across network paths: plain `http://` URL parsing now reuses the same host/port parser used by runtime endpoint policy checks, with extra runtime tests for invalid-URL short-circuiting and default port grant behavior.
 - Shared Phase 2 URL endpoint parsing for policy checks: `adapter-common` now provides `parse_url_endpoint` for `http://` and `https://`, and runtime network capability checks use this shared parser instead of separate endpoint parsing logic.

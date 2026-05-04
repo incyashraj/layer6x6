@@ -32,11 +32,26 @@ pub struct HostLocale {
 
 impl HostLocale {
     pub fn from_env() -> Self {
-        Self::from_env_pairs(std::env::vars())
+        Self::from_env_with_overrides(None, None)
+    }
+
+    pub fn from_env_with_overrides(
+        locale_override: Option<&str>,
+        timezone_override: Option<&str>,
+    ) -> Self {
+        Self::from_env_pairs_with_overrides(std::env::vars(), locale_override, timezone_override)
     }
 
     pub fn from_env_pairs(
         pairs: impl IntoIterator<Item = (impl AsRef<str>, impl AsRef<str>)>,
+    ) -> Self {
+        Self::from_env_pairs_with_overrides(pairs, None, None)
+    }
+
+    pub fn from_env_pairs_with_overrides(
+        pairs: impl IntoIterator<Item = (impl AsRef<str>, impl AsRef<str>)>,
+        locale_override: Option<&str>,
+        timezone_override: Option<&str>,
     ) -> Self {
         let mut lc_all = None;
         let mut lang = None;
@@ -55,12 +70,14 @@ impl HostLocale {
             .as_deref()
             .filter(|value| !value.trim().is_empty())
             .or(lang.as_deref());
+        let timezone_raw = timezone_override.or(timezone.as_deref());
+        let locale_raw = locale_override.or(locale_raw);
 
         Self {
             locale: LocaleId {
                 bcp47: normalize_locale_tag(locale_raw),
             },
-            timezone: normalize_timezone(timezone.as_deref()),
+            timezone: normalize_timezone(timezone_raw),
         }
     }
 
@@ -162,5 +179,17 @@ mod tests {
             HostLocale::format_number(42.5, NumberStyle::Decimal, &locale),
             "42.5:Decimal:en-US"
         );
+    }
+
+    #[test]
+    fn locale_and_timezone_overrides_win_over_environment() {
+        let locale = HostLocale::from_env_pairs_with_overrides(
+            [("LC_ALL", "fr_CA.UTF-8"), ("TZ", "America/Toronto")],
+            Some("en_GB.UTF-8"),
+            Some("UTC"),
+        );
+
+        assert_eq!(locale.current().bcp47, "en-GB");
+        assert_eq!(locale.timezone(), "UTC");
     }
 }

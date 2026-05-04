@@ -122,7 +122,9 @@ clear stderr message.
 The first named sample app has started too. `apps/layer36-clock` is a Rust
 component that reads time and locale through UAPI, then prints through UAPI
 stdout. The CLI now has a hidden `--test-time` flag, so tests can freeze the
-clock and check stable output.
+clock and check stable output. It now also has hidden `--test-locale` and
+`--test-timezone` flags, so fixture tests can pin all clock output fields and
+assert one exact snapshot across hosts.
 
 The second sample path has started as well. `apps/layer36-cat` reads app
 arguments through `layer36:io/args.raw`, opens files through `layer36:fs/files`,

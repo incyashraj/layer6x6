@@ -2063,7 +2063,7 @@ The generated import host exists now as well. `crates/runtime/src/phase2_host.rs
 
 The first real Phase 2 component proof exists under `test/integration/phase2-smoke`. It targets the Phase 2 `cli` world, reads `phase2-smoke-input.txt` through `layer36:fs/files`, calls time and locale imports, and writes its result through `layer36:io/stdio`. CI can build this component as a shared fixture and run it through `layer36 run --grant fs.read:phase2-smoke-input.txt` on the cross-host test matrix. The local test suite now also checks the missing-grant path: without `fs.read`, the host maps the call to `permission-denied`, the component writes a short stderr message, and exits with a stable non-zero code.
 
-The first named sample app also exists now: `apps/layer36-clock`. It is a Rust component for the current binding path. It calls the Phase 2 time and locale imports, writes through UAPI stdout, and can run with `layer36 run --test-time` so tests can compare stable output instead of racing the real clock. The original TypeScript/jco sample plan is still useful for the language-binding track, but the Rust sample lets the runtime path mature first.
+The first named sample app also exists now: `apps/layer36-clock`. It is a Rust component for the current binding path. It calls the Phase 2 time and locale imports, writes through UAPI stdout, and can run with `layer36 run --test-time` so tests can compare stable output instead of racing the real clock. The hidden `--test-locale` and `--test-timezone` flags now let the fixture path pin locale and timezone too, so the clock output can be asserted as one exact cross-host snapshot. The original TypeScript/jco sample plan is still useful for the language-binding track, but the Rust sample lets the runtime path mature first.
 
 `apps/layer36-cat` has started too. The CLI can now forward app arguments after `--`, the runtime exposes them through `layer36:io/args.raw`, and the cat sample uses those args plus `fs.read` grants to concatenate fixture files. The test suite checks the granted path, the missing-grant denial path, and the outside-granted-glob denial path. Permission denial exits with code `5`.
 
@@ -2121,7 +2121,7 @@ formal exit gates.
 
 | Area | Current read | What remains |
 |------|--------------|--------------|
-| Core Phase 2 engineering | About 81-86% through the first useful CLI slice | WIT freeze review, more shared adapter slices, cross-host identity runs, and network hardening. |
+| Core Phase 2 engineering | About 82-87% through the first useful CLI slice | WIT freeze review, more shared adapter slices, cross-host identity runs, and network hardening. |
 | Formal Phase 2 exit | About 45-50% complete | Language runtime proofs, seven-day CI evidence, fuzzing, full benchmark gate, threat model v0.2, ADR-0009 through ADR-0012, and external validation. |
 | UAPI and UCap | Strong shape, not frozen | Review default grants, path normalization, network policy details, and freeze rules before `0.1.0`. |
 | SDKs | Rust is usable; Go and TypeScript are scaffolded | Publish-ready Rust after freeze, TinyGo runtime proof, and jco runtime proof. |
@@ -2192,6 +2192,7 @@ formal exit gates.
 | P2-ADPT-COMMON-02K | Shared Windows reserved-name hardening | 2026-05-04 | `adapter-common::path::LogicalPath` now rejects reserved Windows device-style path segments such as `CON`, `NUL`, `COM1`-`COM9`, and `LPT1`-`LPT9` (including extension-like suffix forms). This keeps sandboxed file paths from falling into host device-name edge behavior. |
 | P2-APP-01A | First `layer36-curl` sample path | 2026-05-04 | Added `apps/layer36-curl`, a Rust Phase 2 component that reads a URL from app args, fetches through `net.http-client.get`, writes stdout, and fails cleanly without `net.connect`. |
 | P2-APP-01E | Clear `layer36-curl` network failures | 2026-05-04 | `layer36-curl` now prints distinct messages for response-too-large, timeout, and protocol errors while keeping its fetch-failure exit behavior stable. |
+| P2-APP-01F | Deterministic clock fixture snapshot controls | 2026-05-04 | Added hidden `layer36 run --test-locale` and `--test-timezone` flags, wired locale/timezone overrides through runtime adapter-common locale helpers, and added a strict `layer36-clock` snapshot test with fixed time, locale, and timezone so cross-host fixture output can be compared exactly. |
 | P2-APP-01B | Pure Layer36 imports for cat/curl samples | 2026-05-04 | `layer36-cat` and `layer36-curl` now parse `io.args.raw` directly. Their rebuilt components no longer import `wasi:*`, and the explicit fixture-backed CLI tests pass for hello, smoke, clock, cat, and curl. |
 | P2-CI-03 | Component import purity gate | 2026-05-04 | Added `layer36-tools --bin check-component-imports` and `scripts/check-component-imports.sh` to parse built component imports and reject anything outside `layer36:*`; full hosted CI and self-hosted CI run it after building Phase 2 fixtures. |
 | P2-APP-01D | Sample manifest launch coverage | 2026-05-04 | Sample manifests for `layer36-clock`, `layer36-cat`, and `layer36-curl` are now validated in CLI tests, and each Rust sample has a fixture-backed `layer36 run --manifest ... --auto-grant` test. |
@@ -2221,7 +2222,7 @@ formal exit gates.
 
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
-| P2-APP-01C | Add cross-host fixture assertions and language sample variants | 2026-05-04 | Rust versions of `layer36-clock`, `layer36-cat`, and `layer36-curl` exist locally; full cross-host fixture assertions and language-binding variants still remain. |
+| P2-APP-01C | Add cross-host fixture assertions and language sample variants | 2026-05-04 | Rust sample coverage now includes deterministic `layer36-clock` snapshot assertions with fixed time/locale/timezone. Remaining work: extend equivalent fixture assertions to language-binding sample variants (Go/TypeScript) once those build/run paths are wired. |
 | P2-ADPT-COMMON-02 | Expand shared adapter-common beyond HTTP framing | 2026-05-04 | Path normalization, prefix hardening, Windows reserved-name hardening, sandbox-root resolution, symlink escape checks, Unix and Windows no-follow final-symlink open hardening, root-like destructive operation guards, first shared clock and time-overflow helpers, and first shared locale helpers now exist. Deeper directory race hardening, remaining Windows parity checks, real ICU4X formatting, OS-specific locale/timezone discovery, and the final per-OS adapter split remain before the adapter-common exit box can be checked. |
 | P2-BIND-01E | Rust SDK crates.io publication | 2026-05-04 | Package shape, API docs, and outside-workspace smoke are ready locally; actual crates.io publication remains blocked until UAPI v0.1 is intentionally frozen. |
 

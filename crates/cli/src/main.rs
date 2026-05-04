@@ -82,6 +82,14 @@ enum Command {
         #[arg(long, hide = true)]
         test_time: Option<u64>,
 
+        /// Fixed locale tag for deterministic tests.
+        #[arg(long, hide = true)]
+        test_locale: Option<String>,
+
+        /// Fixed timezone for deterministic tests.
+        #[arg(long, hide = true)]
+        test_timezone: Option<String>,
+
         /// Arguments passed to the Layer36 app. Put them after `--`.
         #[arg(last = true, value_name = "ARG")]
         app_args: Vec<String>,
@@ -204,6 +212,8 @@ fn run() -> Result<u8> {
             log_grants,
             log_grants_format,
             test_time,
+            test_locale,
+            test_timezone,
             app_args,
         } => run_component(RunRequest {
             file,
@@ -220,6 +230,8 @@ fn run() -> Result<u8> {
             log_grants,
             log_grants_format,
             test_time_millis: test_time,
+            test_locale,
+            test_timezone,
             app_args,
         }),
         Command::Version => {
@@ -267,6 +279,8 @@ struct RunRequest {
     log_grants: Option<PathBuf>,
     log_grants_format: GrantLogFormat,
     test_time_millis: Option<u64>,
+    test_locale: Option<String>,
+    test_timezone: Option<String>,
     app_args: Vec<String>,
 }
 
@@ -340,6 +354,8 @@ fn run_component(request: RunRequest) -> Result<u8> {
             .context("memory limit is too large")?,
         session_policy: policy,
         test_time_millis: request.test_time_millis,
+        test_locale: request.test_locale,
+        test_timezone: request.test_timezone,
         app_args: request.app_args,
         max_http_response_bytes: request.max_http_response_bytes,
         sandbox_root: request.sandbox_root,

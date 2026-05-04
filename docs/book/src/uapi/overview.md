@@ -323,8 +323,9 @@ host returns permission denied before native file access happens.
 
 The first named sample app is `apps/layer36-clock`. It uses the same Phase 2
 world but focuses on time, locale, and stdout. A hidden `--test-time` runner
-flag lets the test suite freeze wall-clock time, which keeps the sample output
-stable across machines.
+flag lets the test suite freeze wall-clock time. Hidden `--test-locale` and
+`--test-timezone` flags can pin locale and timezone too, so the clock fixture
+can assert one exact snapshot across machines.
 
 The next sample is `apps/layer36-cat`. It forced one important addition:
 Layer36-native app arguments. You pass app arguments after `--`:

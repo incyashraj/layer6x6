@@ -582,6 +582,44 @@ fn configured_layer36_clock_component_uses_fixed_test_time() {
 }
 
 #[test]
+fn configured_layer36_clock_component_matches_deterministic_fixture_snapshot() {
+    let Some(path) = configured_layer36_clock_component() else {
+        return;
+    };
+
+    let output = layer36()
+        .args([
+            "run",
+            "--test-time",
+            "1234567890",
+            "--test-locale",
+            "en-US",
+            "--test-timezone",
+            "UTC",
+        ])
+        .arg(path)
+        .output()
+        .expect("run layer36-clock component with deterministic locale/timezone");
+
+    assert!(
+        output.status.success(),
+        "layer36-clock deterministic snapshot failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        concat!(
+            "app=layer36-clock\n",
+            "timezone=UTC\n",
+            "locale=en-US\n",
+            "date=1234567890:UTC:Medium:en-US\n"
+        )
+    );
+    assert!(output.stderr.is_empty());
+}
+
+#[test]
 fn configured_layer36_clock_component_runs_with_sample_manifest_auto_grant() {
     let Some(path) = configured_layer36_clock_component() else {
         return;
