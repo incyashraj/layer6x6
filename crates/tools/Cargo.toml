@@ -1,0 +1,12 @@
+[package]
+name = "layer36-tools"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+anyhow.workspace = true
+wit-parser.workspace = true

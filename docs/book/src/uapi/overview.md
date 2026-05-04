@@ -45,6 +45,9 @@ platform is ready.
 The first Phase 2 draft is checked into `wit/layer36/phase2`. It is a review
 draft, not a frozen compatibility promise yet.
 
+The generated reference page is built from those WIT files:
+[UAPI Reference](../reference/uapi/index.md).
+
 ## App Manifest
 
 Phase 2 apps can also carry a sidecar `manifest.toml`.

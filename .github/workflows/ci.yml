@@ -127,7 +127,30 @@ jobs:
         run: cargo package -p layer36
 
   # ──────────────────────────────────────────────
-  # 6. Shared component fixtures
+  # 6. Generated UAPI reference freshness
+  # ──────────────────────────────────────────────
+  uapi-reference:
+    name: UAPI reference
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@1.91.1
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-uapi-reference-${{ hashFiles('**/Cargo.lock') }}
+      - name: Regenerate UAPI reference
+        run: sh scripts/generate-uapi-reference.sh
+      - name: Check generated UAPI reference is current
+        run: git diff --exit-code -- docs/book/src/reference/uapi/index.md
+
+  # ──────────────────────────────────────────────
+  # 7. Shared component fixtures
   # ──────────────────────────────────────────────
   hello-fixture:
     name: Build shared component fixtures
@@ -194,7 +217,7 @@ jobs:
           if-no-files-found: error
 
   # ──────────────────────────────────────────────
-  # 7. Full test matrix — Linux, macOS, Windows
+  # 8. Full test matrix — Linux, macOS, Windows
   # ──────────────────────────────────────────────
   full-test:
     name: Full test (${{ matrix.os }})
@@ -240,7 +263,7 @@ jobs:
         run: scripts/test-phase1.sh
 
   # ──────────────────────────────────────────────
-  # 8. Documentation build
+  # 9. Documentation build
   # ──────────────────────────────────────────────
   docs:
     name: Docs (mdBook)
@@ -257,7 +280,7 @@ jobs:
         run: mdbook build docs/book
 
   # ──────────────────────────────────────────────
-  # 9. Benchmark smoke + warning-only regression check
+  # 10. Benchmark smoke + warning-only regression check
   # ──────────────────────────────────────────────
   benchmarks:
     name: Benchmarks (warning only)
@@ -289,7 +312,7 @@ jobs:
         run: scripts/check-benchmark-regression.sh
 
   # ──────────────────────────────────────────────
-  # 10. Dependency audit (cargo-deny)
+  # 11. Dependency audit (cargo-deny)
   # ──────────────────────────────────────────────
   deny:
     name: Dependency audit (cargo-deny)

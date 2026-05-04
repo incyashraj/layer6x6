@@ -6,6 +6,7 @@ members = [
     "crates/policy",
     "crates/runtime",
     "crates/cli",
+    "crates/tools",
 ]
 exclude = [
     "apps/layer36-curl",

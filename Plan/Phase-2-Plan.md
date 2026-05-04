@@ -2039,6 +2039,11 @@ The Rust host-binding checkpoint is in place behind the `phase2-bindings` runtim
 
 The first Rust guest SDK crate exists now too. `crates/bindings-rust` builds as package `layer36`, wraps the generated guest imports behind simple modules like `layer36::io`, `layer36::fs`, `layer36::net`, `layer36::time`, and `layer36::locale`, and provides the `Guest` trait plus `layer36::export!`. The Rust sample apps now use that SDK facade instead of calling app-local generated binding modules directly. The SDK also has the first ergonomic helper layer: inline app-argument helpers, stdout/stderr text helpers, file read/write helpers, HTTP text helpers, top-level time and locale shortcuts, a crate README, publish-facing package metadata, a package dry-run in CI, and a short public Rust SDK guide.
 
+The first generated UAPI reference exists too. `crates/tools` parses
+`wit/layer36/phase2` with `wit-parser`, writes
+`docs/book/src/reference/uapi/index.md`, and CI checks that the generated page
+is current. This is still a reference for a moving draft, not a freeze.
+
 The generated WIT type bridge is also in place. `crates/runtime/src/phase2_bridge.rs` maps generated WIT records, enums, and module errors into the runtime dispatcher shapes. This is a small step, but it removes guesswork from the next one: the Wasmtime import traits can now call the dispatcher and return the right WIT-shaped values.
 
 The generated import host exists now as well. `crates/runtime/src/phase2_host.rs` implements Wasmtime's generated Phase 2 host traits over `UapiDispatcher` for path-level filesystem calls, HTTP fetch, time, locale, logging, and stdio. It now has a small resource table too, so opened files and stdio streams get runtime-owned IDs before file read/write/seek/stat and stream read/write/flush calls reach the host adapter.
@@ -2086,7 +2091,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | 10 | Startup overhead for a UAPI-using app < 150 ms | Not done |
 | 11 | UAPI hot-path dispatch < 1 µs (microbenchmark) | Not done |
 | 12 | Developer who knows Rust but not WASM can write a CLI in < 30 min using docs | Not done |
-| 13 | UAPI reference docs auto-generated from WIT and published on docs site | Not done |
+| 13 | UAPI reference docs auto-generated from WIT and published on docs site | Started: first generated mdBook page exists under `reference/uapi`, and hosted/self-hosted CI checks it is current |
 | 14 | WIT Style Guide merged into `docs/book/` | Not done |
 | 15 | ADRs 0006 through at least 0012 merged | Not done |
 
@@ -2125,6 +2130,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-APP-01A | First `layer36-curl` sample path | 2026-05-04 | Added `apps/layer36-curl`, a Rust Phase 2 component that reads a URL from app args, fetches through `net.http-client.get`, writes stdout, and fails cleanly without `net.connect`. |
 | P2-BIND-01A | Rust SDK crate skeleton | 2026-05-04 | Added `crates/bindings-rust` as package `layer36`, with first wrappers over generated guest bindings and the Rust sample apps migrated to the SDK facade. |
 | P2-BIND-01B | Rust SDK helper layer and guide | 2026-05-04 | Added app-facing helpers for args, stream text output, file read/write, HTTP text, time, and locale; documented them in `docs/book/src/uapi/rust-sdk.md`; verified samples still import only Layer36 UAPI. |
+| P2-DOC-02A | Generated UAPI reference seed | 2026-05-04 | Added `layer36-tools` reference generator using `wit-parser`; generated `docs/book/src/reference/uapi/index.md`; linked it in mdBook; hosted and self-hosted CI check the generated page is current. |
 
 ---
 
@@ -2133,7 +2139,8 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
 | P2-APP-01C | Add cross-host fixture assertions and language sample variants | 2026-05-04 | Rust versions of `layer36-clock`, `layer36-cat`, and `layer36-curl` exist locally; full cross-host fixture assertions and language-binding variants still remain. |
-| P2-BIND-01C | Prepare Rust SDK packaging and reference docs | 2026-05-04 | Added crate README, crates.io-facing metadata, package include list, local `cargo package -p layer36 --offline` proof, and CI/self-hosted package dry-runs. Generated API reference still remains. |
+| P2-BIND-01C | Prepare Rust SDK packaging and reference docs | 2026-05-04 | Added crate README, crates.io-facing metadata, package include list, local `cargo package -p layer36 --offline` proof, and CI/self-hosted package dry-runs. Richer Rust SDK API docs still remain. |
+| P2-DOC-02B | Improve generated UAPI reference prose and per-interface examples | 2026-05-04 | The first generated page is truthful and CI-backed; examples, capability notes, and richer per-function docs remain. |
 
 ---
 
