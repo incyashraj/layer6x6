@@ -4,12 +4,13 @@ use std::path::{Path, PathBuf};
 use std::process::{Command as ProcessCommand, ExitCode};
 
 use anyhow::{Context, Result};
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use layer36_manifest::{
     supported_capability_specs, App, Capability, CapabilityRequest, Manifest, PHASE2_CLI_WORLD,
 };
 use layer36_policy::{resolve_session_policy, SessionPolicy};
 use layer36_runtime::{Config, RunOutcome, Runtime, RuntimeError};
+use serde::Serialize;
 
 #[derive(Debug, Parser)]
 #[command(
@@ -91,6 +92,10 @@ enum ManifestCommand {
     Explain {
         /// Path to manifest.toml.
         file: PathBuf,
+
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = ManifestExplainFormat::Text)]
+        format: ManifestExplainFormat,
     },
     /// Create a starter Phase 2 manifest.toml.
     Init {
@@ -124,6 +129,12 @@ enum ManifestCommand {
     },
     /// Print the Phase 2 capability strings understood by this runtime.
     Capabilities,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]
+enum ManifestExplainFormat {
+    Text,
+    Json,
 }
 
 fn main() -> ExitCode {
@@ -180,7 +191,7 @@ fn run() -> Result<u8> {
         Command::Doctor => doctor(),
         Command::Manifest { command } => match command {
             ManifestCommand::Check { file } => check_manifest(&file),
-            ManifestCommand::Explain { file } => explain_manifest(&file),
+            ManifestCommand::Explain { file, format } => explain_manifest(&file, format),
             ManifestCommand::Init {
                 id,
                 name,
@@ -501,9 +512,15 @@ fn check_manifest(file: &Path) -> Result<u8> {
     Ok(0)
 }
 
-fn explain_manifest(file: &Path) -> Result<u8> {
+fn explain_manifest(file: &Path, format: ManifestExplainFormat) -> Result<u8> {
     let manifest = Manifest::parse_file(file)?;
     let declared_caps = manifest.declared_capabilities()?;
+
+    if format == ManifestExplainFormat::Json {
+        let explanation = ManifestExplanation::from_manifest(&manifest, &declared_caps);
+        println!("{}", serde_json::to_string_pretty(&explanation)?);
+        return Ok(0);
+    }
 
     println!("Manifest");
     println!("app id          {}", manifest.app.id);
@@ -536,6 +553,67 @@ fn explain_manifest(file: &Path) -> Result<u8> {
     }
 
     Ok(0)
+}
+
+#[derive(Debug, Serialize)]
+struct ManifestExplanation {
+    app: ManifestAppExplanation,
+    capabilities: Vec<CapabilityExplanation>,
+}
+
+impl ManifestExplanation {
+    fn from_manifest(manifest: &Manifest, declared_caps: &[Capability]) -> Self {
+        let capabilities = manifest
+            .capabilities
+            .iter()
+            .zip(declared_caps)
+            .map(|(request, cap)| {
+                let default_grant = cap.is_default_granted();
+                CapabilityExplanation {
+                    capability: cap.to_string(),
+                    module: cap.module().to_string(),
+                    action: cap.action().to_string(),
+                    resource: cap.resource().map(ToOwned::to_owned),
+                    required: request.required,
+                    default_grant,
+                    launch_grant_needed: request.required && !default_grant,
+                    rationale: request.rationale.clone(),
+                }
+            })
+            .collect();
+
+        Self {
+            app: ManifestAppExplanation {
+                id: manifest.app.id.clone(),
+                name: manifest.app.name.clone(),
+                version: manifest.app.version.clone(),
+                entry: manifest.app.entry.display().to_string(),
+                world: manifest.app.world.clone(),
+            },
+            capabilities,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+struct ManifestAppExplanation {
+    id: String,
+    name: String,
+    version: String,
+    entry: String,
+    world: String,
+}
+
+#[derive(Debug, Serialize)]
+struct CapabilityExplanation {
+    capability: String,
+    module: String,
+    action: String,
+    resource: Option<String>,
+    required: bool,
+    default_grant: bool,
+    launch_grant_needed: bool,
+    rationale: String,
 }
 
 fn init_manifest(request: ManifestInitRequest) -> Result<u8> {

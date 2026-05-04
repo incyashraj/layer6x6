@@ -191,6 +191,59 @@ fn manifest_explain_shows_default_and_launch_grants() {
 }
 
 #[test]
+fn manifest_explain_json_reports_structured_grants() {
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let manifest_path = dir.path().join("manifest.toml");
+    std::fs::write(
+        &manifest_path,
+        r#"
+            [app]
+            id = "com.example.notes"
+            name = "Notes"
+            version = "1.0.0"
+            entry = "notes.wasm"
+            world = "layer36:app/cli@0.1.0"
+
+            [[capabilities]]
+            cap = "io.stdout"
+            rationale = "Print output"
+            required = true
+
+            [[capabilities]]
+            cap = "fs.read:./notes/**"
+            rationale = "Read notes"
+            required = true
+        "#,
+    )
+    .expect("write manifest");
+
+    let output = layer36()
+        .args(["manifest", "explain", "--format", "json"])
+        .arg(&manifest_path)
+        .output()
+        .expect("run manifest explain json");
+
+    assert!(
+        output.status.success(),
+        "manifest explain json failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains(r#""id": "com.example.notes""#));
+    assert!(stdout.contains(r#""entry": "notes.wasm""#));
+    assert!(stdout.contains(r#""capability": "io.stdout""#));
+    assert!(stdout.contains(r#""default_grant": true"#));
+    assert!(stdout.contains(r#""launch_grant_needed": false"#));
+    assert!(stdout.contains(r#""capability": "fs.read:./notes/**""#));
+    assert!(stdout.contains(r#""module": "fs""#));
+    assert!(stdout.contains(r#""action": "read""#));
+    assert!(stdout.contains(r#""resource": "./notes/**""#));
+    assert!(stdout.contains(r#""launch_grant_needed": true"#));
+}
+
+#[test]
 fn manifest_capabilities_lists_phase_2_cap_table() {
     let output = layer36()
         .args(["manifest", "capabilities"])

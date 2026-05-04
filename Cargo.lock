@@ -929,6 +929,8 @@ dependencies = [
  "layer36-manifest",
  "layer36-policy",
  "layer36-runtime",
+ "serde",
+ "serde_json",
  "sha2",
  "tempfile",
  "tracing-subscriber",
