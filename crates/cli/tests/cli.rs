@@ -998,9 +998,11 @@ fn configured_layer36_curl_component_denies_missing_net_grant() {
 
 #[test]
 fn configured_layer36_go_clock_component_matches_deterministic_fixture_snapshot() {
-    let Some(path) =
-        configured_component_from_env("LAYER36_GO_CLOCK_WASM", "layer36-go-clock component test")
-    else {
+    let Some(path) = configured_go_component(
+        "LAYER36_GO_CLOCK_WASM",
+        "layer36-go-clock component test",
+        "layer36_go_clock.wasm",
+    ) else {
         return;
     };
 
@@ -1038,9 +1040,11 @@ fn configured_layer36_go_clock_component_matches_deterministic_fixture_snapshot(
 
 #[test]
 fn configured_layer36_go_cat_component_reads_granted_files() {
-    let Some(path) =
-        configured_component_from_env("LAYER36_GO_CAT_WASM", "layer36-go-cat component test")
-    else {
+    let Some(path) = configured_go_component(
+        "LAYER36_GO_CAT_WASM",
+        "layer36-go-cat component test",
+        "layer36_go_cat.wasm",
+    ) else {
         return;
     };
 
@@ -1073,9 +1077,11 @@ fn configured_layer36_go_cat_component_reads_granted_files() {
 
 #[test]
 fn configured_layer36_go_curl_component_fetches_granted_http_url() {
-    let Some(path) =
-        configured_component_from_env("LAYER36_GO_CURL_WASM", "layer36-go-curl component test")
-    else {
+    let Some(path) = configured_go_component(
+        "LAYER36_GO_CURL_WASM",
+        "layer36-go-curl component test",
+        "layer36_go_curl.wasm",
+    ) else {
         return;
     };
 
@@ -1103,9 +1109,11 @@ fn configured_layer36_go_curl_component_fetches_granted_http_url() {
 
 #[test]
 fn configured_layer36_ts_clock_component_matches_deterministic_fixture_snapshot() {
-    let Some(path) =
-        configured_component_from_env("LAYER36_TS_CLOCK_WASM", "layer36-ts-clock component test")
-    else {
+    let Some(path) = configured_ts_component(
+        "LAYER36_TS_CLOCK_WASM",
+        "layer36-ts-clock component test",
+        "layer36_ts_clock.wasm",
+    ) else {
         return;
     };
 
@@ -1143,9 +1151,11 @@ fn configured_layer36_ts_clock_component_matches_deterministic_fixture_snapshot(
 
 #[test]
 fn configured_layer36_ts_cat_component_reads_granted_files() {
-    let Some(path) =
-        configured_component_from_env("LAYER36_TS_CAT_WASM", "layer36-ts-cat component test")
-    else {
+    let Some(path) = configured_ts_component(
+        "LAYER36_TS_CAT_WASM",
+        "layer36-ts-cat component test",
+        "layer36_ts_cat.wasm",
+    ) else {
         return;
     };
 
@@ -1178,9 +1188,11 @@ fn configured_layer36_ts_cat_component_reads_granted_files() {
 
 #[test]
 fn configured_layer36_ts_curl_component_fetches_granted_http_url() {
-    let Some(path) =
-        configured_component_from_env("LAYER36_TS_CURL_WASM", "layer36-ts-curl component test")
-    else {
+    let Some(path) = configured_ts_component(
+        "LAYER36_TS_CURL_WASM",
+        "layer36-ts-curl component test",
+        "layer36_ts_curl.wasm",
+    ) else {
         return;
     };
 
@@ -1672,8 +1684,38 @@ fn configured_layer36_curl_component() -> Option<PathBuf> {
     configured_component_from_env("LAYER36_CURL_WASM", "layer36-curl component test")
 }
 
+fn configured_go_component(env: &str, label: &str, filename: &str) -> Option<PathBuf> {
+    configured_component_from_env_or_paths(
+        env,
+        label,
+        &[format!("test/integration/language-variants/{filename}")],
+    )
+}
+
+fn configured_ts_component(env: &str, label: &str, filename: &str) -> Option<PathBuf> {
+    configured_component_from_env_or_paths(
+        env,
+        label,
+        &[format!("test/integration/language-variants/{filename}")],
+    )
+}
+
 fn configured_component_from_env(env: &str, label: &str) -> Option<PathBuf> {
+    configured_component_from_env_or_paths(env, label, &[])
+}
+
+fn configured_component_from_env_or_paths(
+    env: &str,
+    label: &str,
+    fallback_paths: &[String],
+) -> Option<PathBuf> {
     let Some(path) = std::env::var_os(env) else {
+        for fallback in fallback_paths {
+            let fallback = workspace_path(PathBuf::from(fallback));
+            if fallback.exists() {
+                return Some(fallback);
+            }
+        }
         eprintln!("skipping {label}: {env} is not set");
         return None;
     };

@@ -41,6 +41,16 @@ paths:
 - `LAYER36_TS_CAT_WASM`
 - `LAYER36_TS_CURL_WASM`
 
+It can also auto-discover built variant fixtures at these paths when the env
+vars are not set:
+
+- `test/integration/language-variants/layer36_go_clock.wasm`
+- `test/integration/language-variants/layer36_go_cat.wasm`
+- `test/integration/language-variants/layer36_go_curl.wasm`
+- `test/integration/language-variants/layer36_ts_clock.wasm`
+- `test/integration/language-variants/layer36_ts_cat.wasm`
+- `test/integration/language-variants/layer36_ts_curl.wasm`
+
 ## Setting up a local runner
 
 In GitHub, open:
