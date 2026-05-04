@@ -24,6 +24,9 @@ layer36 doctor
 It reports the core Rust tools first, then the optional language-binding tools.
 Missing Go or TypeScript tools are fine until you work on those binding tracks.
 
+The first TypeScript SDK scaffold lives in `packages/sdk-ts`. It does not require
+`jco` for normal Rust runtime work, but the TypeScript sample build will need it.
+
 ## Clone and build
 
 ```bash

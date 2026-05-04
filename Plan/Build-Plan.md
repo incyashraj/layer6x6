@@ -1593,7 +1593,7 @@ This section is the living status board for all of Layer36. Update it at every p
 |---|-------|--------|---------|-----------|-------|
 | 0 | Foundation | Mostly done | 2026-05-01 | pending external gates | Renamed from OneOS to Layer36 on 2026-05-02; local scaffold, docs, Pages, labels/issues, and CI are green. |
 | 1 | POC Runtime | Engineering done | 2026-05-02 | pending formal exit gates | Runtime, CLI, WIT host imports, shared hello-world fixture, CI harness, fuel/memory limits, release packaging, quickstart, threat model, benchmarks, ADRs, retrospective, and `v0.1.0-rc1` are in place. |
-| 2 | UAPI v0.1 (CLI) | Started | 2026-05-03 | pending | Draft WIT package, manifest/policy checks, manifest entry/run-file match check, terminal grant prompt, effective capability dump, runtime guard, host-binding checkpoint, dispatcher scaffold, file-handle capability rechecks, generated type bridge, generated host wiring, resource table, initial Phase 2 `layer36 run` linker path, smoke happy/denied proofs, first Rust SDK crate and helper layer, `layer36-clock`, first `layer36-cat`, first `layer36-curl`, sample-manifest launch coverage, language-tooling doctor probes, pure Layer36 imports for the Rust cat/curl samples, component import purity checks, permission-denied exit-code alignment, Rust SDK docs, manifest-derived UAPI reference capability tables, first UAPI dispatch and component startup benchmarks, and budget-aware CI mode are in place. |
+| 2 | UAPI v0.1 (CLI) | Started | 2026-05-03 | pending | Draft WIT package, manifest/policy checks, manifest entry/run-file match check, terminal grant prompt, effective capability dump, runtime guard, host-binding checkpoint, dispatcher scaffold, file-handle capability rechecks, generated type bridge, generated host wiring, resource table, initial Phase 2 `layer36 run` linker path, smoke happy/denied proofs, first Rust SDK crate and helper layer, first TypeScript SDK scaffold, `layer36-clock`, first `layer36-cat`, first `layer36-curl`, sample-manifest launch coverage, language-tooling doctor probes, pure Layer36 imports for the Rust cat/curl samples, component import purity checks, permission-denied exit-code alignment, Rust SDK docs, manifest-derived UAPI reference capability tables, first UAPI dispatch and component startup benchmarks, and budget-aware CI mode are in place. |
 | 3 | UI + Graphics | Not started | pending | pending | |
 | 4 | Mobile Hosts | Not started | pending | pending | |
 | 5 | Developer SDK | Not started | pending | pending | |
@@ -1709,6 +1709,7 @@ Short time-stamped entries for anything significant: ecosystem developments, piv
 | 2026-05-04 | Added an automated component import purity check so built Phase 2 fixtures fail full CI if they import host APIs outside `layer36:*`. |
 | 2026-05-04 | Added fixture-backed sample manifest launch tests for `layer36-clock`, `layer36-cat`, and `layer36-curl` using `layer36 run --manifest ... --auto-grant`. |
 | 2026-05-04 | Extended `layer36 doctor` to show Phase 2 language-binding tool readiness for TinyGo, Go, Node, npm, and jco before wiring those build paths into CI. |
+| 2026-05-04 | Started the TypeScript SDK track with `packages/sdk-ts`, WIT import declarations, helper wrappers, and a docs page. Runtime proof with jco still remains. |
 
 ---
 

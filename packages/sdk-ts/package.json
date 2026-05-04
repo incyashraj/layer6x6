@@ -1,0 +1,33 @@
+{
+  "name": "@layer36/sdk",
+  "version": "0.1.0-dev",
+  "description": "Experimental TypeScript helpers for Layer36 Phase 2 UAPI components.",
+  "type": "module",
+  "private": true,
+  "sideEffects": false,
+  "license": "Apache-2.0 OR MIT",
+  "author": "incyashraj",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./imports": {
+      "types": "./src/imports.d.ts",
+      "default": "./src/imports.d.ts"
+    }
+  },
+  "files": [
+    "src",
+    "README.md",
+    "package.json",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.4"
+  }
+}
