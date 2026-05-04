@@ -8,7 +8,7 @@ every contribution — code, docs, design, or ideas — compounds.
 ## Before you start
 
 1. Read the [Code of Conduct](CODE_OF_CONDUCT.md). We enforce it.
-2. Read the [Roadmap](Plan/Build-Plan.md) and the [current phase plan](Plan/Phase-0-Plan.md)
+2. Read the [Roadmap](Plan/Build-Plan.md) and the [current phase plan](Plan/Phase-2-Plan.md)
    so you know where we are.
 3. Check [open issues](https://github.com/incyashraj/layer6x6/issues) — especially
    those labelled `good first issue`.
@@ -91,6 +91,9 @@ chore(ci): pin cargo-deny to v0.14
 4. All CI checks must pass. Zero clippy warnings.
 5. Add an entry to `CHANGELOG.md` under `[Unreleased]`.
 6. If you changed the book, run `mdbook build docs/book`.
+7. If you changed WIT, follow the
+   [WIT style guide](docs/book/src/wit-style.md) and regenerate the UAPI
+   reference.
 
 ---
 

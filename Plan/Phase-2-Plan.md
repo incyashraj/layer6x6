@@ -1756,8 +1756,8 @@ Additional ADRs as decisions surface. Rule of thumb: if you have to ask "should 
 ### WIT & UAPI
 - [ ] All five WIT files merged and frozen at v0.1.0.
 - [ ] `wasm-tools` validates each.
-- [ ] WIT style guide merged.
-- [ ] UAPI reference auto-generation working in CI.
+- [x] WIT style guide merged.
+- [x] UAPI reference auto-generation working in CI.
 
 ### Adapters
 - [ ] Linux adapter implements all five modules; unit tests green.
@@ -1788,8 +1788,8 @@ Additional ADRs as decisions surface. Rule of thumb: if you have to ask "should 
 - [ ] `cargo-deny` still clean with new deps.
 
 ### Documentation
-- [ ] WIT style guide published.
-- [ ] UAPI reference published.
+- [x] WIT style guide published.
+- [x] UAPI reference published.
 - [ ] Three tutorials published (one per language).
 - [ ] Migration note from Phase 1 published.
 - [ ] Threat model v0.2 published.
@@ -2069,6 +2069,8 @@ There is also a manual self-hosted workflow for a local runner labeled
 `layer36-local`. That gives us a way to run the full local gate on a trusted
 machine without relying on hosted runner availability.
 
+The WIT style guide is now published in the book as well. It gives us concrete rules for package names, interface names, function names, resources, typed errors, capability mapping, comments, versioning, and review checks before we freeze UAPI v0.1.
+
 This does not freeze UAPI v0.1 yet. It gives us a real contract to review, generate bindings from, and wire into host adapters.
 
 ---
@@ -2091,8 +2093,8 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | 10 | Startup overhead for a UAPI-using app < 150 ms | Not done |
 | 11 | UAPI hot-path dispatch < 1 µs (microbenchmark) | Not done |
 | 12 | Developer who knows Rust but not WASM can write a CLI in < 30 min using docs | Not done |
-| 13 | UAPI reference docs auto-generated from WIT and published on docs site | Started: first generated mdBook page exists under `reference/uapi`, and hosted/self-hosted CI checks it is current |
-| 14 | WIT Style Guide merged into `docs/book/` | Not done |
+| 13 | UAPI reference docs auto-generated from WIT and published on docs site | Done for the current draft: generated mdBook page exists under `reference/uapi`, and hosted/self-hosted CI checks it is current |
+| 14 | WIT Style Guide merged into `docs/book/` | Done: `docs/book/src/wit-style.md` is linked from mdBook and `CONTRIBUTING.md` |
 | 15 | ADRs 0006 through at least 0012 merged | Not done |
 
 ---
@@ -2131,6 +2133,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-BIND-01A | Rust SDK crate skeleton | 2026-05-04 | Added `crates/bindings-rust` as package `layer36`, with first wrappers over generated guest bindings and the Rust sample apps migrated to the SDK facade. |
 | P2-BIND-01B | Rust SDK helper layer and guide | 2026-05-04 | Added app-facing helpers for args, stream text output, file read/write, HTTP text, time, and locale; documented them in `docs/book/src/uapi/rust-sdk.md`; verified samples still import only Layer36 UAPI. |
 | P2-BIND-01C | Rust SDK API docs and sample cleanup | 2026-05-04 | Added crate-level SDK docs, rustdoc comments for public helpers, owned argument helpers, sample usage of those helpers, and a self-hosted `cargo doc -p layer36 --no-deps --offline` check. |
+| P2-DOC-01 | WIT style guide | 2026-05-04 | Published `docs/book/src/wit-style.md` with naming, resources, typed errors, capability mapping, comments, versioning, and review checks; linked it from mdBook and `CONTRIBUTING.md`. |
 | P2-DOC-02A | Generated UAPI reference seed | 2026-05-04 | Added `layer36-tools` reference generator using `wit-parser`; generated `docs/book/src/reference/uapi/index.md`; linked it in mdBook; hosted and self-hosted CI check the generated page is current. |
 | P2-DOC-02B | Generated UAPI reference context | 2026-05-04 | The generated reference now includes interface summaries, capability notes, Rust SDK examples, WIT doc comments, and a generator test that checks those sections stay present. |
 
