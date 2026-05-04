@@ -1410,6 +1410,29 @@ mod tests {
     }
 
     #[test]
+    fn net_fetch_host_case_normalization_matches_grant() {
+        let adapter = RecordingAdapter::default();
+        let policy =
+            SessionPolicy::from_cli_grants(&["net.connect:api.example.com:443".to_string()])
+                .expect("policy");
+        let guard = UapiGuard::new(policy);
+        let dispatcher = UapiDispatcher::new(&guard, &adapter);
+        let req = HttpRequest {
+            method: HttpMethod::Get,
+            url: "https://API.Example.COM/v1/ping".to_string(),
+            headers: Vec::new(),
+            body: Vec::new(),
+            timeout_millis: None,
+        };
+
+        dispatcher
+            .net_fetch(req)
+            .expect("host case normalization should match grant");
+
+        assert_eq!(adapter.calls.borrow().net_fetch, 1);
+    }
+
+    #[test]
     fn sleep_requires_time_sleep_grant() {
         let adapter = RecordingAdapter::default();
         let guard = UapiGuard::new(SessionPolicy::default());
