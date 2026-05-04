@@ -62,6 +62,9 @@ and installs the generated UAPI imports. The local adapter currently covers
 stdio, basic filesystem calls, time, locale, and a first plain HTTP GET path.
 That HTTP path is still small on purpose: it is for localhost and test-server
 proofs while HTTPS, redirects, streaming, and production hardening stay open.
+It now has a response-size guard and typed errors for oversized responses,
+timeouts, and malformed HTTP responses, so apps can react to the real problem
+instead of receiving one generic network failure.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2
@@ -88,6 +91,13 @@ Layer36 app args, calls `layer36:net/http-client.get`, and writes the response
 body through UAPI stdout. Its first tests use a local HTTP server: with
 `net.connect:127.0.0.1:PORT` it fetches, without that grant it exits before the
 runtime opens a socket. Permission denial also exits with code `5`.
+Oversized responses, timeouts, and malformed HTTP responses now print specific
+curl messages too.
+
+The generated UAPI reference has also grown past a raw signature list. It now
+pulls capability strings from the manifest crate and adds short behavior notes
+under each function and resource method, so the docs explain both the call shape
+and the permission model in one place.
 
 The first terminal grant prompt exists too. `layer36 run --prompt app.wasm`
 shows the app identity, lists missing manifest capabilities, accepts all or a

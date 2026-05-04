@@ -172,8 +172,7 @@ fn render_interface(
         writeln!(out, "### Functions")?;
         writeln!(out)?;
         for func in freestanding {
-            write_docs(&func.docs, out)?;
-            writeln!(out, "- `{}`", render_function(resolve, func))?;
+            render_function_entry(resolve, &name, func, out)?;
         }
         writeln!(out)?;
     }
@@ -207,8 +206,7 @@ fn render_interface(
         writeln!(out, "#### `{name}` methods")?;
         writeln!(out)?;
         for method in methods {
-            write_docs(&method.docs, out)?;
-            writeln!(out, "- `{}`", render_function(resolve, method))?;
+            render_function_entry(resolve, &interface_name(resolve, interface), method, out)?;
         }
         writeln!(out)?;
     }
@@ -280,6 +278,36 @@ fn render_type_def(resolve: &Resolve, type_id: TypeId, out: &mut String) -> Resu
     }
 
     Ok(())
+}
+
+fn render_function_entry(
+    resolve: &Resolve,
+    interface_name: &str,
+    function: &Function,
+    out: &mut String,
+) -> Result<()> {
+    write_docs(&function.docs, out)?;
+    writeln!(out, "- `{}`", render_function(resolve, function))?;
+
+    let function_name = function_note_key(resolve, function);
+    for note in function_notes(interface_name, &function_name) {
+        writeln!(out, "  - {note}")?;
+    }
+
+    Ok(())
+}
+
+fn function_note_key(resolve: &Resolve, function: &Function) -> String {
+    let name = render_function_name(resolve, function);
+    if let Some(resource_id) = function.kind.resource() {
+        let resource_name = resolve.types[resource_id]
+            .name
+            .as_deref()
+            .unwrap_or("resource");
+        format!("{resource_name}.{name}")
+    } else {
+        name
+    }
 }
 
 fn render_function(resolve: &Resolve, function: &Function) -> String {
@@ -513,6 +541,136 @@ fn rust_example(interface: &str) -> Option<&'static str> {
     }
 }
 
+fn function_notes(interface: &str, function: &str) -> &'static [&'static str] {
+    match (interface, function) {
+        ("layer36:fs/files@0.1.0", "open") => &[
+            "Opens a host file through Layer36 and returns a `file` handle.",
+            "`read` needs `fs.read:PATH`; `write`, `append`, and `read-write` also need the matching write grant.",
+        ],
+        ("layer36:fs/files@0.1.0", "stat") => &[
+            "Reads file metadata without opening the file body.",
+            "Requires `fs.read:PATH` for the path being inspected.",
+        ],
+        ("layer36:fs/files@0.1.0", "list") => &[
+            "Returns directory entry names for a granted directory.",
+            "Requires `fs.list:PATH` before the adapter reads the directory.",
+        ],
+        ("layer36:fs/files@0.1.0", "remove-file") => &[
+            "Deletes one file.",
+            "Requires `fs.remove:PATH`; missing grants fail before host deletion is attempted.",
+        ],
+        ("layer36:fs/files@0.1.0", "remove-dir") => &[
+            "Deletes one directory.",
+            "Requires `fs.remove:PATH`; hosts can still reject non-empty directories.",
+        ],
+        ("layer36:fs/files@0.1.0", "mkdir") => &[
+            "Creates one directory.",
+            "Requires `fs.mkdir:PATH` for the directory being created.",
+        ],
+        ("layer36:fs/files@0.1.0", "rename") => &[
+            "Moves or renames a file or directory.",
+            "Requires grants for both sides: remove/write style access to the source and write style access to the destination.",
+        ],
+        ("layer36:fs/files@0.1.0", "file.read") => &[
+            "Reads up to `n` bytes from an opened file handle.",
+            "The runtime rechecks the handle path before each adapter read.",
+        ],
+        ("layer36:fs/files@0.1.0", "file.write") => &[
+            "Writes bytes to an opened file handle and returns the number written.",
+            "The runtime rechecks write permission before each adapter write.",
+        ],
+        ("layer36:fs/files@0.1.0", "file.seek-set") => &[
+            "Moves the file cursor to an absolute byte position.",
+            "The handle must still be valid and backed by a granted file.",
+        ],
+        ("layer36:fs/files@0.1.0", "file.seek-end") => &[
+            "Moves the file cursor to the end and returns the new position.",
+            "Useful before append-style writes or size checks.",
+        ],
+        ("layer36:fs/files@0.1.0", "file.stat") => &[
+            "Reads metadata for the opened file handle.",
+            "The runtime rechecks the handle path before the adapter stat call.",
+        ],
+        ("layer36:io/args@0.1.0", "raw") => &[
+            "Returns the app arguments passed after `--` in `layer36 run`.",
+            "Current encoding is newline-separated text, so SDK helpers should parse it for app code.",
+        ],
+        ("layer36:io/log@0.1.0", "emit") => &[
+            "Sends one structured log event to the host.",
+            "Fields are plain key/value strings so native hosts can map them to their own log systems.",
+        ],
+        ("layer36:io/stdio@0.1.0", "stdin") => &[
+            "Returns an input stream connected to the host standard input.",
+            "Granted by default for CLI apps.",
+        ],
+        ("layer36:io/stdio@0.1.0", "stdout") => &[
+            "Returns an output stream connected to host standard output.",
+            "Use this for normal command output that other tools may read.",
+        ],
+        ("layer36:io/stdio@0.1.0", "stderr") => &[
+            "Returns an output stream connected to host standard error.",
+            "Use this for diagnostics and permission errors.",
+        ],
+        ("layer36:io/streams@0.1.0", "input-stream.read") => &[
+            "Reads up to `n` bytes from an input stream.",
+            "A short read is valid; an empty read means the stream has no more bytes right now or is closed.",
+        ],
+        ("layer36:io/streams@0.1.0", "input-stream.read-to-string") => &[
+            "Reads the stream as UTF-8 text.",
+            "Invalid UTF-8 returns `io-error.invalid-utf8` instead of lossy text.",
+        ],
+        ("layer36:io/streams@0.1.0", "output-stream.write") => &[
+            "Writes bytes to an output stream and returns the number accepted.",
+            "Apps that need all bytes written should use `write-all` or an SDK helper.",
+        ],
+        ("layer36:io/streams@0.1.0", "output-stream.write-all") => &[
+            "Writes the full byte buffer or returns an IO error.",
+            "This is the right primitive for line-oriented CLI output.",
+        ],
+        ("layer36:io/streams@0.1.0", "output-stream.flush") => &[
+            "Asks the host to push buffered output through.",
+            "Use it before exiting after important diagnostics or prompts.",
+        ],
+        ("layer36:net/http-client@0.1.0", "get") => &[
+            "Performs a simple HTTP GET and returns only the response body.",
+            "Requires `net.connect:HOST:PORT`; Phase 2 currently supports the plain HTTP adapter path.",
+        ],
+        ("layer36:net/http-client@0.1.0", "fetch") => &[
+            "Performs an HTTP request and returns status, headers, and body.",
+            "Timeouts, oversized bodies, malformed responses, and missing grants are typed as `net-error` cases.",
+        ],
+        ("layer36:time/clock@0.1.0", "now-millis") => &[
+            "Reads host wall-clock time in milliseconds since Unix epoch.",
+            "This value can move backward or forward if the host clock changes.",
+        ],
+        ("layer36:time/clock@0.1.0", "monotonic-nanos") => &[
+            "Reads a non-decreasing timer in nanoseconds.",
+            "Use this for durations instead of wall-clock time.",
+        ],
+        ("layer36:time/sleep@0.1.0", "sleep-millis") => &[
+            "Blocks the calling component task for at least the requested milliseconds.",
+            "Requires `time.sleep`; hosts may wake slightly later than requested.",
+        ],
+        ("layer36:locale/info@0.1.0", "current") => &[
+            "Returns the host user's preferred locale as a BCP 47 string.",
+            "Good for display choices, not for security decisions.",
+        ],
+        ("layer36:locale/info@0.1.0", "timezone") => &[
+            "Returns the host timezone name.",
+            "Expected form is an IANA name such as `Asia/Singapore` when the host can provide one.",
+        ],
+        ("layer36:locale/format@0.1.0", "format-date") => &[
+            "Formats a timestamp using a requested timezone, date style, and locale.",
+            "The host owns the native formatting behavior so output can match the platform.",
+        ],
+        ("layer36:locale/format@0.1.0", "format-number") => &[
+            "Formats a number using a requested style and locale.",
+            "Currency style is present in the shape, but richer currency-code handling remains future work.",
+        ],
+        _ => &[],
+    }
+}
+
 fn render_type(resolve: &Resolve, ty: &Type) -> String {
     match ty {
         Type::Bool => "bool".to_string(),
@@ -602,6 +760,8 @@ mod tests {
         assert!(reference.contains("`net.connect:<host>:<port>`"));
         assert!(reference.contains("generated from the runtime manifest table"));
         assert!(reference.contains("let text = layer36::fs::read_to_string"));
+        assert!(reference.contains("Opens a host file through Layer36"));
+        assert!(reference.contains("Timeouts, oversized bodies, malformed responses"));
         assert!(reference.contains("> Milliseconds since Unix epoch."));
     }
 }

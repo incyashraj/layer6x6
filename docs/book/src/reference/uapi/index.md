@@ -52,12 +52,26 @@ layer36::io::stdio::println(&text)?;
 ### Functions
 
 - `open(path: string, mode: open-mode) -> result<own<file>, fs-error>`
+  - Opens a host file through Layer36 and returns a `file` handle.
+  - `read` needs `fs.read:PATH`; `write`, `append`, and `read-write` also need the matching write grant.
 - `stat(path: string) -> result<file-stat, fs-error>`
+  - Reads file metadata without opening the file body.
+  - Requires `fs.read:PATH` for the path being inspected.
 - `list(path: string) -> result<list<string>, fs-error>`
+  - Returns directory entry names for a granted directory.
+  - Requires `fs.list:PATH` before the adapter reads the directory.
 - `remove-file(path: string) -> result<_, fs-error>`
+  - Deletes one file.
+  - Requires `fs.remove:PATH`; missing grants fail before host deletion is attempted.
 - `remove-dir(path: string) -> result<_, fs-error>`
+  - Deletes one directory.
+  - Requires `fs.remove:PATH`; hosts can still reject non-empty directories.
 - `mkdir(path: string) -> result<_, fs-error>`
+  - Creates one directory.
+  - Requires `fs.mkdir:PATH` for the directory being created.
 - `rename(from: string, to: string) -> result<_, fs-error>`
+  - Moves or renames a file or directory.
+  - Requires grants for both sides: remove/write style access to the source and write style access to the destination.
 
 ### Types
 
@@ -66,10 +80,20 @@ layer36::io::stdio::println(&text)?;
 #### `file` methods
 
 - `read(n: u32) -> result<list<u8>, fs-error>`
+  - Reads up to `n` bytes from an opened file handle.
+  - The runtime rechecks the handle path before each adapter read.
 - `write(bytes: list<u8>) -> result<u32, fs-error>`
+  - Writes bytes to an opened file handle and returns the number written.
+  - The runtime rechecks write permission before each adapter write.
 - `seek-set(pos: u64) -> result<u64, fs-error>`
+  - Moves the file cursor to an absolute byte position.
+  - The handle must still be valid and backed by a granted file.
 - `seek-end() -> result<u64, fs-error>`
+  - Moves the file cursor to the end and returns the new position.
+  - Useful before append-style writes or size checks.
 - `stat() -> result<file-stat, fs-error>`
+  - Reads metadata for the opened file handle.
+  - The runtime rechecks the handle path before the adapter stat call.
 
 
 ## `layer36:fs/types@0.1.0`
@@ -129,6 +153,8 @@ let first = layer36::io::args::first_raw(&raw);
 ### Functions
 
 - `raw() -> string`
+  - Returns the app arguments passed after `--` in `layer36 run`.
+  - Current encoding is newline-separated text, so SDK helpers should parse it for app code.
 
 
 ## `layer36:io/log@0.1.0`
@@ -150,6 +176,8 @@ Accepted capability strings for this module, generated from the runtime manifest
 ### Functions
 
 - `emit(level: log-level, message: string, fields: list<field>)`
+  - Sends one structured log event to the host.
+  - Fields are plain key/value strings so native hosts can map them to their own log systems.
 
 ### Types
 
@@ -185,8 +213,14 @@ layer36::io::stdio::eprintln("debug line")?;
 ### Functions
 
 - `stdin() -> own<input-stream>`
+  - Returns an input stream connected to the host standard input.
+  - Granted by default for CLI apps.
 - `stdout() -> own<output-stream>`
+  - Returns an output stream connected to host standard output.
+  - Use this for normal command output that other tools may read.
 - `stderr() -> own<output-stream>`
+  - Returns an output stream connected to host standard error.
+  - Use this for diagnostics and permission errors.
 
 
 ## `layer36:io/streams@0.1.0`
@@ -224,13 +258,23 @@ out.flush()?;
 #### `input-stream` methods
 
 - `read(n: u32) -> result<list<u8>, io-error>`
+  - Reads up to `n` bytes from an input stream.
+  - A short read is valid; an empty read means the stream has no more bytes right now or is closed.
 - `read-to-string() -> result<string, io-error>`
+  - Reads the stream as UTF-8 text.
+  - Invalid UTF-8 returns `io-error.invalid-utf8` instead of lossy text.
 
 #### `output-stream` methods
 
 - `write(bytes: list<u8>) -> result<u32, io-error>`
+  - Writes bytes to an output stream and returns the number accepted.
+  - Apps that need all bytes written should use `write-all` or an SDK helper.
 - `write-all(bytes: list<u8>) -> result<_, io-error>`
+  - Writes the full byte buffer or returns an IO error.
+  - This is the right primitive for line-oriented CLI output.
 - `flush() -> result<_, io-error>`
+  - Asks the host to push buffered output through.
+  - Use it before exiting after important diagnostics or prompts.
 
 
 ## `layer36:io/types@0.1.0`
@@ -279,7 +323,11 @@ let text = layer36::locale::format_number(42.0, layer36::locale::NumberStyle::De
 ### Functions
 
 - `format-date(millis: u64, tz: string, style: date-style, loc: locale-id) -> string`
+  - Formats a timestamp using a requested timezone, date style, and locale.
+  - The host owns the native formatting behavior so output can match the platform.
 - `format-number(value: f64, style: number-style, loc: locale-id) -> string`
+  - Formats a number using a requested style and locale.
+  - Currency style is present in the shape, but richer currency-code handling remains future work.
 
 
 ## `layer36:locale/info@0.1.0`
@@ -307,9 +355,13 @@ let timezone = layer36::locale::timezone();
 > The user's preferred locale as reported by the host.
 
 - `current() -> locale-id`
+  - Returns the host user's preferred locale as a BCP 47 string.
+  - Good for display choices, not for security decisions.
 > IANA timezone name, for example "Asia/Singapore".
 
 - `timezone() -> string`
+  - Returns the host timezone name.
+  - Expected form is an IANA name such as `Asia/Singapore` when the host can provide one.
 
 
 ## `layer36:locale/types@0.1.0`
@@ -359,7 +411,11 @@ layer36::io::stdio::println(&body)?;
 ### Functions
 
 - `get(url: string) -> result<list<u8>, net-error>`
+  - Performs a simple HTTP GET and returns only the response body.
+  - Requires `net.connect:HOST:PORT`; Phase 2 currently supports the plain HTTP adapter path.
 - `fetch(req: request) -> result<response, net-error>`
+  - Performs an HTTP request and returns status, headers, and body.
+  - Timeouts, oversized bodies, malformed responses, and missing grants are typed as `net-error` cases.
 
 
 ## `layer36:net/types@0.1.0`
@@ -436,10 +492,14 @@ let tick = layer36::time::monotonic_nanos();
 > Milliseconds since Unix epoch. Wall-clock; can jump.
 
 - `now-millis() -> u64`
+  - Reads host wall-clock time in milliseconds since Unix epoch.
+  - This value can move backward or forward if the host clock changes.
 > Monotonic nanoseconds since an arbitrary origin.
 > Guaranteed non-decreasing; suitable for measuring intervals.
 
 - `monotonic-nanos() -> u64`
+  - Reads a non-decreasing timer in nanoseconds.
+  - Use this for durations instead of wall-clock time.
 
 
 ## `layer36:time/sleep@0.1.0`
@@ -467,4 +527,6 @@ layer36::time::sleep_millis(100);
 > Block the calling task for at least `millis` milliseconds.
 
 - `sleep-millis(millis: u32)`
+  - Blocks the calling component task for at least the requested milliseconds.
+  - Requires `time.sleep`; hosts may wake slightly later than requested.
 
