@@ -98,3 +98,6 @@ jobs:
 
       - name: Check TypeScript SDK shape
         run: npm --prefix packages/sdk-ts run check:shape
+
+      - name: Check Go SDK shape
+        run: node packages/sdk-go/scripts/check-shape.mjs
