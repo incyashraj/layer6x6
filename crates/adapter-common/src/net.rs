@@ -250,6 +250,7 @@ pub fn parse_plain_http_response(bytes: &[u8]) -> Result<PlainHttpResponse, Plai
     }
 
     let mut headers = Vec::new();
+    let mut content_length: Option<usize> = None;
     for line in lines {
         let Some((name, value)) = line.split_once(':') else {
             return Err(PlainHttpError::InvalidResponse);
@@ -263,11 +264,36 @@ pub fn parse_plain_http_response(bytes: &[u8]) -> Result<PlainHttpResponse, Plai
         {
             return Err(PlainHttpError::InvalidResponse);
         }
+        if name.eq_ignore_ascii_case("transfer-encoding") {
+            // The early Phase 2 plain adapter reads a full buffered response and
+            // does not implement chunked decoding yet.
+            return Err(PlainHttpError::InvalidResponse);
+        }
+        if name.eq_ignore_ascii_case("content-length") {
+            let parsed = value
+                .parse::<usize>()
+                .map_err(|_| PlainHttpError::InvalidResponse)?;
+            if let Some(existing) = content_length {
+                if existing != parsed {
+                    return Err(PlainHttpError::InvalidResponse);
+                }
+            } else {
+                content_length = Some(parsed);
+            }
+        }
         headers.push(PlainHttpHeader {
             name: name.to_string(),
             value: value.to_string(),
         });
         if headers.len() > MAX_HTTP_HEADERS {
+            return Err(PlainHttpError::InvalidResponse);
+        }
+    }
+    if let Some(content_length) = content_length {
+        if body.len() > content_length {
+            return Err(PlainHttpError::InvalidResponse);
+        }
+        if !body.is_empty() && body.len() < content_length {
             return Err(PlainHttpError::InvalidResponse);
         }
     }
@@ -682,6 +708,35 @@ mod tests {
                 .as_bytes()
             )
             .unwrap_err(),
+            PlainHttpError::InvalidResponse
+        );
+        assert_eq!(
+            parse_plain_http_response(
+                b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nbody\r\n0\r\n\r\n"
+            )
+            .unwrap_err(),
+            PlainHttpError::InvalidResponse
+        );
+        assert_eq!(
+            parse_plain_http_response(b"HTTP/1.1 200 OK\r\nContent-Length: nope\r\n\r\nbody")
+                .unwrap_err(),
+            PlainHttpError::InvalidResponse
+        );
+        assert_eq!(
+            parse_plain_http_response(
+                b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nContent-Length: 4\r\n\r\nbody"
+            )
+            .unwrap_err(),
+            PlainHttpError::InvalidResponse
+        );
+        assert_eq!(
+            parse_plain_http_response(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nbody")
+                .unwrap_err(),
+            PlainHttpError::InvalidResponse
+        );
+        assert_eq!(
+            parse_plain_http_response(b"HTTP/1.1 200 OK\r\nContent-Length: 8\r\n\r\nbody")
+                .unwrap_err(),
             PlainHttpError::InvalidResponse
         );
     }

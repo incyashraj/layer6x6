@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Shared Phase 2 plain HTTP response integrity checks in `adapter-common`: the shared response parser now rejects unsupported response `Transfer-Encoding`, conflicting `Content-Length` headers, and mismatched buffered body lengths in this early plain-HTTP slice.
 - Shared Phase 2 HTTP response read-loop hardening in `adapter-common`: full-response reads now use one helper that enforces byte limits and maps timeout-style socket reads before response parsing.
 - Shared Phase 2 host-name validation hardening in `adapter-common`: domain labels now reject leading/trailing `-`, label lengths are bounded, and numeric-dot hosts must parse as valid IPv4 literals.
 - Shared Phase 2 plain HTTP response parser hardening in `adapter-common`: runtime fetch parsing now uses one shared parser that validates HTTP/1.0/1.1 version, status-code range, header count limits, header syntax, and safe header values before data is returned to app-facing response types.
