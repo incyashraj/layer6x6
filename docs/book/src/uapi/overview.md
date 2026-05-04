@@ -96,6 +96,15 @@ You can validate the file today:
 cargo run -p layer36-cli -- manifest check manifest.toml
 ```
 
+To read it in human form:
+
+```bash
+cargo run -p layer36-cli -- manifest explain manifest.toml
+```
+
+This prints app identity, every requested capability, whether the capability is
+default-granted, and whether a launch grant is needed.
+
 You can also create a starter manifest from the CLI:
 
 ```bash

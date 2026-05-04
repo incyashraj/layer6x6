@@ -82,6 +82,11 @@ enum ManifestCommand {
         /// Path to manifest.toml.
         file: PathBuf,
     },
+    /// Explain app identity and capability grants in a manifest.toml file.
+    Explain {
+        /// Path to manifest.toml.
+        file: PathBuf,
+    },
     /// Create a starter Phase 2 manifest.toml.
     Init {
         /// Reverse-DNS app id, for example com.example.notes.
@@ -168,6 +173,7 @@ fn run() -> Result<u8> {
         Command::Doctor => doctor(),
         Command::Manifest { command } => match command {
             ManifestCommand::Check { file } => check_manifest(&file),
+            ManifestCommand::Explain { file } => explain_manifest(&file),
             ManifestCommand::Init {
                 id,
                 name,
@@ -453,6 +459,43 @@ fn check_manifest(file: &Path) -> Result<u8> {
     Ok(0)
 }
 
+fn explain_manifest(file: &Path) -> Result<u8> {
+    let manifest = Manifest::parse_file(file)?;
+    let declared_caps = manifest.declared_capabilities()?;
+
+    println!("Manifest");
+    println!("app id          {}", manifest.app.id);
+    println!("app name        {}", manifest.app.name);
+    println!("version         {}", manifest.app.version);
+    println!("entry           {}", manifest.app.entry.display());
+    println!("world           {}", manifest.app.world);
+    println!();
+
+    if declared_caps.is_empty() {
+        println!("Capabilities");
+        println!("  none declared");
+        return Ok(0);
+    }
+
+    println!("Capabilities");
+    for (request, cap) in manifest.capabilities.iter().zip(declared_caps) {
+        let default_grant = cap.is_default_granted();
+        println!("  - {}", cap);
+        println!("    required             {}", yes_no(request.required));
+        println!("    default grant        {}", yes_no(default_grant));
+        println!(
+            "    launch grant needed  {}",
+            yes_no(request.required && !default_grant)
+        );
+        if let Some(resource) = cap.resource() {
+            println!("    resource             {resource}");
+        }
+        println!("    rationale            {}", request.rationale);
+    }
+
+    Ok(0)
+}
+
 fn init_manifest(request: ManifestInitRequest) -> Result<u8> {
     let capabilities = request
         .capabilities
@@ -512,6 +555,14 @@ fn print_manifest_capabilities() -> Result<u8> {
     }
 
     Ok(0)
+}
+
+fn yes_no(value: bool) -> &'static str {
+    if value {
+        "yes"
+    } else {
+        "no"
+    }
 }
 
 fn print_tool_status(program: &str, args: &[&str]) {

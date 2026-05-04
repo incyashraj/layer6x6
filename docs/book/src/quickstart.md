@@ -172,6 +172,12 @@ cargo run -p layer36-cli -- manifest check path/to/manifest.toml
 For now this checks the TOML schema, app world, app id, duplicate capabilities,
 and capability string format.
 
+To understand what a manifest will ask for:
+
+```bash
+cargo run -p layer36-cli -- manifest explain path/to/manifest.toml
+```
+
 You can also generate a starter manifest:
 
 ```bash
