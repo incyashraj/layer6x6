@@ -27,7 +27,7 @@ impl Guest for Component {
             Err(NetError::PermissionDenied) => {
                 let _ = stderr.write_line("layer36-curl: permission denied");
                 let _ = stderr.flush();
-                return 25;
+                return 5;
             }
             Err(NetError::InvalidUrl) => {
                 let _ = stderr.write_line("layer36-curl: invalid url");

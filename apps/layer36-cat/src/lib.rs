@@ -27,7 +27,7 @@ impl Guest for Component {
                 Err(FsError::PermissionDenied) => {
                     let _ = write_error(&stderr, "permission denied", &path);
                     let _ = stderr.flush();
-                    return 25;
+                    return 5;
                 }
                 Err(FsError::NotFound) => {
                     let _ = write_error(&stderr, "not found", &path);

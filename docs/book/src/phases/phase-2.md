@@ -79,13 +79,15 @@ clock and check stable output.
 The second sample path has started as well. `apps/layer36-cat` reads app
 arguments through `layer36:io/args.raw`, opens files through `layer36:fs/files`,
 and writes bytes to UAPI stdout. The tests prove both sides: it reads files with
-the right `fs.read` grant, and gets permission denied without that grant.
+the right `fs.read` grant, and gets permission denied without that grant. It
+also denies a file outside the granted glob with exit code `5`, matching the
+CLI's permission-denied convention.
 
 The third sample path has started now too. `apps/layer36-curl` reads a URL from
 Layer36 app args, calls `layer36:net/http-client.get`, and writes the response
 body through UAPI stdout. Its first tests use a local HTTP server: with
 `net.connect:127.0.0.1:PORT` it fetches, without that grant it exits before the
-runtime opens a socket.
+runtime opens a socket. Permission denial also exits with code `5`.
 
 The first terminal grant prompt exists too. `layer36 run --prompt app.wasm`
 shows the app identity, lists missing manifest capabilities, accepts all or a

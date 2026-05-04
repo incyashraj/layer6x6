@@ -201,6 +201,11 @@ Inside the component, those arguments come from `layer36:io/args.raw`. The first
 draft returns a newline-separated string. That is intentionally simple while the
 CLI UAPI is still taking shape.
 
+If a requested file is missing from the session grants, the sample prints a
+short permission-denied message and exits with code `5`. The same happens when
+the app has a grant for one path glob but asks for a different file outside
+that glob.
+
 The third sample is `apps/layer36-curl`. It uses those same app arguments for a
 URL, then calls `layer36:net/http-client.get`:
 
@@ -210,7 +215,7 @@ layer36 run --grant net.connect:127.0.0.1:8080 layer36_curl.wasm -- http://127.0
 
 The important part is the grant. Layer36 checks `net.connect:HOST:PORT` before
 the adapter opens a socket. If the grant is missing, the app gets permission
-denied and the host network is never touched.
+denied, exits with code `5`, and the host network is never touched.
 
 ## Rust Binding Checkpoint
 

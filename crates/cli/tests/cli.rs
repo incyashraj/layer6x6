@@ -317,7 +317,32 @@ fn configured_layer36_cat_component_denies_missing_file_grant() {
         .output()
         .expect("run layer36-cat component without grant");
 
-    assert_eq!(output.status.code(), Some(25));
+    assert_eq!(output.status.code(), Some(5));
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("layer36-cat: permission denied: fixtures/secret.txt"));
+}
+
+#[test]
+fn configured_layer36_cat_component_denies_file_outside_granted_glob() {
+    let Some(path) = configured_layer36_cat_component() else {
+        return;
+    };
+
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let fixtures = dir.path().join("fixtures");
+    std::fs::create_dir_all(fixtures.join("public")).expect("create public fixtures dir");
+    std::fs::write(fixtures.join("secret.txt"), "not granted\n").expect("write fixture");
+
+    let output = layer36()
+        .current_dir(dir.path())
+        .args(["run", "--grant", "fs.read:fixtures/public/**"])
+        .arg(path)
+        .args(["--", "fixtures/secret.txt"])
+        .output()
+        .expect("run layer36-cat component outside granted glob");
+
+    assert_eq!(output.status.code(), Some(5));
     assert!(output.stdout.is_empty());
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("layer36-cat: permission denied: fixtures/secret.txt"));
@@ -364,7 +389,7 @@ fn configured_layer36_curl_component_denies_missing_net_grant() {
         .output()
         .expect("run layer36-curl component without grant");
 
-    assert_eq!(output.status.code(), Some(25));
+    assert_eq!(output.status.code(), Some(5));
     assert!(output.stdout.is_empty());
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("layer36-curl: permission denied"));

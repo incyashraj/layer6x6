@@ -1779,7 +1779,7 @@ Additional ADRs as decisions surface. Rule of thumb: if you have to ask "should 
 - [ ] Manifest parser handles all §10.5 fields.
 - [ ] Policy engine enforces caps at every UAPI entry.
 - [x] `--grant`, `--auto-grant`, interactive prompt all work.
-- [ ] Attempt to open a file outside granted glob → clear error, exit code 5.
+- [x] Attempt to open a file outside granted glob → clear error, exit code 5.
 
 ### CI & Quality
 - [ ] Cross-host CI matrix green for ≥ 7 consecutive days.
@@ -2049,9 +2049,9 @@ The first real Phase 2 component proof exists under `test/integration/phase2-smo
 
 The first named sample app also exists now: `apps/layer36-clock`. It is a Rust component for the current binding path. It calls the Phase 2 time and locale imports, writes through UAPI stdout, and can run with `layer36 run --test-time` so tests can compare stable output instead of racing the real clock. The original TypeScript/jco sample plan is still useful for the language-binding track, but the Rust sample lets the runtime path mature first.
 
-`apps/layer36-cat` has started too. The CLI can now forward app arguments after `--`, the runtime exposes them through `layer36:io/args.raw`, and the cat sample uses those args plus `fs.read` grants to concatenate fixture files. The test suite checks both the granted path and the missing-grant denial path.
+`apps/layer36-cat` has started too. The CLI can now forward app arguments after `--`, the runtime exposes them through `layer36:io/args.raw`, and the cat sample uses those args plus `fs.read` grants to concatenate fixture files. The test suite checks the granted path, the missing-grant denial path, and the outside-granted-glob denial path. Permission denial exits with code `5`.
 
-`apps/layer36-curl` has started now as well. It reads its URL from Layer36 app args, calls `layer36:net/http-client.get`, and writes the response body through UAPI stdout. The first test uses a local HTTP server and an exact `net.connect:127.0.0.1:PORT` grant. The matching denial test runs without that grant and exits cleanly before the adapter can open a socket.
+`apps/layer36-curl` has started now as well. It reads its URL from Layer36 app args, calls `layer36:net/http-client.get`, and writes the response body through UAPI stdout. The first test uses a local HTTP server and an exact `net.connect:127.0.0.1:PORT` grant. The matching denial test runs without that grant and exits cleanly with code `5` before the adapter can open a socket.
 
 GitHub Actions is now in budget-aware mode. Normal pushes run the cheap checks:
 format, clippy, Linux workspace tests, and docs. The expensive full path builds
@@ -2080,7 +2080,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | 4 | Go (TinyGo) bindings generated and usable; sample builds and runs | Not done |
 | 5 | TypeScript (jco) bindings generated and usable; sample builds and runs | Not done |
 | 6 | `layer36-curl <url>` works identically on all three hosts | Started: Rust sample builds locally and has granted/denied localhost HTTP tests; full cross-host run remains |
-| 7 | `layer36-cat <file>` works identically on all three hosts | Started: Rust sample builds locally and has granted/denied fixture tests; full cross-host run remains |
+| 7 | `layer36-cat <file>` works identically on all three hosts | Started: Rust sample builds locally and has granted/denied fixture tests, including outside-granted-glob denial; full cross-host run remains |
 | 8 | `layer36-clock` prints time in user locale on all three hosts | Started: Rust sample builds locally and has fixed-time integration coverage; full cross-host run remains |
 | 9 | UCap v0.1: manifest-declared caps enforced; unauthorized calls trap cleanly | Started: CLI preflight, manifest entry/run-file match check, `--grant`, `--auto-grant`, first terminal prompt, `--dump-caps`, runtime UAPI guard, dispatcher scaffold, generated WIT type bridge, generated host wiring, resource table, runtime linker install, Phase 2 smoke happy path, missing-grant proof, app args, `layer36-clock`, first `layer36-cat`, first `layer36-curl`, and a plain HTTP adapter slice exist; cross-host and hardening work remain |
 | 10 | Startup overhead for a UAPI-using app < 150 ms | Not done |
@@ -2106,6 +2106,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-SEC-01G | Terminal grant prompt | 2026-05-04 | Added `layer36 run --prompt`; it lists missing manifest capabilities, accepts all or numbered grants, and keeps non-interactive missing-grant runs as clear permission denials. |
 | P2-SEC-01H | Manifest entry match check | 2026-05-04 | `layer36 run` now rejects a sidecar manifest if `app.entry` does not resolve to the `.wasm` being executed. |
 | P2-SEC-01I | Effective capability dump | 2026-05-04 | Added `layer36 run --dump-caps` to print the resolved session grants and exit before runtime execution. |
+| P2-SEC-01J | Sample permission-denied exit code | 2026-05-04 | `layer36-cat` and `layer36-curl` now use exit code `5` for UCap denial; cat has an outside-granted-glob denial test. |
 | P2-SEC-01C | Runtime UAPI policy guard | 2026-05-03 | Runtime config now carries the session policy; `layer36_runtime::uapi` maps Phase 2 calls to capability checks. |
 | P2-UAPI-REVIEW | Rust host binding checkpoint | 2026-05-03 | Added `phase2-bindings` feature and CI job; confirms Phase 2 WIT generates usable host-side Rust names. |
 | P2-SEC-01D | Runtime UAPI dispatcher scaffold | 2026-05-03 | Added adapter traits and dispatcher methods that map policy denial to module-level errors before adapter calls run. |
