@@ -437,7 +437,7 @@ fn is_valid_ipv4_host(host: &str) -> bool {
 fn contains_http_unsafe_ascii(input: &str) -> bool {
     input
         .bytes()
-        .any(|byte| byte.is_ascii_control() || byte.is_ascii_whitespace())
+        .any(|byte| !byte.is_ascii() || byte.is_ascii_control() || byte.is_ascii_whitespace())
 }
 
 fn is_safe_plain_http_header_value(value: &str) -> bool {
@@ -523,6 +523,10 @@ mod tests {
         );
         assert_eq!(
             PlainHttpUrl::parse("http://127.0.0.1:8080/path with spaces").unwrap_err(),
+            PlainHttpError::InvalidUrl
+        );
+        assert_eq!(
+            PlainHttpUrl::parse("http://127.0.0.1:8080/caf\u{e9}").unwrap_err(),
             PlainHttpError::InvalidUrl
         );
     }
@@ -734,6 +738,10 @@ mod tests {
         );
         assert_eq!(
             parse_url_endpoint("https://999.0.0.1/path").unwrap_err(),
+            UrlEndpointError::InvalidUrl
+        );
+        assert_eq!(
+            parse_url_endpoint("https://example.com/caf\u{e9}").unwrap_err(),
             UrlEndpointError::InvalidUrl
         );
     }

@@ -1387,6 +1387,29 @@ mod tests {
     }
 
     #[test]
+    fn net_fetch_rejects_non_ascii_url_before_adapter() {
+        let adapter = RecordingAdapter::default();
+        let policy =
+            SessionPolicy::from_cli_grants(&["net.connect:api.example.com:443".to_string()])
+                .expect("policy");
+        let guard = UapiGuard::new(policy);
+        let dispatcher = UapiDispatcher::new(&guard, &adapter);
+        let req = HttpRequest {
+            method: HttpMethod::Get,
+            url: "https://api.example.com/caf\u{e9}".to_string(),
+            headers: Vec::new(),
+            body: Vec::new(),
+            timeout_millis: None,
+        };
+        let err = dispatcher
+            .net_fetch(req)
+            .expect_err("non-ascii URL should fail before adapter");
+
+        assert!(matches!(err, NetDispatchError::InvalidUrl));
+        assert_eq!(adapter.calls.borrow().net_fetch, 0);
+    }
+
+    #[test]
     fn net_fetch_http_default_port_matches_grant() {
         let adapter = RecordingAdapter::default();
         let policy =

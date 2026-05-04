@@ -110,6 +110,9 @@ Host names are now normalized to lowercase in shared URL parsing, so capability
 checks stay stable across input case differences like `EXAMPLE.com` and
 `example.com`. URL scheme checks are now case-insensitive as well, so
 `HTTP://` and `HTTPS://` forms follow the same grant matching path.
+In this early plain-HTTP slice, URL parsing is also ASCII-only. Non-ASCII URLs
+are rejected early so request framing and capability endpoint checks stay
+deterministic until broader URL handling lands in a later hardening pass.
 Request targets now also have a shared size limit before request framing so
 this early plain-HTTP path rejects oversized path/query payloads up front.
 The runtime's network capability gate now also uses a shared endpoint parser for
