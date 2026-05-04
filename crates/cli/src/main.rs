@@ -362,9 +362,18 @@ fn print_version() {
 fn doctor() -> Result<u8> {
     println!("Layer36 doctor");
     println!("--------------");
+    println!("Core tools");
     print_tool_status("cargo-component", &["--version"]);
     print_target_status("wasm32-wasip1")?;
     print_target_status("wasm32-wasip2")?;
+    println!();
+    println!("Phase 2 language tools");
+    print_tool_status("tinygo", &["version"]);
+    print_tool_status("go", &["version"]);
+    print_tool_status("node", &["--version"]);
+    print_tool_status("npm", &["--version"]);
+    print_tool_status("jco", &["--version"]);
+    println!();
     println!("state dir       {}", layer36_home().display());
     Ok(0)
 }

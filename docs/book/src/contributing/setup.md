@@ -9,9 +9,20 @@ Optional (needed for specific phases):
 - `cargo-component`: for building WASM components (Phase 1+)
 - `wasm-tools`: for WASM inspection and optimization (Phase 1+)
 - `mdbook`: for building the docs site (`cargo install mdbook`)
+- `tinygo` and `go`: for the Phase 2 Go binding path
+- `node`, `npm`, and `jco`: for the Phase 2 TypeScript binding path
 
 If you want GitHub to run jobs on your own machine, see
 [CI and runners](ci-and-runners.md).
+
+Run this after setup:
+
+```bash
+layer36 doctor
+```
+
+It reports the core Rust tools first, then the optional language-binding tools.
+Missing Go or TypeScript tools are fine until you work on those binding tracks.
 
 ## Clone and build
 

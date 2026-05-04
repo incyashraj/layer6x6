@@ -49,9 +49,16 @@ fn doctor_lists_phase_1_tooling() {
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("Layer36 doctor"));
+    assert!(stdout.contains("Core tools"));
     assert!(stdout.contains("cargo-component"));
     assert!(stdout.contains("wasm32-wasip1"));
     assert!(stdout.contains("wasm32-wasip2"));
+    assert!(stdout.contains("Phase 2 language tools"));
+    assert!(stdout.contains("tinygo"));
+    assert!(stdout.contains("go"));
+    assert!(stdout.contains("node"));
+    assert!(stdout.contains("npm"));
+    assert!(stdout.contains("jco"));
     assert!(stdout.contains("state dir"));
 }
 

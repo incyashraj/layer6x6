@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- `layer36 doctor` now reports Phase 2 language-binding tool readiness for TinyGo, Go, Node, npm, and jco.
 - Fixture-backed sample manifest tests proving `layer36-clock`, `layer36-cat`, and `layer36-curl` run through their sample `manifest.toml` files with `--auto-grant`.
 - Phase 2 component import checker that rejects non-`layer36:*` imports in built sample components, wired into full hosted CI and self-hosted CI.
 - Phase 2 component startup benchmarks for the smoke UAPI app and `layer36-clock`, including a first local runtime-path read in the mdBook benchmark notes.
