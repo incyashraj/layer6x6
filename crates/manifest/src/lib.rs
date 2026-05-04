@@ -11,7 +11,7 @@ use std::{
     str::FromStr,
 };
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 pub const PHASE2_CLI_WORLD: &str = "layer36:app/cli@0.1.0";
@@ -35,7 +35,7 @@ const PHASE2_CAPABILITY_SPECS: &[CapabilitySpec] = &[
     CapabilitySpec::resource_free("locale", "format", true),
 ];
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Manifest {
     pub app: App,
@@ -75,6 +75,11 @@ impl Manifest {
             .collect()
     }
 
+    pub fn to_toml_pretty(&self) -> Result<String> {
+        self.validate()?;
+        toml::to_string_pretty(self).map_err(|err| ManifestError::Toml(err.to_string()))
+    }
+
     fn validate(&self) -> Result<()> {
         validate_app_id(&self.app.id)?;
         validate_required("app.name", &self.app.name)?;
@@ -102,7 +107,7 @@ impl Manifest {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct App {
     pub id: String,
@@ -112,7 +117,7 @@ pub struct App {
     pub world: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct CapabilityRequest {
     pub cap: String,
@@ -519,5 +524,31 @@ mod tests {
         assert!(specs.iter().any(|spec| {
             spec.display_pattern() == "net.connect:<host>:<port>" && !spec.default_granted()
         }));
+    }
+
+    #[test]
+    fn renders_manifest_template_as_valid_toml() {
+        let manifest = Manifest {
+            app: App {
+                id: "com.example.hello".to_string(),
+                name: "Hello".to_string(),
+                version: "0.1.0".to_string(),
+                entry: PathBuf::from("hello.wasm"),
+                world: PHASE2_CLI_WORLD.to_string(),
+            },
+            capabilities: vec![CapabilityRequest {
+                cap: "io.stdout".to_string(),
+                rationale: "Print output".to_string(),
+                required: true,
+            }],
+        };
+
+        let rendered = manifest.to_toml_pretty().expect("render manifest");
+        assert!(rendered.contains("[app]"));
+        assert!(rendered.contains("[[capabilities]]"));
+        assert_eq!(
+            Manifest::parse(&rendered).expect("parse rendered"),
+            manifest
+        );
     }
 }

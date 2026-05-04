@@ -4,7 +4,9 @@ use std::process::{Command as ProcessCommand, ExitCode};
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use layer36_manifest::{supported_capability_specs, Capability, Manifest};
+use layer36_manifest::{
+    supported_capability_specs, App, Capability, CapabilityRequest, Manifest, PHASE2_CLI_WORLD,
+};
 use layer36_policy::{resolve_session_policy, SessionPolicy};
 use layer36_runtime::{Config, RunOutcome, Runtime, RuntimeError};
 
@@ -80,6 +82,36 @@ enum ManifestCommand {
         /// Path to manifest.toml.
         file: PathBuf,
     },
+    /// Create a starter Phase 2 manifest.toml.
+    Init {
+        /// Reverse-DNS app id, for example com.example.notes.
+        #[arg(long)]
+        id: String,
+
+        /// Human-readable app name.
+        #[arg(long)]
+        name: String,
+
+        /// App version.
+        #[arg(long, default_value = "0.1.0-dev")]
+        version: String,
+
+        /// Component path written into app.entry.
+        #[arg(long)]
+        entry: PathBuf,
+
+        /// Capability to request. Repeat for multiple capabilities.
+        #[arg(long, value_name = "CAP")]
+        cap: Vec<String>,
+
+        /// Write to a file instead of stdout.
+        #[arg(long)]
+        output: Option<PathBuf>,
+
+        /// Overwrite --output if it already exists.
+        #[arg(long)]
+        force: bool,
+    },
     /// Print the Phase 2 capability strings understood by this runtime.
     Capabilities,
 }
@@ -136,6 +168,23 @@ fn run() -> Result<u8> {
         Command::Doctor => doctor(),
         Command::Manifest { command } => match command {
             ManifestCommand::Check { file } => check_manifest(&file),
+            ManifestCommand::Init {
+                id,
+                name,
+                version,
+                entry,
+                cap,
+                output,
+                force,
+            } => init_manifest(ManifestInitRequest {
+                id,
+                name,
+                version,
+                entry,
+                capabilities: cap,
+                output,
+                force,
+            }),
             ManifestCommand::Capabilities => print_manifest_capabilities(),
         },
     }
@@ -152,6 +201,16 @@ struct RunRequest {
     dump_caps: bool,
     test_time_millis: Option<u64>,
     app_args: Vec<String>,
+}
+
+struct ManifestInitRequest {
+    id: String,
+    name: String,
+    version: String,
+    entry: PathBuf,
+    capabilities: Vec<String>,
+    output: Option<PathBuf>,
+    force: bool,
 }
 
 fn run_component(request: RunRequest) -> Result<u8> {
@@ -390,6 +449,53 @@ fn check_manifest(file: &Path) -> Result<u8> {
     println!("world           {}", manifest.app.world);
     println!("capabilities    {}", declared_caps.len());
     println!("required caps   {}", required_caps.len());
+
+    Ok(0)
+}
+
+fn init_manifest(request: ManifestInitRequest) -> Result<u8> {
+    let capabilities = request
+        .capabilities
+        .iter()
+        .map(|cap| {
+            let cap: Capability = cap.parse()?;
+            Ok(CapabilityRequest {
+                cap: cap.to_string(),
+                rationale: if cap.is_default_granted() {
+                    "Default app capability".to_string()
+                } else {
+                    "Required by app".to_string()
+                },
+                required: true,
+            })
+        })
+        .collect::<layer36_manifest::Result<Vec<_>>>()?;
+
+    let manifest = Manifest {
+        app: App {
+            id: request.id,
+            name: request.name,
+            version: request.version,
+            entry: request.entry,
+            world: PHASE2_CLI_WORLD.to_string(),
+        },
+        capabilities,
+    };
+    let rendered = manifest.to_toml_pretty()?;
+
+    if let Some(output) = request.output {
+        if output.exists() && !request.force {
+            anyhow::bail!(
+                "refusing to overwrite existing manifest: {} (pass --force to replace it)",
+                output.display()
+            );
+        }
+        std::fs::write(&output, rendered)
+            .with_context(|| format!("failed to write manifest {}", output.display()))?;
+        println!("wrote {}", output.display());
+    } else {
+        print!("{rendered}");
+    }
 
     Ok(0)
 }

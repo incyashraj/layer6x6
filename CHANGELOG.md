@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- `layer36 manifest init` to generate starter Phase 2 `manifest.toml` files with validated app metadata and capability strings.
 - Initial `packages/sdk-go` Go/TinyGo SDK scaffold with Phase 2 UAPI helper packages, clock/curl examples, and a dependency-free package shape check in CI.
 - Initial `@layer36/sdk` TypeScript package scaffold with Phase 2 UAPI import declarations, helper modules, examples, and a dependency-free package shape check in CI.
 - `layer36 doctor` now reports Phase 2 language-binding tool readiness for TinyGo, Go, Node, npm, and jco.

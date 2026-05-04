@@ -96,6 +96,21 @@ You can validate the file today:
 cargo run -p layer36-cli -- manifest check manifest.toml
 ```
 
+You can also create a starter manifest from the CLI:
+
+```bash
+cargo run -p layer36-cli -- manifest init \
+  --id com.example.notes \
+  --name Notes \
+  --entry notes.wasm \
+  --cap io.stdout \
+  --cap 'fs.read:./notes/**' \
+  --output manifest.toml
+```
+
+By default, `manifest init` prints TOML to stdout. Use `--output` to write a
+file, and `--force` if you really want to replace an existing file.
+
 You can also print the capability strings this runtime understands:
 
 ```bash
@@ -105,7 +120,7 @@ cargo run -p layer36-cli -- manifest capabilities
 `layer36 run` also reads `manifest.toml` when it sits next to the `.wasm` file:
 
 ```bash
-cargo run -p layer36-cli -- run app.wasm --grant fs.read:~/Documents/notes/**
+cargo run -p layer36-cli -- run app.wasm --grant 'fs.read:~/Documents/notes/**'
 cargo run -p layer36-cli -- run app.wasm --auto-grant
 cargo run -p layer36-cli -- run --prompt app.wasm
 cargo run -p layer36-cli -- run --dump-caps app.wasm

@@ -153,6 +153,110 @@ fn manifest_capabilities_lists_phase_2_cap_table() {
 }
 
 #[test]
+fn manifest_init_prints_valid_phase_2_manifest() {
+    let output = layer36()
+        .args([
+            "manifest",
+            "init",
+            "--id",
+            "com.example.notes",
+            "--name",
+            "Notes",
+            "--entry",
+            "notes.wasm",
+            "--cap",
+            "io.stdout",
+            "--cap",
+            "fs.read:./notes/**",
+        ])
+        .output()
+        .expect("run manifest init");
+
+    assert!(
+        output.status.success(),
+        "manifest init failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("[app]"));
+    assert!(stdout.contains("id = \"com.example.notes\""));
+    assert!(stdout.contains("entry = \"notes.wasm\""));
+    assert!(stdout.contains("cap = \"io.stdout\""));
+    assert!(stdout.contains("cap = \"fs.read:./notes/**\""));
+    assert!(output.stderr.is_empty());
+
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let manifest_path = dir.path().join("manifest.toml");
+    std::fs::write(&manifest_path, stdout.as_bytes()).expect("write generated manifest");
+
+    let check = layer36()
+        .args(["manifest", "check"])
+        .arg(&manifest_path)
+        .output()
+        .expect("check generated manifest");
+    assert!(
+        check.status.success(),
+        "generated manifest check failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&check.stdout),
+        String::from_utf8_lossy(&check.stderr)
+    );
+}
+
+#[test]
+fn manifest_init_writes_output_and_refuses_overwrite() {
+    let dir = tempfile::tempdir().expect("create temp dir");
+    let manifest_path = dir.path().join("manifest.toml");
+
+    let output = layer36()
+        .args([
+            "manifest",
+            "init",
+            "--id",
+            "com.example.clock",
+            "--name",
+            "Clock",
+            "--entry",
+            "clock.wasm",
+            "--cap",
+            "time.clock",
+            "--output",
+        ])
+        .arg(&manifest_path)
+        .output()
+        .expect("write manifest");
+
+    assert!(
+        output.status.success(),
+        "manifest init output failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(manifest_path.exists());
+
+    let second = layer36()
+        .args([
+            "manifest",
+            "init",
+            "--id",
+            "com.example.clock",
+            "--name",
+            "Clock",
+            "--entry",
+            "clock.wasm",
+            "--output",
+        ])
+        .arg(&manifest_path)
+        .output()
+        .expect("refuse overwrite");
+
+    assert!(!second.status.success());
+    let stderr = String::from_utf8_lossy(&second.stderr);
+    assert!(stderr.contains("refusing to overwrite existing manifest"));
+}
+
+#[test]
 fn sample_manifests_validate() {
     for manifest in [
         "apps/layer36-clock/manifest.toml",

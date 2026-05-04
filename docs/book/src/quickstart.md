@@ -172,6 +172,17 @@ cargo run -p layer36-cli -- manifest check path/to/manifest.toml
 For now this checks the TOML schema, app world, app id, duplicate capabilities,
 and capability string format.
 
+You can also generate a starter manifest:
+
+```bash
+cargo run -p layer36-cli -- manifest init \
+  --id com.example.hello \
+  --name Hello \
+  --entry hello.wasm \
+  --cap io.stdout \
+  --output manifest.toml
+```
+
 To see the Phase 2 capability strings accepted by this runtime:
 
 ```bash
