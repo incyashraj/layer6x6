@@ -22,8 +22,9 @@ merged into `main`, and then **never modified** — only superseded by a new ADR
 | [0001](0001-rust-for-runtime.md) | Rust for the Layer36 runtime | Accepted | 0 |
 | [0002](0002-wasmtime-runtime-engine.md) | Wasmtime as runtime engine | Accepted | 1 |
 | [0003](0003-component-model-from-day-one.md) | Component Model from day one | Accepted | 1 |
-
-*(Expand this table as ADRs are merged.)*
+| [0006](0006-wit-versioning-strategy.md) | WIT versioning strategy | Accepted | 2 |
+| [0007](0007-ucap-soft-enforcement.md) | UCap v0.1 soft enforcement | Accepted | 2 |
+| [0008](0008-host-async-runtime.md) | Host async runtime | Accepted | 2 |
 
 ## Process
 

@@ -37,5 +37,8 @@ Examples that do **not** need an ADR:
 | ADR | Title | Status |
 |-----|-------|--------|
 | [ADR-0001](../../../adr/0001-rust-for-runtime.md) | Rust for the Layer36 runtime | Accepted |
-
-*(Expand this table as ADRs are merged.)*
+| [ADR-0002](../../../adr/0002-wasmtime-runtime-engine.md) | Wasmtime as runtime engine | Accepted |
+| [ADR-0003](../../../adr/0003-component-model-from-day-one.md) | Component Model from day one | Accepted |
+| [ADR-0006](../../../adr/0006-wit-versioning-strategy.md) | WIT versioning strategy | Accepted |
+| [ADR-0007](../../../adr/0007-ucap-soft-enforcement.md) | UCap v0.1 soft enforcement | Accepted |
+| [ADR-0008](../../../adr/0008-host-async-runtime.md) | Host async runtime | Accepted |

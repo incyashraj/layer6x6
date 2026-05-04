@@ -315,7 +315,7 @@ HTTP/3 / QUIC deferred to Phase 3 or later.
 
 ### 6.6 Async exposure to WASM: **synchronous WIT, async under the hood**
 
-Per ADR-0006 (see §19): UAPI functions appear synchronous from WASM's point of view. The runtime drives async I/O while the WASM is parked. This matches the Component Model's `async` proposal trajectory and avoids asking apps to reason about futures across the ABI boundary.
+Per ADR-0008 (see §19): UAPI functions appear synchronous from WASM's point of view. The runtime drives async I/O while the WASM is parked. This matches the Component Model's `async` proposal trajectory and avoids asking apps to reason about futures across the ABI boundary.
 
 ### 6.7 Filesystem path representation: **UTF-8 strings with platform normalization**
 
@@ -995,7 +995,7 @@ Phase 2 is 12 weeks of calendar time, scaled for ~20 hours/week of active develo
 
 - Draft all five WIT files. Internal review. Iterate.
 - Write WIT style guide (§18.1).
-- ADR-0006 (sync UAPI over async adapter), ADR-0007 (path representation), ADR-0008 (time representation).
+- ADR-0006 (WIT versioning), ADR-0007 (UCap soft enforcement), ADR-0008 (host async runtime).
 
 ### Weeks 3–4: `io` + `time` + `locale`
 
@@ -1739,12 +1739,12 @@ Expected ADRs in Phase 2:
 
 | ID | Title | Target week |
 |---|---|---|
-| 0006 | Sync UAPI ABI over async runtime | W1 |
-| 0007 | Filesystem path representation (UTF-8 + normalization) | W1 |
-| 0008 | Time representation (Unix millis + timezone) | W2 |
-| 0009 | Per-app sandbox root | W5 |
-| 0010 | HTTP client stack (hyper + rustls) | W7 |
-| 0011 | UCap grant model v0.1 (session-scoped, terminal UI) | W9 |
+| 0006 | WIT versioning strategy | W1 |
+| 0007 | UCap v0.1 soft enforcement model | W1 |
+| 0008 | Host async runtime | W2 |
+| 0009 | Filesystem path representation and sandbox root | W5 |
+| 0010 | HTTP client stack | W7 |
+| 0011 | Cross-host adapter contract | W9 |
 | 0012 | Adapter crate split (per-OS, not cfg-gated) | W3 |
 
 Additional ADRs as decisions surface. Rule of thumb: if you have to ask "should I write an ADR?" the answer is yes.
@@ -1820,7 +1820,7 @@ Additional ADRs as decisions surface. Rule of thumb: if you have to ask "should 
 | TinyGo's component-model support is incomplete for our WITs | Medium | Medium | Prototype Go binding in Week 3. If blocker, degrade Go to "experimental" for Phase 2, defer to Phase 5. |
 | jco-produced components are 10+ MB | High | Medium | Acknowledge and document. TS is valued for DX, not size. Bundle-size optimization is Phase 7. |
 | Path canonicalization has sandbox-escape edge cases | High | Critical | Fuzz aggressively. Port tests from well-trodden capability systems (sandboxie, chromium sandbox docs). |
-| Async-over-sync UAPI pattern causes deadlocks | Medium | High | Architectural RFC in Week 1 (ADR-0006); single-threaded Tokio per store enforced. |
+| Async-over-sync UAPI pattern causes deadlocks | Medium | High | Architectural RFC in Week 1 (ADR-0008); single-threaded Tokio per store enforced. |
 | HTTP client memory blowup on large responses | Medium | Medium | Hard cap on response body size (16 MB v0.1). Streaming is v0.2 of `net`. |
 | Cross-host stdout differs subtly (line endings, locale formatting) | High | Medium | Test fixtures explicit about encoding; LF-only output; `layer36-clock` tests use `--test-time` for determinism. |
 
@@ -2112,7 +2112,19 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | 12 | Developer who knows Rust but not WASM can write a CLI in < 30 min using docs | Started: first Rust walkthrough exists using the current repo-local SDK, component build, manifest init/explain, granted run, and denial path; timed external run remains |
 | 13 | UAPI reference docs auto-generated from WIT and published on docs site | Done for the current draft: generated mdBook page exists under `reference/uapi`, its capability tables come from the manifest crate, it includes function-level behavior notes, and hosted/self-hosted CI checks it is current |
 | 14 | WIT Style Guide merged into `docs/book/` | Done: `docs/book/src/wit-style.md` is linked from mdBook and `CONTRIBUTING.md` |
-| 15 | ADRs 0006 through at least 0012 merged | Not done |
+| 15 | ADRs 0006 through at least 0012 merged | Started: ADR-0006, ADR-0007, and ADR-0008 are accepted; ADR-0009 through ADR-0012 remain |
+
+### Remaining Work Snapshot
+
+This is a practical read, not a promise. It separates working code progress from
+formal exit gates.
+
+| Area | Current read | What remains |
+|------|--------------|--------------|
+| Core Phase 2 engineering | About 60-65% through the first useful CLI slice | WIT freeze review, stronger adapter split, cross-host identity runs, and network hardening. |
+| Formal Phase 2 exit | About 40-45% complete | Language runtime proofs, seven-day CI evidence, fuzzing, full benchmark gate, threat model v0.2, ADR-0009 through ADR-0012, and external validation. |
+| UAPI and UCap | Strong shape, not frozen | Review default grants, path normalization, network policy details, and freeze rules before `0.1.0`. |
+| SDKs | Rust is usable; Go and TypeScript are scaffolded | Publish-ready Rust after freeze, TinyGo runtime proof, and jco runtime proof. |
 
 ---
 
@@ -2185,6 +2197,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-DOC-02B | Generated UAPI reference context | 2026-05-04 | The generated reference now includes interface summaries, capability notes, Rust SDK examples, WIT doc comments, and a generator test that checks those sections stay present. |
 | P2-DOC-02C | Reference capability table derivation | 2026-05-04 | The generated UAPI reference now renders accepted capability strings from `crates/manifest`, keeping docs aligned with manifest validation and `layer36 manifest capabilities`. |
 | P2-DOC-02D | Function-level UAPI reference notes | 2026-05-04 | The reference generator now adds plain behavior notes under Phase 2 functions and resource methods, including grant expectations and current adapter limits. |
+| P2-ADR-01 | First Phase 2 ADR batch | 2026-05-04 | Accepted ADR-0006 for WIT versioning, ADR-0007 for UCap v0.1 soft enforcement, and ADR-0008 for host async runtime direction. |
 
 ---
 
@@ -2201,9 +2214,9 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | ADR | Title | Status | Merged |
 |-----|-------|--------|--------|
-| ADR-0006 | WIT versioning strategy (semver per module) | Pending | — |
-| ADR-0007 | UCap v0.1 soft enforcement model | Pending | — |
-| ADR-0008 | Async runtime choice (tokio) for host adapters | Pending | — |
+| ADR-0006 | WIT versioning strategy (semver per module) | Accepted | 2026-05-04 |
+| ADR-0007 | UCap v0.1 soft enforcement model | Accepted | 2026-05-04 |
+| ADR-0008 | Async runtime choice (tokio) for host adapters | Accepted | 2026-05-04 |
 
 _ADRs 0009–0012 to be determined during Phase 2 work._
 

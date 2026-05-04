@@ -1628,8 +1628,11 @@ Append as each ADR is drafted and merged. Full ADR files live in `docs/adr/`.
 | ADR-0001 | Rust for the runtime | 0 | Accepted locally | pending |
 | ADR-0002 | Wasmtime as runtime engine | 1 | Accepted | 2026-05-02 |
 | ADR-0003 | Adopt WASM Component Model from day one | 1 | Accepted | 2026-05-02 |
+| ADR-0006 | WIT versioning strategy | 2 | Accepted | 2026-05-04 |
+| ADR-0007 | UCap v0.1 soft enforcement | 2 | Accepted | 2026-05-04 |
+| ADR-0008 | Host async runtime | 2 | Accepted | 2026-05-04 |
 
-_ADRs 0004 onward will be added here as they are drafted and merged across phases._
+_ADRs 0009 onward will be added here as they are drafted and merged across phases._
 
 ---
 
@@ -1730,6 +1733,7 @@ Short time-stamped entries for anything significant: ecosystem developments, piv
 | 2026-05-04 | Expanded the Phase 2 plain HTTP adapter from GET-only framing to lower-level request framing with method, app headers, buffered body, and host-owned transport headers. |
 | 2026-05-04 | Hardened Phase 2 stdio stream resources so stdin/stdout/stderr handles carry their origin and stream read/write/flush methods re-check capability metadata before adapter calls. |
 | 2026-05-04 | Added Phase 2 UAPI policy coverage tests so every supported capability name maps to a UAPI call and the current dispatcher adapter surface is exercised through the policy gate. |
+| 2026-05-04 | Accepted ADR-0006, ADR-0007, and ADR-0008 for Phase 2 WIT versioning, UCap soft enforcement, and host async runtime direction. |
 
 ---
 
