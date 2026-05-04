@@ -310,6 +310,11 @@ pub mod net {
     }
 
     /// Send a lower-level HTTP request record.
+    ///
+    /// The current local adapter supports plain HTTP request framing. It sends
+    /// the selected method, app headers, and buffered body while keeping
+    /// transport headers such as `Host`, `Connection`, and `Content-Length`
+    /// under host control.
     pub fn fetch(req: Request) -> Result<Response, NetError> {
         crate::bindings::layer36::net::http_client::fetch(&req)
     }

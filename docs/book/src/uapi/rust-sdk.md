@@ -137,9 +137,13 @@ let body = layer36::net::get("http://127.0.0.1:8080/data.txt")?;
 ```
 
 The runtime checks a `net.connect:HOST:PORT` grant before opening the socket.
-The current plain HTTP adapter caps the full response at 1 MiB. HTTPS,
-redirects, streaming bodies, and configurable response limits are still Phase 2
-work.
+For lower-level work, `layer36::net::fetch(req)` sends the request method, app
+headers, and a buffered body, then returns status, headers, and body. The host
+still owns transport headers such as `Host`, `Connection`, and
+`Content-Length`. The current plain HTTP adapter caps the full response at 1
+MiB by default, with `layer36 run --max-http-response-bytes` available for test
+runs that need a different limit. HTTPS, redirects, and streaming bodies are
+still Phase 2 work.
 
 ## Current Limits
 

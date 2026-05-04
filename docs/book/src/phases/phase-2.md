@@ -62,12 +62,14 @@ and flushes can route through the adapter without exposing raw host IDs.
 The runtime also has an initial Phase 2 execution path now. `layer36 run` keeps
 supporting the Phase 1 proof world, then falls back to the Phase 2 `cli` world
 and installs the generated UAPI imports. The local adapter currently covers
-stdio, basic filesystem calls, time, locale, and a first plain HTTP GET path.
-That HTTP path is still small on purpose: it is for localhost and test-server
-proofs while HTTPS, redirects, streaming, and production hardening stay open.
-It now has a response-size guard and typed errors for oversized responses,
-timeouts, and malformed HTTP responses, so apps can react to the real problem
-instead of receiving one generic network failure.
+stdio, basic filesystem calls, time, locale, and a first plain HTTP request
+path. That HTTP path is still small on purpose: it is for localhost and
+test-server proofs while HTTPS, redirects, streaming, and production hardening
+stay open. It now forwards lower-level `fetch` methods, app headers, and
+buffered bodies, while keeping host-controlled transport headers owned by the
+adapter. It also has a response-size guard and typed errors for oversized
+responses, timeouts, and malformed HTTP responses, so apps can react to the real
+problem instead of receiving one generic network failure.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2

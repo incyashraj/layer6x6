@@ -456,7 +456,7 @@ fn capability_notes(interface: &str) -> &'static [&'static str] {
         "layer36:io/log@0.1.0" => &["`io.log` is a low-risk default grant."],
         "layer36:net/http-client@0.1.0" => &[
             "`get` and `fetch` require a matching `net.connect:HOST:PORT` grant before the adapter opens a socket.",
-            "The current host adapter supports the plain HTTP test path first with a 1 MiB full-response cap; HTTPS and richer network behavior are still Phase 2 work.",
+            "The current host adapter supports plain HTTP request framing first, with a 1 MiB full-response cap; HTTPS, redirects, streaming, and richer network behavior are still Phase 2 work.",
         ],
         "layer36:time/clock@0.1.0" => {
             &["`time.clock` and `time.monotonic` are default grants."]
@@ -636,7 +636,8 @@ fn function_notes(interface: &str, function: &str) -> &'static [&'static str] {
             "Requires `net.connect:HOST:PORT`; Phase 2 currently supports the plain HTTP adapter path.",
         ],
         ("layer36:net/http-client@0.1.0", "fetch") => &[
-            "Performs an HTTP request and returns status, headers, and body.",
+            "Performs a lower-level HTTP request and returns status, headers, and body.",
+            "The plain HTTP adapter now forwards the method, app headers, and buffered body while keeping `Host`, `Connection`, and `Content-Length` under host control.",
             "Timeouts, oversized bodies, malformed responses, and missing grants are typed as `net-error` cases.",
         ],
         ("layer36:time/clock@0.1.0", "now-millis") => &[

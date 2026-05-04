@@ -652,9 +652,7 @@ impl FsAdapter for LocalPhase2Adapter {
 impl NetAdapter for LocalPhase2Adapter {
     fn fetch(&self, req: HttpRequest) -> std::result::Result<HttpResponse, AdapterError> {
         let url = ParsedHttpUrl::parse(&req.url)?;
-        if !matches!(req.method, uapi_dispatch::HttpMethod::Get) {
-            return Err(AdapterError::Unsupported);
-        }
+        let request = build_plain_http_request(&req, &url)?;
 
         let mut stream = TcpStream::connect((url.host.as_str(), url.port))
             .map_err(|err| AdapterError::Network(err.to_string()))?;
@@ -668,26 +666,92 @@ impl NetAdapter for LocalPhase2Adapter {
                 .map_err(map_io_error)?;
         }
 
-        let mut request = format!(
-            "GET {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n",
-            url.path_and_query, url.host
-        )
-        .into_bytes();
-        for header in req.headers {
-            if header.name.contains(['\r', '\n']) || header.value.contains(['\r', '\n']) {
-                return Err(AdapterError::Protocol("invalid HTTP header".to_string()));
-            }
-            request.extend_from_slice(header.name.as_bytes());
-            request.extend_from_slice(b": ");
-            request.extend_from_slice(header.value.as_bytes());
-            request.extend_from_slice(b"\r\n");
-        }
-        request.extend_from_slice(b"\r\n");
-
         stream.write_all(&request).map_err(map_net_io_error)?;
         let response = read_http_response_limited(&mut stream, self.max_http_response_bytes)?;
         parse_http_response(&response)
     }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn build_plain_http_request(
+    req: &HttpRequest,
+    url: &ParsedHttpUrl,
+) -> std::result::Result<Vec<u8>, AdapterError> {
+    let method = http_method_name(req.method);
+    let mut request = format!(
+        "{method} {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n",
+        url.path_and_query, url.host
+    )
+    .into_bytes();
+
+    for header in &req.headers {
+        if !is_valid_plain_http_header_name(&header.name) || header.value.contains(['\r', '\n']) {
+            return Err(AdapterError::Protocol("invalid HTTP header".to_string()));
+        }
+        if is_host_controlled_http_header(&header.name) {
+            return Err(AdapterError::Protocol(
+                "host-controlled HTTP header".to_string(),
+            ));
+        }
+        request.extend_from_slice(header.name.as_bytes());
+        request.extend_from_slice(b": ");
+        request.extend_from_slice(header.value.as_bytes());
+        request.extend_from_slice(b"\r\n");
+    }
+    if !req.body.is_empty() {
+        request.extend_from_slice(format!("Content-Length: {}\r\n", req.body.len()).as_bytes());
+    }
+    request.extend_from_slice(b"\r\n");
+    request.extend_from_slice(&req.body);
+
+    Ok(request)
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn http_method_name(method: uapi_dispatch::HttpMethod) -> &'static str {
+    match method {
+        uapi_dispatch::HttpMethod::Get => "GET",
+        uapi_dispatch::HttpMethod::Post => "POST",
+        uapi_dispatch::HttpMethod::Put => "PUT",
+        uapi_dispatch::HttpMethod::Delete => "DELETE",
+        uapi_dispatch::HttpMethod::Patch => "PATCH",
+        uapi_dispatch::HttpMethod::Head => "HEAD",
+        uapi_dispatch::HttpMethod::Options => "OPTIONS",
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn is_valid_plain_http_header_name(name: &str) -> bool {
+    !name.is_empty()
+        && name.bytes().all(|byte| {
+            matches!(
+                byte,
+                b'!' | b'#'
+                    | b'$'
+                    | b'%'
+                    | b'&'
+                    | b'\''
+                    | b'*'
+                    | b'+'
+                    | b'-'
+                    | b'.'
+                    | b'^'
+                    | b'_'
+                    | b'`'
+                    | b'|'
+                    | b'~'
+                    | b'0'..=b'9'
+                    | b'a'..=b'z'
+                    | b'A'..=b'Z'
+            )
+        })
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn is_host_controlled_http_header(name: &str) -> bool {
+    name.eq_ignore_ascii_case("host")
+        || name.eq_ignore_ascii_case("connection")
+        || name.eq_ignore_ascii_case("content-length")
 }
 
 #[cfg(feature = "phase2-bindings")]
@@ -948,6 +1012,126 @@ mod tests {
         assert_eq!(parsed.host, "127.0.0.1");
         assert_eq!(parsed.port, 8080);
         assert_eq!(parsed.path_and_query, "/?name=layer36");
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn plain_http_request_builder_forwards_method_headers_and_body() {
+        let url = ParsedHttpUrl::parse("http://127.0.0.1:8080/submit?name=layer36")
+            .expect("parse HTTP URL");
+        let req = HttpRequest {
+            method: uapi_dispatch::HttpMethod::Post,
+            url: "http://127.0.0.1:8080/submit?name=layer36".to_string(),
+            headers: vec![Header {
+                name: "X-Layer36".to_string(),
+                value: "yes".to_string(),
+            }],
+            body: b"payload".to_vec(),
+            timeout_millis: Some(1000),
+        };
+
+        let request = build_plain_http_request(&req, &url).expect("build HTTP request");
+        let request = String::from_utf8(request).expect("request is UTF-8");
+
+        assert!(request.starts_with("POST /submit?name=layer36 HTTP/1.1\r\n"));
+        assert!(request.contains("Host: 127.0.0.1\r\n"));
+        assert!(request.contains("Connection: close\r\n"));
+        assert!(request.contains("X-Layer36: yes\r\n"));
+        assert!(request.contains("Content-Length: 7\r\n"));
+        assert!(request.ends_with("\r\n\r\npayload"));
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn plain_http_request_builder_rejects_host_controlled_headers() {
+        let url = ParsedHttpUrl::parse("http://127.0.0.1:8080/").expect("parse HTTP URL");
+        let req = HttpRequest {
+            method: uapi_dispatch::HttpMethod::Get,
+            url: "http://127.0.0.1:8080/".to_string(),
+            headers: vec![Header {
+                name: "Content-Length".to_string(),
+                value: "999".to_string(),
+            }],
+            body: Vec::new(),
+            timeout_millis: None,
+        };
+
+        let err = build_plain_http_request(&req, &url)
+            .expect_err("host-controlled headers should be rejected");
+
+        assert!(
+            matches!(err, AdapterError::Protocol(message) if message == "host-controlled HTTP header")
+        );
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn local_plain_http_adapter_sends_post_body_and_parses_response() {
+        let listener = match std::net::TcpListener::bind("127.0.0.1:0") {
+            Ok(listener) => listener,
+            Err(err) if err.kind() == std::io::ErrorKind::PermissionDenied => {
+                eprintln!("skipping local HTTP adapter socket test: bind is not permitted");
+                return;
+            }
+            Err(err) => panic!("bind HTTP fixture: {err}"),
+        };
+        let addr = listener.local_addr().expect("fixture address");
+        let (tx, rx) = std::sync::mpsc::channel();
+
+        let server = std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().expect("accept HTTP request");
+            let mut request = Vec::new();
+            let mut chunk = [0; 512];
+
+            loop {
+                let read = stream.read(&mut chunk).expect("read HTTP request");
+                if read == 0 {
+                    break;
+                }
+                request.extend_from_slice(&chunk[..read]);
+
+                if request.windows(4).any(|window| window == b"\r\n\r\n")
+                    && request.ends_with(b"payload")
+                {
+                    break;
+                }
+            }
+
+            tx.send(String::from_utf8(request).expect("request is UTF-8"))
+                .expect("send captured request");
+            stream
+                .write_all(b"HTTP/1.1 201 Created\r\nContent-Type: text/plain\r\n\r\naccepted")
+                .expect("write HTTP response");
+        });
+
+        let adapter = LocalPhase2Adapter::new(
+            Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            Vec::new(),
+            1024,
+        );
+        let response = adapter
+            .fetch(HttpRequest {
+                method: uapi_dispatch::HttpMethod::Post,
+                url: format!("http://{addr}/submit"),
+                headers: vec![Header {
+                    name: "X-Layer36".to_string(),
+                    value: "yes".to_string(),
+                }],
+                body: b"payload".to_vec(),
+                timeout_millis: Some(1000),
+            })
+            .expect("POST should succeed");
+
+        server.join().expect("server joins");
+        let request = rx.recv().expect("captured request");
+
+        assert!(request.starts_with("POST /submit HTTP/1.1\r\n"));
+        assert!(request.contains("X-Layer36: yes\r\n"));
+        assert!(request.contains("Content-Length: 7\r\n"));
+        assert!(request.ends_with("\r\n\r\npayload"));
+        assert_eq!(response.status, 201);
+        assert_eq!(response.body, b"accepted");
     }
 
     #[test]

@@ -256,11 +256,14 @@ not match, it tries the Phase 2 `cli` world and installs the generated UAPI
 imports.
 
 The local adapter is still small on purpose. It can handle stdio, basic files,
-time, locale, and plain HTTP GET. The HTTP path is only a first useful slice:
-good enough for localhost and fixed test servers, not yet a full web client. It
-rejects responses above 1 MiB by default so local tests do not accidentally
-depend on unbounded host reads. Use `--max-http-response-bytes` to lower or raise
-that limit for a run. When the response is too large, the app receives
+time, locale, and plain HTTP request framing. The HTTP path is only a first
+useful slice: good enough for localhost and fixed test servers, not yet a full
+web client. `get(url)` remains the simple body-only path. `fetch(req)` can send
+the selected method, app headers, and a buffered body, while the host controls
+transport headers such as `Host`, `Connection`, and `Content-Length`. Responses
+above 1 MiB are rejected by default so local tests do not accidentally depend on
+unbounded host reads. Use `--max-http-response-bytes` to lower or raise that
+limit for a run. When the response is too large, the app receives
 `net-error.body-too-large`, not a vague network failure. Timeouts and malformed
 responses also cross the WIT boundary as `net-error.timeout` and
 `net-error.protocol`. HTTPS, redirects, streaming, and deeper protocol work are

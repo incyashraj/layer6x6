@@ -38,6 +38,13 @@ layer36::export!(Component);
 let args = layer36::io::args::all();
 let text = layer36::fs::read_to_string("input.txt")?;
 let body = layer36::net::get_text("http://127.0.0.1:8080/data.txt")?;
+let response = layer36::net::fetch(layer36::net::Request {
+    method: layer36::net::HttpMethod::Post,
+    url: "http://127.0.0.1:8080/submit".to_string(),
+    headers: Vec::new(),
+    body: b"hello".to_vec(),
+    timeout_millis: Some(1000),
+})?;
 let now = layer36::time::now_millis();
 let locale = layer36::locale::current();
 ```

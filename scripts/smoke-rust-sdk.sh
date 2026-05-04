@@ -22,9 +22,9 @@ run_cargo() {
 }
 
 if [ "${LAYER36_OFFLINE:-}" = "1" ]; then
-  run_cargo package -p layer36 --offline
+  run_cargo package -p layer36 --allow-dirty --offline
 else
-  run_cargo package -p layer36
+  run_cargo package -p layer36 --allow-dirty
 fi
 
 package_dir="$(

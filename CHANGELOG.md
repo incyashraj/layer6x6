@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Phase 2 plain HTTP `fetch(req)` now sends the selected method, app headers, and buffered body while keeping transport headers under host control.
 - `scripts/smoke-rust-sdk.sh` to package the Rust SDK and check a fresh outside-workspace component against the packaged crate.
 - Generated UAPI reference pages now include function-level behavior notes for the Phase 2 interfaces and resource methods.
 - `layer36-curl` now prints clearer messages for oversized, timed-out, and malformed HTTP responses.
