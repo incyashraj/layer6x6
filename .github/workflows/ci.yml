@@ -1,6 +1,10 @@
 name: CI
 
 on:
+  push:
+    branches:
+      - main
+  pull_request:
   workflow_dispatch:
     inputs:
       full:
@@ -61,7 +65,7 @@ jobs:
   # ──────────────────────────────────────────────
   phase2-bindings:
     name: Phase 2 bindings
-    if: ${{ inputs.full }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.full) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[full-ci]')) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -106,7 +110,7 @@ jobs:
   # ──────────────────────────────────────────────
   hello-fixture:
     name: Build shared component fixtures
-    if: ${{ inputs.full }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.full) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[full-ci]')) }}
     runs-on: ubuntu-latest
     outputs:
       sha256: ${{ steps.hash.outputs.sha256 }}
@@ -173,7 +177,7 @@ jobs:
   # ──────────────────────────────────────────────
   full-test:
     name: Full test (${{ matrix.os }})
-    if: ${{ inputs.full }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.full) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[full-ci]')) }}
     runs-on: ${{ matrix.os }}
     needs: hello-fixture
     strategy:
@@ -236,7 +240,7 @@ jobs:
   # ──────────────────────────────────────────────
   benchmarks:
     name: Benchmarks (warning only)
-    if: ${{ inputs.full }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.full) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[full-ci]')) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -268,7 +272,7 @@ jobs:
   # ──────────────────────────────────────────────
   deny:
     name: Dependency audit (cargo-deny)
-    if: ${{ inputs.full }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.full) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[full-ci]')) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

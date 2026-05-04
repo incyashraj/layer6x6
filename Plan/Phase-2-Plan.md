@@ -2053,16 +2053,16 @@ The first named sample app also exists now: `apps/layer36-clock`. It is a Rust c
 
 `apps/layer36-curl` has started now as well. It reads its URL from Layer36 app args, calls `layer36:net/http-client.get`, and writes the response body through UAPI stdout. The first test uses a local HTTP server and an exact `net.connect:127.0.0.1:PORT` grant. The matching denial test runs without that grant and exits cleanly with code `5` before the adapter can open a socket.
 
-GitHub Actions is now in budget-aware mode. Normal pushes run the cheap checks:
-format, clippy, Linux workspace tests, and docs. The expensive full path builds
-the shared component fixtures, runs Linux/macOS/Windows, benchmarks, cargo-deny,
-and the dedicated Phase 2 binding checkpoint only when manually dispatched with
-`full = true` or when a push commit message contains `[full-ci]`.
+GitHub Actions is back in public-repo mode. Normal pushes and pull requests run
+the cheap hosted checks: format, clippy, Linux workspace tests, and docs. The
+expensive full path builds the shared component fixtures, runs
+Linux/macOS/Windows, benchmarks, cargo-deny, and the dedicated Phase 2 binding
+checkpoint only when manually dispatched with `full = true` or when a push
+commit message contains `[full-ci]`.
 
-As of 2026-05-04, the GitHub account's Actions billing/spending limit is
-blocking new jobs before they start. CI is temporarily manual-only so pushes do
-not create failed runs. Until Actions is available again, local `cargo fmt`,
-`cargo clippy`, `mdbook build`, and full workspace tests are the required gate.
+There is also a manual self-hosted workflow for a local runner labeled
+`layer36-local`. That gives us a way to run the full local gate on a trusted
+machine without relying on hosted runner availability.
 
 This does not freeze UAPI v0.1 yet. It gives us a real contract to review, generate bindings from, and wire into host adapters.
 
@@ -2116,6 +2116,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P2-SEC-01E-d | Runtime Phase 2 linker install | 2026-05-03 | `layer36 run` can now fall back from the Phase 1 `app` world to the Phase 2 `cli` world and install generated UAPI imports with a local adapter for stdio, basic fs, time, and locale. |
 | P2-SEC-01E-e | Phase 2 smoke component proof | 2026-05-03 | Added `test/integration/phase2-smoke`, a real Phase 2 `cli` component that reads a file, calls time/locale, writes to stdout, and is wired into the cross-host CI fixture path. |
 | P2-CI-01 | Budget-aware CI mode | 2026-05-04 | Normal push CI now runs cheap Linux checks only; full cross-host matrix, benchmarks, cargo-deny, fixtures, and the dedicated Phase 2 binding checkpoint run manually with `full = true` or a `[full-ci]` commit marker. |
+| P2-CI-02 | Public CI and self-hosted runner path | 2026-05-04 | Repo visibility is public, cheap hosted CI is restored for pushes and PRs, Pages deploys from docs changes, and a manual `Self-hosted CI` workflow targets local runners labeled `layer36-local`. |
 | P2-SEC-01F | Phase 2 smoke missing-grant proof | 2026-05-04 | Added a CLI integration test proving the smoke component receives `fs.permission-denied` without `fs.read`, writes a clear stderr message, and exits non-zero without reading host files. |
 | P2-APP-03A | First `layer36-clock` sample path | 2026-05-04 | Added `apps/layer36-clock`, a Rust Phase 2 component using time, locale, and stdout, plus `layer36 run --test-time` for deterministic sample tests. |
 | P2-UAPI-06 | Layer36 app arguments | 2026-05-04 | Added `layer36:io/args.raw`, default `io.args` grants, CLI forwarding through `layer36 run ... -- <args>`, and host dispatch wiring. |

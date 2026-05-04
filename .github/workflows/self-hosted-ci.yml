@@ -1,0 +1,75 @@
+name: Self-hosted CI
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: self-hosted-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  local-full-gate:
+    name: Local full gate
+    runs-on: [self-hosted, layer36-local]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@1.91.1
+        with:
+          components: rustfmt, clippy
+          targets: wasm32-wasip1, wasm32-wasip2, wasm32-unknown-unknown
+
+      - name: Install local CI tools
+        shell: bash
+        run: |
+          if ! command -v cargo-component >/dev/null 2>&1; then
+            cargo install cargo-component --locked --version 0.21.1
+          fi
+          if ! command -v cargo-deny >/dev/null 2>&1; then
+            cargo install cargo-deny --locked --version 0.19.4
+          fi
+          if ! command -v mdbook >/dev/null 2>&1; then
+            cargo install mdbook --locked --version 0.4.40
+          fi
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Lint
+        run: cargo clippy --workspace --all-features -- -D warnings
+
+      - name: Build component fixtures
+        id: fixtures
+        shell: bash
+        run: |
+          hello_path="$(scripts/build-hello-component.sh | tail -n 1)"
+          phase2_smoke_path="$(scripts/build-phase2-smoke-component.sh | tail -n 1)"
+          clock_path="$(scripts/build-layer36-clock-component.sh | tail -n 1)"
+          cat_path="$(scripts/build-layer36-cat-component.sh | tail -n 1)"
+          curl_path="$(scripts/build-layer36-curl-component.sh | tail -n 1)"
+          printf 'hello=%s\n' "$hello_path" >> "$GITHUB_OUTPUT"
+          printf 'phase2_smoke=%s\n' "$phase2_smoke_path" >> "$GITHUB_OUTPUT"
+          printf 'clock=%s\n' "$clock_path" >> "$GITHUB_OUTPUT"
+          printf 'cat=%s\n' "$cat_path" >> "$GITHUB_OUTPUT"
+          printf 'curl=%s\n' "$curl_path" >> "$GITHUB_OUTPUT"
+
+      - name: Test workspace
+        env:
+          LAYER36_HELLO_WASM: ${{ steps.fixtures.outputs.hello }}
+          LAYER36_PHASE2_SMOKE_WASM: ${{ steps.fixtures.outputs.phase2_smoke }}
+          LAYER36_CLOCK_WASM: ${{ steps.fixtures.outputs.clock }}
+          LAYER36_CAT_WASM: ${{ steps.fixtures.outputs.cat }}
+          LAYER36_CURL_WASM: ${{ steps.fixtures.outputs.curl }}
+        run: cargo test --workspace --all-features
+
+      - name: Dependency audit
+        run: cargo deny check advisories licenses bans sources
+
+      - name: Docs
+        run: mdbook build docs/book

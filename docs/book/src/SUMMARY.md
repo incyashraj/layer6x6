@@ -23,6 +23,7 @@
   - [Your first PR](contributing/first-pr.md)
   - [ADR process](contributing/adrs.md)
   - [WIT style guide](contributing/wit-style.md)
+  - [CI and runners](contributing/ci-and-runners.md)
 - [Setting up your environment](contributing/setup.md)
 
 # Phase Notes

@@ -10,6 +10,9 @@ Optional (needed for specific phases):
 - `wasm-tools`: for WASM inspection and optimization (Phase 1+)
 - `mdbook`: for building the docs site (`cargo install mdbook`)
 
+If you want GitHub to run jobs on your own machine, see
+[CI and runners](ci-and-runners.md).
+
 ## Clone and build
 
 ```bash
