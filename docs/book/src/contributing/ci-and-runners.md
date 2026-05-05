@@ -30,6 +30,9 @@ runner labeled `layer36-local`. Use it when you want GitHub to run the full
 local gate on your own machine instead of a hosted runner.
 That local gate now also runs a short Phase 2 fuzz smoke over the first fuzz
 targets.
+The benchmark regression step is warning-only by default in this manual
+workflow, and you can switch it to strict fail mode with the
+`benchmark_regression_mode` input when you want to enforce performance gating.
 
 The runtime tests now include an optional Phase 2 language-variant slice for Go
 and TypeScript sample components. It runs through:

@@ -4,6 +4,9 @@
 **Estimate:** est. 4 to 8 weeks
 **Goal:** Make Layer36 useful for small command line apps.
 
+Security baseline for this phase is now published:
+[Phase 2 Threat Model v0.2](../phase2/threat-model-v0-2.md).
+
 Phase 2 replaces the temporary Phase 1 host interface with real APIs:
 
 - `io`

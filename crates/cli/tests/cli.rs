@@ -981,7 +981,9 @@ fn configured_layer36_curl_component_fetches_granted_http_url() {
     };
 
     let body = b"hello from curl\n";
-    let (addr, server) = spawn_http_fixture(body);
+    let Some((addr, server)) = spawn_http_fixture(body) else {
+        return;
+    };
     let url = format!("http://{addr}/fixture.txt");
 
     let output = layer36()
@@ -1009,7 +1011,9 @@ fn configured_layer36_curl_component_rejects_response_above_cli_limit() {
     };
 
     let body = b"too large for this run\n";
-    let (addr, server) = spawn_http_fixture(body);
+    let Some((addr, server)) = spawn_http_fixture(body) else {
+        return;
+    };
     let url = format!("http://{addr}/fixture.txt");
 
     let output = layer36()
@@ -1039,7 +1043,9 @@ fn configured_layer36_curl_component_runs_with_sample_manifest_auto_grant() {
     };
 
     let body = b"hello from manifest curl\n";
-    let (addr, server) = spawn_http_fixture(body);
+    let Some((addr, server)) = spawn_http_fixture(body) else {
+        return;
+    };
     let url = format!("http://{addr}/fixture.txt");
 
     let output = layer36()
@@ -1092,7 +1098,9 @@ fn configured_layer36_curl_component_reports_connect_failure() {
         return;
     };
 
-    let addr = reserve_unused_local_addr();
+    let Some(addr) = reserve_unused_local_addr() else {
+        return;
+    };
     let url = format!("http://{addr}/unreachable");
 
     let output = layer36()
@@ -1140,7 +1148,9 @@ fn configured_layer36_curl_component_reports_protocol_error() {
         return;
     };
 
-    let (addr, server) = spawn_malformed_http_fixture(b"NOT-HTTP\r\n\r\n");
+    let Some((addr, server)) = spawn_malformed_http_fixture(b"NOT-HTTP\r\n\r\n") else {
+        return;
+    };
     let url = format!("http://{addr}/malformed");
 
     let output = layer36()
@@ -1165,7 +1175,9 @@ fn configured_layer36_curl_component_reports_timeout() {
         return;
     };
 
-    let (addr, server) = spawn_stalling_http_fixture(Duration::from_millis(1500));
+    let Some((addr, server)) = spawn_stalling_http_fixture(Duration::from_millis(1500)) else {
+        return;
+    };
     let url = format!("http://{addr}/stall");
 
     let output = layer36()
@@ -1280,7 +1292,9 @@ fn configured_layer36_go_curl_component_fetches_granted_http_url() {
     };
 
     let body = b"hello from go curl\n";
-    let (addr, server) = spawn_http_fixture(body);
+    let Some((addr, server)) = spawn_http_fixture(body) else {
+        return;
+    };
     let url = format!("http://{addr}/fixture.txt");
 
     let output = layer36()
@@ -1391,7 +1405,9 @@ fn configured_layer36_ts_curl_component_fetches_granted_http_url() {
     };
 
     let body = b"hello from ts curl\n";
-    let (addr, server) = spawn_http_fixture(body);
+    let Some((addr, server)) = spawn_http_fixture(body) else {
+        return;
+    };
     let url = format!("http://{addr}/fixture.txt");
 
     let output = layer36()
@@ -1917,8 +1933,19 @@ fn configured_component_from_env_or_paths(
     Some(workspace_path(PathBuf::from(path)))
 }
 
-fn spawn_http_fixture(body: &'static [u8]) -> (SocketAddr, thread::JoinHandle<()>) {
-    let listener = TcpListener::bind("127.0.0.1:0").expect("bind HTTP fixture");
+fn bind_local_fixture_listener(label: &str) -> Option<TcpListener> {
+    match TcpListener::bind("127.0.0.1:0") {
+        Ok(listener) => Some(listener),
+        Err(err) if err.kind() == std::io::ErrorKind::PermissionDenied => {
+            eprintln!("skipping {label}: localhost bind is blocked ({err})");
+            None
+        }
+        Err(err) => panic!("bind {label}: {err}"),
+    }
+}
+
+fn spawn_http_fixture(body: &'static [u8]) -> Option<(SocketAddr, thread::JoinHandle<()>)> {
+    let listener = bind_local_fixture_listener("HTTP fixture")?;
     listener
         .set_nonblocking(true)
         .expect("set HTTP fixture nonblocking");
@@ -1956,20 +1983,22 @@ fn spawn_http_fixture(body: &'static [u8]) -> (SocketAddr, thread::JoinHandle<()
             .expect("write HTTP fixture response body");
     });
 
-    (addr, handle)
+    Some((addr, handle))
 }
 
-fn reserve_unused_local_addr() -> SocketAddr {
-    let listener = TcpListener::bind("127.0.0.1:0").expect("bind local address probe");
+fn reserve_unused_local_addr() -> Option<SocketAddr> {
+    let listener = bind_local_fixture_listener("local address probe")?;
     let addr = listener
         .local_addr()
         .expect("read local address probe port");
     drop(listener);
-    addr
+    Some(addr)
 }
 
-fn spawn_malformed_http_fixture(payload: &'static [u8]) -> (SocketAddr, thread::JoinHandle<()>) {
-    let listener = TcpListener::bind("127.0.0.1:0").expect("bind malformed HTTP fixture");
+fn spawn_malformed_http_fixture(
+    payload: &'static [u8],
+) -> Option<(SocketAddr, thread::JoinHandle<()>)> {
+    let listener = bind_local_fixture_listener("malformed HTTP fixture")?;
     listener
         .set_nonblocking(true)
         .expect("set malformed HTTP fixture nonblocking");
@@ -2002,11 +2031,11 @@ fn spawn_malformed_http_fixture(payload: &'static [u8]) -> (SocketAddr, thread::
             .write_all(payload)
             .expect("write malformed HTTP fixture response");
     });
-    (addr, handle)
+    Some((addr, handle))
 }
 
-fn spawn_stalling_http_fixture(wait: Duration) -> (SocketAddr, thread::JoinHandle<()>) {
-    let listener = TcpListener::bind("127.0.0.1:0").expect("bind stalling HTTP fixture");
+fn spawn_stalling_http_fixture(wait: Duration) -> Option<(SocketAddr, thread::JoinHandle<()>)> {
+    let listener = bind_local_fixture_listener("stalling HTTP fixture")?;
     listener
         .set_nonblocking(true)
         .expect("set stalling HTTP fixture nonblocking");
@@ -2038,7 +2067,7 @@ fn spawn_stalling_http_fixture(wait: Duration) -> (SocketAddr, thread::JoinHandl
         thread::sleep(wait);
         let _ = stream.flush();
     });
-    (addr, handle)
+    Some((addr, handle))
 }
 
 fn expected_hello_hash() -> Option<String> {
