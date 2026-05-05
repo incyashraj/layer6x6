@@ -343,16 +343,100 @@ pub fn normalize_locale_tag(raw: Option<&str>) -> String {
 
 pub fn normalize_timezone(raw: Option<&str>) -> String {
     const MAX_TIMEZONE_BYTES: usize = 128;
-    raw.map(str::trim)
-        .filter(|value| {
-            !value.is_empty()
-                && value.len() <= MAX_TIMEZONE_BYTES
-                && value
-                    .chars()
-                    .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '/' | '_' | '+' | '-'))
-        })
-        .unwrap_or("UTC")
-        .to_string()
+    let Some(value) = raw.map(str::trim).filter(|value| !value.is_empty()) else {
+        return "UTC".to_string();
+    };
+
+    if value.len() > MAX_TIMEZONE_BYTES {
+        return "UTC".to_string();
+    }
+
+    if let Some(offset) = normalize_utc_offset_timezone(value) {
+        return offset;
+    }
+    if looks_like_utc_offset_timezone(value) {
+        return "UTC".to_string();
+    }
+
+    if value
+        .chars()
+        .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '/' | '_' | '+' | '-'))
+    {
+        return value.to_string();
+    }
+
+    "UTC".to_string()
+}
+
+fn looks_like_utc_offset_timezone(raw: &str) -> bool {
+    raw.starts_with('+')
+        || raw.starts_with('-')
+        || raw.starts_with("UTC+")
+        || raw.starts_with("UTC-")
+        || raw.starts_with("utc+")
+        || raw.starts_with("utc-")
+        || raw.starts_with("GMT+")
+        || raw.starts_with("GMT-")
+        || raw.starts_with("gmt+")
+        || raw.starts_with("gmt-")
+}
+
+fn normalize_utc_offset_timezone(raw: &str) -> Option<String> {
+    if raw.eq_ignore_ascii_case("z") || raw.eq_ignore_ascii_case("utc") {
+        return Some("UTC".to_string());
+    }
+
+    if let Some(suffix) = raw
+        .strip_prefix("UTC")
+        .or_else(|| raw.strip_prefix("utc"))
+        .or_else(|| raw.strip_prefix("GMT"))
+        .or_else(|| raw.strip_prefix("gmt"))
+    {
+        return parse_utc_offset_suffix(suffix);
+    }
+
+    parse_utc_offset_suffix(raw)
+}
+
+fn parse_utc_offset_suffix(suffix: &str) -> Option<String> {
+    let sign = if let Some(rest) = suffix.strip_prefix('+') {
+        (1i8, rest)
+    } else if let Some(rest) = suffix.strip_prefix('-') {
+        (-1i8, rest)
+    } else {
+        return None;
+    };
+
+    let (hours_text, minutes_text) = if let Some((hours, minutes)) = sign.1.split_once(':') {
+        if minutes.contains(':') {
+            return None;
+        }
+        (hours, minutes)
+    } else if sign.1.len() > 2 {
+        let split_at = sign.1.len().checked_sub(2)?;
+        sign.1.split_at(split_at)
+    } else {
+        (sign.1, "00")
+    };
+
+    if hours_text.is_empty() || hours_text.len() > 2 || minutes_text.len() != 2 {
+        return None;
+    }
+
+    if !hours_text.chars().all(|ch| ch.is_ascii_digit())
+        || !minutes_text.chars().all(|ch| ch.is_ascii_digit())
+    {
+        return None;
+    }
+
+    let hours: u8 = hours_text.parse().ok()?;
+    let minutes: u8 = minutes_text.parse().ok()?;
+    if hours > 23 || minutes > 59 {
+        return None;
+    }
+
+    let sign_text = if sign.0 < 0 { "-" } else { "+" };
+    Some(format!("UTC{sign_text}{hours:02}:{minutes:02}"))
 }
 
 fn canonicalize_locale_tag(tag: &str) -> Option<String> {
@@ -534,6 +618,26 @@ mod tests {
         assert_eq!(normalize_timezone(Some("UTC*")), "UTC");
         assert_eq!(normalize_timezone(Some(&"A".repeat(129))), "UTC");
         assert_eq!(normalize_timezone(Some("Etc/GMT+1")), "Etc/GMT+1");
+    }
+
+    #[test]
+    fn timezone_accepts_and_normalizes_utc_offset_forms() {
+        assert_eq!(normalize_timezone(Some("Z")), "UTC");
+        assert_eq!(normalize_timezone(Some("+5")), "UTC+05:00");
+        assert_eq!(normalize_timezone(Some("-07")), "UTC-07:00");
+        assert_eq!(normalize_timezone(Some("+0530")), "UTC+05:30");
+        assert_eq!(normalize_timezone(Some("-1245")), "UTC-12:45");
+        assert_eq!(normalize_timezone(Some("UTC+5:30")), "UTC+05:30");
+        assert_eq!(normalize_timezone(Some("gmt-02:00")), "UTC-02:00");
+    }
+
+    #[test]
+    fn timezone_rejects_invalid_utc_offset_forms() {
+        assert_eq!(normalize_timezone(Some("+")), "UTC");
+        assert_eq!(normalize_timezone(Some("+24")), "UTC");
+        assert_eq!(normalize_timezone(Some("-00:60")), "UTC");
+        assert_eq!(normalize_timezone(Some("UTC+05:3")), "UTC");
+        assert_eq!(normalize_timezone(Some("GMT+05:30:00")), "UTC");
     }
 
     #[test]

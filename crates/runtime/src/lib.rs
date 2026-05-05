@@ -1402,6 +1402,29 @@ mod tests {
 
     #[cfg(feature = "phase2-bindings")]
     #[test]
+    fn local_phase2_adapter_normalizes_timezone_offset_override() {
+        let adapter = LocalPhase2Adapter::new(
+            Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            Some("en_US.UTF-8".to_string()),
+            Some("UTC+5:30".to_string()),
+            Vec::new(),
+            1024,
+            PathBuf::from("."),
+        );
+
+        let locale = adapter.current().expect("read locale");
+        let timezone = adapter.timezone().expect("read timezone");
+        let date = adapter
+            .format_date(1_234_567_890, &timezone, DateStyle::Long, &locale)
+            .expect("format date");
+
+        assert_eq!(timezone, "UTC+05:30");
+        assert_eq!(date, "1970-01-15 06:56:07 UTC+05:30");
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
     fn local_fs_adapter_normalizes_portable_separators() {
         let temp =
             std::env::temp_dir().join(format!("layer36-path-normalize-{}", std::process::id()));
