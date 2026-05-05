@@ -61,6 +61,8 @@ const MAX_PHASE2_WRITE_BYTES: usize = 8 * 1024 * 1024;
 const MAX_PHASE2_LIST_ENTRIES: usize = 4096;
 #[cfg(feature = "phase2-bindings")]
 const MAX_PHASE2_ARGS_RAW_BYTES: usize = 64 * 1024;
+#[cfg(feature = "phase2-bindings")]
+const MAX_PHASE2_OPEN_RESOURCES: usize = 1024;
 
 wasmtime::component::bindgen!({
     path: "../../wit/layer36",
@@ -446,12 +448,23 @@ impl LocalPhase2Adapter {
         }
     }
 
-    fn insert_resource(&self, resource: LocalResource) -> FileHandle {
+    fn insert_resource(
+        &self,
+        resource: LocalResource,
+    ) -> std::result::Result<FileHandle, AdapterError> {
         let mut state = self.state.borrow_mut();
+        if state.resources.len() >= MAX_PHASE2_OPEN_RESOURCES {
+            return Err(AdapterError::Io(format!(
+                "resource table exceeds limit ({MAX_PHASE2_OPEN_RESOURCES} handles)"
+            )));
+        }
         let id = state.next_id;
-        state.next_id += 1;
+        state.next_id = state
+            .next_id
+            .checked_add(1)
+            .ok_or_else(|| AdapterError::Io("resource id overflow".to_string()))?;
         state.resources.insert(id, resource);
-        FileHandle::resource(id)
+        Ok(FileHandle::resource(id))
     }
 
     fn resolve_fs_path(
@@ -642,15 +655,15 @@ impl HostAdapter for LocalPhase2Adapter {
 #[cfg(feature = "phase2-bindings")]
 impl IoAdapter for LocalPhase2Adapter {
     fn stdin(&self) -> std::result::Result<FileHandle, AdapterError> {
-        Ok(self.insert_resource(LocalResource::Stdin))
+        self.insert_resource(LocalResource::Stdin)
     }
 
     fn stdout(&self) -> std::result::Result<FileHandle, AdapterError> {
-        Ok(self.insert_resource(LocalResource::Stdout))
+        self.insert_resource(LocalResource::Stdout)
     }
 
     fn stderr(&self) -> std::result::Result<FileHandle, AdapterError> {
-        Ok(self.insert_resource(LocalResource::Stderr))
+        self.insert_resource(LocalResource::Stderr)
     }
 
     fn args_raw(&self) -> std::result::Result<String, AdapterError> {
@@ -760,7 +773,7 @@ impl FsAdapter for LocalPhase2Adapter {
             }
         }
         let file = opts.open(path).map_err(map_io_error)?;
-        Ok(self.insert_resource(LocalResource::File(file)))
+        self.insert_resource(LocalResource::File(file))
     }
 
     fn read(&self, handle: &FileHandle, n: u32) -> std::result::Result<Vec<u8>, AdapterError> {
@@ -1442,6 +1455,32 @@ mod tests {
             ),
             other => panic!("unexpected error variant: {other:?}"),
         }
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn local_io_adapter_rejects_resource_table_overflow() {
+        let adapter = LocalPhase2Adapter::new(
+            Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            None,
+            None,
+            Vec::new(),
+            1024,
+            PathBuf::from("."),
+        );
+
+        for _ in 0..MAX_PHASE2_OPEN_RESOURCES {
+            adapter.stdout().expect("open stream handle within limit");
+        }
+
+        let err = adapter
+            .stdout()
+            .expect_err("resource-table overflow should be rejected");
+        assert!(
+            matches!(err, AdapterError::Io(ref message) if message.contains("resource table exceeds limit")),
+            "unexpected resource-table overflow error: {err:?}"
+        );
     }
 
     #[cfg(feature = "phase2-bindings")]

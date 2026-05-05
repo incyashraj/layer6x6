@@ -57,7 +57,9 @@ The generated host traits are also wired for the first useful slice. HTTP,
 path-level filesystem operations, time, locale, logs, and stdio now call the
 dispatcher, which means UCap sits in front of those calls. A small resource
 table now owns opened file and stdio handles, so reads, writes, seeks, stats,
-and flushes can route through the adapter without exposing raw host IDs.
+and flushes can route through the adapter without exposing raw host IDs. The
+local runtime now also caps that open-handle table, so Phase 2 components
+cannot grow stream/file handles without bound.
 
 The runtime also has an initial Phase 2 execution path now. `layer36 run` keeps
 supporting the Phase 1 proof world, then falls back to the Phase 2 `cli` world
