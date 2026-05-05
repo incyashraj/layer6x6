@@ -3,11 +3,25 @@ set -eu
 
 # Ensure locally installed cargo subcommands are reachable.
 export PATH="$HOME/.cargo/bin:$PATH"
+FUZZ_MAX_TOTAL_TIME="${LAYER36_FUZZ_MAX_TOTAL_TIME:-30}"
+FUZZ_TARGETS="${LAYER36_FUZZ_TARGETS:-manifest_parse logical_path_parse policy_match}"
+
+case "$FUZZ_MAX_TOTAL_TIME" in
+  ''|*[!0-9]*)
+    echo "LAYER36_FUZZ_MAX_TOTAL_TIME must be a positive integer (seconds)." >&2
+    exit 1
+    ;;
+esac
+
+if [ "$FUZZ_MAX_TOTAL_TIME" -le 0 ]; then
+  echo "LAYER36_FUZZ_MAX_TOTAL_TIME must be greater than zero." >&2
+  exit 1
+fi
 
 if [ "${LAYER36_FUZZ_SMOKE_DRY_RUN:-0}" = "1" ]; then
-  echo "cargo-fuzz run manifest_parse -- -max_total_time=30  # nightly-pinned cargo/rustc"
-  echo "cargo-fuzz run logical_path_parse -- -max_total_time=30  # nightly-pinned cargo/rustc"
-  echo "cargo-fuzz run policy_match -- -max_total_time=30  # nightly-pinned cargo/rustc"
+  for target in $FUZZ_TARGETS; do
+    echo "cargo-fuzz run $target -- -max_total_time=$FUZZ_MAX_TOTAL_TIME  # nightly-pinned cargo/rustc"
+  done
   exit 0
 fi
 
@@ -37,6 +51,7 @@ export PATH="$nightly_bindir:$PATH"
 export CARGO="$nightly_cargo"
 export RUSTC="$nightly_rustc"
 
-cargo-fuzz run manifest_parse -- -max_total_time=30
-cargo-fuzz run logical_path_parse -- -max_total_time=30
-cargo-fuzz run policy_match -- -max_total_time=30
+for target in $FUZZ_TARGETS; do
+  echo "Running cargo-fuzz target '$target' for ${FUZZ_MAX_TOTAL_TIME}s"
+  cargo-fuzz run "$target" -- -max_total_time="$FUZZ_MAX_TOTAL_TIME"
+done

@@ -8,6 +8,11 @@ on:
         required: false
         type: string
         default: optional
+      fuzz_max_total_time:
+        description: Per-target fuzz duration in seconds
+        required: false
+        type: string
+        default: "30"
 
 concurrency:
   group: self-hosted-ci-${{ github.ref }}
@@ -113,6 +118,7 @@ jobs:
       - name: Fuzz smoke
         env:
           RUSTUP_TOOLCHAIN: nightly
+          LAYER36_FUZZ_MAX_TOTAL_TIME: ${{ inputs.fuzz_max_total_time }}
         run: scripts/run-phase2-fuzz-smoke.sh
 
       - name: Docs

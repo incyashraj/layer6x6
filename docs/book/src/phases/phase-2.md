@@ -266,7 +266,12 @@ TypeScript, so contributors can onboard per language without guessing the
 current phase boundaries.
 We also now have the first fuzz-harness set for manifest parsing, shared path
 normalization, and policy matching. Nightly multi-hour fuzz runs are still a
-remaining exit item.
+remaining exit item, but the run path is now configurable without editing
+scripts. `scripts/run-phase2-fuzz-smoke.sh` accepts
+`LAYER36_FUZZ_MAX_TOTAL_TIME` (seconds per target), and self-hosted CI now
+accepts a matching manual input. There is also a dedicated
+`Self-hosted Fuzz Nightly` workflow that defaults to long runs on local
+runners.
 The first self-hosted fuzz smoke already paid off by finding and helping fix a
 real non-ASCII path-parsing panic in shared path handling.
 

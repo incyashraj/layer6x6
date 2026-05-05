@@ -1,0 +1,52 @@
+name: Self-hosted Fuzz Nightly
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      fuzz_max_total_time:
+        description: Per-target fuzz duration in seconds
+        required: false
+        type: string
+        default: "4800"
+
+concurrency:
+  group: self-hosted-fuzz-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  fuzz-nightly:
+    name: Fuzz nightly
+    runs-on: [self-hosted, layer36-local]
+    timeout-minutes: 360
+    env:
+      LAYER36_FUZZ_MAX_TOTAL_TIME: ${{ github.event_name == 'workflow_dispatch' && inputs.fuzz_max_total_time || '4800' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@1.91.1
+        with:
+          targets: wasm32-wasip1
+
+      - name: Install fuzz tools
+        shell: bash
+        run: |
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.cargo/bin:$PATH"
+          if ! command -v cargo-fuzz >/dev/null 2>&1; then
+            cargo install cargo-fuzz --locked
+          fi
+          if ! rustup toolchain list | grep -q "^nightly"; then
+            rustup toolchain install nightly --profile minimal
+          fi
+
+      - name: Run fuzz targets
+        env:
+          RUSTUP_TOOLCHAIN: nightly
+        run: scripts/run-phase2-fuzz-smoke.sh
