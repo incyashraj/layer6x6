@@ -190,6 +190,9 @@ impl fs::files::HostFile for Phase2Host<'_> {
     }
 
     fn drop(&mut self, rep: Resource<fs::files::File>) -> wasmtime::Result<()> {
+        if let Some(handle) = self.resources.file(rep.rep()).cloned() {
+            let _ = self.dispatcher().close_file_handle(&handle);
+        }
         self.resources.remove_file(rep.rep());
         Ok(())
     }
@@ -252,6 +255,9 @@ impl io::streams::HostInputStream for Phase2Host<'_> {
     }
 
     fn drop(&mut self, rep: Resource<io::streams::InputStream>) -> wasmtime::Result<()> {
+        if let Some(handle) = self.resources.input(rep.rep()).cloned() {
+            let _ = self.dispatcher().close_stream_handle(&handle);
+        }
         self.resources.remove_input(rep.rep());
         Ok(())
     }
@@ -303,6 +309,9 @@ impl io::streams::HostOutputStream for Phase2Host<'_> {
     }
 
     fn drop(&mut self, rep: Resource<io::streams::OutputStream>) -> wasmtime::Result<()> {
+        if let Some(handle) = self.resources.output(rep.rep()).cloned() {
+            let _ = self.dispatcher().close_stream_handle(&handle);
+        }
         self.resources.remove_output(rep.rep());
         Ok(())
     }
@@ -519,6 +528,8 @@ mod tests {
 
     #[derive(Default)]
     struct Calls {
+        close_file: usize,
+        close_stream: usize,
         file_read: usize,
         fs_stat: usize,
         log: usize,
@@ -591,6 +602,11 @@ mod tests {
             Ok(())
         }
 
+        fn close_stream(&self, _handle: &FileHandle) -> Result<(), AdapterError> {
+            self.calls.borrow_mut().close_stream += 1;
+            Ok(())
+        }
+
         fn log(&self, _level: &str, _message: &str) -> Result<(), AdapterError> {
             self.calls.borrow_mut().log += 1;
             Ok(())
@@ -656,6 +672,11 @@ mod tests {
         }
 
         fn rename(&self, _from: &str, _to: &str) -> Result<(), AdapterError> {
+            Ok(())
+        }
+
+        fn close_file(&self, _handle: &FileHandle) -> Result<(), AdapterError> {
+            self.calls.borrow_mut().close_file += 1;
             Ok(())
         }
     }
@@ -918,6 +939,32 @@ mod tests {
         assert_eq!(bytes, b"file-20");
         assert_eq!(adapter.calls.borrow().file_read, 1);
         assert_eq!(adapter.calls.borrow().stream_write_all, 1);
+    }
+
+    #[test]
+    fn resource_drop_closes_underlying_handles() {
+        let adapter = RecordingAdapter::default();
+        let guard = UapiGuard::new(SessionPolicy::from_grants([
+            "fs.read:/tmp/data.txt".parse().unwrap(),
+            "io.stdout".parse().unwrap(),
+        ]));
+        let mut host = Phase2Host::new(guard, Box::new(adapter.clone()));
+
+        let file = fs::files::Host::open(
+            &mut host,
+            "/tmp/data.txt".to_string(),
+            fs::types::OpenMode::Read,
+        )
+        .unwrap()
+        .unwrap();
+        let stdout = io::stdio::Host::stdout(&mut host).unwrap();
+
+        fs::files::HostFile::drop(&mut host, file).unwrap();
+        io::streams::HostOutputStream::drop(&mut host, stdout).unwrap();
+
+        let calls = adapter.calls.borrow();
+        assert_eq!(calls.close_file, 1);
+        assert_eq!(calls.close_stream, 1);
     }
 
     #[test]

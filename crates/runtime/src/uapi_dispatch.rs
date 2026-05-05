@@ -236,6 +236,7 @@ pub trait IoAdapter {
         bytes: &[u8],
     ) -> std::result::Result<(), AdapterError>;
     fn flush_stream(&self, handle: &FileHandle) -> std::result::Result<(), AdapterError>;
+    fn close_stream(&self, handle: &FileHandle) -> std::result::Result<(), AdapterError>;
     fn log(&self, level: &str, message: &str) -> std::result::Result<(), AdapterError>;
 }
 
@@ -252,6 +253,7 @@ pub trait FsAdapter {
     fn remove_dir(&self, path: &str) -> std::result::Result<(), AdapterError>;
     fn mkdir(&self, path: &str) -> std::result::Result<(), AdapterError>;
     fn rename(&self, from: &str, to: &str) -> std::result::Result<(), AdapterError>;
+    fn close_file(&self, handle: &FileHandle) -> std::result::Result<(), AdapterError>;
 }
 
 pub trait NetAdapter {
@@ -461,6 +463,17 @@ impl<'a> UapiDispatcher<'a> {
     pub fn flush_stream(&self, handle: &FileHandle) -> DispatchResult<()> {
         self.check_stream_handle(handle, StreamAccess::Write)?;
         self.adapter.io().flush_stream(handle).map_err(Into::into)
+    }
+
+    pub fn close_stream_handle(
+        &self,
+        handle: &FileHandle,
+    ) -> std::result::Result<(), AdapterError> {
+        self.adapter.io().close_stream(handle)
+    }
+
+    pub fn close_file_handle(&self, handle: &FileHandle) -> std::result::Result<(), AdapterError> {
+        self.adapter.fs().close_file(handle)
     }
 
     pub fn net_fetch(
@@ -793,6 +806,10 @@ mod tests {
             Ok(())
         }
 
+        fn close_stream(&self, _handle: &FileHandle) -> std::result::Result<(), AdapterError> {
+            Ok(())
+        }
+
         fn log(&self, _level: &str, _message: &str) -> std::result::Result<(), AdapterError> {
             self.calls.borrow_mut().log += 1;
             Ok(())
@@ -881,6 +898,10 @@ mod tests {
 
         fn rename(&self, _from: &str, _to: &str) -> std::result::Result<(), AdapterError> {
             self.calls.borrow_mut().fs_rename += 1;
+            Ok(())
+        }
+
+        fn close_file(&self, _handle: &FileHandle) -> std::result::Result<(), AdapterError> {
             Ok(())
         }
     }

@@ -467,6 +467,14 @@ impl LocalPhase2Adapter {
         Ok(FileHandle::resource(id))
     }
 
+    fn close_resource(&self, handle: &FileHandle) -> std::result::Result<(), AdapterError> {
+        let mut state = self.state.borrow_mut();
+        match state.resources.remove(&handle.id) {
+            Some(_) => Ok(()),
+            None => Err(AdapterError::NotFound),
+        }
+    }
+
     fn resolve_fs_path(
         &self,
         path: &str,
@@ -742,6 +750,10 @@ impl IoAdapter for LocalPhase2Adapter {
         .map_err(map_io_error)
     }
 
+    fn close_stream(&self, handle: &FileHandle) -> std::result::Result<(), AdapterError> {
+        self.close_resource(handle)
+    }
+
     fn log(&self, level: &str, message: &str) -> std::result::Result<(), AdapterError> {
         tracing::event!(tracing::Level::INFO, level, "{message}");
         Ok(())
@@ -870,6 +882,10 @@ impl FsAdapter for LocalPhase2Adapter {
         let from = self.resolve_fs_path(from, FsOperation::RenameSource)?;
         let to = self.resolve_fs_path(to, FsOperation::RenameDestination)?;
         std::fs::rename(from, to).map_err(map_io_error)
+    }
+
+    fn close_file(&self, handle: &FileHandle) -> std::result::Result<(), AdapterError> {
+        self.close_resource(handle)
     }
 }
 
@@ -1481,6 +1497,42 @@ mod tests {
             matches!(err, AdapterError::Io(ref message) if message.contains("resource table exceeds limit")),
             "unexpected resource-table overflow error: {err:?}"
         );
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn local_io_adapter_releases_slot_on_close() {
+        let adapter = LocalPhase2Adapter::new(
+            Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            None,
+            None,
+            Vec::new(),
+            1024,
+            PathBuf::from("."),
+        );
+
+        let mut handles = Vec::new();
+        for _ in 0..MAX_PHASE2_OPEN_RESOURCES {
+            handles.push(adapter.stdout().expect("open stream handle within limit"));
+        }
+
+        let err = adapter
+            .stdout()
+            .expect_err("resource-table overflow should be rejected before close");
+        assert!(
+            matches!(err, AdapterError::Io(ref message) if message.contains("resource table exceeds limit")),
+            "unexpected pre-close overflow error: {err:?}"
+        );
+
+        let released = handles.pop().expect("last handle");
+        adapter
+            .close_stream(&released)
+            .expect("close stream should release one resource slot");
+
+        adapter
+            .stdout()
+            .expect("opening stream after close should succeed");
     }
 
     #[cfg(feature = "phase2-bindings")]

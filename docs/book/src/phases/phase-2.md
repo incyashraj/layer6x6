@@ -59,7 +59,9 @@ dispatcher, which means UCap sits in front of those calls. A small resource
 table now owns opened file and stdio handles, so reads, writes, seeks, stats,
 and flushes can route through the adapter without exposing raw host IDs. The
 local runtime now also caps that open-handle table, so Phase 2 components
-cannot grow stream/file handles without bound.
+cannot grow stream/file handles without bound. Generated resource `drop`
+callbacks now close underlying local adapter handles too, so released
+resources return slots back to the same local runtime session.
 
 The runtime also has an initial Phase 2 execution path now. `layer36 run` keeps
 supporting the Phase 1 proof world, then falls back to the Phase 2 `cli` world
