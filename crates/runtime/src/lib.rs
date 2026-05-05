@@ -8,7 +8,7 @@ use std::{
     collections::BTreeMap,
     fs::File,
     io::{Read, Seek, SeekFrom, Write},
-    net::{SocketAddr, TcpStream, ToSocketAddrs},
+    net::{SocketAddr, TcpStream},
     path::{Path, PathBuf},
     rc::Rc,
     time::{Duration, UNIX_EPOCH},
@@ -1179,14 +1179,26 @@ fn connect_plain_http_stream(
 fn resolve_plain_http_socket_addrs(
     url: &PlainHttpUrl,
 ) -> std::result::Result<Vec<SocketAddr>, AdapterError> {
-    let addrs: Vec<SocketAddr> = (url.host.as_str(), url.port)
-        .to_socket_addrs()
-        .map_err(map_net_resolve_error)?
-        .collect();
+    let addrs =
+        resolve_socket_addrs_on_host(url.host.as_str(), url.port).map_err(map_net_resolve_error)?;
     if addrs.is_empty() {
         return Err(AdapterError::NotFound);
     }
     Ok(addrs)
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn resolve_socket_addrs_on_host(host: &str, port: u16) -> std::io::Result<Vec<SocketAddr>> {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        return host_os_adapter::resolve_socket_addrs(host, port);
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        use std::net::ToSocketAddrs;
+        (host, port).to_socket_addrs().map(Iterator::collect)
+    }
 }
 
 #[cfg(feature = "phase2-bindings")]

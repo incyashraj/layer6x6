@@ -9,6 +9,7 @@ use layer36_adapter_common::{
     time::HostClock,
 };
 use std::fs::OpenOptions;
+use std::net::ToSocketAddrs;
 use std::net::{SocketAddr, TcpStream};
 use std::time::Duration;
 
@@ -39,6 +40,11 @@ pub fn connect_tcp(addr: SocketAddr, timeout: Option<Duration>) -> std::io::Resu
         Some(timeout) => TcpStream::connect_timeout(&addr, timeout),
         None => TcpStream::connect(addr),
     }
+}
+
+/// Resolve socket addresses through the Windows adapter path.
+pub fn resolve_socket_addrs(host: &str, port: u16) -> std::io::Result<Vec<SocketAddr>> {
+    (host, port).to_socket_addrs().map(Iterator::collect)
 }
 
 /// Read the current locale through the Windows adapter path.
@@ -108,6 +114,12 @@ mod tests {
     #[test]
     fn connect_tcp_hook_is_available() {
         let hook: fn(SocketAddr, Option<Duration>) -> std::io::Result<TcpStream> = connect_tcp;
+        let _ = hook;
+    }
+
+    #[test]
+    fn resolve_socket_addrs_hook_is_available() {
+        let hook: fn(&str, u16) -> std::io::Result<Vec<SocketAddr>> = resolve_socket_addrs;
         let _ = hook;
     }
 
