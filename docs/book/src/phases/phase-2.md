@@ -274,6 +274,9 @@ accepts a matching manual input. There is also a dedicated
 runners.
 The first self-hosted fuzz smoke already paid off by finding and helping fix a
 real non-ASCII path-parsing panic in shared path handling.
+Timezone fallback coverage also now includes extra Unix timezone file paths
+(`/etc/TIMEZONE` and `/var/db/timezone/timezone`) in addition to `/etc/timezone`,
+which helps hosts that do not expose timezone only through `/etc/localtime`.
 
 If Phase 2 works, those apps should produce the same output on Linux, macOS, and
 Windows while running through the same Layer36 runtime model.

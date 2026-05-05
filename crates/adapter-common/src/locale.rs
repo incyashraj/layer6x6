@@ -183,8 +183,31 @@ fn infer_unix_timezone_from_localtime() -> Option<String> {
         }
     }
 
-    let contents = std::fs::read_to_string("/etc/timezone").ok()?;
-    timezone_from_etc_timezone_contents(&contents)
+    timezone_from_candidate_files(&[
+        "/etc/timezone",
+        "/etc/TIMEZONE",
+        "/var/db/timezone/timezone",
+    ])
+}
+
+fn timezone_from_candidate_files(paths: &[&str]) -> Option<String> {
+    timezone_from_candidate_files_with_reader(paths, |path| std::fs::read_to_string(path).ok())
+}
+
+fn timezone_from_candidate_files_with_reader(
+    paths: &[&str],
+    mut read: impl FnMut(&str) -> Option<String>,
+) -> Option<String> {
+    for path in paths {
+        let Some(contents) = read(path) else {
+            continue;
+        };
+        if let Some(timezone) = timezone_from_etc_timezone_contents(&contents) {
+            return Some(timezone);
+        }
+    }
+
+    None
 }
 
 fn timezone_from_localtime_link_target(target: &Path) -> Option<String> {
@@ -760,5 +783,33 @@ mod tests {
         assert!(timezone_from_etc_timezone_contents("America/New York\n").is_none());
         assert!(timezone_from_etc_timezone_contents("../UTC\n").is_none());
         assert!(timezone_from_etc_timezone_contents("\n# only comment\n").is_none());
+    }
+
+    #[test]
+    fn timezone_candidate_file_fallback_uses_first_valid_source() {
+        let tz = timezone_from_candidate_files_with_reader(
+            &[
+                "/etc/timezone",
+                "/etc/TIMEZONE",
+                "/var/db/timezone/timezone",
+            ],
+            |path| match path {
+                "/etc/timezone" => Some("invalid timezone value\n".to_string()),
+                "/etc/TIMEZONE" => None,
+                "/var/db/timezone/timezone" => Some("Asia/Singapore\n".to_string()),
+                _ => None,
+            },
+        )
+        .expect("timezone should be inferred");
+        assert_eq!(tz, "Asia/Singapore");
+    }
+
+    #[test]
+    fn timezone_candidate_file_fallback_returns_none_when_all_invalid() {
+        let tz =
+            timezone_from_candidate_files_with_reader(&["/etc/timezone", "/etc/TIMEZONE"], |_| {
+                Some("bad zone\n".to_string())
+            });
+        assert!(tz.is_none());
     }
 }

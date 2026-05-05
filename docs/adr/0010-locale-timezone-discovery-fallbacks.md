@@ -36,7 +36,8 @@ Locale fallback order is:
 
 Timezone fallback order is:
 explicit override → `TZ` → Unix `/etc/localtime` zoneinfo symlink inference
-→ default `UTC`.
+→ Unix timezone text files (`/etc/timezone`, `/etc/TIMEZONE`,
+`/var/db/timezone/timezone`) → default `UTC`.
 
 All discovered values still pass through strict normalization before they reach
 runtime-facing locale/timezone APIs.
