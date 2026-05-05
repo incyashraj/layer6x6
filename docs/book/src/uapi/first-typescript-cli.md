@@ -56,7 +56,26 @@ npm --prefix packages/sdk-ts run check:shape
 This confirms package metadata, helper exports, and import declarations still
 match the current UAPI-facing SDK contract.
 
-## 4. Optional Runtime Variant Test Hook
+## 4. Build Runtime Variant Fixtures (When jco Is Available)
+
+From repo root:
+
+```bash
+scripts/build-phase2-language-variant-fixtures.sh
+```
+
+This script now tries to build the TypeScript variant fixtures automatically
+from `test/integration/language-variants-src/` when `jco` is available.
+Outputs go to:
+
+```text
+test/integration/language-variants/
+```
+
+If `jco` is missing, it exits cleanly in default mode and tells you what is
+missing.
+
+## 5. Optional Runtime Variant Test Hook
 
 If TypeScript variant WASM fixtures exist under:
 
@@ -78,14 +97,13 @@ check before runtime assertions.
 You can force stricter CI behavior with `LAYER36_LANGUAGE_VARIANTS_MODE`.
 Useful values are `optional` (default), `go`, `ts`, `any`, and `both`.
 
-## 5. Where This Fits In Phase 2
+## 6. Where This Fits In Phase 2
 
-TypeScript is now at "SDK and harness ready" stage.
+TypeScript is now at "SDK, harness, and first fixture-build path ready" stage.
 
 Still pending:
 
-- stable componentize build path in CI
-- routine fixture generation for TypeScript variants
+- always-on fixture generation in the regular hosted CI path
 - always-on runtime fixture gate for TypeScript variants
 
 So this tutorial is intentionally honest: strong SDK structure today, full build

@@ -278,6 +278,11 @@ jobs:
           LAYER36_CAT_WASM: layer36-fixture/layer36_cat.wasm
           LAYER36_CURL_WASM: layer36-fixture/layer36_curl.wasm
         run: scripts/test-phase1.sh
+      - name: Build Phase 2 language-variant fixtures
+        shell: bash
+        env:
+          LAYER36_LANGUAGE_VARIANTS_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.language_variants_mode || 'optional' }}
+        run: scripts/build-phase2-language-variant-fixtures.sh
       - name: Run Phase 2 language-variant runtime tests
         shell: bash
         env:

@@ -259,8 +259,11 @@ The proof apps are:
 The Go and TypeScript SDK tracks now also include matching clock/cat/curl sample
 sources with CI shape checks. The CLI test harness now also has optional
 fixture assertions for Go and TypeScript variants behind `LAYER36_GO_*` and
-`LAYER36_TS_*` WASM env vars. TinyGo/jco component builds and CI fixture wiring
-are still pending.
+`LAYER36_TS_*` WASM env vars. We now also run a pre-test fixture build step
+(`scripts/build-phase2-language-variant-fixtures.sh`) in hosted full CI and
+self-hosted CI. That step can auto-build the TypeScript fixture trio from
+repo-local sources when `jco` is available, while keeping Go lane status explicit.
+TinyGo runtime fixture build is still pending.
 We now also have three language walkthroughs in the docs: Rust, Go, and
 TypeScript, so contributors can onboard per language without guessing the
 current phase boundaries.

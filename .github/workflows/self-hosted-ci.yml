@@ -105,6 +105,11 @@ jobs:
           LAYER36_CURL_WASM: ${{ steps.fixtures.outputs.curl }}
         run: cargo test --workspace --all-features
 
+      - name: Build Phase 2 language-variant fixtures
+        env:
+          LAYER36_LANGUAGE_VARIANTS_MODE: ${{ inputs.language_variants_mode }}
+        run: scripts/build-phase2-language-variant-fixtures.sh
+
       - name: Test Phase 2 language variants
         env:
           LAYER36_LANGUAGE_VARIANTS_MODE: ${{ inputs.language_variants_mode }}

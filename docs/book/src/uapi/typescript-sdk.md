@@ -18,7 +18,7 @@ What exists now:
 What still needs proof:
 
 - Install `jco`.
-- Build a real TypeScript component.
+- Build and keep validating real TypeScript components in CI.
 - Run that component through `layer36 run`.
 - Add a fixture-backed test like the Rust samples.
 
@@ -85,3 +85,13 @@ npm --prefix packages/sdk-ts run check:shape
 This does not compile a component. It catches simple mistakes such as missing
 helper files, wrong package metadata, accidental `wasi:*` imports, or missing
 Layer36 import declarations.
+
+For runtime fixture builds, use:
+
+```bash
+scripts/build-phase2-language-variant-fixtures.sh
+```
+
+When `jco` is available, that script now builds the TypeScript fixture trio in
+`test/integration/language-variants/` and lets the existing runtime-variant
+tests run without manually setting fixture env vars.

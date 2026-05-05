@@ -53,7 +53,19 @@ node packages/sdk-go/scripts/check-shape.mjs
 This check is cheap and fast. It confirms that Go SDK package structure and
 public helper names still match our current Phase 2 contract.
 
-## 4. Optional Runtime Variant Test Hook
+## 4. Fixture Build Step (Current State)
+
+From repo root:
+
+```bash
+scripts/build-phase2-language-variant-fixtures.sh
+```
+
+Today this script can auto-build the TypeScript fixture trio when `jco` is
+available and reports Go status clearly. Go fixtures still need either manual
+provisioning or the future TinyGo build lane.
+
+## 5. Optional Runtime Variant Test Hook
 
 If you already have compiled Go WASM fixtures at:
 
@@ -75,7 +87,7 @@ check before runtime assertions.
 You can force stricter CI behavior with `LAYER36_LANGUAGE_VARIANTS_MODE`.
 Useful values are `optional` (default), `go`, `ts`, `any`, and `both`.
 
-## 5. Where This Fits In Phase 2
+## 6. Where This Fits In Phase 2
 
 Go is now at "SDK and test harness ready" stage.
 
