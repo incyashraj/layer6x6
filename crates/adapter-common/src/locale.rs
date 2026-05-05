@@ -1,5 +1,7 @@
 //! Shared locale helpers for host adapters.
 
+use std::path::Path;
+
 /// BCP 47 locale identifier used by the Phase 2 host adapter layer.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LocaleId {
@@ -55,29 +57,48 @@ impl HostLocale {
     ) -> Self {
         let mut lc_all = None;
         let mut lang = None;
+        let mut lc_messages = None;
+        let mut language = None;
+        let mut apple_locale = None;
         let mut timezone = None;
 
         for (key, value) in pairs {
             match key.as_ref() {
                 "LC_ALL" => lc_all = Some(value.as_ref().to_string()),
                 "LANG" => lang = Some(value.as_ref().to_string()),
+                "LC_MESSAGES" => lc_messages = Some(value.as_ref().to_string()),
+                "LANGUAGE" => language = Some(value.as_ref().to_string()),
+                "AppleLocale" => apple_locale = Some(value.as_ref().to_string()),
                 "TZ" => timezone = Some(value.as_ref().to_string()),
                 _ => {}
             }
         }
 
+        let language_first = language
+            .as_deref()
+            .and_then(|value| value.split(':').find(|part| !part.trim().is_empty()));
         let locale_raw = lc_all
             .as_deref()
             .filter(|value| !value.trim().is_empty())
-            .or(lang.as_deref());
-        let timezone_raw = timezone_override.or(timezone.as_deref());
+            .or(lang.as_deref().filter(|value| !value.trim().is_empty()))
+            .or(lc_messages
+                .as_deref()
+                .filter(|value| !value.trim().is_empty()))
+            .or(language_first)
+            .or(apple_locale
+                .as_deref()
+                .filter(|value| !value.trim().is_empty()));
+        let timezone_raw = timezone_override
+            .map(str::to_string)
+            .or(timezone)
+            .or_else(system_timezone_fallback);
         let locale_raw = locale_override.or(locale_raw);
 
         Self {
             locale: LocaleId {
                 bcp47: normalize_locale_tag(locale_raw),
             },
-            timezone: normalize_timezone(timezone_raw),
+            timezone: normalize_timezone(timezone_raw.as_deref()),
         }
     }
 
@@ -135,6 +156,39 @@ impl HostLocale {
             }
         }
     }
+}
+
+fn system_timezone_fallback() -> Option<String> {
+    #[cfg(unix)]
+    {
+        return infer_unix_timezone_from_localtime();
+    }
+
+    #[cfg(not(unix))]
+    {
+        None
+    }
+}
+
+#[cfg(unix)]
+fn infer_unix_timezone_from_localtime() -> Option<String> {
+    let target = std::fs::read_link("/etc/localtime").ok()?;
+    timezone_from_localtime_link_target(&target)
+}
+
+fn timezone_from_localtime_link_target(target: &Path) -> Option<String> {
+    let portable = target.to_string_lossy().replace('\\', "/");
+    let marker = "/zoneinfo/";
+    let (_, suffix) = portable.split_once(marker)?;
+    let candidate = suffix.trim_matches('/');
+    if candidate.is_empty() {
+        return None;
+    }
+    let normalized = normalize_timezone(Some(candidate));
+    if normalized == "UTC" && !candidate.eq_ignore_ascii_case("UTC") {
+        return None;
+    }
+    Some(normalized)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -352,7 +406,7 @@ mod tests {
 
     #[test]
     fn locale_normalizes_lang_and_strips_modifier() {
-        let locale = HostLocale::from_env_pairs([("LANG", "de_DE.UTF-8@euro")]);
+        let locale = HostLocale::from_env_pairs([("LANG", "de_DE.UTF-8@euro"), ("TZ", "")]);
 
         assert_eq!(locale.current().bcp47, "de-DE");
         assert_eq!(locale.timezone(), "UTC");
@@ -454,5 +508,48 @@ mod tests {
         assert_eq!(normalize_timezone(Some("UTC*")), "UTC");
         assert_eq!(normalize_timezone(Some(&"A".repeat(129))), "UTC");
         assert_eq!(normalize_timezone(Some("Etc/GMT+1")), "Etc/GMT+1");
+    }
+
+    #[test]
+    fn locale_falls_back_to_lc_messages_and_language() {
+        let locale = HostLocale::from_env_pairs([
+            ("LC_ALL", ""),
+            ("LANG", ""),
+            ("LC_MESSAGES", "es_ES.UTF-8"),
+            ("LANGUAGE", "fr_FR:de_DE"),
+        ]);
+        assert_eq!(locale.current().bcp47, "es-ES");
+
+        let locale = HostLocale::from_env_pairs([
+            ("LC_ALL", ""),
+            ("LANG", ""),
+            ("LC_MESSAGES", ""),
+            ("LANGUAGE", "fr_FR:de_DE"),
+        ]);
+        assert_eq!(locale.current().bcp47, "fr-FR");
+    }
+
+    #[test]
+    fn timezone_can_be_inferred_from_zoneinfo_symlink_target() {
+        let tz =
+            timezone_from_localtime_link_target(Path::new("/usr/share/zoneinfo/Asia/Singapore"))
+                .expect("timezone should be inferred");
+        assert_eq!(tz, "Asia/Singapore");
+
+        let tz = timezone_from_localtime_link_target(Path::new(
+            "/var/db/timezone/zoneinfo/America/Toronto",
+        ))
+        .expect("timezone should be inferred");
+        assert_eq!(tz, "America/Toronto");
+    }
+
+    #[test]
+    fn timezone_inference_rejects_non_zoneinfo_targets() {
+        assert!(timezone_from_localtime_link_target(Path::new("/etc/localtime")).is_none());
+        assert!(timezone_from_localtime_link_target(Path::new("/zoneinfo/")).is_none());
+        assert!(timezone_from_localtime_link_target(Path::new(
+            "/usr/share/zoneinfo/America/New York",
+        ))
+        .is_none());
     }
 }

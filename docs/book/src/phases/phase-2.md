@@ -168,9 +168,14 @@ to stable language/script/region casing with a safe fallback for malformed
 values, including stricter primary locale-subtag and bounded-subtag checks so
 invalid locale-tag shapes fall back to `en-US`. Timezone normalization is now
 conservative too, accepting only simple timezone-name shapes for this phase and
-falling back to `UTC` on invalid input. Real ICU4X formatting and native per-OS
-locale discovery are still open, but the early behavior now has one home
-instead of being copied in the runtime.
+falling back to `UTC` on invalid input. Locale discovery now also has practical
+fallbacks for `LC_MESSAGES`, `LANGUAGE` (first preferred token), and
+`AppleLocale` when `LC_ALL`/`LANG` are absent. Timezone discovery now has a
+Unix fallback too: when `TZ` is not set and `/etc/localtime` is a zoneinfo
+symlink, Layer36 derives a normalized timezone from that link target. Real
+ICU4X formatting and broader host-native per-OS locale/timezone discovery are
+still open, but the early behavior now has one home instead of being copied in
+the runtime.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2
