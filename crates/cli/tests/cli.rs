@@ -1021,6 +1021,28 @@ fn configured_layer36_curl_component_denies_missing_net_grant() {
 }
 
 #[test]
+fn configured_layer36_curl_component_reports_connect_failure() {
+    let Some(path) = configured_layer36_curl_component() else {
+        return;
+    };
+
+    let addr = reserve_unused_local_addr();
+    let url = format!("http://{addr}/unreachable");
+
+    let output = layer36()
+        .args(["run", "--grant", &format!("net.connect:{addr}")])
+        .arg(path)
+        .args(["--", &url])
+        .output()
+        .expect("run layer36-curl against unused local port");
+
+    assert_eq!(output.status.code(), Some(21));
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("layer36-curl: connection failed"));
+}
+
+#[test]
 fn configured_layer36_go_clock_component_matches_deterministic_fixture_snapshot() {
     let Some(path) = configured_go_component(
         "LAYER36_GO_CLOCK_WASM",
@@ -1787,6 +1809,15 @@ fn spawn_http_fixture(body: &'static [u8]) -> (SocketAddr, thread::JoinHandle<()
     });
 
     (addr, handle)
+}
+
+fn reserve_unused_local_addr() -> SocketAddr {
+    let listener = TcpListener::bind("127.0.0.1:0").expect("bind local address probe");
+    let addr = listener
+        .local_addr()
+        .expect("read local address probe port");
+    drop(listener);
+    addr
 }
 
 fn expected_hello_hash() -> Option<String> {
