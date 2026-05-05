@@ -8,10 +8,10 @@ use std::{
     collections::BTreeMap,
     fs::File,
     io::{Read, Seek, SeekFrom, Write},
-    net::TcpStream,
+    net::{TcpStream, ToSocketAddrs},
     path::{Path, PathBuf},
     rc::Rc,
-    time::UNIX_EPOCH,
+    time::{Duration, UNIX_EPOCH},
 };
 
 use thiserror::Error;
@@ -989,10 +989,9 @@ impl NetAdapter for LocalPhase2Adapter {
         let plain_req = plain_http_request_from_dispatch(&req);
         let request = build_plain_http_request(&plain_req, &url).map_err(map_plain_http_error)?;
 
-        let mut stream = TcpStream::connect((url.host.as_str(), url.port))
-            .map_err(|err| AdapterError::Network(err.to_string()))?;
+        let mut stream = connect_plain_http_stream(&url, req.timeout_millis)?;
         if let Some(millis) = req.timeout_millis {
-            let timeout = std::time::Duration::from_millis(millis.into());
+            let timeout = Duration::from_millis(millis.into());
             stream
                 .set_read_timeout(Some(timeout))
                 .map_err(map_io_error)?;
@@ -1018,6 +1017,37 @@ impl NetAdapter for LocalPhase2Adapter {
             body: response.body,
         })
     }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn connect_plain_http_stream(
+    url: &PlainHttpUrl,
+    timeout_millis: Option<u32>,
+) -> std::result::Result<TcpStream, AdapterError> {
+    if let Some(millis) = timeout_millis {
+        if millis == 0 {
+            return Err(AdapterError::Timeout);
+        }
+        let timeout = Duration::from_millis(u64::from(millis));
+        let addrs = (url.host.as_str(), url.port)
+            .to_socket_addrs()
+            .map_err(|err| AdapterError::Network(err.to_string()))?;
+        let mut last_err = None;
+        for addr in addrs {
+            match TcpStream::connect_timeout(&addr, timeout) {
+                Ok(stream) => return Ok(stream),
+                Err(err) => last_err = Some(err),
+            }
+        }
+        if let Some(err) = last_err {
+            return Err(map_net_io_error(err));
+        }
+        return Err(AdapterError::Network(
+            "host did not resolve to any socket addresses".to_string(),
+        ));
+    }
+
+    TcpStream::connect((url.host.as_str(), url.port)).map_err(map_net_io_error)
 }
 
 #[cfg(feature = "phase2-bindings")]
@@ -1971,6 +2001,30 @@ mod tests {
         assert!(
             matches!(err, AdapterError::Protocol(message) if message == "host-controlled HTTP header")
         );
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn local_plain_http_adapter_zero_timeout_fails_as_timeout() {
+        let adapter = LocalPhase2Adapter::new(
+            Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            None,
+            None,
+            Vec::new(),
+            1024,
+            PathBuf::from("."),
+        );
+        let req = HttpRequest {
+            method: uapi_dispatch::HttpMethod::Get,
+            url: "http://127.0.0.1:1/".to_string(),
+            headers: Vec::new(),
+            body: Vec::new(),
+            timeout_millis: Some(0),
+        };
+
+        let err = adapter.fetch(req).expect_err("zero timeout should fail");
+        assert_eq!(err, AdapterError::Timeout);
     }
 
     #[cfg(feature = "phase2-bindings")]
