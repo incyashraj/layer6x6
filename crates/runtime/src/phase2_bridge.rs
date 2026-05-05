@@ -276,6 +276,18 @@ mod tests {
             )),
             net::types::NetError::Protocol(message) if message == "bad status"
         ));
+        assert!(matches!(
+            net_error_to_wit(dispatch::NetDispatchError::Adapter(
+                dispatch::AdapterError::NotFound
+            )),
+            net::types::NetError::DnsFailure(message) if message == "not found"
+        ));
+        assert!(matches!(
+            net_error_to_wit(dispatch::NetDispatchError::Adapter(
+                dispatch::AdapterError::Network("connection refused".to_string())
+            )),
+            net::types::NetError::ConnectFailure(message) if message == "connection refused"
+        ));
     }
 
     #[test]

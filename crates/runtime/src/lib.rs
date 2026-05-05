@@ -1031,7 +1031,7 @@ fn connect_plain_http_stream(
         let timeout = Duration::from_millis(u64::from(millis));
         let addrs = (url.host.as_str(), url.port)
             .to_socket_addrs()
-            .map_err(|err| AdapterError::Network(err.to_string()))?;
+            .map_err(map_net_resolve_error)?;
         let mut last_err = None;
         for addr in addrs {
             match TcpStream::connect_timeout(&addr, timeout) {
@@ -1042,9 +1042,7 @@ fn connect_plain_http_stream(
         if let Some(err) = last_err {
             return Err(map_net_io_error(err));
         }
-        return Err(AdapterError::Network(
-            "host did not resolve to any socket addresses".to_string(),
-        ));
+        return Err(AdapterError::NotFound);
     }
 
     TcpStream::connect((url.host.as_str(), url.port)).map_err(map_net_io_error)
@@ -1262,6 +1260,14 @@ fn map_net_io_error(err: std::io::Error) -> AdapterError {
         | std::io::ErrorKind::BrokenPipe
         | std::io::ErrorKind::UnexpectedEof => AdapterError::Network(err.to_string()),
         _ => map_io_error(err),
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn map_net_resolve_error(err: std::io::Error) -> AdapterError {
+    match err.kind() {
+        std::io::ErrorKind::NotFound => AdapterError::NotFound,
+        _ => AdapterError::Network(err.to_string()),
     }
 }
 
@@ -2049,6 +2055,14 @@ mod tests {
         let err = std::io::Error::from(std::io::ErrorKind::TimedOut);
         let mapped = map_net_io_error(err);
         assert_eq!(mapped, AdapterError::Timeout);
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn map_net_resolve_error_maps_not_found_to_adapter_not_found() {
+        let err = std::io::Error::from(std::io::ErrorKind::NotFound);
+        let mapped = map_net_resolve_error(err);
+        assert_eq!(mapped, AdapterError::NotFound);
     }
 
     #[cfg(feature = "phase2-bindings")]
