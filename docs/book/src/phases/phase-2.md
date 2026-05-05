@@ -199,6 +199,8 @@ the timezone label text.
 As part of the per-OS adapter split, runtime locale and clock construction now
 route through dedicated Linux, macOS, and Windows adapter crates, with fallback
 logic kept for unsupported hosts.
+The same is now true for `time.sleep-millis`, which routes through the per-OS
+adapter path instead of a runtime-local direct call.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2

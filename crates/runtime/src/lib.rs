@@ -571,6 +571,19 @@ fn discover_host_clock(test_time_millis: Option<u64>) -> HostClock {
 }
 
 #[cfg(feature = "phase2-bindings")]
+fn sleep_on_host(millis: u32) {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::sleep_millis(millis);
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        HostClock::sleep_millis(millis);
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
 fn logical_path_to_sandbox_relative(path: PathBuf) -> std::result::Result<PathBuf, AdapterError> {
     if path.is_absolute() {
         let trimmed = path
@@ -1199,7 +1212,7 @@ impl TimeAdapter for LocalPhase2Adapter {
     }
 
     fn sleep_millis(&self, millis: u32) -> std::result::Result<(), AdapterError> {
-        HostClock::sleep_millis(millis);
+        sleep_on_host(millis);
         Ok(())
     }
 }

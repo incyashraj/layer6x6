@@ -21,6 +21,11 @@ pub fn discover_clock(test_time_millis: Option<u64>) -> HostClock {
     HostClock::new(test_time_millis)
 }
 
+/// Sleep through the Linux host adapter path.
+pub fn sleep_millis(millis: u32) {
+    HostClock::sleep_millis(millis);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -41,5 +46,10 @@ mod tests {
     fn clock_discovery_applies_fixed_time_override() {
         let clock = discover_clock(Some(1_777));
         assert_eq!(clock.now_millis().expect("fixed clock"), 1_777);
+    }
+
+    #[test]
+    fn sleep_hook_accepts_zero_millis() {
+        sleep_millis(0);
     }
 }
