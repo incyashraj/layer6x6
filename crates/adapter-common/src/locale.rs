@@ -161,7 +161,7 @@ impl HostLocale {
 fn system_timezone_fallback() -> Option<String> {
     #[cfg(unix)]
     {
-        return infer_unix_timezone_from_localtime();
+        infer_unix_timezone_from_localtime()
     }
 
     #[cfg(not(unix))]
