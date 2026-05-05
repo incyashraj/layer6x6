@@ -1785,6 +1785,7 @@ Short time-stamped entries for anything significant: ecosystem developments, piv
 | 2026-05-05 | Added a new docs page for non technical readers, `docs/book/src/progress-for-everyone.md`, with plain language status, system flow diagrams, and current phase progress; linked it in mdBook navigation for GitHub Pages. |
 | 2026-05-05 | Hardened manifest capability resource parsing: filesystem capability resources now use shared logical-path validation and `net.connect` resources must match a valid endpoint shape, so malformed resource patterns fail earlier at manifest parse time. |
 | 2026-05-05 | Hardened session-policy network resource matching: `net.connect` grant matching now normalizes host case and numeric ports before wildcard evaluation, so mixed-case hosts and zero-padded ports match canonical runtime endpoint forms. |
+| 2026-05-05 | Tightened manifest-side `net.connect` host validation to match earlier shared-host hardening: host patterns now reject invalid dot placement, invalid label-edge `-` forms, and malformed numeric IPv4 literals during manifest parsing, with explicit test coverage for accepted and rejected host shapes. |
 
 ---
 

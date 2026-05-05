@@ -24,6 +24,9 @@ capability check that must pass before an adapter talks to the host OS.
 Manifest capability parsing now also validates resource shapes earlier: unsafe
 filesystem resource patterns and malformed `net.connect` endpoint forms fail
 during manifest parsing instead of reaching runtime policy resolution.
+Manifest `net.connect` host parsing is stricter now too: invalid dot placement,
+invalid leading or trailing `-` in host labels, and malformed numeric IPv4
+host forms are rejected at parse time.
 Session policy matching now also normalizes `net.connect` host casing and
 numeric ports before wildcard matching, so grant checks stay stable when users
 type host names with mixed case or port values like `0443`.

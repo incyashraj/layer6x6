@@ -453,12 +453,7 @@ fn validate_connect_resource(resource: &str) -> std::result::Result<(), String> 
     if host.is_empty() {
         return Err("network endpoint host cannot be empty".to_string());
     }
-    if !host
-        .chars()
-        .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '.' | '-' | '*'))
-    {
-        return Err("network endpoint host contains unsupported characters".to_string());
-    }
+    validate_connect_host_pattern(host)?;
 
     if port == "*" {
         return Ok(());
@@ -471,6 +466,50 @@ fn validate_connect_resource(resource: &str) -> std::result::Result<(), String> 
     }
 
     Ok(())
+}
+
+fn validate_connect_host_pattern(host: &str) -> std::result::Result<(), String> {
+    if host.starts_with('.') || host.ends_with('.') || host.contains("..") {
+        return Err("network endpoint host has invalid dot placement".to_string());
+    }
+    if !host
+        .chars()
+        .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '.' | '-' | '*'))
+    {
+        return Err("network endpoint host contains unsupported characters".to_string());
+    }
+
+    let numeric_like = host.bytes().all(|byte| matches!(byte, b'0'..=b'9' | b'.'));
+    if numeric_like && !is_valid_ipv4_host(host) {
+        return Err("network endpoint host is not a valid IPv4 address".to_string());
+    }
+
+    for label in host.split('.') {
+        if label.is_empty() || label.len() > 63 {
+            return Err("network endpoint host label is empty or too long".to_string());
+        }
+        if label.starts_with('-') || label.ends_with('-') {
+            return Err("network endpoint host label cannot start or end with `-`".to_string());
+        }
+    }
+
+    Ok(())
+}
+
+fn is_valid_ipv4_host(host: &str) -> bool {
+    let mut parts = host.split('.');
+    for _ in 0..4 {
+        let Some(part) = parts.next() else {
+            return false;
+        };
+        if part.is_empty() {
+            return false;
+        }
+        if part.parse::<u8>().is_err() {
+            return false;
+        }
+    }
+    parts.next().is_none()
 }
 
 #[cfg(test)]
@@ -592,9 +631,15 @@ mod tests {
         "net.connect:127.0.0.1:443"
             .parse::<Capability>()
             .expect("accept host and numeric port");
+        "net.connect:api-1.example.com:443"
+            .parse::<Capability>()
+            .expect("accept domain labels with hyphen");
         "net.connect:*.example.com:*"
             .parse::<Capability>()
             .expect("accept wildcard host and wildcard port");
+        "net.connect:*:443"
+            .parse::<Capability>()
+            .expect("accept wildcard host");
 
         for input in [
             "net.connect::443",
@@ -605,6 +650,14 @@ mod tests {
             "net.connect:exa mple.com:443",
             "net.connect:[::1]:80",
             "net.connect:one:two:three",
+            "net.connect:.example.com:443",
+            "net.connect:example.com.:443",
+            "net.connect:example..com:443",
+            "net.connect:-example.com:443",
+            "net.connect:example-.com:443",
+            "net.connect:256.1.1.1:443",
+            "net.connect:1.2.3:443",
+            "net.connect:1.2.3.4.5:443",
         ] {
             let err = input
                 .parse::<Capability>()

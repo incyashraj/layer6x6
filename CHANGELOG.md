@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Manifest `net.connect` host-pattern hardening: capability parsing now rejects invalid dot placement, invalid label-edge `-` forms, and malformed numeric IPv4 host forms before runtime policy matching, with manifest tests for accepted wildcard/label forms and malformed host cases.
 - Policy `net.connect` matching parity hardening: session grant matching now normalizes host case and numeric ports before wildcard matching, so grants like `API.example.com:0443` match canonical runtime endpoint checks.
 - Manifest capability resource-shape hardening: filesystem capability resources now use shared logical-path validation rules, and `net.connect` resources must match valid endpoint shapes (`<host>:<port>` with wildcard support) so malformed resources fail at manifest parse time.
 - Docs: added a non technical progress page at `docs/book/src/progress-for-everyone.md` with plain language goals, system flow diagrams, current timeline state, and glossary style explanations.
