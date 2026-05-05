@@ -1,6 +1,6 @@
 use layer36::{
     io::{args, stdio, streams::OutputStreamExt},
-    net::{self, HttpMethod, NetError, Request},
+    net::{self, NetError},
     Guest,
 };
 
@@ -19,16 +19,8 @@ impl Guest for Component {
 
         let stderr = stdio::stderr();
 
-        let request = Request {
-            method: HttpMethod::Get,
-            url: url.to_string(),
-            headers: Vec::new(),
-            body: Vec::new(),
-            timeout_millis: Some(1000),
-        };
-
-        let body = match net::fetch(request) {
-            Ok(response) => response.body,
+        let body = match net::get(url) {
+            Ok(body) => body,
             Err(err) => {
                 let (message, code) = classify_net_error(&err);
                 let _ = stderr.write_line(message);
