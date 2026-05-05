@@ -2,9 +2,9 @@
 set -eu
 
 if [ "${LAYER36_FUZZ_SMOKE_DRY_RUN:-0}" = "1" ]; then
-  echo "cargo +nightly fuzz run manifest_parse -- -max_total_time=30"
-  echo "cargo +nightly fuzz run logical_path_parse -- -max_total_time=30"
-  echo "cargo +nightly fuzz run policy_match -- -max_total_time=30"
+  echo "rustup run nightly cargo fuzz run manifest_parse -- -max_total_time=30"
+  echo "rustup run nightly cargo fuzz run logical_path_parse -- -max_total_time=30"
+  echo "rustup run nightly cargo fuzz run policy_match -- -max_total_time=30"
   exit 0
 fi
 
@@ -26,6 +26,6 @@ if ! rustup toolchain list | grep -q "^nightly"; then
   exit 1
 fi
 
-cargo +nightly fuzz run manifest_parse -- -max_total_time=30
-cargo +nightly fuzz run logical_path_parse -- -max_total_time=30
-cargo +nightly fuzz run policy_match -- -max_total_time=30
+rustup run nightly cargo fuzz run manifest_parse -- -max_total_time=30
+rustup run nightly cargo fuzz run logical_path_parse -- -max_total_time=30
+rustup run nightly cargo fuzz run policy_match -- -max_total_time=30
