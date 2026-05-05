@@ -1043,6 +1043,28 @@ fn configured_layer36_curl_component_reports_connect_failure() {
 }
 
 #[test]
+fn configured_layer36_curl_component_reports_dns_failure() {
+    let Some(path) = configured_layer36_curl_component() else {
+        return;
+    };
+
+    let host = "layer36-does-not-exist.invalid";
+    let url = format!("http://{host}/unreachable");
+
+    let output = layer36()
+        .args(["run", "--grant", &format!("net.connect:{host}:80")])
+        .arg(path)
+        .args(["--", &url])
+        .output()
+        .expect("run layer36-curl against unresolved host");
+
+    assert_eq!(output.status.code(), Some(21));
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("layer36-curl: dns lookup failed"));
+}
+
+#[test]
 fn configured_layer36_go_clock_component_matches_deterministic_fixture_snapshot() {
     let Some(path) = configured_go_component(
         "LAYER36_GO_CLOCK_WASM",
