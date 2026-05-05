@@ -35,6 +35,8 @@ set_imports_are_pure() {
 }
 
 jco_runner() {
+  jco_npx_package="${LAYER36_JCO_NPX_PACKAGE:-@bytecodealliance/jco@1.14.0}"
+
   if command -v jco >/dev/null 2>&1; then
     XDG_CACHE_HOME="$ROOT/.cache" jco "$@"
     return
@@ -42,7 +44,7 @@ jco_runner() {
 
   if command -v npx >/dev/null 2>&1; then
     if [ "${LAYER36_ALLOW_NPX_INSTALL:-0}" = "1" ]; then
-      XDG_CACHE_HOME="$ROOT/.cache" npx --yes @bytecodealliance/jco "$@"
+      XDG_CACHE_HOME="$ROOT/.cache" npx --yes "$jco_npx_package" "$@"
       return
     fi
     XDG_CACHE_HOME="$ROOT/.cache" npx --no-install jco "$@"

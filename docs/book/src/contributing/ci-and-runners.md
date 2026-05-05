@@ -22,8 +22,8 @@ The expensive checks stay opt-in. Run the `CI` workflow manually with
 
 In hosted full CI, the Phase 2 TypeScript language-variant lane now runs in
 `ts` mode by default. The fixture build step can install jco through `npx`
-when needed, so TypeScript runtime fixtures stay active without manual runner
-tool preinstall.
+when needed, and the full-test matrix pins Node 22 for this lane, so TypeScript
+runtime fixtures stay active without manual runner tool preinstall.
 
 Dependency audit now runs through `scripts/check-dependencies.sh`. This keeps
 `licenses`, `bans`, and `sources` as hard failures, while known advisory-db

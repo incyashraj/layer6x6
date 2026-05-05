@@ -278,6 +278,10 @@ jobs:
           LAYER36_CAT_WASM: layer36-fixture/layer36_cat.wasm
           LAYER36_CURL_WASM: layer36-fixture/layer36_curl.wasm
         run: scripts/test-phase1.sh
+      - name: Set up Node.js for TypeScript fixture lane
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - name: Build Phase 2 language-variant fixtures
         shell: bash
         env:

@@ -74,7 +74,8 @@ test/integration/language-variants/
 
 If `jco` is missing, it exits cleanly in default mode and tells you what is
 missing. For hosted full CI, Layer36 now allows `npx`-driven jco installation
-for this step, so the TypeScript lane can stay active by default.
+for this step (with a pinned jco package version), so the TypeScript lane can
+stay active by default.
 
 ## 5. Optional Runtime Variant Test Hook
 

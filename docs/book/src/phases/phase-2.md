@@ -265,8 +265,9 @@ fixture assertions for Go and TypeScript variants behind `LAYER36_GO_*` and
 `LAYER36_TS_*` WASM env vars. We now also run a pre-test fixture build step
 (`scripts/build-phase2-language-variant-fixtures.sh`) in hosted full CI and
 self-hosted CI. Hosted full CI now runs that step in `ts` mode by default and
-allows `npx` install for jco, so TypeScript runtime fixtures stay active
-without manual runner setup. Go lane status remains explicit.
+allows `npx` install for jco (with a pinned package version). The full-test
+matrix also pins Node 22 for this lane, so TypeScript runtime fixtures stay
+active without manual runner setup. Go lane status remains explicit.
 TypeScript fixture generation now enforces Layer36-only imports and uses the
 real WIT variant shape for filesystem open mode (`{ tag: "read" }`), which made
 the TypeScript cat fixture runtime path stable in local tests.
