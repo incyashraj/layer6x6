@@ -271,7 +271,9 @@ active without manual runner setup. Go lane status remains explicit.
 TypeScript fixture generation now enforces Layer36-only imports and uses the
 real WIT variant shape for filesystem open mode (`{ tag: "read" }`), which made
 the TypeScript cat fixture runtime path stable in local tests.
-TinyGo runtime fixture build is still pending.
+Self-hosted CI now also runs a TinyGo WASI Preview 2 build-smoke lane for Go
+clock/cat/curl samples, including a component-shape check for `wasi:cli/run`.
+Layer36-runtime fixture proof for Go remains pending.
 We now also have three language walkthroughs in the docs: Rust, Go, and
 TypeScript, so contributors can onboard per language without guessing the
 current phase boundaries.

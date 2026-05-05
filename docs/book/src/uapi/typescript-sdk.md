@@ -21,8 +21,9 @@ What exists now:
 What still needs proof:
 
 - Keep full runtime fixture proof stable in hosted CI.
-- Complete and stabilize the TinyGo fixture lane so language-variant checks can
-  move from optional to strict by default.
+- Keep advancing the Go TinyGo lane from build-smoke to Layer36-runtime
+  fixture proof so language-variant checks can move from optional to strict by
+  default.
 - Keep curl fixture evidence stable on restricted runners where local socket
   bind policy may differ.
 

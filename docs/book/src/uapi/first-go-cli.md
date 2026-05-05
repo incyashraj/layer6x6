@@ -63,7 +63,16 @@ scripts/build-phase2-language-variant-fixtures.sh
 
 Today this script can auto-build the TypeScript fixture trio when `jco` is
 available and reports Go status clearly. Go fixtures still need either manual
-provisioning or the future TinyGo build lane.
+provisioning for runtime tests.
+
+There is now also a Go TinyGo build-smoke lane:
+
+```bash
+scripts/build-phase2-go-variant-smoke.sh
+```
+
+This builds Go clock/cat/curl WASI Preview 2 artifacts and checks their
+component export shape (`wasi:cli/run`).
 
 ## 5. Optional Runtime Variant Test Hook
 
@@ -93,8 +102,7 @@ Go is now at "SDK and test harness ready" stage.
 
 Still pending:
 
-- full TinyGo component build path
-- routine fixture generation in CI
+- Layer36-import runtime fixture proof for Go variants
 - always-on runtime fixture gate for Go variants
 
 That means we are not blocked. We can keep improving UAPI and policy hardening

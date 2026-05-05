@@ -160,7 +160,8 @@ if [ "$ts_ready" -eq 0 ]; then
 fi
 
 if [ "$go_ready" -eq 0 ]; then
-  echo "Go language-variant fixtures not built: TinyGo build pipeline is not wired yet in this script."
+  echo "Go language-variant runtime fixtures not built in this script yet."
+  echo "Run scripts/build-phase2-go-variant-smoke.sh for TinyGo WASI Preview 2 build-smoke artifacts."
 fi
 
 case "$MODE" in

@@ -38,6 +38,15 @@ targets.
 The benchmark regression step is warning-only by default in this manual
 workflow, and you can switch it to strict fail mode with the
 `benchmark_regression_mode` input when you want to enforce performance gating.
+It also now runs a TinyGo WASI Preview 2 build-smoke lane for Go clock/cat/curl
+samples through:
+
+```bash
+scripts/build-phase2-go-variant-smoke.sh
+```
+
+This lane checks TinyGo component build health and `wasi:cli/run` export shape.
+It is intentionally separate from the Layer36 runtime fixture gate.
 
 The runtime tests now include an optional Phase 2 language-variant slice for Go
 and TypeScript sample components. It runs through:

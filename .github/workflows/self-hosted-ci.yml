@@ -60,6 +60,9 @@ jobs:
           if ! command -v cargo-fuzz >/dev/null 2>&1; then
             cargo install cargo-fuzz --locked
           fi
+          if ! command -v wasm-tools >/dev/null 2>&1; then
+            cargo install wasm-tools --locked
+          fi
           if ! rustup toolchain list | grep -q "^nightly"; then
             rustup toolchain install nightly --profile minimal
           fi
@@ -109,6 +112,11 @@ jobs:
         env:
           LAYER36_LANGUAGE_VARIANTS_MODE: ${{ inputs.language_variants_mode }}
         run: scripts/build-phase2-language-variant-fixtures.sh
+
+      - name: Build Phase 2 Go variant smoke components
+        env:
+          LAYER36_GO_VARIANT_SMOKE_MODE: optional
+        run: scripts/build-phase2-go-variant-smoke.sh
 
       - name: Test Phase 2 language variants
         env:
