@@ -1786,7 +1786,8 @@ Additional ADRs as decisions surface. Rule of thumb: if you have to ask "should 
 
 ### CI & Quality
 - [ ] Cross-host CI matrix green for ≥ 7 consecutive days.
-- [ ] Fuzz targets defined; nightly run for ≥ 4 h succeeds without crash.
+- [x] Fuzz targets defined.
+- [ ] Nightly fuzz run for ≥ 4 h succeeds without crash.
 - [x] Built Phase 2 sample components checked for pure `layer36:*` imports.
 - [x] First UAPI dispatch microbenchmark target exists.
 - [x] First UAPI component startup benchmark target exists.
@@ -2174,6 +2175,7 @@ formal exit gates.
 | P2-CI-01 | Budget-aware CI mode | 2026-05-04 | Normal push CI now runs cheap Linux checks only; full cross-host matrix, benchmarks, cargo-deny, fixtures, and the dedicated Phase 2 binding checkpoint run manually with `full = true` or a `[full-ci]` commit marker. |
 | P2-CI-02 | Public CI and self-hosted runner path | 2026-05-04 | Repo visibility is public, cheap hosted CI is restored for pushes and PRs, Pages deploys from docs changes, and a manual `Self-hosted CI` workflow targets local runners labeled `layer36-local`. |
 | P2-CI-04 | Dependency audit runner hardening | 2026-05-05 | Added `scripts/check-dependencies.sh` and switched hosted + self-hosted CI dependency-audit steps to use it. The wrapper keeps `licenses`, `bans`, and `sources` as hard gates, while allowing known advisory-db parser/lock-path failures in current `cargo-deny` to degrade to a warning until upstream compatibility catches up. |
+| P2-TEST-02A | First Phase 2 fuzz harness set | 2026-05-05 | Added `fuzz/` with first `cargo-fuzz` targets for manifest parsing, logical path parsing, and policy match checks, plus `scripts/run-phase2-fuzz-smoke.sh` for short local/self-hosted fuzz smoke runs. |
 | P2-SEC-01F | Phase 2 smoke missing-grant proof | 2026-05-04 | Added a CLI integration test proving the smoke component receives `fs.permission-denied` without `fs.read`, writes a clear stderr message, and exits non-zero without reading host files. |
 | P2-APP-03A | First `layer36-clock` sample path | 2026-05-04 | Added `apps/layer36-clock`, a Rust Phase 2 component using time, locale, and stdout, plus `layer36 run --test-time` for deterministic sample tests. |
 | P2-UAPI-06 | Layer36 app arguments | 2026-05-04 | Added `layer36:io/args.raw`, default `io.args` grants, CLI forwarding through `layer36 run ... -- <args>`, and host dispatch wiring. |

@@ -1788,6 +1788,7 @@ Short time-stamped entries for anything significant: ecosystem developments, piv
 | 2026-05-05 | Tightened manifest-side `net.connect` host validation to match earlier shared-host hardening: host patterns now reject invalid dot placement, invalid label-edge `-` forms, and malformed numeric IPv4 literals during manifest parsing, with explicit test coverage for accepted and rejected host shapes. |
 | 2026-05-05 | Published the missing Phase 2 language tutorials: added `First Go CLI` and `First TypeScript CLI` walkthroughs in mdBook, linked them in navigation, and closed the "three tutorials, one per language" Phase 2 documentation checklist item. |
 | 2026-05-05 | Hardened dependency-audit execution for hosted and self-hosted CI by adding `scripts/check-dependencies.sh`: advisory-db parser/lock-path failures now degrade to a warning, while `cargo-deny` `licenses`, `bans`, and `sources` remain hard gates. Also fixed a wildcard-style path dependency in `crates/manifest/Cargo.toml` so bans checks pass again. |
+| 2026-05-05 | Added first Phase 2 fuzz scaffolding under `fuzz/` with `cargo-fuzz` targets for manifest parsing, logical path parsing, and policy matching, plus a short smoke runner script at `scripts/run-phase2-fuzz-smoke.sh`. Checklist now marks fuzz targets defined, with nightly multi-hour fuzz stability still pending. |
 
 ---
 

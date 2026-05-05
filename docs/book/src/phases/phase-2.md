@@ -234,6 +234,9 @@ are still pending.
 We now also have three language walkthroughs in the docs: Rust, Go, and
 TypeScript, so contributors can onboard per language without guessing the
 current phase boundaries.
+We also now have the first fuzz-harness set for manifest parsing, shared path
+normalization, and policy matching. Nightly multi-hour fuzz runs are still a
+remaining exit item.
 
 If Phase 2 works, those apps should produce the same output on Linux, macOS, and
 Windows while running through the same Layer36 runtime model.

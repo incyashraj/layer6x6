@@ -1,0 +1,38 @@
+[package]
+name = "layer36-fuzz"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+layer36-adapter-common = { path = "../crates/adapter-common", version = "0.1.0-dev" }
+layer36-manifest = { path = "../crates/manifest", version = "0.1.0-dev" }
+layer36-policy = { path = "../crates/policy", version = "0.1.0-dev" }
+
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "manifest_parse"
+path = "fuzz_targets/manifest_parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "logical_path_parse"
+path = "fuzz_targets/logical_path_parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "policy_match"
+path = "fuzz_targets/policy_match.rs"
+test = false
+doc = false
+bench = false

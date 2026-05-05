@@ -28,6 +28,8 @@ warnings until upstream compatibility catches up.
 There is also a `Self-hosted CI` workflow. It is manual-only and targets a
 runner labeled `layer36-local`. Use it when you want GitHub to run the full
 local gate on your own machine instead of a hosted runner.
+That local gate now also runs a short Phase 2 fuzz smoke over the first fuzz
+targets.
 
 The runtime tests now include an optional Phase 2 language-variant slice for Go
 and TypeScript sample components. It runs through:

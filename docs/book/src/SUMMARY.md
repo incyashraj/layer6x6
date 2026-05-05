@@ -31,6 +31,7 @@
   - [ADR process](contributing/adrs.md)
   - [WIT style guide](wit-style.md)
   - [CI and runners](contributing/ci-and-runners.md)
+  - [Fuzzing](contributing/fuzzing.md)
 - [Setting up your environment](contributing/setup.md)
 
 # Phase Notes
