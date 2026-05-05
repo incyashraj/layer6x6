@@ -53,6 +53,7 @@ use uapi_dispatch::{
 };
 
 pub const DEFAULT_MAX_HTTP_RESPONSE_BYTES: usize = 1024 * 1024;
+pub const DEFAULT_HTTP_TIMEOUT_MILLIS: u32 = 5_000;
 #[cfg(feature = "phase2-bindings")]
 const MAX_PHASE2_READ_BYTES: usize = 8 * 1024 * 1024;
 #[cfg(feature = "phase2-bindings")]
@@ -90,6 +91,8 @@ pub struct Config {
     pub app_args: Vec<String>,
     /// Maximum full HTTP response size accepted by the local Phase 2 adapter.
     pub max_http_response_bytes: usize,
+    /// Default timeout for Phase 2 HTTP requests from helper UAPI calls.
+    pub default_http_timeout_millis: Option<u32>,
     /// Root directory used to resolve relative Phase 2 filesystem paths.
     pub sandbox_root: PathBuf,
 }
@@ -105,6 +108,7 @@ impl Default for Config {
             test_timezone: None,
             app_args: Vec::new(),
             max_http_response_bytes: DEFAULT_MAX_HTTP_RESPONSE_BYTES,
+            default_http_timeout_millis: Some(DEFAULT_HTTP_TIMEOUT_MILLIS),
             sandbox_root: PathBuf::from("."),
         }
     }
@@ -318,7 +322,7 @@ impl HostState {
             output: output.clone(),
             _uapi: UapiGuard::new(config.session_policy.clone()),
             #[cfg(feature = "phase2-bindings")]
-            phase2: phase2_host::Phase2Host::new(
+            phase2: phase2_host::Phase2Host::new_with_http_timeout(
                 UapiGuard::new(config.session_policy.clone()),
                 Box::new(LocalPhase2Adapter::new(
                     output,
@@ -329,6 +333,7 @@ impl HostState {
                     config.max_http_response_bytes,
                     config.sandbox_root.clone(),
                 )),
+                config.default_http_timeout_millis,
             ),
         })
     }
@@ -1317,6 +1322,10 @@ mod tests {
         assert_eq!(
             Config::default().max_http_response_bytes,
             DEFAULT_MAX_HTTP_RESPONSE_BYTES
+        );
+        assert_eq!(
+            Config::default().default_http_timeout_millis,
+            Some(DEFAULT_HTTP_TIMEOUT_MILLIS)
         );
     }
 

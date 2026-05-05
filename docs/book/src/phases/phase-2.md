@@ -157,6 +157,10 @@ The runtime's network capability gate now also uses a shared endpoint parser for
 no longer drift as separate parsers evolve. The plain `http://` URL parser now
 reuses that same authority parsing path to keep host/port validation in one
 place.
+For helper-style `net.http-client.get` calls, the default request timeout is now
+runtime-configurable through `layer36 run --http-timeout-millis`. The default is
+5000 milliseconds, and `--http-timeout-millis 0` disables that default timeout
+for the helper `get` path.
 
 Time is also starting to move into shared adapter code. The local runtime now
 uses a common host clock helper for fixed test time, Unix-epoch milliseconds,

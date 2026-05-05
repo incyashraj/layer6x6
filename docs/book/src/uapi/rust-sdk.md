@@ -142,8 +142,10 @@ headers, and a buffered body, then returns status, headers, and body. The host
 still owns transport headers such as `Host`, `Connection`, and
 `Content-Length`. The current plain HTTP adapter caps the full response at 1
 MiB by default, with `layer36 run --max-http-response-bytes` available for test
-runs that need a different limit. HTTPS, redirects, and streaming bodies are
-still Phase 2 work.
+runs that need a different limit. Helper `layer36::net::get` calls use a default
+timeout of 5000 ms, configurable with `layer36 run --http-timeout-millis` (`0`
+disables the default timeout). HTTPS, redirects, and streaming bodies are still
+Phase 2 work.
 
 ## Current Limits
 

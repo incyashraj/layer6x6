@@ -16,19 +16,30 @@ use crate::{
 use wasmtime::component::Resource;
 
 const MAX_PHASE2_HOST_RESOURCES: usize = 1024;
+const DEFAULT_HTTP_CLIENT_GET_TIMEOUT_MILLIS: u32 = 5_000;
 
 pub struct Phase2Host<'a> {
     guard: UapiGuard,
     adapter: Box<dyn HostAdapter + 'a>,
     resources: Phase2ResourceTable,
+    default_http_timeout_millis: Option<u32>,
 }
 
 impl<'a> Phase2Host<'a> {
     pub fn new(guard: UapiGuard, adapter: Box<dyn HostAdapter + 'a>) -> Self {
+        Self::new_with_http_timeout(guard, adapter, Some(DEFAULT_HTTP_CLIENT_GET_TIMEOUT_MILLIS))
+    }
+
+    pub fn new_with_http_timeout(
+        guard: UapiGuard,
+        adapter: Box<dyn HostAdapter + 'a>,
+        default_http_timeout_millis: Option<u32>,
+    ) -> Self {
         Self {
             guard,
             adapter,
             resources: Phase2ResourceTable::default(),
+            default_http_timeout_millis,
         }
     }
 
@@ -339,7 +350,7 @@ impl net::http_client::Host for Phase2Host<'_> {
             url,
             headers: Vec::new(),
             body: Vec::new(),
-            timeout_millis: Some(5000),
+            timeout_millis: self.default_http_timeout_millis,
         };
 
         Ok(self
@@ -563,6 +574,7 @@ mod tests {
         close_stream: usize,
         file_read: usize,
         fs_stat: usize,
+        last_timeout_millis: Option<Option<u32>>,
         log: usize,
         net_fetch: usize,
         sleep: usize,
@@ -714,7 +726,9 @@ mod tests {
 
     impl NetAdapter for RecordingAdapter {
         fn fetch(&self, req: HttpRequest) -> Result<HttpResponse, AdapterError> {
-            self.calls.borrow_mut().net_fetch += 1;
+            let mut calls = self.calls.borrow_mut();
+            calls.net_fetch += 1;
+            calls.last_timeout_millis = Some(req.timeout_millis);
             if let Some(error) = &self.net_error {
                 return Err(error.clone());
             }
@@ -776,6 +790,41 @@ mod tests {
     }
 
     #[test]
+    fn generated_get_uses_configured_default_timeout() {
+        let adapter = RecordingAdapter::default();
+        let guard = UapiGuard::new(SessionPolicy::from_grants(["net.connect:example.com:80"
+            .parse()
+            .unwrap()]));
+        let mut host =
+            Phase2Host::new_with_http_timeout(guard, Box::new(adapter.clone()), Some(2500));
+
+        let response =
+            net::http_client::Host::get(&mut host, "http://example.com/path".to_string())
+                .unwrap()
+                .unwrap();
+
+        assert_eq!(response, b"ok".to_vec());
+        assert_eq!(adapter.calls.borrow().last_timeout_millis, Some(Some(2500)));
+    }
+
+    #[test]
+    fn generated_get_can_disable_default_timeout() {
+        let adapter = RecordingAdapter::default();
+        let guard = UapiGuard::new(SessionPolicy::from_grants(["net.connect:example.com:80"
+            .parse()
+            .unwrap()]));
+        let mut host = Phase2Host::new_with_http_timeout(guard, Box::new(adapter.clone()), None);
+
+        let response =
+            net::http_client::Host::get(&mut host, "http://example.com/path".to_string())
+                .unwrap()
+                .unwrap();
+
+        assert_eq!(response, b"ok".to_vec());
+        assert_eq!(adapter.calls.borrow().last_timeout_millis, Some(None));
+    }
+
+    #[test]
     fn generated_net_host_calls_dispatcher() {
         let adapter = RecordingAdapter::default();
         let guard = UapiGuard::new(SessionPolicy::from_grants(["net.connect:example.com:443"
@@ -790,7 +839,7 @@ mod tests {
                 url: "https://example.com/path".to_string(),
                 headers: Vec::new(),
                 body: Vec::new(),
-                timeout_millis: None,
+                timeout_millis: Some(42),
             },
         )
         .unwrap()
@@ -798,6 +847,7 @@ mod tests {
 
         assert_eq!(response.status, 200);
         assert_eq!(adapter.calls.borrow().net_fetch, 1);
+        assert_eq!(adapter.calls.borrow().last_timeout_millis, Some(Some(42)));
     }
 
     #[test]

@@ -9,7 +9,10 @@ use layer36_manifest::{
     supported_capability_specs, App, Capability, CapabilityRequest, Manifest, PHASE2_CLI_WORLD,
 };
 use layer36_policy::{resolve_session_policy, SessionPolicy};
-use layer36_runtime::{Config, RunOutcome, Runtime, RuntimeError, DEFAULT_MAX_HTTP_RESPONSE_BYTES};
+use layer36_runtime::{
+    Config, RunOutcome, Runtime, RuntimeError, DEFAULT_HTTP_TIMEOUT_MILLIS,
+    DEFAULT_MAX_HTTP_RESPONSE_BYTES,
+};
 use serde::Serialize;
 
 const MAX_PHASE2_ARGS_RAW_BYTES: usize = 64 * 1024;
@@ -44,6 +47,10 @@ enum Command {
         /// Max bytes accepted for one Phase 2 HTTP response.
         #[arg(long, default_value_t = DEFAULT_MAX_HTTP_RESPONSE_BYTES)]
         max_http_response_bytes: usize,
+
+        /// Default timeout in milliseconds for helper Phase 2 HTTP GET calls (`0` disables).
+        #[arg(long, default_value_t = DEFAULT_HTTP_TIMEOUT_MILLIS)]
+        http_timeout_millis: u32,
 
         /// Root directory used for relative Phase 2 filesystem paths.
         #[arg(long, default_value = ".")]
@@ -205,6 +212,7 @@ fn run() -> Result<u8> {
             fuel,
             mem_limit,
             max_http_response_bytes,
+            http_timeout_millis,
             sandbox_root,
             manifest,
             grant,
@@ -223,6 +231,7 @@ fn run() -> Result<u8> {
             fuel,
             mem_limit,
             max_http_response_bytes,
+            http_timeout_millis,
             sandbox_root,
             manifest_path: manifest,
             grants: grant,
@@ -272,6 +281,7 @@ struct RunRequest {
     fuel: Option<u64>,
     mem_limit: u64,
     max_http_response_bytes: usize,
+    http_timeout_millis: u32,
     sandbox_root: PathBuf,
     manifest_path: Option<PathBuf>,
     grants: Vec<String>,
@@ -363,6 +373,10 @@ fn run_component(request: RunRequest) -> Result<u8> {
         test_timezone: request.test_timezone,
         app_args: request.app_args,
         max_http_response_bytes: request.max_http_response_bytes,
+        default_http_timeout_millis: match request.http_timeout_millis {
+            0 => None,
+            millis => Some(millis),
+        },
         sandbox_root: request.sandbox_root,
     };
     let runtime = Runtime::new(&config)?;

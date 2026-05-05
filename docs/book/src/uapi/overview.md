@@ -299,6 +299,8 @@ slice. App-provided header values now reject control characters, and
 for `http://` and `https://`, so capability checks and adapter-side URL parsing
 stay aligned. The plain `http://` request parser now reuses that same authority
 path, so host/port validation logic is no longer duplicated across net layers.
+Helper `get(url)` calls now use a runtime-configured default timeout:
+`layer36 run --http-timeout-millis` (default `5000`, set `0` to disable).
 HTTPS, redirects, streaming, and deeper protocol work are
 still open.
 
