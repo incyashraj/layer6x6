@@ -68,6 +68,26 @@ pub fn read_dir(path: &Path) -> std::io::Result<std::fs::ReadDir> {
     std::fs::read_dir(path)
 }
 
+/// Remove a file through the Linux adapter path.
+pub fn remove_file(path: &Path) -> std::io::Result<()> {
+    std::fs::remove_file(path)
+}
+
+/// Remove an empty directory through the Linux adapter path.
+pub fn remove_dir(path: &Path) -> std::io::Result<()> {
+    std::fs::remove_dir(path)
+}
+
+/// Create a directory through the Linux adapter path.
+pub fn create_dir(path: &Path) -> std::io::Result<()> {
+    std::fs::create_dir(path)
+}
+
+/// Rename a filesystem path through the Linux adapter path.
+pub fn rename_path(from: &Path, to: &Path) -> std::io::Result<()> {
+    std::fs::rename(from, to)
+}
+
 /// Read the current locale through the Linux adapter path.
 pub fn current_locale(locale: &HostLocale) -> LocaleId {
     locale.current()
@@ -158,6 +178,30 @@ mod tests {
     #[test]
     fn read_dir_hook_is_available() {
         let hook: fn(&Path) -> std::io::Result<std::fs::ReadDir> = read_dir;
+        let _ = hook;
+    }
+
+    #[test]
+    fn remove_file_hook_is_available() {
+        let hook: fn(&Path) -> std::io::Result<()> = remove_file;
+        let _ = hook;
+    }
+
+    #[test]
+    fn remove_dir_hook_is_available() {
+        let hook: fn(&Path) -> std::io::Result<()> = remove_dir;
+        let _ = hook;
+    }
+
+    #[test]
+    fn create_dir_hook_is_available() {
+        let hook: fn(&Path) -> std::io::Result<()> = create_dir;
+        let _ = hook;
+    }
+
+    #[test]
+    fn rename_path_hook_is_available() {
+        let hook: fn(&Path, &Path) -> std::io::Result<()> = rename_path;
         let _ = hook;
     }
 

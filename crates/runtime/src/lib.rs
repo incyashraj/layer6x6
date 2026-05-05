@@ -1059,23 +1059,23 @@ impl FsAdapter for LocalPhase2Adapter {
 
     fn remove_file(&self, path: &str) -> std::result::Result<(), AdapterError> {
         let path = self.resolve_fs_path(path, FsOperation::RemoveLeaf)?;
-        std::fs::remove_file(path).map_err(map_io_error)
+        remove_file_on_host(path.as_path()).map_err(map_io_error)
     }
 
     fn remove_dir(&self, path: &str) -> std::result::Result<(), AdapterError> {
         let path = self.resolve_fs_path(path, FsOperation::RemoveLeaf)?;
-        std::fs::remove_dir(path).map_err(map_io_error)
+        remove_dir_on_host(path.as_path()).map_err(map_io_error)
     }
 
     fn mkdir(&self, path: &str) -> std::result::Result<(), AdapterError> {
         let path = self.resolve_fs_path(path, FsOperation::CreateLeaf)?;
-        std::fs::create_dir(path).map_err(map_io_error)
+        create_dir_on_host(path.as_path()).map_err(map_io_error)
     }
 
     fn rename(&self, from: &str, to: &str) -> std::result::Result<(), AdapterError> {
         let from = self.resolve_fs_path(from, FsOperation::RenameSource)?;
         let to = self.resolve_fs_path(to, FsOperation::RenameDestination)?;
-        std::fs::rename(from, to).map_err(map_io_error)
+        rename_path_on_host(from.as_path(), to.as_path()).map_err(map_io_error)
     }
 
     fn close_file(&self, handle: &FileHandle) -> std::result::Result<(), AdapterError> {
@@ -1135,6 +1135,58 @@ fn read_dir_on_host(path: &Path) -> std::io::Result<std::fs::ReadDir> {
     #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
     {
         std::fs::read_dir(path)
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn remove_file_on_host(path: &Path) -> std::io::Result<()> {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::remove_file(path)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        std::fs::remove_file(path)
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn remove_dir_on_host(path: &Path) -> std::io::Result<()> {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::remove_dir(path)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        std::fs::remove_dir(path)
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn create_dir_on_host(path: &Path) -> std::io::Result<()> {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::create_dir(path)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        std::fs::create_dir(path)
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn rename_path_on_host(from: &Path, to: &Path) -> std::io::Result<()> {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::rename_path(from, to)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        std::fs::rename(from, to)
     }
 }
 
