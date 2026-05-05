@@ -57,6 +57,7 @@ impl HostLocale {
     ) -> Self {
         let mut lc_all = None;
         let mut lang = None;
+        let mut lc_time = None;
         let mut lc_messages = None;
         let mut language = None;
         let mut apple_locale = None;
@@ -66,6 +67,7 @@ impl HostLocale {
             match key.as_ref() {
                 "LC_ALL" => lc_all = Some(value.as_ref().to_string()),
                 "LANG" => lang = Some(value.as_ref().to_string()),
+                "LC_TIME" => lc_time = Some(value.as_ref().to_string()),
                 "LC_MESSAGES" => lc_messages = Some(value.as_ref().to_string()),
                 "LANGUAGE" => language = Some(value.as_ref().to_string()),
                 "AppleLocale" => apple_locale = Some(value.as_ref().to_string()),
@@ -81,6 +83,7 @@ impl HostLocale {
             .as_deref()
             .filter(|value| !value.trim().is_empty())
             .or(lang.as_deref().filter(|value| !value.trim().is_empty()))
+            .or(lc_time.as_deref().filter(|value| !value.trim().is_empty()))
             .or(lc_messages
                 .as_deref()
                 .filter(|value| !value.trim().is_empty()))
@@ -703,6 +706,18 @@ mod tests {
             ("LANGUAGE", "fr_FR:de_DE"),
         ]);
         assert_eq!(locale.current().bcp47, "fr-FR");
+    }
+
+    #[test]
+    fn locale_falls_back_to_lc_time_before_lc_messages() {
+        let locale = HostLocale::from_env_pairs([
+            ("LC_ALL", ""),
+            ("LANG", ""),
+            ("LC_TIME", "it_IT.UTF-8"),
+            ("LC_MESSAGES", "es_ES.UTF-8"),
+            ("LANGUAGE", "fr_FR:de_DE"),
+        ]);
+        assert_eq!(locale.current().bcp47, "it-IT");
     }
 
     #[test]

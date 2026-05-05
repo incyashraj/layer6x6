@@ -179,7 +179,7 @@ conservative too, accepting only simple timezone-name shapes for this phase and
 falling back to `UTC` on invalid input. It now also accepts normalized UTC
 offset forms such as `UTC+05:30`, `GMT-02:00`, `+0530`, and `-07`, then stores
 them as canonical `UTC±HH:MM`. Locale discovery now also has practical
-fallbacks for `LC_MESSAGES`, `LANGUAGE` (first preferred token), and
+fallbacks for `LC_TIME`, `LC_MESSAGES`, `LANGUAGE` (first preferred token), and
 `AppleLocale` when `LC_ALL`/`LANG` are absent. Timezone discovery now has a
 Unix fallback too: when `TZ` is not set and `/etc/localtime` is a zoneinfo
 symlink, Layer36 derives a normalized timezone from that link target. It now
