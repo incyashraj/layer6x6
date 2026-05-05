@@ -111,8 +111,10 @@ impl HostLocale {
     }
 
     pub fn format_date(millis: u64, timezone: &str, style: DateStyle, locale: &LocaleId) -> String {
-        let parts = utc_parts_from_unix_millis(millis);
         let timezone = normalize_timezone(Some(timezone));
+        let shifted_millis = i128::from(millis)
+            + i128::from(timezone_offset_minutes(&timezone).unwrap_or_default()) * 60 * 1_000;
+        let parts = utc_parts_from_unix_millis(shifted_millis);
         let locale = normalize_locale_tag(Some(&locale.bcp47));
 
         match style {
@@ -236,19 +238,21 @@ impl UtcParts {
     }
 }
 
-fn utc_parts_from_unix_millis(unix_millis: u64) -> UtcParts {
-    const SECS_PER_DAY: u64 = 86_400;
-    const SECS_PER_HOUR: u64 = 3_600;
-    const SECS_PER_MINUTE: u64 = 60;
+fn utc_parts_from_unix_millis(unix_millis: i128) -> UtcParts {
+    const SECS_PER_DAY: i128 = 86_400;
+    const SECS_PER_HOUR: i128 = 3_600;
+    const SECS_PER_MINUTE: i128 = 60;
 
-    let total_seconds = unix_millis / 1_000;
-    let millis = (unix_millis % 1_000) as u16;
-    let days = (total_seconds / SECS_PER_DAY) as i64;
-    let day_seconds = total_seconds % SECS_PER_DAY;
+    let total_seconds = unix_millis.div_euclid(1_000);
+    let millis = unix_millis.rem_euclid(1_000) as u16;
+    let days = total_seconds.div_euclid(SECS_PER_DAY) as i64;
+    let day_seconds = total_seconds.rem_euclid(SECS_PER_DAY);
 
-    let hour = (day_seconds / SECS_PER_HOUR) as u8;
-    let minute = ((day_seconds % SECS_PER_HOUR) / SECS_PER_MINUTE) as u8;
-    let second = (day_seconds % SECS_PER_MINUTE) as u8;
+    let hour = (day_seconds.div_euclid(SECS_PER_HOUR)) as u8;
+    let minute = (day_seconds
+        .rem_euclid(SECS_PER_HOUR)
+        .div_euclid(SECS_PER_MINUTE)) as u8;
+    let second = (day_seconds.rem_euclid(SECS_PER_MINUTE)) as u8;
 
     let (year, month, day) = civil_from_days(days);
     let weekday_index = (days + 4).rem_euclid(7) as u8;
@@ -439,6 +443,32 @@ fn parse_utc_offset_suffix(suffix: &str) -> Option<String> {
     Some(format!("UTC{sign_text}{hours:02}:{minutes:02}"))
 }
 
+fn timezone_offset_minutes(timezone: &str) -> Option<i32> {
+    if timezone == "UTC" {
+        return Some(0);
+    }
+    let suffix = timezone.strip_prefix("UTC")?;
+    let (sign, rest) = if let Some(rest) = suffix.strip_prefix('+') {
+        (1i32, rest)
+    } else if let Some(rest) = suffix.strip_prefix('-') {
+        (-1i32, rest)
+    } else {
+        return None;
+    };
+
+    let (hours, minutes) = rest.split_once(':')?;
+    if hours.len() != 2 || minutes.len() != 2 {
+        return None;
+    }
+    let hours: i32 = hours.parse().ok()?;
+    let minutes: i32 = minutes.parse().ok()?;
+    if hours > 23 || minutes > 59 {
+        return None;
+    }
+
+    Some(sign * (hours * 60 + minutes))
+}
+
 fn canonicalize_locale_tag(tag: &str) -> Option<String> {
     let portable = tag.replace('_', "-");
     let mut pieces = portable.split('-');
@@ -558,6 +588,22 @@ mod tests {
         assert_eq!(
             HostLocale::format_number(42.5, NumberStyle::Currency, &locale),
             "$42.5"
+        );
+    }
+
+    #[test]
+    fn deterministic_formatter_applies_timezone_offsets() {
+        let locale = LocaleId {
+            bcp47: "en-US".to_string(),
+        };
+
+        assert_eq!(
+            HostLocale::format_date(0, "UTC+05:30", DateStyle::Medium, &locale),
+            "1970-01-01 05:30"
+        );
+        assert_eq!(
+            HostLocale::format_date(0, "UTC-01:00", DateStyle::Short, &locale),
+            "1969-12-31"
         );
     }
 

@@ -1420,7 +1420,7 @@ mod tests {
             .expect("format date");
 
         assert_eq!(timezone, "UTC+05:30");
-        assert_eq!(date, "1970-01-15 06:56:07 UTC+05:30");
+        assert_eq!(date, "1970-01-15 12:26:07 UTC+05:30");
     }
 
     #[cfg(feature = "phase2-bindings")]

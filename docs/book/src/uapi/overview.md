@@ -317,7 +317,8 @@ and deterministic baseline formatting for date and number styles. This is not
 the final ICU4X-quality behavior, but it gives stable cross-host outputs while
 the deeper locale work lands in one shared adapter module. Timezone
 normalization now also accepts UTC offset forms (`UTC+05:30`, `GMT-02:00`,
-`+0530`, `-07`) and stores them in canonical `UTC±HH:MM` form.
+`+0530`, `-07`) and stores them in canonical `UTC±HH:MM` form. Date formatting
+now applies those normalized offsets to the rendered timestamp.
 
 The first proof component lives at `test/integration/phase2-smoke`. It reads a
 file, checks time and locale, and writes output through the Phase 2 imports.

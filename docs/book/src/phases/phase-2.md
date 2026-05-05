@@ -190,6 +190,9 @@ broader host-native per-OS locale/timezone discovery are still open, but the
 early behavior now has one home instead of being copied in the runtime. This
 fallback order is captured in
 `docs/adr/0010-locale-timezone-discovery-fallbacks.md`.
+Date formatting now also applies normalized UTC offsets to the rendered time
+value, so `UTC+05:30` and `UTC-01:00` shift timestamps instead of only changing
+the timezone label text.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2
