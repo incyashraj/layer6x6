@@ -20,6 +20,15 @@ thiserror.workspace = true
 tracing.workspace = true
 wasmtime.workspace = true
 
+[target.'cfg(target_os = "linux")'.dependencies]
+layer36-adapter-linux = { path = "../adapter-linux", version = "0.1.0-dev" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+layer36-adapter-macos = { path = "../adapter-macos", version = "0.1.0-dev" }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+layer36-adapter-windows = { path = "../adapter-windows", version = "0.1.0-dev" }
+
 [dev-dependencies]
 criterion.workspace = true
 wit-parser.workspace = true

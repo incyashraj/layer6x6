@@ -52,6 +52,13 @@ use uapi_dispatch::{
     HttpResponse, IoAdapter, LocaleAdapter, LocaleId, NetAdapter, OpenMode, TimeAdapter,
 };
 
+#[cfg(all(feature = "phase2-bindings", target_os = "linux"))]
+use layer36_adapter_linux as host_os_adapter;
+#[cfg(all(feature = "phase2-bindings", target_os = "macos"))]
+use layer36_adapter_macos as host_os_adapter;
+#[cfg(all(feature = "phase2-bindings", target_os = "windows"))]
+use layer36_adapter_windows as host_os_adapter;
+
 pub const DEFAULT_MAX_HTTP_RESPONSE_BYTES: usize = 1024 * 1024;
 pub const DEFAULT_HTTP_TIMEOUT_MILLIS: u32 = 5_000;
 #[cfg(feature = "phase2-bindings")]
@@ -445,10 +452,7 @@ impl LocalPhase2Adapter {
             output,
             state: RefCell::new(LocalPhase2AdapterState::default()),
             clock: HostClock::new(test_time_millis),
-            locale: HostLocale::from_env_with_overrides(
-                test_locale.as_deref(),
-                test_timezone.as_deref(),
-            ),
+            locale: discover_host_locale(test_locale.as_deref(), test_timezone.as_deref()),
             app_args,
             max_http_response_bytes,
             sandbox_root,
@@ -534,6 +538,22 @@ impl LocalPhase2Adapter {
             }
             Err(err) => Err(map_io_error(err)),
         }
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn discover_host_locale(
+    locale_override: Option<&str>,
+    timezone_override: Option<&str>,
+) -> HostLocale {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::discover_locale(locale_override, timezone_override)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        HostLocale::from_env_with_overrides(locale_override, timezone_override)
     }
 }
 

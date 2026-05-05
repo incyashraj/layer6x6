@@ -989,6 +989,9 @@ version = "0.1.0-dev"
 dependencies = [
  "criterion",
  "layer36-adapter-common",
+ "layer36-adapter-linux",
+ "layer36-adapter-macos",
+ "layer36-adapter-windows",
  "layer36-manifest",
  "layer36-policy",
  "libc",
