@@ -10,6 +10,7 @@ use layer36_adapter_common::{
 use std::fs::OpenOptions;
 use std::net::ToSocketAddrs;
 use std::net::{SocketAddr, TcpStream};
+use std::path::Path;
 use std::time::Duration;
 
 /// Host family handled by this adapter crate.
@@ -55,6 +56,16 @@ pub fn resolve_socket_addrs(host: &str, port: u16) -> std::io::Result<Vec<Socket
 /// Check blocked-link metadata semantics through the Linux adapter path.
 pub fn is_blocked_link_metadata(metadata: &std::fs::Metadata) -> bool {
     metadata.file_type().is_symlink()
+}
+
+/// Read filesystem metadata through the Linux adapter path.
+pub fn stat_path(path: &Path) -> std::io::Result<std::fs::Metadata> {
+    std::fs::metadata(path)
+}
+
+/// Read a directory iterator through the Linux adapter path.
+pub fn read_dir(path: &Path) -> std::io::Result<std::fs::ReadDir> {
+    std::fs::read_dir(path)
 }
 
 /// Read the current locale through the Linux adapter path.
@@ -135,6 +146,18 @@ mod tests {
     #[test]
     fn blocked_link_metadata_hook_is_available() {
         let hook: fn(&std::fs::Metadata) -> bool = is_blocked_link_metadata;
+        let _ = hook;
+    }
+
+    #[test]
+    fn stat_path_hook_is_available() {
+        let hook: fn(&Path) -> std::io::Result<std::fs::Metadata> = stat_path;
+        let _ = hook;
+    }
+
+    #[test]
+    fn read_dir_hook_is_available() {
+        let hook: fn(&Path) -> std::io::Result<std::fs::ReadDir> = read_dir;
         let _ = hook;
     }
 

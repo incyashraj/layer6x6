@@ -212,6 +212,8 @@ Socket timeout setup for that fetch path now also routes through per-OS
 adapters.
 Sandbox link-metadata checks now also route through per-OS adapters, so both
 symlink/reparse-point detection and network host calls are less runtime-local.
+Filesystem `stat` and directory listing host calls now route through per-OS
+adapters too.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2

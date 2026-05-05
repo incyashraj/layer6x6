@@ -1032,7 +1032,7 @@ impl FsAdapter for LocalPhase2Adapter {
 
     fn stat(&self, path: &str) -> std::result::Result<FileStat, AdapterError> {
         let path = self.resolve_fs_path(path, FsOperation::Existing)?;
-        std::fs::metadata(path)
+        stat_path_on_host(path.as_path())
             .map(file_stat_from_metadata)
             .map_err(map_io_error)
     }
@@ -1040,7 +1040,7 @@ impl FsAdapter for LocalPhase2Adapter {
     fn list(&self, path: &str) -> std::result::Result<Vec<String>, AdapterError> {
         let path = self.resolve_fs_path(path, FsOperation::Existing)?;
         let mut entries = Vec::new();
-        for entry in std::fs::read_dir(path).map_err(map_io_error)? {
+        for entry in read_dir_on_host(path.as_path()).map_err(map_io_error)? {
             let entry = entry.map_err(map_io_error)?;
             let name = entry
                 .file_name()
@@ -1109,6 +1109,32 @@ fn apply_no_follow_final_symlink_on_host(opts: &mut std::fs::OpenOptions) {
     ))]
     {
         let _ = opts;
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn stat_path_on_host(path: &Path) -> std::io::Result<std::fs::Metadata> {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::stat_path(path)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        std::fs::metadata(path)
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn read_dir_on_host(path: &Path) -> std::io::Result<std::fs::ReadDir> {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::read_dir(path)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        std::fs::read_dir(path)
     }
 }
 
