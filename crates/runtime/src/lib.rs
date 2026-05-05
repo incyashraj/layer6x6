@@ -1110,12 +1110,7 @@ impl NetAdapter for LocalPhase2Adapter {
         let mut stream = connect_plain_http_stream(&url, req.timeout_millis)?;
         if let Some(millis) = req.timeout_millis {
             let timeout = Duration::from_millis(millis.into());
-            stream
-                .set_read_timeout(Some(timeout))
-                .map_err(map_io_error)?;
-            stream
-                .set_write_timeout(Some(timeout))
-                .map_err(map_io_error)?;
+            apply_tcp_timeouts_on_host(&stream, timeout).map_err(map_io_error)?;
         }
 
         stream.write_all(&request).map_err(map_net_io_error)?;
@@ -1214,6 +1209,20 @@ fn connect_tcp_on_host(addr: SocketAddr, timeout: Option<Duration>) -> std::io::
             Some(timeout) => TcpStream::connect_timeout(&addr, timeout),
             None => TcpStream::connect(addr),
         }
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn apply_tcp_timeouts_on_host(stream: &TcpStream, timeout: Duration) -> std::io::Result<()> {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::apply_tcp_timeouts(stream, timeout)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        stream.set_read_timeout(Some(timeout))?;
+        stream.set_write_timeout(Some(timeout))
     }
 }
 

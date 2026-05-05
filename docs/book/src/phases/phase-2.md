@@ -208,6 +208,8 @@ Filesystem no-follow open-flag setup and plain HTTP TCP connect calls now also
 route through the same per-OS adapter crate path.
 Socket-address resolution for plain HTTP fetch now follows that same per-OS
 adapter route too.
+Socket timeout setup for that fetch path now also routes through per-OS
+adapters.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2
