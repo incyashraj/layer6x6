@@ -204,6 +204,8 @@ logic kept for unsupported hosts.
 The same is now true for `time.sleep-millis`, and locale read/format paths
 (`current`, `timezone`, `format-date`, `format-number`), which now route
 through the per-OS adapter path instead of runtime-local direct calls.
+Filesystem no-follow open-flag setup and plain HTTP TCP connect calls now also
+route through the same per-OS adapter crate path.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2

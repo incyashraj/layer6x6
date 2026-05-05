@@ -9,6 +9,8 @@ use layer36_adapter_common::{
     time::HostClock,
 };
 use std::fs::OpenOptions;
+use std::net::{SocketAddr, TcpStream};
+use std::time::Duration;
 
 /// Host family handled by this adapter crate.
 pub const HOST_FAMILY: &str = "windows";
@@ -29,6 +31,14 @@ pub fn discover_clock(test_time_millis: Option<u64>) -> HostClock {
 /// Sleep through the Windows host adapter path.
 pub fn sleep_millis(millis: u32) {
     HostClock::sleep_millis(millis);
+}
+
+/// Open a TCP stream through the Windows adapter path.
+pub fn connect_tcp(addr: SocketAddr, timeout: Option<Duration>) -> std::io::Result<TcpStream> {
+    match timeout {
+        Some(timeout) => TcpStream::connect_timeout(&addr, timeout),
+        None => TcpStream::connect(addr),
+    }
 }
 
 /// Read the current locale through the Windows adapter path.
@@ -93,6 +103,12 @@ mod tests {
     #[test]
     fn sleep_hook_accepts_zero_millis() {
         sleep_millis(0);
+    }
+
+    #[test]
+    fn connect_tcp_hook_is_available() {
+        let hook: fn(SocketAddr, Option<Duration>) -> std::io::Result<TcpStream> = connect_tcp;
+        let _ = hook;
     }
 
     #[test]

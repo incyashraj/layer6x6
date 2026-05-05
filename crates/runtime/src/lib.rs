@@ -1151,7 +1151,7 @@ fn connect_plain_http_stream(
         let timeout = Duration::from_millis(u64::from(millis));
         let mut last_err = None;
         for addr in addrs {
-            match TcpStream::connect_timeout(&addr, timeout) {
+            match connect_tcp_on_host(addr, Some(timeout)) {
                 Ok(stream) => return Ok(stream),
                 Err(err) => last_err = Some(err),
             }
@@ -1164,7 +1164,7 @@ fn connect_plain_http_stream(
 
     let mut last_err = None;
     for addr in addrs {
-        match TcpStream::connect(addr) {
+        match connect_tcp_on_host(addr, None) {
             Ok(stream) => return Ok(stream),
             Err(err) => last_err = Some(err),
         }
@@ -1187,6 +1187,22 @@ fn resolve_plain_http_socket_addrs(
         return Err(AdapterError::NotFound);
     }
     Ok(addrs)
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn connect_tcp_on_host(addr: SocketAddr, timeout: Option<Duration>) -> std::io::Result<TcpStream> {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        return host_os_adapter::connect_tcp(addr, timeout);
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        match timeout {
+            Some(timeout) => TcpStream::connect_timeout(&addr, timeout),
+            None => TcpStream::connect(addr),
+        }
+    }
 }
 
 #[cfg(feature = "phase2-bindings")]
