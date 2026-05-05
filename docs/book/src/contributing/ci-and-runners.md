@@ -20,6 +20,11 @@ The expensive checks stay opt-in. Run the `CI` workflow manually with
 - benchmarks
 - `cargo-deny`
 
+Dependency audit now runs through `scripts/check-dependencies.sh`. This keeps
+`licenses`, `bans`, and `sources` as hard failures, while known advisory-db
+parser or lock-path failures in the current `cargo-deny` path are downgraded to
+warnings until upstream compatibility catches up.
+
 There is also a `Self-hosted CI` workflow. It is manual-only and targets a
 runner labeled `layer36-local`. Use it when you want GitHub to run the full
 local gate on your own machine instead of a hosted runner.

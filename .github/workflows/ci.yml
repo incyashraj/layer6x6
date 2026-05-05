@@ -351,4 +351,4 @@ jobs:
       - name: Install cargo-deny
         run: cargo install cargo-deny --locked --version 0.19.4
       - name: Run cargo-deny
-        run: cargo deny check advisories licenses bans sources
+        run: scripts/check-dependencies.sh

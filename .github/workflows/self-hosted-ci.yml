@@ -94,7 +94,7 @@ jobs:
           git diff --exit-code -- docs/book/src/reference/uapi/index.md
 
       - name: Dependency audit
-        run: cargo deny check advisories licenses bans sources
+        run: scripts/check-dependencies.sh
 
       - name: Docs
         run: '"$HOME/.cargo/bin/mdbook" build docs/book'
