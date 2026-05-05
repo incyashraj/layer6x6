@@ -104,12 +104,32 @@ fn capability_allows(grant: &Capability, required: &Capability) -> bool {
 
 fn normalize_resource(module: &str, resource: &str) -> Option<String> {
     if module == "fs" {
-        LogicalPath::parse(resource)
+        return LogicalPath::parse(resource)
             .ok()
-            .map(|path| path.as_str().to_string())
-    } else {
-        Some(resource.to_string())
+            .map(|path| path.as_str().to_string());
     }
+    if module == "net" {
+        return normalize_net_resource(resource);
+    }
+    Some(resource.to_string())
+}
+
+fn normalize_net_resource(resource: &str) -> Option<String> {
+    let (host, port) = resource.split_once(':')?;
+    if host.is_empty() || port.is_empty() {
+        return None;
+    }
+    let host = host.to_ascii_lowercase();
+    if port == "*" {
+        return Some(format!("{host}:*"));
+    }
+
+    let port = port.parse::<u16>().ok()?;
+    if port == 0 {
+        return None;
+    }
+
+    Some(format!("{host}:{port}"))
 }
 
 fn resource_pattern_matches(pattern: &str, value: &str) -> bool {
@@ -230,11 +250,16 @@ mod tests {
     fn fs_resource_matching_rejects_parent_traversal() {
         let grant = "fs.read:./notes/**".parse().expect("parse grant");
         let policy = SessionPolicy::from_grants([grant]);
-        let required = "fs.read:./notes/../secret.txt"
-            .parse()
-            .expect("parse required");
+        let err = "fs.read:./notes/../secret.txt"
+            .parse::<Capability>()
+            .expect_err("parent traversal should fail during capability parsing");
 
-        assert!(!policy.allows(&required));
+        assert!(
+            matches!(err, ManifestError::InvalidCapability { .. }),
+            "unexpected parse error: {err:?}"
+        );
+        let required = "fs.read:./notes/today.txt".parse().expect("parse required");
+        assert!(policy.allows(&required));
     }
 
     #[test]
@@ -284,5 +309,31 @@ mod tests {
             "./notes/*.txt",
             "./notes/a/b.txt"
         ));
+    }
+
+    #[test]
+    fn net_resource_matching_normalizes_host_case() {
+        let grant = "net.connect:API.Example.com:443"
+            .parse()
+            .expect("parse grant");
+        let policy = SessionPolicy::from_grants([grant]);
+        let required = "net.connect:api.example.com:443"
+            .parse()
+            .expect("parse required");
+
+        assert!(policy.allows(&required));
+    }
+
+    #[test]
+    fn net_resource_matching_normalizes_numeric_ports() {
+        let grant = "net.connect:api.example.com:0443"
+            .parse()
+            .expect("parse grant");
+        let policy = SessionPolicy::from_grants([grant]);
+        let required = "net.connect:api.example.com:443"
+            .parse()
+            .expect("parse required");
+
+        assert!(policy.allows(&required));
     }
 }

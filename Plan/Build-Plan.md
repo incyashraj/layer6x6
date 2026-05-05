@@ -1784,6 +1784,7 @@ Short time-stamped entries for anything significant: ecosystem developments, piv
 | 2026-05-05 | Fixed hosted CI clippy failures after resource-lifecycle trait expansion by updating the runtime benchmark `NoopAdapter` to implement new `close_stream` and `close_file` trait methods. |
 | 2026-05-05 | Added a new docs page for non technical readers, `docs/book/src/progress-for-everyone.md`, with plain language status, system flow diagrams, and current phase progress; linked it in mdBook navigation for GitHub Pages. |
 | 2026-05-05 | Hardened manifest capability resource parsing: filesystem capability resources now use shared logical-path validation and `net.connect` resources must match a valid endpoint shape, so malformed resource patterns fail earlier at manifest parse time. |
+| 2026-05-05 | Hardened session-policy network resource matching: `net.connect` grant matching now normalizes host case and numeric ports before wildcard evaluation, so mixed-case hosts and zero-padded ports match canonical runtime endpoint forms. |
 
 ---
 

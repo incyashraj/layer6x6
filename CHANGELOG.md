@@ -12,6 +12,7 @@ Pre-1.0: breaking changes may occur in any minor release.
 ## [Unreleased]
 
 ### Added
+- Policy `net.connect` matching parity hardening: session grant matching now normalizes host case and numeric ports before wildcard matching, so grants like `API.example.com:0443` match canonical runtime endpoint checks.
 - Manifest capability resource-shape hardening: filesystem capability resources now use shared logical-path validation rules, and `net.connect` resources must match valid endpoint shapes (`<host>:<port>` with wildcard support) so malformed resources fail at manifest parse time.
 - Docs: added a non technical progress page at `docs/book/src/progress-for-everyone.md` with plain language goals, system flow diagrams, current timeline state, and glossary style explanations.
 - CLI and runtime Phase 2 app-argument count guardrail: `layer36 run` preflight and runtime `io.args.raw` now reject more than 1024 app arguments before guest parsing, with runtime and CLI tests covering this path.
