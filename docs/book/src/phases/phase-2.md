@@ -63,7 +63,9 @@ cannot grow stream/file handles without bound. Generated resource `drop`
 callbacks now close underlying local adapter handles too, so released
 resources return slots back to the same local runtime session. The generated
 host-side resource table now has its own active-resource cap too, so both host
-and adapter layers have bounded handle growth in this phase.
+and adapter layers have bounded handle growth in this phase. Both tables now
+also reuse released resource IDs before allocating fresh IDs, so long-running
+sessions keep resource identity stable and avoid unbounded ID growth.
 
 The runtime also has an initial Phase 2 execution path now. `layer36 run` keeps
 supporting the Phase 1 proof world, then falls back to the Phase 2 `cli` world

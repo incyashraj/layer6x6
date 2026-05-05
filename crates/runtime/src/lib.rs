@@ -458,11 +458,17 @@ impl LocalPhase2Adapter {
                 "resource table exceeds limit ({MAX_PHASE2_OPEN_RESOURCES} handles)"
             )));
         }
-        let id = state.next_id;
-        state.next_id = state
-            .next_id
-            .checked_add(1)
-            .ok_or_else(|| AdapterError::Io("resource id overflow".to_string()))?;
+        let id = match state.free_ids.pop() {
+            Some(id) => id,
+            None => {
+                let id = state.next_id;
+                state.next_id = state
+                    .next_id
+                    .checked_add(1)
+                    .ok_or_else(|| AdapterError::Io("resource id overflow".to_string()))?;
+                id
+            }
+        };
         state.resources.insert(id, resource);
         Ok(FileHandle::resource(id))
     }
@@ -470,7 +476,10 @@ impl LocalPhase2Adapter {
     fn close_resource(&self, handle: &FileHandle) -> std::result::Result<(), AdapterError> {
         let mut state = self.state.borrow_mut();
         match state.resources.remove(&handle.id) {
-            Some(_) => Ok(()),
+            Some(_) => {
+                state.free_ids.push(handle.id);
+                Ok(())
+            }
             None => Err(AdapterError::NotFound),
         }
     }
@@ -626,6 +635,7 @@ fn map_existing_broken_leaf_error(
 #[derive(Default)]
 struct LocalPhase2AdapterState {
     next_id: u64,
+    free_ids: Vec<u64>,
     resources: BTreeMap<u64, LocalResource>,
 }
 
@@ -1533,6 +1543,39 @@ mod tests {
         adapter
             .stdout()
             .expect("opening stream after close should succeed");
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn local_io_adapter_reuses_released_resource_id() {
+        let adapter = LocalPhase2Adapter::new(
+            Rc::new(RefCell::new(OutputMode::Sink)),
+            None,
+            None,
+            None,
+            Vec::new(),
+            1024,
+            PathBuf::from("."),
+        );
+
+        let first = adapter.stdout().expect("open first stream");
+        let second = adapter.stdout().expect("open second stream");
+        assert!(
+            second.id > first.id,
+            "resource ids should increase while allocating fresh handles"
+        );
+
+        adapter
+            .close_stream(&second)
+            .expect("close should release the handle id");
+
+        let reopened = adapter
+            .stdout()
+            .expect("opening after close should reuse released id");
+        assert_eq!(
+            reopened.id, second.id,
+            "adapter should reuse released ids before allocating new ones"
+        );
     }
 
     #[cfg(feature = "phase2-bindings")]

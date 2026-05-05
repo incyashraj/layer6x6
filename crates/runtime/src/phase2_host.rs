@@ -428,6 +428,7 @@ impl locale::format::Host for Phase2Host<'_> {
 #[derive(Default)]
 struct Phase2ResourceTable {
     next_id: u32,
+    free_ids: Vec<u32>,
     files: BTreeMap<u32, FileHandle>,
     inputs: BTreeMap<u32, FileHandle>,
     outputs: BTreeMap<u32, FileHandle>,
@@ -474,15 +475,21 @@ impl Phase2ResourceTable {
     }
 
     fn remove_file(&mut self, id: u32) {
-        self.files.remove(&id);
+        if self.files.remove(&id).is_some() {
+            self.release_id(id);
+        }
     }
 
     fn remove_input(&mut self, id: u32) {
-        self.inputs.remove(&id);
+        if self.inputs.remove(&id).is_some() {
+            self.release_id(id);
+        }
     }
 
     fn remove_output(&mut self, id: u32) {
-        self.outputs.remove(&id);
+        if self.outputs.remove(&id).is_some() {
+            self.release_id(id);
+        }
     }
 
     fn ensure_capacity(&self) -> wasmtime::Result<()> {
@@ -496,12 +503,21 @@ impl Phase2ResourceTable {
     }
 
     fn allocate_id(&mut self) -> wasmtime::Result<u32> {
-        let id = self.next_id;
-        self.next_id = self
-            .next_id
-            .checked_add(1)
-            .ok_or_else(|| wasmtime::Error::msg("Phase 2 resource table exhausted"))?;
-        Ok(id)
+        match self.free_ids.pop() {
+            Some(id) => Ok(id),
+            None => {
+                let id = self.next_id;
+                self.next_id = self
+                    .next_id
+                    .checked_add(1)
+                    .ok_or_else(|| wasmtime::Error::msg("Phase 2 resource table exhausted"))?;
+                Ok(id)
+            }
+        }
+    }
+
+    fn release_id(&mut self, id: u32) {
+        self.free_ids.push(id);
     }
 }
 
@@ -998,6 +1014,32 @@ mod tests {
             err.to_string()
                 .contains("Phase 2 host resource table exceeds limit"),
             "unexpected host resource-table overflow error: {err}"
+        );
+    }
+
+    #[test]
+    fn host_resource_table_reuses_released_ids() {
+        let adapter = RecordingAdapter::default();
+        let guard = UapiGuard::new(SessionPolicy::from_grants(["io.stdout".parse().unwrap()]));
+        let mut host = Phase2Host::new(guard, Box::new(adapter));
+
+        let first = io::stdio::Host::stdout(&mut host).expect("first stdout stream");
+        let second = io::stdio::Host::stdout(&mut host).expect("second stdout stream");
+        let second_id = second.rep();
+        assert!(
+            second_id > first.rep(),
+            "resource ids should increase while allocating fresh handles"
+        );
+
+        io::streams::HostOutputStream::drop(&mut host, second)
+            .expect("dropping stream should release host resource id");
+
+        let reopened =
+            io::stdio::Host::stdout(&mut host).expect("stream after drop should allocate");
+        assert_eq!(
+            reopened.rep(),
+            second_id,
+            "host resource table should reuse released ids before allocating new ones"
         );
     }
 
