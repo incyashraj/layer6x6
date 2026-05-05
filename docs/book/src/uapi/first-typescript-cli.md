@@ -75,6 +75,8 @@ If you provide TypeScript fixture env vars, provide all three (`clock`, `cat`,
 and `curl`) so the runtime lane runs as one complete set.
 When all three are present, the script also runs the component import-purity
 check before runtime assertions.
+You can force stricter CI behavior with `LAYER36_LANGUAGE_VARIANTS_MODE`.
+Useful values are `optional` (default), `go`, `ts`, `any`, and `both`.
 
 ## 5. Where This Fits In Phase 2
 

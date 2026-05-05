@@ -2,6 +2,7 @@
 set -eu
 
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+MODE="${LAYER36_LANGUAGE_VARIANTS_MODE:-optional}"
 
 set_if_exists() {
   key="$1"
@@ -97,12 +98,49 @@ require_all_or_none "TypeScript" "$ts_count" 3 \
   LAYER36_TS_CAT_WASM \
   LAYER36_TS_CURL_WASM
 
-if [ "$go_count" -eq 0 ] && [ "$ts_count" -eq 0 ]; then
+case "$MODE" in
+  optional|any|both|go|ts)
+    ;;
+  *)
+    echo "Phase 2 language-variant setup error: unknown LAYER36_LANGUAGE_VARIANTS_MODE='$MODE'." >&2
+    echo "Allowed values: optional, any, both, go, ts" >&2
+    exit 1
+    ;;
+esac
+
+case "$MODE" in
+  any)
+    if [ "$go_count" -eq 0 ] && [ "$ts_count" -eq 0 ]; then
+      echo "Phase 2 language-variant setup error: mode '$MODE' requires at least one complete language fixture set." >&2
+      exit 1
+    fi
+    ;;
+  both)
+    if [ "$go_count" -ne 3 ] || [ "$ts_count" -ne 3 ]; then
+      echo "Phase 2 language-variant setup error: mode '$MODE' requires complete Go and TypeScript fixture sets." >&2
+      exit 1
+    fi
+    ;;
+  go)
+    if [ "$go_count" -ne 3 ]; then
+      echo "Phase 2 language-variant setup error: mode '$MODE' requires a complete Go fixture set." >&2
+      exit 1
+    fi
+    ;;
+  ts)
+    if [ "$ts_count" -ne 3 ]; then
+      echo "Phase 2 language-variant setup error: mode '$MODE' requires a complete TypeScript fixture set." >&2
+      exit 1
+    fi
+    ;;
+esac
+
+if [ "$MODE" = "optional" ] && [ "$go_count" -eq 0 ] && [ "$ts_count" -eq 0 ]; then
   echo "Skipping Phase 2 language-variant runtime tests (no LAYER36_GO_* or LAYER36_TS_* vars set, and no test/integration/language-variants/*.wasm fixtures found)."
   exit 0
 fi
 
-echo "Running Phase 2 language-variant runtime tests"
+echo "Running Phase 2 language-variant runtime tests (mode: $MODE)"
 cd "$ROOT"
 
 if [ "$go_count" -eq 3 ]; then

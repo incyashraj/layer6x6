@@ -12,6 +12,11 @@ on:
         required: false
         type: boolean
         default: false
+      language_variants_mode:
+        description: Language-variant fixture mode (optional, any, both, go, ts)
+        required: false
+        type: string
+        default: optional
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -275,6 +280,8 @@ jobs:
         run: scripts/test-phase1.sh
       - name: Run Phase 2 language-variant runtime tests
         shell: bash
+        env:
+          LAYER36_LANGUAGE_VARIANTS_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.language_variants_mode || 'optional' }}
         run: scripts/test-phase2-language-variants.sh
 
   # ──────────────────────────────────────────────

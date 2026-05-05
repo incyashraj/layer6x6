@@ -2,6 +2,12 @@ name: Self-hosted CI
 
 on:
   workflow_dispatch:
+    inputs:
+      language_variants_mode:
+        description: Language-variant fixture mode (optional, any, both, go, ts)
+        required: false
+        type: string
+        default: optional
 
 concurrency:
   group: self-hosted-ci-${{ github.ref }}
@@ -85,6 +91,8 @@ jobs:
         run: cargo test --workspace --all-features
 
       - name: Test Phase 2 language variants
+        env:
+          LAYER36_LANGUAGE_VARIANTS_MODE: ${{ inputs.language_variants_mode }}
         run: scripts/test-phase2-language-variants.sh
 
       - name: Package Rust SDK
