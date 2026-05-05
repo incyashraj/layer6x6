@@ -152,12 +152,19 @@ fn is_reserved_windows_segment(segment: &str) -> bool {
         return false;
     }
 
-    match normalized.to_ascii_uppercase().as_str() {
+    let upper = normalized.to_ascii_uppercase();
+    if !upper.is_ascii() {
+        return false;
+    }
+
+    match upper.as_str() {
         "CON" | "PRN" | "AUX" | "NUL" => true,
-        name if name.len() == 4 => {
-            let (prefix, suffix) = name.split_at(3);
-            (prefix == "COM" || prefix == "LPT") && matches!(suffix.as_bytes()[0], b'1'..=b'9')
-        }
+        name if name.len() == 4 => match name.as_bytes() {
+            [b'C', b'O', b'M', digit] | [b'L', b'P', b'T', digit] => {
+                matches!(digit, b'1'..=b'9')
+            }
+            _ => false,
+        },
         _ => false,
     }
 }
@@ -275,6 +282,13 @@ mod tests {
             PathError::AmbiguousWindowsSuffix
         );
         assert!(LogicalPath::parse("logs/report.v1").is_ok());
+    }
+
+    #[test]
+    fn parse_does_not_panic_on_non_ascii_four_byte_segments() {
+        let input = String::from_utf8(vec![b'2', b'-', 0xCC, 0x8B]).expect("valid utf8");
+        let result = LogicalPath::parse(&input);
+        assert!(result.is_ok(), "unexpected parse result: {result:?}");
     }
 
     #[test]
