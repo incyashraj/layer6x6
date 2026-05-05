@@ -231,6 +231,9 @@ sources with CI shape checks. The CLI test harness now also has optional
 fixture assertions for Go and TypeScript variants behind `LAYER36_GO_*` and
 `LAYER36_TS_*` WASM env vars. TinyGo/jco component builds and CI fixture wiring
 are still pending.
+We now also have three language walkthroughs in the docs: Rust, Go, and
+TypeScript, so contributors can onboard per language without guessing the
+current phase boundaries.
 
 If Phase 2 works, those apps should produce the same output on Linux, macOS, and
 Windows while running through the same Layer36 runtime model.

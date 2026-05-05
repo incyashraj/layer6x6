@@ -19,7 +19,9 @@
 - [Rust SDK](uapi/rust-sdk.md)
 - [First Rust CLI](uapi/first-rust-cli.md)
 - [Go SDK](uapi/go-sdk.md)
+- [First Go CLI](uapi/first-go-cli.md)
 - [TypeScript SDK](uapi/typescript-sdk.md)
+- [First TypeScript CLI](uapi/first-typescript-cli.md)
 
 # Developer Guide
 

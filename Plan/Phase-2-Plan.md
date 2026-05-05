@@ -1796,7 +1796,7 @@ Additional ADRs as decisions surface. Rule of thumb: if you have to ask "should 
 ### Documentation
 - [x] WIT style guide published.
 - [x] UAPI reference published.
-- [ ] Three tutorials published (one per language).
+- [x] Three tutorials published (one per language).
 - [x] Migration note from Phase 1 published.
 - [ ] Threat model v0.2 published.
 
@@ -2231,6 +2231,8 @@ formal exit gates.
 | P2-DEV-03 | Structured manifest explanation | 2026-05-04 | Added `layer36 manifest explain --format json` with app identity and per-capability module/action/resource/default-grant/launch-grant fields for CI, editor, and SDK tooling. |
 | P2-DEV-04 | Structured manifest checks and capability table | 2026-05-04 | Added `--format json` to `layer36 manifest check` and `layer36 manifest capabilities`, so all manifest inspection commands now have script-friendly output. |
 | P2-DOC-03A | First Rust UAPI walkthrough | 2026-05-04 | Added `docs/book/src/uapi/first-rust-cli.md`, a repo-local tutorial for building the Rust cat sample, generating and explaining a manifest, running with `--auto-grant`, and observing the missing-grant denial path. |
+| P2-DOC-03B | First Go UAPI walkthrough | 2026-05-05 | Added `docs/book/src/uapi/first-go-cli.md`, a practical Go tutorial for current Phase 2 status: tool checks, sample entry points, SDK shape verification, and optional runtime variant test hook usage. |
+| P2-DOC-03C | First TypeScript UAPI walkthrough | 2026-05-05 | Added `docs/book/src/uapi/first-typescript-cli.md`, a practical TypeScript tutorial for current Phase 2 status: tool checks, sample entry points, SDK shape verification, and optional runtime variant test hook usage. |
 | P2-DOC-04 | Phase 1 to Phase 2 migration note | 2026-05-04 | Added `docs/book/src/phase2/migrating-from-phase1.md`, explaining how the Phase 1 `print`/`exit` proof interface maps to Phase 2 UAPI stdout, `Guest::run` return codes, manifests, and session grants. |
 | P2-BIND-01A | Rust SDK crate skeleton | 2026-05-04 | Added `crates/bindings-rust` as package `layer36`, with first wrappers over generated guest bindings and the Rust sample apps migrated to the SDK facade. |
 | P2-BIND-01B | Rust SDK helper layer and guide | 2026-05-04 | Added app-facing helpers for args, stream text output, file read/write, HTTP text, time, and locale; documented them in `docs/book/src/uapi/rust-sdk.md`; verified samples still import only Layer36 UAPI. |
