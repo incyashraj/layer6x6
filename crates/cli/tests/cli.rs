@@ -714,6 +714,72 @@ fn configured_layer36_clock_component_matches_deterministic_fixture_snapshot() {
 }
 
 #[test]
+fn configured_layer36_clock_component_applies_positive_timezone_offset() {
+    let Some(path) = configured_layer36_clock_component() else {
+        return;
+    };
+
+    let output = layer36()
+        .args([
+            "run",
+            "--test-time",
+            "1234567890",
+            "--test-locale",
+            "en-US",
+            "--test-timezone",
+            "UTC+05:30",
+        ])
+        .arg(path)
+        .output()
+        .expect("run layer36-clock with positive timezone offset");
+
+    assert!(
+        output.status.success(),
+        "layer36-clock timezone offset run failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("timezone=UTC+05:30"));
+    assert!(stdout.contains("date=1970-01-15 12:26"));
+    assert!(output.stderr.is_empty());
+}
+
+#[test]
+fn configured_layer36_clock_component_applies_negative_timezone_offset() {
+    let Some(path) = configured_layer36_clock_component() else {
+        return;
+    };
+
+    let output = layer36()
+        .args([
+            "run",
+            "--test-time",
+            "0",
+            "--test-locale",
+            "en-US",
+            "--test-timezone",
+            "UTC-01:00",
+        ])
+        .arg(path)
+        .output()
+        .expect("run layer36-clock with negative timezone offset");
+
+    assert!(
+        output.status.success(),
+        "layer36-clock negative timezone offset run failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("timezone=UTC-01:00"));
+    assert!(stdout.contains("date=1969-12-31 23:00"));
+    assert!(output.stderr.is_empty());
+}
+
+#[test]
 fn configured_layer36_clock_component_runs_with_sample_manifest_auto_grant() {
     let Some(path) = configured_layer36_clock_component() else {
         return;
