@@ -106,11 +106,23 @@ echo "Running Phase 2 language-variant runtime tests"
 cd "$ROOT"
 
 if [ "$go_count" -eq 3 ]; then
+  echo "Checking Go language-variant component imports"
+  scripts/check-component-imports.sh \
+    "$LAYER36_GO_CLOCK_WASM" \
+    "$LAYER36_GO_CAT_WASM" \
+    "$LAYER36_GO_CURL_WASM"
+
   echo "Running Go language-variant runtime tests"
   cargo test -p layer36-cli --test cli configured_layer36_go_
 fi
 
 if [ "$ts_count" -eq 3 ]; then
+  echo "Checking TypeScript language-variant component imports"
+  scripts/check-component-imports.sh \
+    "$LAYER36_TS_CLOCK_WASM" \
+    "$LAYER36_TS_CAT_WASM" \
+    "$LAYER36_TS_CURL_WASM"
+
   echo "Running TypeScript language-variant runtime tests"
   cargo test -p layer36-cli --test cli configured_layer36_ts_
 fi

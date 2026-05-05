@@ -73,6 +73,8 @@ scripts/test-phase2-language-variants.sh
 If fixtures are not present, the script exits with a skip message and no error.
 If you provide TypeScript fixture env vars, provide all three (`clock`, `cat`,
 and `curl`) so the runtime lane runs as one complete set.
+When all three are present, the script also runs the component import-purity
+check before runtime assertions.
 
 ## 5. Where This Fits In Phase 2
 
