@@ -1090,6 +1090,31 @@ fn configured_layer36_curl_component_reports_protocol_error() {
 }
 
 #[test]
+fn configured_layer36_curl_component_reports_timeout() {
+    let Some(path) = configured_layer36_curl_component() else {
+        return;
+    };
+
+    let (addr, server) = spawn_stalling_http_fixture(Duration::from_millis(1500));
+    let url = format!("http://{addr}/stall");
+
+    let output = layer36()
+        .args(["run", "--grant", &format!("net.connect:{addr}")])
+        .arg(path)
+        .args(["--", &url])
+        .output()
+        .expect("run layer36-curl against stalling HTTP fixture");
+    server
+        .join()
+        .expect("stalling HTTP fixture thread completed");
+
+    assert_eq!(output.status.code(), Some(21));
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("layer36-curl: request timed out"));
+}
+
+#[test]
 fn configured_layer36_go_clock_component_matches_deterministic_fixture_snapshot() {
     let Some(path) = configured_go_component(
         "LAYER36_GO_CLOCK_WASM",
@@ -1900,6 +1925,42 @@ fn spawn_malformed_http_fixture(payload: &'static [u8]) -> (SocketAddr, thread::
         stream
             .write_all(payload)
             .expect("write malformed HTTP fixture response");
+    });
+    (addr, handle)
+}
+
+fn spawn_stalling_http_fixture(wait: Duration) -> (SocketAddr, thread::JoinHandle<()>) {
+    let listener = TcpListener::bind("127.0.0.1:0").expect("bind stalling HTTP fixture");
+    listener
+        .set_nonblocking(true)
+        .expect("set stalling HTTP fixture nonblocking");
+    let addr = listener
+        .local_addr()
+        .expect("read stalling HTTP fixture address");
+    let handle = thread::spawn(move || {
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let mut stream = loop {
+            match listener.accept() {
+                Ok((stream, _)) => break stream,
+                Err(err) if err.kind() == std::io::ErrorKind::WouldBlock => {
+                    assert!(
+                        Instant::now() < deadline,
+                        "timed out waiting for stalling HTTP fixture connection"
+                    );
+                    thread::sleep(Duration::from_millis(10));
+                }
+                Err(err) => panic!("accept stalling HTTP fixture connection: {err}"),
+            }
+        };
+        stream
+            .set_nonblocking(false)
+            .expect("set stalling HTTP fixture stream blocking");
+        let mut request = [0_u8; 1024];
+        let _ = stream
+            .read(&mut request)
+            .expect("read stalling HTTP fixture request");
+        thread::sleep(wait);
+        let _ = stream.flush();
     });
     (addr, handle)
 }
