@@ -115,10 +115,10 @@ jobs:
           LAYER36_JCO_NPX_PACKAGE: "@bytecodealliance/jco@1.14.0"
         run: scripts/build-phase2-language-variant-fixtures.sh
 
-      - name: Build Phase 2 Go variant smoke components
+      - name: Promote Phase 2 Go runtime fixtures when import-pure
         env:
-          LAYER36_GO_VARIANT_SMOKE_MODE: optional
-        run: scripts/build-phase2-go-variant-smoke.sh
+          LAYER36_GO_RUNTIME_FIXTURE_MODE: optional
+        run: scripts/promote-phase2-go-runtime-fixtures.sh
 
       - name: Test Phase 2 language variants
         env:

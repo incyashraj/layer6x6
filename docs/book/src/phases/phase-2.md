@@ -290,9 +290,14 @@ unresolved-host error checks, so restricted runners still prove key curl failure
 paths even when localhost fixture sockets are unavailable.
 Go curl fixture coverage now includes matching non-localhost denial and
 unresolved-host checks with stable stderr markers.
-Self-hosted CI now also runs a TinyGo WASI Preview 2 build-smoke lane for Go
-clock/cat/curl samples, including a component-shape check for `wasi:cli/run`.
-Layer36-runtime fixture proof for Go remains pending.
+Self-hosted CI now runs a TinyGo WASI Preview 2 build-smoke lane for Go
+clock/cat/curl samples and then tries to promote those outputs into
+`test/integration/language-variants/layer36_go_*.wasm`.
+Promotion only happens when import-purity checks pass (`layer36:*` imports
+only). If current TinyGo outputs still import host `wasi:*`, the promotion step
+prints a clear skip message and keeps Go runtime fixtures disabled.
+Layer36-runtime fixture proof for Go therefore remains pending, but it is now
+guarded by an explicit readiness gate.
 We now also have three language walkthroughs in the docs: Rust, Go, and
 TypeScript, so contributors can onboard per language without guessing the
 current phase boundaries.

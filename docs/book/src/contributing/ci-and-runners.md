@@ -40,15 +40,19 @@ targets.
 The benchmark regression step is warning-only by default in this manual
 workflow, and you can switch it to strict fail mode with the
 `benchmark_regression_mode` input when you want to enforce performance gating.
-It also now runs a TinyGo WASI Preview 2 build-smoke lane for Go clock/cat/curl
-samples through:
+It now runs a TinyGo WASI Preview 2 build-smoke lane for Go clock/cat/curl
+samples and then tries to promote those artifacts into Layer36 runtime fixtures
+through:
 
 ```bash
-scripts/build-phase2-go-variant-smoke.sh
+scripts/promote-phase2-go-runtime-fixtures.sh
 ```
 
-This lane checks TinyGo component build health and `wasi:cli/run` export shape.
-It is intentionally separate from the Layer36 runtime fixture gate.
+The promotion script still builds with TinyGo and checks `wasi:cli/run` export
+shape. It then runs import-purity checks. Only import-pure outputs are copied to
+`test/integration/language-variants/layer36_go_*.wasm` and picked up by runtime
+variant tests. When imports are still host `wasi:*`, the script keeps the Go
+runtime fixtures disabled and prints a clear skip message.
 
 The TypeScript curl variant now has extra runtime assertions that do not depend
 on localhost fixture sockets. Missing-grant and unresolved-host paths are
