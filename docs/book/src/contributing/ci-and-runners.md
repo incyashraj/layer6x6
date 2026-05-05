@@ -24,6 +24,8 @@ In hosted full CI, the Phase 2 TypeScript language-variant lane now runs in
 `ts` mode by default. The fixture build step can install jco through `npx`
 when needed, and the full-test matrix pins Node 22 for this lane, so TypeScript
 runtime fixtures stay active without manual runner tool preinstall.
+Self-hosted CI now uses the same pinned `npx` fallback for jco in its fixture
+build step.
 
 Dependency audit now runs through `scripts/check-dependencies.sh`. This keeps
 `licenses`, `bans`, and `sources` as hard failures, while known advisory-db

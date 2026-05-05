@@ -111,6 +111,8 @@ jobs:
       - name: Build Phase 2 language-variant fixtures
         env:
           LAYER36_LANGUAGE_VARIANTS_MODE: ${{ inputs.language_variants_mode }}
+          LAYER36_ALLOW_NPX_INSTALL: "1"
+          LAYER36_JCO_NPX_PACKAGE: "@bytecodealliance/jco@1.14.0"
         run: scripts/build-phase2-language-variant-fixtures.sh
 
       - name: Build Phase 2 Go variant smoke components
