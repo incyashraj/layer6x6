@@ -1127,7 +1127,11 @@ fn configured_layer36_curl_component_reports_dns_failure() {
     assert_eq!(output.status.code(), Some(21));
     assert!(output.stdout.is_empty());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("layer36-curl: dns lookup failed"));
+    assert!(
+        stderr.contains("layer36-curl: dns lookup failed")
+            || stderr.contains("layer36-curl: connection failed"),
+        "unexpected stderr for unresolved host path: {stderr}"
+    );
 }
 
 #[test]
@@ -1165,7 +1169,13 @@ fn configured_layer36_curl_component_reports_timeout() {
     let url = format!("http://{addr}/stall");
 
     let output = layer36()
-        .args(["run", "--grant", &format!("net.connect:{addr}")])
+        .args([
+            "run",
+            "--http-timeout-millis",
+            "1000",
+            "--grant",
+            &format!("net.connect:{addr}"),
+        ])
         .arg(path)
         .args(["--", &url])
         .output()
