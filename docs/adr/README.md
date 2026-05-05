@@ -28,6 +28,7 @@ merged into `main`, and then **never modified** — only superseded by a new ADR
 | [0009](0009-sandbox-link-semantics.md) | Sandbox link-semantics guardrails | Accepted | 2 |
 | [0010](0010-locale-timezone-discovery-fallbacks.md) | Locale and timezone discovery fallbacks | Accepted | 2 |
 | [0011](0011-phase2-benchmark-regression-policy.md) | Phase 2 benchmark regression policy | Accepted | 2 |
+| [0012](0012-adapter-crate-split-per-os.md) | Adapter crate split per host OS | Accepted | 2 |
 
 ## Process
 

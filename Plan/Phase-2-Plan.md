@@ -1802,7 +1802,7 @@ Additional ADRs as decisions surface. Rule of thumb: if you have to ask "should 
 - [x] Threat model v0.2 published.
 
 ### ADRs
-- [ ] ADR-0006 through ADR-0012 merged (7 ADRs).
+- [x] ADR-0006 through ADR-0012 merged (7 ADRs).
 
 ### External validation
 - [ ] One external developer has built and run a UAPI app via tutorial in < 30 min.
@@ -2113,7 +2113,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | 12 | Developer who knows Rust but not WASM can write a CLI in < 30 min using docs | Started: first Rust walkthrough exists using the current repo-local SDK, component build, manifest init/explain, granted run, and denial path; timed external run remains |
 | 13 | UAPI reference docs auto-generated from WIT and published on docs site | Done for the current draft: generated mdBook page exists under `reference/uapi`, its capability tables come from the manifest crate, it includes function-level behavior notes, and hosted/self-hosted CI checks it is current |
 | 14 | WIT Style Guide merged into `docs/book/` | Done: `docs/book/src/wit-style.md` is linked from mdBook and `CONTRIBUTING.md` |
-| 15 | ADRs 0006 through at least 0012 merged | Started: ADR-0006, ADR-0007, ADR-0008, ADR-0009, ADR-0010, and ADR-0011 are accepted; ADR-0012 remains |
+| 15 | ADRs 0006 through at least 0012 merged | Done: ADR-0006 through ADR-0012 are accepted |
 
 ### Remaining Work Snapshot
 
@@ -2123,7 +2123,7 @@ formal exit gates.
 | Area | Current read | What remains |
 |------|--------------|--------------|
 | Core Phase 2 engineering | About 89-90% through the first useful CLI slice | WIT freeze review, more shared adapter slices, cross-host identity runs, and network hardening. |
-| Formal Phase 2 exit | About 52-57% complete | Language runtime proofs, seven-day CI evidence, fuzzing, full benchmark gate, ADR-0012, and external validation. |
+| Formal Phase 2 exit | About 54-59% complete | Language runtime proofs, seven-day CI evidence, fuzzing, full benchmark gate, and external validation. |
 | UAPI and UCap | Strong shape, not frozen | Review default grants, path normalization, network policy details, and freeze rules before `0.1.0`. |
 | SDKs | Rust is usable; Go scaffold is ready; TypeScript scaffold plus auto-build lane and passing local clock/cat fixtures are ready | Publish-ready Rust after freeze, TinyGo runtime proof, and stable TS curl fixture evidence on restricted runners. |
 
@@ -2297,6 +2297,8 @@ formal exit gates.
 | P2-ADR-02 | Sandbox link-semantics policy ADR | 2026-05-05 | Accepted ADR-0009 to define cross-host sandbox traversal link semantics: deny symbolic-link traversal on Unix-like hosts and deny reparse-point traversal on Windows, with final-open no-follow behavior retained on both host families. |
 | P2-ADR-03 | Locale/timezone fallback discovery ADR | 2026-05-05 | Accepted ADR-0010 to define strict locale/timezone discovery fallback order for Phase 2 (`LC_ALL`/`LANG`/`LC_TIME`/`LC_MESSAGES`/`LANGUAGE`/`AppleLocale`, and `TZ` plus Unix `/etc/localtime` zoneinfo-link inference and timezone file fallbacks), while preserving normalization-driven deterministic behavior. |
 | P2-ADR-04 | Phase 2 benchmark regression policy ADR | 2026-05-05 | Accepted ADR-0011 to define a two-mode benchmark policy: warning-only checks in hosted full CI and strict fail-mode checks in self-hosted CI, both anchored to the dedicated Phase 2 baseline file and script-based baseline refresh path. |
+| P2-ADR-05 | Adapter crate split decision ADR | 2026-05-05 | Accepted ADR-0012 to split host adapter implementation into per-OS crates (`adapter-linux`, `adapter-macos`, `adapter-windows`) while keeping shared deterministic behavior in `adapter-common` and using runtime-local wiring as a migration step. |
+| P2-ADPT-SPLIT-01 | Per-OS adapter crate scaffolding | 2026-05-05 | Added workspace crates `adapter-linux`, `adapter-macos`, and `adapter-windows` as first ownership boundaries for host-specific adapter logic. Each crate now exposes a minimal locale-discovery surface backed by `adapter-common`, giving us concrete split structure for follow-on runtime wiring. |
 | P2-CI-06 | Self-hosted benchmark gate default mode adjustment | 2026-05-05 | Updated `Self-hosted CI` manual workflow to default benchmark regression checks to `warn`, with `fail` still available through the workflow input. This keeps routine local full-gate runs stable under common workstation noise while preserving strict mode when needed. |
 | P2-CI-07 | Hosted full CI TypeScript fixture default gate | 2026-05-05 | Updated hosted full-test CI to run language-variant fixtures in `ts` mode by default, enabled `npx` jco installation in the fixture build step, and pinned this lane to Node 22 plus a pinned jco package version. This keeps the TypeScript runtime fixture lane active by default in full hosted CI while reducing cross-runner npm drift and preserving manual mode override inputs. |
 
@@ -2307,7 +2309,7 @@ formal exit gates.
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
 | P2-APP-01C | Add cross-host fixture assertions and language sample variants | 2026-05-04 | Rust sample coverage includes deterministic `layer36-clock` snapshot assertions with fixed time/locale/timezone. Go/TypeScript now have clock/cat/curl sample sources, CI shape contracts, runtime fixture assertions in the CLI harness, fixture completeness checks, import-purity preflight checks, configurable strictness modes, and an automated pre-test fixture build step. Hosted full CI now defaults this lane to `ts` mode with `npx` jco install enabled and pinned (Node 22 plus pinned jco package), TypeScript clock and cat fixture runtime tests pass locally after WIT-variant shape alignment, and restricted-runner localhost fixture failures now skip cleanly for both bind-denied and accept-timeout paths. Remaining work: full TinyGo build lane and stable TypeScript curl evidence on restricted runners. |
-| P2-ADPT-COMMON-02 | Expand shared adapter-common beyond HTTP framing | 2026-05-04 | Path normalization, prefix hardening, Windows reserved-name hardening, trailing-dot and trailing-space segment hardening, path-length guard hardening, sandbox-root resolution, sandbox-rooted absolute logical-path handling, symlink escape checks, symlink-segment traversal denial for existing and create paths, Windows reparse-point traversal parity hardening, Unix and Windows no-follow final-symlink open hardening, root-like destructive operation guards, first shared clock and time-overflow helpers, first shared locale helpers, deterministic baseline locale formatting, UTC-offset aware date formatting, locale-tag canonicalization hardening, locale-subtag shape hardening, timezone-shape normalization hardening, UTC-offset timezone normalization, extended locale env fallback (`LC_TIME`/`LC_MESSAGES`/`LANGUAGE`/`AppleLocale`) plus Unix `/etc/localtime` and timezone file fallbacks (`/etc/timezone`, `/etc/TIMEZONE`, `/var/db/timezone/timezone`), shared strict HTTP response parsing, stricter shared host/IPv4 validation, lowercase host normalization, shared response read-loop limits, response integrity checks, a shared request-body size guard, strict buffered Content-Length matching, and a shared request-target size guard now exist. Remaining work is focused on fuller per-OS adapter split and richer locale/timezone fidelity (ICU4X-grade formatting and broader host-native discovery) before this exit box can be checked. |
+| P2-ADPT-COMMON-02 | Expand shared adapter-common beyond HTTP framing | 2026-05-04 | Path normalization, prefix hardening, Windows reserved-name hardening, trailing-dot and trailing-space segment hardening, path-length guard hardening, sandbox-root resolution, sandbox-rooted absolute logical-path handling, symlink escape checks, symlink-segment traversal denial for existing and create paths, Windows reparse-point traversal parity hardening, Unix and Windows no-follow final-symlink open hardening, root-like destructive operation guards, first shared clock and time-overflow helpers, first shared locale helpers, deterministic baseline locale formatting, UTC-offset aware date formatting, locale-tag canonicalization hardening, locale-subtag shape hardening, timezone-shape normalization hardening, UTC-offset timezone normalization, extended locale env fallback (`LC_TIME`/`LC_MESSAGES`/`LANGUAGE`/`AppleLocale`) plus Unix `/etc/localtime` and timezone file fallbacks (`/etc/timezone`, `/etc/TIMEZONE`, `/var/db/timezone/timezone`), shared strict HTTP response parsing, stricter shared host/IPv4 validation, lowercase host normalization, shared response read-loop limits, response integrity checks, a shared request-body size guard, strict buffered Content-Length matching, and a shared request-target size guard now exist. Per-OS adapter crate scaffolding now exists (`adapter-linux`, `adapter-macos`, `adapter-windows`); remaining work is wiring runtime host logic into those crates and adding richer host-native locale/timezone fidelity (ICU4X-grade formatting and broader discovery). |
 | P2-BIND-01E | Rust SDK crates.io publication | 2026-05-04 | Package shape, API docs, and outside-workspace smoke are ready locally; actual crates.io publication remains blocked until UAPI v0.1 is intentionally frozen. |
 
 ---
@@ -2322,8 +2324,9 @@ formal exit gates.
 | ADR-0009 | Sandbox link-semantics guardrails | Accepted | 2026-05-05 |
 | ADR-0010 | Locale and timezone discovery fallbacks (Phase 2) | Accepted | 2026-05-05 |
 | ADR-0011 | Phase 2 benchmark regression policy | Accepted | 2026-05-05 |
+| ADR-0012 | Adapter crate split per host OS | Accepted | 2026-05-05 |
 
-_ADR-0012 to be determined during Phase 2 work._
+_Current ADR batch for this phase is complete._
 
 ---
 
