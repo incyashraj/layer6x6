@@ -196,6 +196,9 @@ fallback order is captured in
 Date formatting now also applies normalized UTC offsets to the rendered time
 value, so `UTC+05:30` and `UTC-01:00` shift timestamps instead of only changing
 the timezone label text.
+As part of the per-OS adapter split, runtime locale and clock construction now
+route through dedicated Linux, macOS, and Windows adapter crates, with fallback
+logic kept for unsupported hosts.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2

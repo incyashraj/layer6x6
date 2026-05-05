@@ -4,7 +4,7 @@
 //! from `layer36-adapter-common`, while Windows-specific host wiring will land
 //! here.
 
-use layer36_adapter_common::locale::HostLocale;
+use layer36_adapter_common::{locale::HostLocale, time::HostClock};
 
 /// Host family handled by this adapter crate.
 pub const HOST_FAMILY: &str = "windows";
@@ -15,6 +15,11 @@ pub fn discover_locale(
     timezone_override: Option<&str>,
 ) -> HostLocale {
     HostLocale::from_env_with_overrides(locale_override, timezone_override)
+}
+
+/// Build the Windows host clock surface.
+pub fn discover_clock(test_time_millis: Option<u64>) -> HostClock {
+    HostClock::new(test_time_millis)
 }
 
 #[cfg(test)]
@@ -31,5 +36,11 @@ mod tests {
         let locale = discover_locale(Some("en-US"), Some("UTC"));
         assert_eq!(locale.current().bcp47, "en-US");
         assert_eq!(locale.timezone(), "UTC");
+    }
+
+    #[test]
+    fn clock_discovery_applies_fixed_time_override() {
+        let clock = discover_clock(Some(1_777));
+        assert_eq!(clock.now_millis().expect("fixed clock"), 1_777);
     }
 }

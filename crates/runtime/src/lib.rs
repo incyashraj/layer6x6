@@ -451,7 +451,7 @@ impl LocalPhase2Adapter {
         Self {
             output,
             state: RefCell::new(LocalPhase2AdapterState::default()),
-            clock: HostClock::new(test_time_millis),
+            clock: discover_host_clock(test_time_millis),
             locale: discover_host_locale(test_locale.as_deref(), test_timezone.as_deref()),
             app_args,
             max_http_response_bytes,
@@ -554,6 +554,19 @@ fn discover_host_locale(
     #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
     {
         HostLocale::from_env_with_overrides(locale_override, timezone_override)
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn discover_host_clock(test_time_millis: Option<u64>) -> HostClock {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::discover_clock(test_time_millis)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        HostClock::new(test_time_millis)
     }
 }
 
