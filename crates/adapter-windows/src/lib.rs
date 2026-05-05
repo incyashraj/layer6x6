@@ -8,6 +8,7 @@ use layer36_adapter_common::{
     locale::{DateStyle, HostLocale, LocaleId, NumberStyle},
     time::HostClock,
 };
+use std::fs::OpenOptions;
 
 /// Host family handled by this adapter crate.
 pub const HOST_FAMILY: &str = "windows";
@@ -50,6 +51,23 @@ pub fn format_number(value: f64, style: NumberStyle, locale: &LocaleId) -> Strin
     HostLocale::format_number(value, style, locale)
 }
 
+/// Apply Windows no-follow-final-symlink open behavior.
+pub fn apply_no_follow_final_symlink(opts: &mut OpenOptions) {
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::OpenOptionsExt;
+
+        // Ask CreateFile to open the reparse point itself so final symlinks are not followed.
+        const FILE_FLAG_OPEN_REPARSE_POINT: u32 = 0x0020_0000;
+        opts.custom_flags(FILE_FLAG_OPEN_REPARSE_POINT);
+    }
+
+    #[cfg(not(windows))]
+    {
+        let _ = opts;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -89,5 +107,11 @@ mod tests {
         assert_eq!(tz, "UTC");
         assert_eq!(date, "1970-01-01 00:00");
         assert_eq!(number, "42.5");
+    }
+
+    #[test]
+    fn no_follow_hook_accepts_open_options() {
+        let mut opts = OpenOptions::new();
+        apply_no_follow_final_symlink(&mut opts);
     }
 }

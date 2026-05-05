@@ -7,6 +7,7 @@ use layer36_adapter_common::{
     locale::{DateStyle, HostLocale, LocaleId, NumberStyle},
     time::HostClock,
 };
+use std::fs::OpenOptions;
 
 /// Host family handled by this adapter crate.
 pub const HOST_FAMILY: &str = "linux";
@@ -49,6 +50,16 @@ pub fn format_number(value: f64, style: NumberStyle, locale: &LocaleId) -> Strin
     HostLocale::format_number(value, style, locale)
 }
 
+/// Apply Linux no-follow-final-symlink open behavior.
+pub fn apply_no_follow_final_symlink(opts: &mut OpenOptions) {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+
+        opts.custom_flags(libc::O_NOFOLLOW);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -88,5 +99,11 @@ mod tests {
         assert_eq!(tz, "UTC");
         assert_eq!(date, "1970-01-01 00:00");
         assert_eq!(number, "42.5");
+    }
+
+    #[test]
+    fn no_follow_hook_accepts_open_options() {
+        let mut opts = OpenOptions::new();
+        apply_no_follow_final_symlink(&mut opts);
     }
 }

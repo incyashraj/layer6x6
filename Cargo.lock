@@ -932,6 +932,7 @@ name = "layer36-adapter-linux"
 version = "0.1.0-dev"
 dependencies = [
  "layer36-adapter-common",
+ "libc",
 ]
 
 [[package]]
@@ -939,6 +940,7 @@ name = "layer36-adapter-macos"
 version = "0.1.0-dev"
 dependencies = [
  "layer36-adapter-common",
+ "libc",
 ]
 
 [[package]]

@@ -951,7 +951,7 @@ impl FsAdapter for LocalPhase2Adapter {
         };
         let path = self.resolve_fs_path(path, missing_leaf)?;
         let mut opts = std::fs::OpenOptions::new();
-        apply_no_follow_final_symlink(&mut opts);
+        apply_no_follow_final_symlink_on_host(&mut opts);
         match mode {
             OpenMode::Read => {
                 opts.read(true);
@@ -1071,24 +1071,34 @@ impl FsAdapter for LocalPhase2Adapter {
     }
 }
 
-#[cfg(all(feature = "phase2-bindings", unix))]
-fn apply_no_follow_final_symlink(opts: &mut std::fs::OpenOptions) {
-    use std::os::unix::fs::OpenOptionsExt;
+#[cfg(feature = "phase2-bindings")]
+fn apply_no_follow_final_symlink_on_host(opts: &mut std::fs::OpenOptions) {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::apply_no_follow_final_symlink(opts);
+    }
 
-    opts.custom_flags(libc::O_NOFOLLOW);
+    #[cfg(all(
+        not(target_os = "linux"),
+        not(target_os = "macos"),
+        not(target_os = "windows"),
+        unix
+    ))]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        opts.custom_flags(libc::O_NOFOLLOW);
+    }
+
+    #[cfg(all(
+        not(target_os = "linux"),
+        not(target_os = "macos"),
+        not(target_os = "windows"),
+        not(unix)
+    ))]
+    {
+        let _ = opts;
+    }
 }
-
-#[cfg(all(feature = "phase2-bindings", windows))]
-fn apply_no_follow_final_symlink(opts: &mut std::fs::OpenOptions) {
-    use std::os::windows::fs::OpenOptionsExt;
-
-    // Ask CreateFile to open the reparse point itself so final symlinks are not followed.
-    const FILE_FLAG_OPEN_REPARSE_POINT: u32 = 0x0020_0000;
-    opts.custom_flags(FILE_FLAG_OPEN_REPARSE_POINT);
-}
-
-#[cfg(all(feature = "phase2-bindings", not(any(unix, windows))))]
-fn apply_no_follow_final_symlink(_opts: &mut std::fs::OpenOptions) {}
 
 #[cfg(feature = "phase2-bindings")]
 impl NetAdapter for LocalPhase2Adapter {

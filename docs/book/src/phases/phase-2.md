@@ -105,6 +105,8 @@ parent for new files, before host I/O. If a symlink would take the path outside
 the sandbox root, the adapter denies the call. On Unix and Windows hosts, file
 open also uses a no-follow final-symlink flag, so the final filename cannot be
 a symlink at open time.
+That no-follow open behavior now routes through the per-OS adapter crate path
+instead of runtime-local cfg blocks.
 Runtime path resolution now also denies symlinked path segments inside the
 sandbox traversal path itself, for both existing-target and create-path
 operations, so this phase has less directory traversal race exposure.
