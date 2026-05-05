@@ -38,3 +38,8 @@ ehthumbs.db
 # Build scripts output
 /dist/
 /scripts/out/
+
+# Fuzz artifacts
+/fuzz/Cargo.lock
+/fuzz/corpus/
+/fuzz/artifacts/

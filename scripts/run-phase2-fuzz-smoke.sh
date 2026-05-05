@@ -1,10 +1,13 @@
 #!/usr/bin/env sh
 set -eu
 
+# Ensure locally installed cargo subcommands are reachable.
+export PATH="$HOME/.cargo/bin:$PATH"
+
 if [ "${LAYER36_FUZZ_SMOKE_DRY_RUN:-0}" = "1" ]; then
-  echo "cargo fuzz run manifest_parse -- -max_total_time=30  # with nightly-pinned CARGO/RUSTC"
-  echo "cargo fuzz run logical_path_parse -- -max_total_time=30  # with nightly-pinned CARGO/RUSTC"
-  echo "cargo fuzz run policy_match -- -max_total_time=30  # with nightly-pinned CARGO/RUSTC"
+  echo "cargo-fuzz run manifest_parse -- -max_total_time=30  # nightly-pinned cargo/rustc"
+  echo "cargo-fuzz run logical_path_parse -- -max_total_time=30  # nightly-pinned cargo/rustc"
+  echo "cargo-fuzz run policy_match -- -max_total_time=30  # nightly-pinned cargo/rustc"
   exit 0
 fi
 
@@ -33,8 +36,7 @@ nightly_bindir="$(dirname "$nightly_cargo")"
 export PATH="$nightly_bindir:$PATH"
 export CARGO="$nightly_cargo"
 export RUSTC="$nightly_rustc"
-export RUSTUP_TOOLCHAIN="nightly"
 
-cargo fuzz run manifest_parse -- -max_total_time=30
-cargo fuzz run logical_path_parse -- -max_total_time=30
-cargo fuzz run policy_match -- -max_total_time=30
+cargo-fuzz run manifest_parse -- -max_total_time=30
+cargo-fuzz run logical_path_parse -- -max_total_time=30
+cargo-fuzz run policy_match -- -max_total_time=30
