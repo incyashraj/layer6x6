@@ -14,7 +14,8 @@ func main() {
 
 	body, err := l36net.GetText(args[0])
 	if err != nil {
-		_ = l36io.Eprintln(err.Error())
+		_ = l36io.Eprintln("layer36-go-curl: " + err.Error())
+		_ = l36io.Eprintln("layer36-go-curl: fetch failed")
 		return
 	}
 

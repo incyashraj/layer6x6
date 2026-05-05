@@ -274,6 +274,8 @@ the TypeScript cat fixture runtime path stable in local tests.
 TypeScript curl fixture coverage now also includes non-localhost denial and
 unresolved-host error checks, so restricted runners still prove key curl failure
 paths even when localhost fixture sockets are unavailable.
+Go curl fixture coverage now includes matching non-localhost denial and
+unresolved-host checks with stable stderr markers.
 Self-hosted CI now also runs a TinyGo WASI Preview 2 build-smoke lane for Go
 clock/cat/curl samples, including a component-shape check for `wasi:cli/run`.
 Layer36-runtime fixture proof for Go remains pending.

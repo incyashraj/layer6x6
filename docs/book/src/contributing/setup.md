@@ -21,7 +21,8 @@ Run this after setup:
 layer36 doctor
 ```
 
-It reports the core Rust tools first, then the optional language-binding tools.
+It reports core Rust tools first, then Phase 2 language tools, including
+`wasm-tools`, TinyGo, Go, Node, npm, and jco.
 Missing Go or TypeScript tools are fine until you work on those binding tracks.
 
 The first Go and TypeScript SDK scaffolds live in `packages/sdk-go` and

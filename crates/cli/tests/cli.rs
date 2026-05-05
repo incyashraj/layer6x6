@@ -54,6 +54,7 @@ fn doctor_lists_phase_1_tooling() {
     assert!(stdout.contains("wasm32-wasip1"));
     assert!(stdout.contains("wasm32-wasip2"));
     assert!(stdout.contains("Phase 2 language tools"));
+    assert!(stdout.contains("wasm-tools"));
     assert!(stdout.contains("tinygo"));
     assert!(stdout.contains("go"));
     assert!(stdout.contains("node"));
@@ -1337,6 +1338,63 @@ fn configured_layer36_go_curl_component_fetches_granted_http_url() {
     );
     assert_eq!(output.stdout, body);
     assert!(output.stderr.is_empty());
+}
+
+#[test]
+fn configured_layer36_go_curl_component_denies_missing_grant() {
+    let Some(path) = configured_go_component(
+        "LAYER36_GO_CURL_WASM",
+        "layer36-go-curl component test",
+        "layer36_go_curl.wasm",
+    ) else {
+        return;
+    };
+
+    let output = layer36()
+        .arg("run")
+        .arg(path)
+        .args(["--", "http://example.com/"])
+        .output()
+        .expect("run layer36-go-curl component without grant");
+
+    let code = output.status.code();
+    assert!(
+        code == Some(0) || code == Some(21),
+        "unexpected status code for missing net grant: {code:?}"
+    );
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("layer36-go-curl: fetch failed"));
+}
+
+#[test]
+fn configured_layer36_go_curl_component_reports_unresolved_host() {
+    let Some(path) = configured_go_component(
+        "LAYER36_GO_CURL_WASM",
+        "layer36-go-curl component test",
+        "layer36_go_curl.wasm",
+    ) else {
+        return;
+    };
+
+    let host = "layer36-does-not-exist.invalid";
+    let url = format!("http://{host}/unreachable");
+
+    let output = layer36()
+        .args(["run", "--grant", &format!("net.connect:{host}:80")])
+        .arg(path)
+        .args(["--", &url])
+        .output()
+        .expect("run layer36-go-curl against unresolved host");
+
+    let code = output.status.code();
+    assert!(
+        code == Some(0) || code == Some(21),
+        "unexpected status code for unresolved-host path: {code:?}"
+    );
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("layer36-go-curl: fetch failed"));
 }
 
 #[test]

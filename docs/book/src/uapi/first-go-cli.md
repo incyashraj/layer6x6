@@ -93,6 +93,8 @@ tests were skipped. If you provide Go fixture env vars, provide all three
 (`clock`, `cat`, and `curl`) so the runtime lane runs as one complete set.
 When all three are present, the script also runs the component import-purity
 check before runtime assertions.
+The Go curl runtime assertions now include missing-grant and unresolved-host
+paths that do not require localhost fixture sockets.
 You can force stricter CI behavior with `LAYER36_LANGUAGE_VARIANTS_MODE`.
 Useful values are `optional` (default), `go`, `ts`, `any`, and `both`.
 
