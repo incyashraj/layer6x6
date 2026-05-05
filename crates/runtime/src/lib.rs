@@ -584,6 +584,63 @@ fn sleep_on_host(millis: u32) {
 }
 
 #[cfg(feature = "phase2-bindings")]
+fn host_current_locale(locale: &HostLocale) -> HostLocaleId {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::current_locale(locale)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        locale.current()
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn timezone_from_host_locale(locale: &HostLocale) -> String {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::timezone(locale)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        locale.timezone()
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn format_date_on_host(
+    millis: u64,
+    timezone: &str,
+    style: HostDateStyle,
+    locale: &HostLocaleId,
+) -> String {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::format_date(millis, timezone, style, locale)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        HostLocale::format_date(millis, timezone, style, locale)
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn format_number_on_host(value: f64, style: HostNumberStyle, locale: &HostLocaleId) -> String {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::format_number(value, style, locale)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        HostLocale::format_number(value, style, locale)
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
 fn logical_path_to_sandbox_relative(path: PathBuf) -> std::result::Result<PathBuf, AdapterError> {
     if path.is_absolute() {
         let trimmed = path
@@ -1220,11 +1277,11 @@ impl TimeAdapter for LocalPhase2Adapter {
 #[cfg(feature = "phase2-bindings")]
 impl LocaleAdapter for LocalPhase2Adapter {
     fn current(&self) -> std::result::Result<LocaleId, AdapterError> {
-        Ok(locale_from_host(self.locale.current()))
+        Ok(locale_from_host(host_current_locale(&self.locale)))
     }
 
     fn timezone(&self) -> std::result::Result<String, AdapterError> {
-        Ok(self.locale.timezone())
+        Ok(timezone_from_host_locale(&self.locale))
     }
 
     fn format_date(
@@ -1234,7 +1291,7 @@ impl LocaleAdapter for LocalPhase2Adapter {
         style: DateStyle,
         loc: &LocaleId,
     ) -> std::result::Result<String, AdapterError> {
-        Ok(HostLocale::format_date(
+        Ok(format_date_on_host(
             millis,
             tz,
             date_style_to_host(style),
@@ -1248,7 +1305,7 @@ impl LocaleAdapter for LocalPhase2Adapter {
         style: uapi_dispatch::NumberStyle,
         loc: &LocaleId,
     ) -> std::result::Result<String, AdapterError> {
-        Ok(HostLocale::format_number(
+        Ok(format_number_on_host(
             value,
             number_style_to_host(style),
             &locale_to_host(loc),
