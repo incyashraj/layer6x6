@@ -237,6 +237,8 @@ current phase boundaries.
 We also now have the first fuzz-harness set for manifest parsing, shared path
 normalization, and policy matching. Nightly multi-hour fuzz runs are still a
 remaining exit item.
+The first self-hosted fuzz smoke already paid off by finding and helping fix a
+real non-ASCII path-parsing panic in shared path handling.
 
 If Phase 2 works, those apps should produce the same output on Linux, macOS, and
 Windows while running through the same Layer36 runtime model.
