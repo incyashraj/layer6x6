@@ -386,6 +386,11 @@ unresolved-host checks with stable stderr markers.
 The Go curl sample now also uses a stable, case-insensitive error classifier
 with unit tests for key Layer36 net error classes, so common failure paths
 map to predictable messages and exit codes (`5`, `20`, `21`).
+The Go fixture promotion diagnostics are also clearer now. When TinyGo outputs
+are not Layer36-import pure, the import checker reports every failing Go
+artifact instead of stopping at the first one. Current local smoke artifacts
+build successfully, but still import WASI host APIs, so they are correctly not
+promoted into runtime fixtures yet.
 When both Go and TypeScript fixture sets are available, the CLI harness now
 also runs cross-language parity checks for `layer36-clock`, `layer36-cat`, and
 `layer36-curl`. Those checks run Rust, Go, and TypeScript samples with the same

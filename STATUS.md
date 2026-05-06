@@ -73,6 +73,8 @@ Top pending items:
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`
 - Generated UAPI reference now includes those WIT contract comments
 - Rust SDK package smoke now verifies packaged README, SDK root, and generated bindings files
+- Go TinyGo smoke artifacts build locally, but promotion correctly blocks them because they still import WASI host APIs
+- Component import checker now reports all failing artifacts in one run, which improves Go runtime-proof triage
 
 ## 7) Source of truth files
 

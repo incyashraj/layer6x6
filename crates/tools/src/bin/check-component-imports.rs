@@ -21,6 +21,24 @@ fn main() -> Result<()> {
         reports.push(check_component_imports(path)?);
     }
 
+    let failures = reports
+        .iter()
+        .filter(|report| !report.bad_imports.is_empty())
+        .collect::<Vec<_>>();
+    if !failures.is_empty() {
+        for report in &failures {
+            eprintln!(
+                "- {} imports non-Layer36 host APIs: {}",
+                report.path.display(),
+                report.bad_imports.join(", ")
+            );
+        }
+        bail!(
+            "Layer36 component import check failed for {} component(s)",
+            failures.len()
+        );
+    }
+
     println!("Layer36 component import check passed");
     for report in reports {
         println!(
@@ -36,6 +54,7 @@ fn main() -> Result<()> {
 struct ImportReport {
     path: PathBuf,
     imports: BTreeSet<String>,
+    bad_imports: Vec<String>,
 }
 
 fn check_component_imports(path: &Path) -> Result<ImportReport> {
@@ -48,17 +67,10 @@ fn check_component_imports(path: &Path) -> Result<ImportReport> {
         .cloned()
         .collect::<Vec<_>>();
 
-    if !bad_imports.is_empty() {
-        bail!(
-            "{} imports non-Layer36 host APIs: {}",
-            path.display(),
-            bad_imports.join(", ")
-        );
-    }
-
     Ok(ImportReport {
         path: path.to_path_buf(),
         imports,
+        bad_imports,
     })
 }
 

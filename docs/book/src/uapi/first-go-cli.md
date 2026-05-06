@@ -74,6 +74,19 @@ scripts/build-phase2-go-variant-smoke.sh
 This builds Go clock/cat/curl WASI Preview 2 artifacts and checks their
 component export shape (`wasi:cli/run`).
 
+The current TinyGo artifacts do build, but they are not Layer36-import pure yet.
+The promotion step checks all three artifacts together and reports every
+non-Layer36 import it sees. Current blockers are:
+
+- clock and cat still import WASI stdout, IO stream/error, random, and the
+  TinyGo run import helper
+- curl imports a wider WASI surface because it currently pulls in environment,
+  exit, stdio, clocks, filesystem, IO, random, and the TinyGo run import helper
+
+That is useful progress: the build shape works, and the remaining Go task is to
+replace those WASI host calls with real `layer36:*` imports before runtime
+fixtures can be promoted.
+
 ## 5. Optional Runtime Variant Test Hook
 
 If you already have compiled Go WASM fixtures at:
@@ -104,7 +117,7 @@ Go is now at "SDK and test harness ready" stage.
 
 Still pending:
 
-- Layer36-import runtime fixture proof for Go variants
+- Layer36-import pure runtime fixture proof for Go variants
 - always-on runtime fixture gate for Go variants
 
 That means we are not blocked. We can keep improving UAPI and policy hardening
