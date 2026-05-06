@@ -307,6 +307,12 @@ pulls capability strings from the manifest crate and adds short behavior notes
 under each function and resource method, so the docs explain both the call shape
 and the permission model in one place.
 
+The UAPI gate is stricter now too. `scripts/check-uapi.sh` first runs
+`wasm-tools component wit` across the Phase 2 world and all dependency
+packages (`io`, `fs`, `net`, `time`, `locale`), then runs the contract-shape
+checks in `layer36-tools --bin check-uapi`. Hosted and self-hosted CI both run
+this before UAPI reference regeneration.
+
 The first terminal grant prompt exists too. `layer36 run --prompt app.wasm`
 shows the app identity, lists missing manifest capabilities, accepts all or a
 numbered subset, and stores the approved caps only for that run. In a normal

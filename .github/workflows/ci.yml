@@ -151,6 +151,8 @@ jobs:
             ~/.cargo/git
             target/
           key: ${{ runner.os }}-cargo-uapi-reference-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install wasm-tools
+        run: cargo install wasm-tools --locked
       - name: Check Phase 2 UAPI contract
         run: sh scripts/check-uapi.sh
       - name: Regenerate UAPI reference

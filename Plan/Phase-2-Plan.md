@@ -1755,7 +1755,7 @@ Additional ADRs as decisions surface. Rule of thumb: if you have to ask "should 
 
 ### WIT & UAPI
 - [ ] All five WIT files merged and frozen at v0.1.0.
-- [ ] `wasm-tools` validates each.
+- [x] `wasm-tools` validates each.
 - [x] WIT style guide merged.
 - [x] UAPI reference auto-generation working in CI.
 
@@ -2032,7 +2032,7 @@ Save as `docs/book/src/phase2/retro.md` at the end of Phase 2.
 > **Phase Status:** Started
 > **Started:** 2026-05-03
 > **Completed:** pending
-> **Last Updated:** 2026-05-04
+> **Last Updated:** 2026-05-06
 
 ### Progress Summary
 
@@ -2083,10 +2083,12 @@ machine without relying on hosted runner availability.
 
 The WIT style guide is now published in the book as well. It gives us concrete rules for package names, interface names, function names, resources, typed errors, capability mapping, comments, versioning, and review checks before we freeze UAPI v0.1.
 
-The Phase 2 UAPI contract checker exists now too. `scripts/check-uapi.sh` parses
-`wit/layer36/phase2`, checks the expected package set, the `cli` world imports,
-the `run` export, kebab-case naming, and the `permission-denied` variants needed
-for protected filesystem and network calls. Hosted and self-hosted CI both run it
+The Phase 2 UAPI contract checker exists now too. `scripts/check-uapi.sh` now
+runs two checks in one pass: `wasm-tools component wit` validation for every
+Phase 2 package directory (`world` plus `io`, `fs`, `net`, `time`, `locale`)
+and the `layer36-tools --bin check-uapi` contract checks for expected package
+set, `cli` world imports, `run` export shape, kebab-case naming, and
+`permission-denied` variants. Hosted and self-hosted CI both run this gate
 before regenerating the UAPI reference.
 
 This does not freeze UAPI v0.1 yet. It gives us a real contract to review, generate bindings from, and wire into host adapters.
@@ -2189,6 +2191,7 @@ formal exit gates.
 | P2-APP-03A | First `layer36-clock` sample path | 2026-05-04 | Added `apps/layer36-clock`, a Rust Phase 2 component using time, locale, and stdout, plus `layer36 run --test-time` for deterministic sample tests. |
 | P2-UAPI-06 | Layer36 app arguments | 2026-05-04 | Added `layer36:io/args.raw`, default `io.args` grants, CLI forwarding through `layer36 run ... -- <args>`, and host dispatch wiring. |
 | P2-UAPI-07 | UAPI contract checker | 2026-05-04 | Added `scripts/check-uapi.sh` and `layer36-tools --bin check-uapi` to validate the Phase 2 package set, `cli` world shape, naming, and permission-denied error variants in hosted and self-hosted CI. |
+| P2-UAPI-08 | wasm-tools package validation gate for Phase 2 WIT | 2026-05-06 | Extended `scripts/check-uapi.sh` to run `wasm-tools component wit` across `wit/layer36/phase2` and each dependency package directory (`io`, `fs`, `net`, `time`, `locale`) before contract checks. Hosted CI `uapi-reference` now installs `wasm-tools` so this runs on every cheap hosted push lane too. |
 | P2-APP-02A | First `layer36-cat` sample path | 2026-05-04 | Added `apps/layer36-cat`, a Rust Phase 2 component that reads app args, opens granted files, writes stdout, and fails cleanly without `fs.read`. |
 | P2-NET-01 | Plain HTTP GET adapter slice | 2026-05-04 | Added a minimal `http://` GET adapter for test servers and localhost-style requests, with policy still checked before socket access. |
 | P2-NET-02 | Plain HTTP response-size guard | 2026-05-04 | Added a 1 MiB full-response cap to the Phase 2 plain HTTP adapter reader, with unit coverage for exact-limit acceptance and oversized rejection. |
