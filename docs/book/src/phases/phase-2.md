@@ -148,6 +148,10 @@ Request framing now also enforces a shared buffered body size limit so this
 early plain-HTTP path cannot consume unbounded request payloads.
 Shared host parsing now also rejects invalid domain-label forms and invalid
 numeric IPv4 literals so URL and capability-path validation stay aligned.
+It now also rejects wildcard or non-unicast numeric IPv4 endpoint forms
+(`0.0.0.0`, `255.255.255.255`, and multicast ranges) during endpoint parsing,
+so runtime URL checks and manifest `net.connect` validation stay aligned on
+connectable target shapes.
 Host names are now normalized to lowercase in shared URL parsing, so capability
 checks stay stable across input case differences like `EXAMPLE.com` and
 `example.com`. URL scheme checks are now case-insensitive as well, so
