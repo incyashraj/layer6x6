@@ -220,6 +220,8 @@ Sandbox symlink metadata reads now also route through per-OS adapters.
 Sandbox-root and parent-path canonicalization now also route through per-OS
 adapters.
 Filesystem `open` host calls now also route through per-OS adapters.
+Runtime component-file reads and sandbox-root directory creation now also route
+through per-OS adapters.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2

@@ -168,7 +168,7 @@ impl Runtime {
     }
 
     pub fn run_file(&self, path: impl AsRef<Path>, config: &Config) -> Result<RunOutcome> {
-        let bytes = std::fs::read(path)?;
+        let bytes = read_path_on_host(path.as_ref())?;
         self.run_bytes(&bytes, config)
     }
 
@@ -321,7 +321,7 @@ impl HostState {
         let memory_bytes = usize::try_from(config.memory_bytes)
             .map_err(|_| RuntimeError::EngineInit("memory limit is too large".to_string()))?;
         let output = Rc::new(RefCell::new(output));
-        std::fs::create_dir_all(&config.sandbox_root)?;
+        create_dir_all_on_host(&config.sandbox_root)?;
 
         Ok(Self {
             exit_code: None,
@@ -1200,6 +1200,42 @@ fn symlink_metadata_on_host(path: &Path) -> std::io::Result<std::fs::Metadata> {
     #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
     {
         std::fs::symlink_metadata(path)
+    }
+}
+
+fn read_path_on_host(path: &Path) -> std::io::Result<Vec<u8>> {
+    #[cfg(all(
+        feature = "phase2-bindings",
+        any(target_os = "linux", target_os = "macos", target_os = "windows")
+    ))]
+    {
+        host_os_adapter::read_path(path)
+    }
+
+    #[cfg(not(all(
+        feature = "phase2-bindings",
+        any(target_os = "linux", target_os = "macos", target_os = "windows")
+    )))]
+    {
+        std::fs::read(path)
+    }
+}
+
+fn create_dir_all_on_host(path: &Path) -> std::io::Result<()> {
+    #[cfg(all(
+        feature = "phase2-bindings",
+        any(target_os = "linux", target_os = "macos", target_os = "windows")
+    ))]
+    {
+        host_os_adapter::create_dir_all(path)
+    }
+
+    #[cfg(not(all(
+        feature = "phase2-bindings",
+        any(target_os = "linux", target_os = "macos", target_os = "windows")
+    )))]
+    {
+        std::fs::create_dir_all(path)
     }
 }
 

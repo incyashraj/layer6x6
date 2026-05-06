@@ -96,6 +96,16 @@ pub fn open_path(path: &Path, opts: &mut OpenOptions) -> std::io::Result<std::fs
     opts.open(path)
 }
 
+/// Read a full filesystem path through the Windows adapter path.
+pub fn read_path(path: &Path) -> std::io::Result<Vec<u8>> {
+    std::fs::read(path)
+}
+
+/// Ensure a directory tree exists through the Windows adapter path.
+pub fn create_dir_all(path: &Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(path)
+}
+
 /// Remove a file through the Windows adapter path.
 pub fn remove_file(path: &Path) -> std::io::Result<()> {
     std::fs::remove_file(path)
@@ -231,6 +241,18 @@ mod tests {
     #[test]
     fn open_path_hook_is_available() {
         let hook: fn(&Path, &mut OpenOptions) -> std::io::Result<std::fs::File> = open_path;
+        let _ = hook;
+    }
+
+    #[test]
+    fn read_path_hook_is_available() {
+        let hook: fn(&Path) -> std::io::Result<Vec<u8>> = read_path;
+        let _ = hook;
+    }
+
+    #[test]
+    fn create_dir_all_hook_is_available() {
+        let hook: fn(&Path) -> std::io::Result<()> = create_dir_all;
         let _ = hook;
     }
 
