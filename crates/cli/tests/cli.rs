@@ -1357,14 +1357,10 @@ fn configured_layer36_go_curl_component_denies_missing_grant() {
         .output()
         .expect("run layer36-go-curl component without grant");
 
-    let code = output.status.code();
-    assert!(
-        code == Some(0) || code == Some(21),
-        "unexpected status code for missing net grant: {code:?}"
-    );
+    assert_eq!(output.status.code(), Some(5));
     assert!(output.stdout.is_empty());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("layer36-go-curl: fetch failed"));
+    assert!(stderr.contains("layer36-go-curl: permission denied"));
 }
 
 #[test]
@@ -1387,14 +1383,15 @@ fn configured_layer36_go_curl_component_reports_unresolved_host() {
         .output()
         .expect("run layer36-go-curl against unresolved host");
 
-    let code = output.status.code();
-    assert!(
-        code == Some(0) || code == Some(21),
-        "unexpected status code for unresolved-host path: {code:?}"
-    );
+    assert_eq!(output.status.code(), Some(21));
     assert!(output.stdout.is_empty());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("layer36-go-curl: fetch failed"));
+    assert!(
+        stderr.contains("layer36-go-curl: dns lookup failed")
+            || stderr.contains("layer36-go-curl: connection failed")
+            || stderr.contains("layer36-go-curl: fetch failed"),
+        "unexpected unresolved-host stderr: {stderr}"
+    );
 }
 
 #[test]
@@ -1786,13 +1783,10 @@ fn configured_layer36_go_curl_component_reports_invalid_url() {
         .output()
         .expect("run layer36-go-curl against invalid URL");
 
+    assert_eq!(output.status.code(), Some(20));
     assert!(output.stdout.is_empty());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(
-        stderr.contains("layer36-go-curl: invalid url")
-            || stderr.contains("layer36-go-curl: fetch failed"),
-        "unexpected Go invalid-url stderr: {stderr}"
-    );
+    assert!(stderr.contains("layer36-go-curl: invalid url"));
 }
 
 #[test]

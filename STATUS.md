@@ -70,6 +70,7 @@ Top pending items:
 - Added parity tests for Rust vs TypeScript on curl denial and invalid URL paths
 - Go curl classifier hardened with stable mapping and unit tests
 - Expanded curl error-path parity checks to Rust, Go, and TypeScript for missing-grant, invalid-url, and unresolved-host paths
+- Tightened dedicated Go curl fixture checks so missing-grant, invalid-url, and unresolved-host paths enforce expected exit codes and stderr markers
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`
 - Generated UAPI reference now includes those WIT contract comments
