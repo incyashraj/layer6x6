@@ -4,16 +4,18 @@ set -eu
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 cd "$ROOT"
 
-OUTPUT="${1:-target/phase2-language-variant-evidence/language-variant-evidence.md}"
+OUTPUT="target/phase2-language-variant-evidence/language-variant-evidence.md"
 STRICT="${LAYER36_LANGUAGE_VARIANT_EVIDENCE_STRICT:-0}"
 MODE="${LAYER36_LANGUAGE_VARIANTS_MODE:-optional}"
 
-if [ "$OUTPUT" = "--strict" ]; then
-  STRICT="1"
-  OUTPUT="target/phase2-language-variant-evidence/language-variant-evidence.md"
-elif [ "$OUTPUT" = "--help" ] || [ "$OUTPUT" = "-h" ]; then
+usage() {
   cat <<'USAGE'
-Usage: scripts/record-phase2-language-variant-evidence.sh [output.md]
+Usage: scripts/record-phase2-language-variant-evidence.sh [--strict] [--mode <mode>] [--output <path>]
+
+Options:
+  --strict           Exit non-zero when build/test fails
+  --mode <mode>      optional|any|both|go|ts (default: env LAYER36_LANGUAGE_VARIANTS_MODE or optional)
+  --output <path>    Output markdown file path
 
 Environment:
   LAYER36_LANGUAGE_VARIANTS_MODE             optional|any|both|go|ts (default: optional)
@@ -23,8 +25,48 @@ Notes:
   - The script always writes a markdown report.
   - In strict mode, it returns a non-zero exit code when build/test fails.
 USAGE
-  exit 0
-fi
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --strict)
+      STRICT="1"
+      shift
+      ;;
+    --mode)
+      if [ "$#" -lt 2 ]; then
+        echo "missing value for --mode" >&2
+        usage
+        exit 2
+      fi
+      MODE="$2"
+      shift 2
+      ;;
+    --output)
+      if [ "$#" -lt 2 ]; then
+        echo "missing value for --output" >&2
+        usage
+        exit 2
+      fi
+      OUTPUT="$2"
+      shift 2
+      ;;
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    *)
+      if [ "$OUTPUT" = "target/phase2-language-variant-evidence/language-variant-evidence.md" ]; then
+        OUTPUT="$1"
+        shift
+      else
+        echo "unknown argument: $1" >&2
+        usage
+        exit 2
+      fi
+      ;;
+  esac
+done
 
 mkdir -p "$(dirname "$OUTPUT")"
 TMP_DIR="target/phase2-language-variant-evidence/.tmp"

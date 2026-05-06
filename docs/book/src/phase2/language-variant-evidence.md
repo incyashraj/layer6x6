@@ -23,7 +23,8 @@ target/phase2-language-variant-evidence/language-variant-evidence.md
 You can pass a custom output path:
 
 ```bash
-scripts/record-phase2-language-variant-evidence.sh target/phase2-language-variant-evidence/macos-arm64.md
+scripts/record-phase2-language-variant-evidence.sh \
+  --output target/phase2-language-variant-evidence/macos-arm64.md
 ```
 
 ## What It Records
@@ -51,11 +52,16 @@ By default, the recorder writes a report even when one command fails.
 For CI-style behavior, use strict mode:
 
 ```bash
-LAYER36_LANGUAGE_VARIANT_EVIDENCE_STRICT=1 \
-  scripts/record-phase2-language-variant-evidence.sh
+scripts/record-phase2-language-variant-evidence.sh --strict
 ```
 
 In strict mode, the script exits non-zero when build or test fails.
+
+You can also choose a fixture mode directly:
+
+```bash
+scripts/record-phase2-language-variant-evidence.sh --mode ts --strict
+```
 
 ## Why This Helps Phase 2
 
