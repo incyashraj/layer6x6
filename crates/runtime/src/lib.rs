@@ -750,7 +750,7 @@ fn ensure_no_symlink_segments(
     let mut current = root.to_path_buf();
     for (index, segment) in segments.iter().enumerate() {
         current.push(segment.as_os_str());
-        match std::fs::symlink_metadata(&current) {
+        match symlink_metadata_on_host(&current) {
             Ok(metadata) => {
                 if metadata_has_blocked_link_semantics(&metadata) {
                     return Err(AdapterError::PermissionDenied);
@@ -805,7 +805,7 @@ fn map_existing_broken_leaf_error(
     path: &Path,
     original: std::io::Error,
 ) -> std::result::Result<Option<AdapterError>, AdapterError> {
-    match std::fs::symlink_metadata(path) {
+    match symlink_metadata_on_host(path) {
         Ok(metadata) if metadata_has_blocked_link_semantics(&metadata) => {
             Ok(Some(AdapterError::PermissionDenied))
         }
@@ -1187,6 +1187,19 @@ fn rename_path_on_host(from: &Path, to: &Path) -> std::io::Result<()> {
     #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
     {
         std::fs::rename(from, to)
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn symlink_metadata_on_host(path: &Path) -> std::io::Result<std::fs::Metadata> {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::symlink_metadata(path)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        std::fs::symlink_metadata(path)
     }
 }
 

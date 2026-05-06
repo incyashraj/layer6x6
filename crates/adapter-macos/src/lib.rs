@@ -68,6 +68,11 @@ pub fn read_dir(path: &Path) -> std::io::Result<std::fs::ReadDir> {
     std::fs::read_dir(path)
 }
 
+/// Read symlink metadata through the macOS adapter path.
+pub fn symlink_metadata(path: &Path) -> std::io::Result<std::fs::Metadata> {
+    std::fs::symlink_metadata(path)
+}
+
 /// Remove a file through the macOS adapter path.
 pub fn remove_file(path: &Path) -> std::io::Result<()> {
     std::fs::remove_file(path)
@@ -178,6 +183,12 @@ mod tests {
     #[test]
     fn read_dir_hook_is_available() {
         let hook: fn(&Path) -> std::io::Result<std::fs::ReadDir> = read_dir;
+        let _ = hook;
+    }
+
+    #[test]
+    fn symlink_metadata_hook_is_available() {
+        let hook: fn(&Path) -> std::io::Result<std::fs::Metadata> = symlink_metadata;
         let _ = hook;
     }
 

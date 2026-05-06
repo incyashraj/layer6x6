@@ -216,6 +216,7 @@ Filesystem `stat` and directory listing host calls now route through per-OS
 adapters too.
 Filesystem mutation host calls (`remove-file`, `remove-dir`, `mkdir`, `rename`)
 now route through per-OS adapters as well.
+Sandbox symlink metadata reads now also route through per-OS adapters.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2
