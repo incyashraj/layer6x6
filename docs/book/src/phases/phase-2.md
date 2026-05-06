@@ -373,6 +373,9 @@ exits with code `20`. The CLI harness now includes explicit Rust versus
 TypeScript parity checks for both of those paths.
 Go curl fixture coverage now includes matching non-localhost denial and
 unresolved-host checks with stable stderr markers.
+The Go curl sample now also uses a stable, case-insensitive error classifier
+with unit tests for key Layer36 net error classes, so common failure paths
+map to predictable messages and exit codes (`5`, `20`, `21`).
 When both Go and TypeScript fixture sets are available, the CLI harness now
 also runs cross-language parity checks for `layer36-clock`, `layer36-cat`, and
 `layer36-curl`. Those checks run Rust, Go, and TypeScript samples with the same

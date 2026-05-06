@@ -31,9 +31,9 @@ func run() int {
 }
 
 func classifyNetError(err error) (string, int) {
-	msg := err.Error()
+	msg := strings.ToLower(err.Error())
 	switch {
-	case strings.Contains(msg, "permission denied"):
+	case strings.Contains(msg, "permission denied"), strings.Contains(msg, "permission-denied"):
 		return "layer36-go-curl: permission denied", 5
 	case strings.Contains(msg, "invalid-url"):
 		return "layer36-go-curl: invalid url", 20
