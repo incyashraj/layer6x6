@@ -1688,6 +1688,73 @@ fn language_variants_cat_output_matches_across_rust_go_ts() {
 }
 
 #[test]
+fn language_variants_curl_output_matches_across_rust_go_ts() {
+    let Some(rust_path) = configured_layer36_curl_component() else {
+        return;
+    };
+    let Some(go_path) = configured_go_component(
+        "LAYER36_GO_CURL_WASM",
+        "layer36-go-curl component test",
+        "layer36_go_curl.wasm",
+    ) else {
+        eprintln!("skipping language variant curl parity: Go fixture is unavailable");
+        return;
+    };
+    let Some(ts_path) = configured_ts_component(
+        "LAYER36_TS_CURL_WASM",
+        "layer36-ts-curl component test",
+        "layer36_ts_curl.wasm",
+    ) else {
+        eprintln!("skipping language variant curl parity: TypeScript fixture is unavailable");
+        return;
+    };
+
+    let body = b"hello from parity curl\n";
+    let Some((addr, server)) = spawn_http_fixture(body) else {
+        return;
+    };
+    let url = format!("http://{addr}/fixture.txt");
+    let grant = format!("net.connect:{addr}");
+
+    let run_curl = |path: &PathBuf, label: &str| {
+        let output = layer36()
+            .args(["run", "--grant", &grant])
+            .arg(path)
+            .args(["--", &url])
+            .output()
+            .expect("run language variant curl component");
+
+        assert!(
+            output.status.success(),
+            "{label} failed\nstdout:\n{}\nstderr:\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(output.stderr.is_empty(), "{label} wrote to stderr");
+        output.stdout
+    };
+
+    let rust_stdout = run_curl(&rust_path, "layer36-curl");
+    let go_stdout = run_curl(&go_path, "layer36-go-curl");
+    let ts_stdout = run_curl(&ts_path, "layer36-ts-curl");
+
+    let accepted = server.join().expect("HTTP fixture thread completed");
+    if !accepted {
+        eprintln!(
+            "skipping language variant curl parity: runtime could not connect to localhost fixture in this environment"
+        );
+        return;
+    }
+
+    assert_eq!(rust_stdout, body, "Rust curl output did not match fixture");
+    assert_eq!(go_stdout, rust_stdout, "Go curl output drifted from Rust");
+    assert_eq!(
+        ts_stdout, rust_stdout,
+        "TypeScript curl output drifted from Rust"
+    );
+}
+
+#[test]
 fn fuel_limit_exits_with_limit_code() {
     let Some(path) = configured_hello_component() else {
         return;
