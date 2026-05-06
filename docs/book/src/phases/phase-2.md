@@ -154,9 +154,9 @@ checks stay stable across input case differences like `EXAMPLE.com` and
 `HTTP://` and `HTTPS://` forms follow the same grant matching path.
 Resolved socket-address lists now also go through shared normalization:
 duplicates are removed, IPv4 addresses are preferred before IPv6 while
-first-seen order is still preserved inside each family, and connect-attempt
-lists are capped to a fixed maximum so DNS result variance cannot create
-unbounded retry loops.
+first-seen order is still preserved inside each family, unspecified wildcard
+targets (`0.0.0.0` and `::`) are dropped, and connect-attempt lists are capped
+to a fixed maximum so DNS result variance cannot create unbounded retry loops.
 In this early plain-HTTP slice, URL parsing is also ASCII-only. Non-ASCII URLs
 are rejected early so request framing and capability endpoint checks stay
 deterministic until broader URL handling lands in a later hardening pass.

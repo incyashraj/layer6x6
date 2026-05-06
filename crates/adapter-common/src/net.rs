@@ -102,6 +102,9 @@ pub fn normalize_resolved_socket_addrs(addrs: Vec<SocketAddr>) -> Vec<SocketAddr
     let mut v6_addrs = Vec::new();
 
     for addr in addrs {
+        if addr.ip().is_unspecified() {
+            continue;
+        }
         if seen.insert(addr) {
             if addr.is_ipv4() {
                 v4_addrs.push(addr);
@@ -858,6 +861,23 @@ mod tests {
         let normalized = normalize_resolved_socket_addrs(vec![v6_a, v4_a, v4_b, v6_b]);
 
         assert_eq!(normalized, vec![v4_a, v4_b, v6_a, v6_b]);
+    }
+
+    #[test]
+    fn normalize_resolved_socket_addrs_filters_unspecified_addresses() {
+        let unspecified_v4 = SocketAddr::from(([0, 0, 0, 0], 18080));
+        let unspecified_v6 = SocketAddr::from(([0u16, 0, 0, 0, 0, 0, 0, 0], 18080));
+        let usable_v4 = SocketAddr::from(([127, 0, 0, 1], 18080));
+        let usable_v6 = SocketAddr::from(([0u16, 0, 0, 0, 0, 0, 0, 1], 18080));
+
+        let normalized = normalize_resolved_socket_addrs(vec![
+            unspecified_v6,
+            usable_v6,
+            unspecified_v4,
+            usable_v4,
+        ]);
+
+        assert_eq!(normalized, vec![usable_v4, usable_v6]);
     }
 
     #[test]
