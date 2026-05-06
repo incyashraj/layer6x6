@@ -23,6 +23,8 @@ What is already in place:
   [Phase 2 Exit Evidence](exit-evidence.md)
 - hosted CI and self-hosted CI fail if that evidence page is stale
 - Rust sample apps use the current SDK facade
+- Rust sample app evidence can be recorded with
+  `scripts/record-phase2-sample-evidence.sh`
 - TypeScript fixtures build through jco and pass local runtime checks
 - Go TinyGo artifacts build, but are not runtime fixtures yet because they still
   import WASI host APIs

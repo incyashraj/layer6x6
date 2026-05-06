@@ -10,5 +10,6 @@ publish = false
 [dependencies]
 anyhow.workspace = true
 layer36-manifest = { path = "../manifest", version = "0.1.0-dev" }
+sha2 = "0.10.9"
 wasmparser.workspace = true
 wit-parser.workspace = true

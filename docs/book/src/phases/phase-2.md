@@ -350,6 +350,14 @@ the Linux, macOS, and Windows adapter crates expose the matching functions.
 Hosted CI and the self-hosted full gate run that check so direct host-call
 backsliding is easier to catch.
 
+Sample evidence has a repeatable recorder now too. The
+[Sample Evidence](../phase2/sample-evidence.md) page explains how to run
+`scripts/record-phase2-sample-evidence.sh` on each desktop host. The recorder
+builds the CLI and Rust clock/cat/curl components, runs fixed fixtures, and
+writes a markdown report with host metadata, commands, exit codes, stdout
+hashes, and output snapshots. That gives the Phase 2 exit review a practical
+way to compare Linux, macOS, and Windows sample behavior.
+
 The first terminal grant prompt exists too. `layer36 run --prompt app.wasm`
 shows the app identity, lists missing manifest capabilities, accepts all or a
 numbered subset, and stores the approved caps only for that run. In a normal

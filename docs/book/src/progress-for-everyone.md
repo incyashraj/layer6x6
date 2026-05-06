@@ -51,6 +51,8 @@ flowchart LR
    - TypeScript fixtures are built automatically in CI
    - Go fixture promotion is now attempted automatically when TinyGo tools are available
    - strict Go modes fail clearly if Go fixtures are missing or not import-pure
+6. The Rust sample apps now have a repeatable evidence recorder, so each host
+   can produce the same kind of proof file for clock, cat, and curl.
 
 ## Current Build Timeline
 

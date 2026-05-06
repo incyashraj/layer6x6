@@ -25,17 +25,22 @@ pub(crate) use __export_world_cli_cabi;
 #[allow(dead_code, clippy::all)]
 pub mod layer36 {
     pub mod fs {
+        /// Shared filesystem records, modes, and errors.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod types {
             #[used]
             #[doc(hidden)]
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
+            /// Metadata returned for files and directories.
             #[repr(C)]
             #[derive(Clone, Copy)]
             pub struct FileStat {
+                /// Size in bytes for files. Directory size is host-defined.
                 pub size: u64,
+                /// Last modified time in Unix epoch milliseconds.
                 pub modified_millis: u64,
+                /// True when the path is a directory.
                 pub is_dir: bool,
             }
             impl ::core::fmt::Debug for FileStat {
@@ -50,11 +55,16 @@ pub mod layer36 {
                         .finish()
                 }
             }
+            /// How a file should be opened.
             #[derive(Clone, Copy)]
             pub enum OpenMode {
+                /// Open for reads.
                 Read,
+                /// Open for writes, creating or truncating according to host policy.
                 Write,
+                /// Open for both reads and writes.
                 ReadWrite,
+                /// Open for appending writes.
                 Append,
             }
             impl ::core::fmt::Debug for OpenMode {
@@ -72,14 +82,22 @@ pub mod layer36 {
                     }
                 }
             }
+            /// Filesystem error shape used by path and file-handle calls.
             #[derive(Clone)]
             pub enum FsError {
+                /// Path does not exist.
                 NotFound,
+                /// Capability policy or sandbox rules denied the operation.
                 PermissionDenied,
+                /// The target already exists.
                 AlreadyExists,
+                /// Path text is not accepted by the Phase 2 path rules.
                 InvalidPath,
+                /// Operation needed a directory but found something else.
                 NotADirectory,
+                /// Operation needed a file but found a directory.
                 IsADirectory,
+                /// Host-specific filesystem error text.
                 Io(_rt::String),
             }
             impl ::core::fmt::Debug for FsError {
@@ -118,6 +136,7 @@ pub mod layer36 {
             }
             impl std::error::Error for FsError {}
         }
+        /// Filesystem functions and file resources.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod files {
             #[used]
@@ -127,6 +146,7 @@ pub mod layer36 {
             pub type FileStat = super::super::super::layer36::fs::types::FileStat;
             pub type OpenMode = super::super::super::layer36::fs::types::OpenMode;
             pub type FsError = super::super::super::layer36::fs::types::FsError;
+            /// Open file resource.
             #[derive(Debug)]
             #[repr(transparent)]
             pub struct File {
@@ -166,6 +186,7 @@ pub mod layer36 {
             }
             impl File {
                 #[allow(unused_unsafe, clippy::all)]
+                /// Read up to `n` bytes from the current file cursor.
                 pub fn read(&self, n: u32) -> Result<_rt::Vec<u8>, FsError> {
                     unsafe {
                         #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -253,6 +274,7 @@ pub mod layer36 {
             }
             impl File {
                 #[allow(unused_unsafe, clippy::all)]
+                /// Write bytes at the current file cursor.
                 pub fn write(&self, bytes: &[u8]) -> Result<u32, FsError> {
                     unsafe {
                         #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -349,6 +371,7 @@ pub mod layer36 {
             }
             impl File {
                 #[allow(unused_unsafe, clippy::all)]
+                /// Seek to an absolute byte position.
                 pub fn seek_set(&self, pos: u64) -> Result<u64, FsError> {
                     unsafe {
                         #[repr(align(8))]
@@ -427,6 +450,7 @@ pub mod layer36 {
             }
             impl File {
                 #[allow(unused_unsafe, clippy::all)]
+                /// Seek to the end of the file.
                 pub fn seek_end(&self) -> Result<u64, FsError> {
                     unsafe {
                         #[repr(align(8))]
@@ -503,6 +527,7 @@ pub mod layer36 {
             }
             impl File {
                 #[allow(unused_unsafe, clippy::all)]
+                /// Read metadata for this open file handle.
                 pub fn stat(&self) -> Result<FileStat, FsError> {
                     unsafe {
                         #[repr(align(8))]
@@ -579,6 +604,7 @@ pub mod layer36 {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Open a path and return a file resource.
             pub fn open(path: &str, mode: OpenMode) -> Result<File, FsError> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -673,6 +699,7 @@ pub mod layer36 {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Read metadata for a path without opening it as a file resource.
             pub fn stat(path: &str) -> Result<FileStat, FsError> {
                 unsafe {
                     #[repr(align(8))]
@@ -749,6 +776,7 @@ pub mod layer36 {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// List directory entry names for a path.
             pub fn list(path: &str) -> Result<_rt::Vec<_rt::String>, FsError> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -860,6 +888,7 @@ pub mod layer36 {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Remove one file.
             pub fn remove_file(path: &str) -> Result<(), FsError> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -937,6 +966,7 @@ pub mod layer36 {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Remove one directory.
             pub fn remove_dir(path: &str) -> Result<(), FsError> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -1014,6 +1044,7 @@ pub mod layer36 {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Create one directory.
             pub fn mkdir(path: &str) -> Result<(), FsError> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -1091,6 +1122,7 @@ pub mod layer36 {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Rename or move a path.
             pub fn rename(from: &str, to: &str) -> Result<(), FsError> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -1187,19 +1219,26 @@ pub mod layer36 {
         }
     }
     pub mod io {
+        /// Shared IO records and errors.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod types {
             #[used]
             #[doc(hidden)]
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
+            /// Severity level for app log events.
             #[repr(u8)]
             #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
             pub enum LogLevel {
+                /// Very detailed diagnostic data.
                 Trace,
+                /// Developer-focused diagnostic data.
                 Debug,
+                /// Normal informational event.
                 Info,
+                /// Something unexpected happened, but the app can continue.
                 Warn,
+                /// The app hit an error condition.
                 Error,
             }
             impl ::core::fmt::Debug for LogLevel {
@@ -1232,12 +1271,18 @@ pub mod layer36 {
                     }
                 }
             }
+            /// Error shape for byte streams and text stream helpers.
             #[derive(Clone)]
             pub enum IoError {
+                /// The stream was already closed.
                 Closed,
+                /// The host interrupted the operation.
                 Interrupted,
+                /// The stream ended before enough bytes were read.
                 UnexpectedEof,
+                /// Bytes could not be decoded as UTF-8 text.
                 InvalidUtf8,
+                /// Host-specific IO error text.
                 Other(_rt::String),
             }
             impl ::core::fmt::Debug for IoError {
@@ -1272,6 +1317,7 @@ pub mod layer36 {
             }
             impl std::error::Error for IoError {}
         }
+        /// Byte stream resources used by stdio and future IO surfaces.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod streams {
             #[used]
@@ -1279,6 +1325,7 @@ pub mod layer36 {
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             pub type IoError = super::super::super::layer36::io::types::IoError;
+            /// Readable byte stream owned by the runtime.
             #[derive(Debug)]
             #[repr(transparent)]
             pub struct InputStream {
@@ -1316,6 +1363,7 @@ pub mod layer36 {
                     }
                 }
             }
+            /// Writable byte stream owned by the runtime.
             #[derive(Debug)]
             #[repr(transparent)]
             pub struct OutputStream {
@@ -1355,6 +1403,7 @@ pub mod layer36 {
             }
             impl InputStream {
                 #[allow(unused_unsafe, clippy::all)]
+                /// Read up to `n` bytes from the stream.
                 pub fn read(&self, n: u32) -> Result<_rt::Vec<u8>, IoError> {
                     unsafe {
                         #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -1440,6 +1489,7 @@ pub mod layer36 {
             }
             impl InputStream {
                 #[allow(unused_unsafe, clippy::all)]
+                /// Read the stream as UTF-8 text.
                 pub fn read_to_string(&self) -> Result<_rt::String, IoError> {
                     unsafe {
                         #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -1528,6 +1578,7 @@ pub mod layer36 {
             }
             impl OutputStream {
                 #[allow(unused_unsafe, clippy::all)]
+                /// Write some bytes and return the number accepted by the host.
                 pub fn write(&self, bytes: &[u8]) -> Result<u32, IoError> {
                     unsafe {
                         #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -1622,6 +1673,7 @@ pub mod layer36 {
             }
             impl OutputStream {
                 #[allow(unused_unsafe, clippy::all)]
+                /// Write the whole byte buffer or return an error.
                 pub fn write_all(&self, bytes: &[u8]) -> Result<(), IoError> {
                     unsafe {
                         #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -1711,6 +1763,7 @@ pub mod layer36 {
             }
             impl OutputStream {
                 #[allow(unused_unsafe, clippy::all)]
+                /// Flush host-side output buffers.
                 pub fn flush(&self) -> Result<(), IoError> {
                     unsafe {
                         #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -1784,6 +1837,7 @@ pub mod layer36 {
                 }
             }
         }
+        /// Standard streams for CLI-style apps.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod stdio {
             #[used]
@@ -1792,6 +1846,7 @@ pub mod layer36 {
             pub type InputStream = super::super::super::layer36::io::streams::InputStream;
             pub type OutputStream = super::super::super::layer36::io::streams::OutputStream;
             #[allow(unused_unsafe, clippy::all)]
+            /// Host standard input.
             pub fn stdin() -> InputStream {
                 unsafe {
                     #[cfg(target_arch = "wasm32")]
@@ -1813,6 +1868,7 @@ pub mod layer36 {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Host standard output for normal app output.
             pub fn stdout() -> OutputStream {
                 unsafe {
                     #[cfg(target_arch = "wasm32")]
@@ -1834,6 +1890,7 @@ pub mod layer36 {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Host standard error for diagnostics.
             pub fn stderr() -> OutputStream {
                 unsafe {
                     #[cfg(target_arch = "wasm32")]
@@ -1855,6 +1912,7 @@ pub mod layer36 {
                 }
             }
         }
+        /// App arguments passed by the Layer36 launcher.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod args {
             #[used]
@@ -1862,6 +1920,10 @@ pub mod layer36 {
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             #[allow(unused_unsafe, clippy::all)]
+            /// Raw argument payload for the current CLI slice.
+            ///
+            /// The Phase 2 host encodes arguments as newline-separated text. SDKs should
+            /// expose friendlier argument helpers over this raw transport.
             pub fn raw() -> _rt::String {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -1898,6 +1960,7 @@ pub mod layer36 {
                 }
             }
         }
+        /// Structured app logging.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod log {
             #[used]
@@ -1905,9 +1968,12 @@ pub mod layer36 {
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             pub type LogLevel = super::super::super::layer36::io::types::LogLevel;
+            /// One key/value pair attached to a log event.
             #[derive(Clone)]
             pub struct Field {
+                /// Field name.
                 pub key: _rt::String,
+                /// Field value rendered as text.
                 pub value: _rt::String,
             }
             impl ::core::fmt::Debug for Field {
@@ -1922,6 +1988,7 @@ pub mod layer36 {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Emit one structured log event to the host.
             pub fn emit(level: LogLevel, message: &str, fields: &[Field]) -> () {
                 unsafe {
                     let vec0 = message;
@@ -2004,14 +2071,17 @@ pub mod layer36 {
         }
     }
     pub mod locale {
+        /// Locale and formatting type definitions.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod types {
             #[used]
             #[doc(hidden)]
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
+            /// Host locale identifier using a BCP 47 language tag.
             #[derive(Clone)]
             pub struct LocaleId {
+                /// Canonicalized BCP 47 locale tag, for example `en-US`.
                 pub bcp47: _rt::String,
             }
             impl ::core::fmt::Debug for LocaleId {
@@ -2022,12 +2092,17 @@ pub mod layer36 {
                     f.debug_struct("LocaleId").field("bcp47", &self.bcp47).finish()
                 }
             }
+            /// Date rendering style requested from the host.
             #[repr(u8)]
             #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
             pub enum DateStyle {
+                /// Compact numeric date form.
                 Short,
+                /// Medium-length date form.
                 Medium,
+                /// Long date form.
                 Long,
+                /// Full date form.
                 Full,
             }
             impl ::core::fmt::Debug for DateStyle {
@@ -2058,11 +2133,15 @@ pub mod layer36 {
                     }
                 }
             }
+            /// Number rendering style requested from the host.
             #[repr(u8)]
             #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
             pub enum NumberStyle {
+                /// Decimal number formatting.
                 Decimal,
+                /// Percent formatting.
                 Percent,
+                /// Currency formatting. Currency code selection remains future work.
                 Currency,
             }
             impl ::core::fmt::Debug for NumberStyle {
@@ -2098,6 +2177,7 @@ pub mod layer36 {
                 }
             }
         }
+        /// Host locale and timezone discovery.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod info {
             #[used]
@@ -2182,6 +2262,7 @@ pub mod layer36 {
                 }
             }
         }
+        /// Host-backed date and number formatting.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod format {
             #[used]
@@ -2192,6 +2273,7 @@ pub mod layer36 {
             pub type DateStyle = super::super::super::layer36::locale::types::DateStyle;
             pub type NumberStyle = super::super::super::layer36::locale::types::NumberStyle;
             #[allow(unused_unsafe, clippy::all)]
+            /// Format Unix epoch milliseconds using a timezone, style, and locale.
             pub fn format_date(
                 millis: u64,
                 tz: &str,
@@ -2268,6 +2350,7 @@ pub mod layer36 {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Format a number using a style and locale.
             pub fn format_number(
                 value: f64,
                 style: NumberStyle,
@@ -2330,21 +2413,30 @@ pub mod layer36 {
         }
     }
     pub mod net {
+        /// Shared network request, response, and error types.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod types {
             #[used]
             #[doc(hidden)]
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
+            /// HTTP method for Phase 2 client requests.
             #[repr(u8)]
             #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
             pub enum HttpMethod {
+                /// HTTP GET.
                 Get,
+                /// HTTP POST.
                 Post,
+                /// HTTP PUT.
                 Put,
+                /// HTTP DELETE.
                 Delete,
+                /// HTTP PATCH.
                 Patch,
+                /// HTTP HEAD.
                 Head,
+                /// HTTP OPTIONS.
                 Options,
             }
             impl ::core::fmt::Debug for HttpMethod {
@@ -2385,9 +2477,12 @@ pub mod layer36 {
                     }
                 }
             }
+            /// One HTTP header field.
             #[derive(Clone)]
             pub struct Header {
+                /// Header name.
                 pub name: _rt::String,
+                /// Header value.
                 pub value: _rt::String,
             }
             impl ::core::fmt::Debug for Header {
@@ -2401,12 +2496,18 @@ pub mod layer36 {
                         .finish()
                 }
             }
+            /// Buffered HTTP request shape.
             #[derive(Clone)]
             pub struct Request {
+                /// Request method.
                 pub method: HttpMethod,
+                /// Absolute request URL.
                 pub url: _rt::String,
+                /// App-provided headers. Host-controlled transport headers are rejected.
                 pub headers: _rt::Vec<Header>,
+                /// Buffered request body.
                 pub body: _rt::Vec<u8>,
+                /// Optional timeout in milliseconds for this request.
                 pub timeout_millis: Option<u32>,
             }
             impl ::core::fmt::Debug for Request {
@@ -2423,10 +2524,14 @@ pub mod layer36 {
                         .finish()
                 }
             }
+            /// Buffered HTTP response shape.
             #[derive(Clone)]
             pub struct Response {
+                /// Numeric HTTP status code.
                 pub status: u16,
+                /// Response headers accepted by the host adapter.
                 pub headers: _rt::Vec<Header>,
+                /// Buffered response body.
                 pub body: _rt::Vec<u8>,
             }
             impl ::core::fmt::Debug for Response {
@@ -2441,16 +2546,26 @@ pub mod layer36 {
                         .finish()
                 }
             }
+            /// Network error shape returned by HTTP client calls.
             #[derive(Clone)]
             pub enum NetError {
+                /// URL syntax or unsupported Phase 2 URL shape.
                 InvalidUrl,
+                /// Hostname resolution failed.
                 DnsFailure(_rt::String),
+                /// Socket connection failed.
                 ConnectFailure(_rt::String),
+                /// TLS setup failed. HTTPS is not yet implemented in the first Phase 2 adapter slice.
                 TlsFailure(_rt::String),
+                /// Request timed out.
                 Timeout,
+                /// Response exceeded the configured body-size limit.
                 BodyTooLarge,
+                /// Capability policy denied the request before socket access.
                 PermissionDenied,
+                /// Response framing or protocol parsing failed.
                 Protocol(_rt::String),
+                /// Host-specific network error text.
                 Other(_rt::String),
             }
             impl ::core::fmt::Debug for NetError {
@@ -2497,6 +2612,7 @@ pub mod layer36 {
             }
             impl std::error::Error for NetError {}
         }
+        /// HTTP client calls for CLI components.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod http_client {
             #[used]
@@ -2507,6 +2623,7 @@ pub mod layer36 {
             pub type Response = super::super::super::layer36::net::types::Response;
             pub type NetError = super::super::super::layer36::net::types::NetError;
             #[allow(unused_unsafe, clippy::all)]
+            /// Perform a simple GET request and return only the response body.
             pub fn get(url: &str) -> Result<_rt::Vec<u8>, NetError> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -2663,6 +2780,7 @@ pub mod layer36 {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Perform a buffered HTTP request and return status, headers, and body.
             pub fn fetch(req: &Request) -> Result<Response, NetError> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -2968,6 +3086,7 @@ pub mod layer36 {
         }
     }
     pub mod time {
+        /// Host clock reads.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod clock {
             #[used]
@@ -3011,6 +3130,7 @@ pub mod layer36 {
                 }
             }
         }
+        /// Blocking sleep support for CLI components.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod sleep {
             #[used]

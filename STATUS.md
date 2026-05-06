@@ -3,23 +3,23 @@
 Last updated: 2026-05-06
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `babf633`
-Working tree at this status update: Phase 2 exit-evidence ledger slice validated locally
+Latest checked completed push before this slice: `3493279`
+Working tree at this status update: Phase 2 sample-evidence recorder slice validated locally
 
 ## 1) Project size today
 
-- Commits after this slice lands: 244
-- Tracked files after this slice lands: about 241
-- Total tracked lines after this slice lands: about 71,110
-- Rust lines (`.rs`) after this slice lands: about 35,218
-- Docs lines (`.md`) after this slice lands: about 26,402
+- Commits after this slice lands: 245
+- Tracked files after this slice lands: about 244
+- Total tracked lines after this slice lands: about 72,100
+- Rust lines (`.rs`) after this slice lands: about 36,105
+- Docs lines (`.md`) after this slice lands: about 26,483
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`babf633`) checks:
+Latest completed push (`3493279`) checks:
 
-- CI: success (run `25435200286`)
-- Deploy docs to GitHub Pages: success (run `25435200232`)
+- CI: success (run `25435956772`)
+- Deploy docs to GitHub Pages: success (run `25435956652`)
 
 Recent pushes before that are also green.
 
@@ -80,6 +80,7 @@ Top pending items:
 - Wired hosted and self-hosted CI to fail when that freeze-evidence page is stale
 - Added a runtime adapter-boundary guard for 34 host wrappers across Linux, macOS, and Windows adapter crates
 - Added a Phase 2 exit-evidence ledger that tracks all 15 exit gates with status, proof source, and next step
+- Added a Phase 2 Rust sample evidence recorder for clock, cat, and curl stdout/hash proof across hosts
 
 ## 7) Source of truth files
 

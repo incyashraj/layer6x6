@@ -1,0 +1,65 @@
+# Sample Evidence
+
+This page explains how to record Phase 2 sample evidence.
+
+The goal is simple: run the same three Rust sample apps on each desktop host and
+compare the stdout hashes.
+
+- `layer36-clock`
+- `layer36-cat`
+- `layer36-curl`
+
+If Linux, macOS, and Windows produce the same stdout for these fixed fixtures,
+we have much better evidence that the UAPI behaves the same across hosts.
+
+## Recorder
+
+Run this from the repo root:
+
+```bash
+scripts/record-phase2-sample-evidence.sh
+```
+
+By default, it writes:
+
+```text
+target/phase2-sample-evidence/sample-evidence.md
+```
+
+You can choose another output path:
+
+```bash
+scripts/record-phase2-sample-evidence.sh target/phase2-sample-evidence/macos-arm64.md
+```
+
+## What It Runs
+
+The recorder builds the local CLI and the three Rust sample components. Then it
+runs:
+
+1. `layer36-clock` with fixed time, locale, and timezone
+2. `layer36-cat` against two small fixture files
+3. `layer36-curl` against a local HTTP fixture server
+
+The output file records:
+
+- git commit
+- host OS and CPU architecture
+- command text
+- process exit code
+- result status
+- stdout SHA-256
+- stderr SHA-256
+- exact stdout snapshot
+
+## Exit Use
+
+For Phase 2 exit, collect one report from each required desktop host.
+
+The important comparison is the stdout hash for each sample. Host metadata will
+be different. The sample stdout hashes should match.
+
+If a host cannot run the curl local-server fixture, record that as a blocker
+instead of treating it as cross-host proof.
+The recorder does this automatically when localhost binding is blocked: it keeps
+clock and cat evidence, and marks curl as blocked.

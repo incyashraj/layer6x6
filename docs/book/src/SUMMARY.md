@@ -48,6 +48,7 @@
   - [Threat Model v0.2](phase2/threat-model-v0-2.md)
   - [Migrating From Phase 1](phase2/migrating-from-phase1.md)
   - [Adapter Boundary](phase2/adapter-boundary.md)
+  - [Sample Evidence](phase2/sample-evidence.md)
   - [UAPI Freeze Review](phase2/uapi-freeze-review.md)
   - [UAPI Freeze Evidence](phase2/uapi-freeze-evidence.md)
   - [Exit Evidence](phase2/exit-evidence.md)
