@@ -156,6 +156,10 @@ rejected before any adapter network call runs.
 For manifest host patterns, wildcard is now constrained to explicit shapes only:
 a full left-most `*` label (`*` or `*.example.com`). Partial-label wildcard
 forms (for example `exa*mple.com`) and multiple wildcard labels are rejected.
+Policy matching now also treats `*.example.com` as a single-label wildcard
+scope only (for example `api.example.com`, but not `deep.api.example.com`),
+while `*` host grants remain the broad opt-in form. Runtime dispatcher tests
+now cover this grant behavior directly.
 Host names are now normalized to lowercase in shared URL parsing, so capability
 checks stay stable across input case differences like `EXAMPLE.com` and
 `example.com`. URL scheme checks are now case-insensitive as well, so

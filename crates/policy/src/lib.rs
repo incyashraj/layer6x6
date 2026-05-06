@@ -96,6 +96,9 @@ fn capability_allows(grant: &Capability, required: &Capability) -> bool {
             else {
                 return false;
             };
+            if grant.module() == "net" {
+                return net_resource_pattern_matches(&grant_resource, &required_resource);
+            }
             resource_pattern_matches(&grant_resource, &required_resource)
         }
         _ => false,
@@ -130,6 +133,46 @@ fn normalize_net_resource(resource: &str) -> Option<String> {
     }
 
     Some(format!("{host}:{port}"))
+}
+
+fn net_resource_pattern_matches(pattern: &str, value: &str) -> bool {
+    let Some((pattern_host, pattern_port)) = split_net_resource(pattern) else {
+        return false;
+    };
+    let Some((value_host, value_port)) = split_net_resource(value) else {
+        return false;
+    };
+
+    if pattern_port != "*" && pattern_port != value_port {
+        return false;
+    }
+
+    if pattern_host == "*" {
+        return true;
+    }
+
+    if let Some(suffix) = pattern_host.strip_prefix("*.") {
+        if value_host == suffix {
+            return false;
+        }
+        let Some(prefix) = value_host.strip_suffix(suffix) else {
+            return false;
+        };
+        let Some(prefix) = prefix.strip_suffix('.') else {
+            return false;
+        };
+        return !prefix.is_empty() && !prefix.contains('.');
+    }
+
+    pattern_host == value_host
+}
+
+fn split_net_resource(resource: &str) -> Option<(&str, &str)> {
+    let (host, port) = resource.split_once(':')?;
+    if host.is_empty() || port.is_empty() {
+        return None;
+    }
+    Some((host, port))
 }
 
 fn resource_pattern_matches(pattern: &str, value: &str) -> bool {
@@ -300,10 +343,6 @@ mod tests {
 
     #[test]
     fn wildcard_supports_middle_and_suffix_matches() {
-        assert!(resource_pattern_matches(
-            "api.*.com:443",
-            "api.example.com:443"
-        ));
         assert!(resource_pattern_matches("./notes/**", "./notes/a/b.txt"));
         assert!(!resource_pattern_matches(
             "./notes/*.txt",
@@ -329,6 +368,38 @@ mod tests {
         let grant = "net.connect:api.example.com:0443"
             .parse()
             .expect("parse grant");
+        let policy = SessionPolicy::from_grants([grant]);
+        let required = "net.connect:api.example.com:443"
+            .parse()
+            .expect("parse required");
+
+        assert!(policy.allows(&required));
+    }
+
+    #[test]
+    fn net_resource_matching_leftmost_wildcard_is_single_label_only() {
+        let grant = "net.connect:*.example.com:443"
+            .parse()
+            .expect("parse grant");
+        let policy = SessionPolicy::from_grants([grant]);
+        let one_label = "net.connect:api.example.com:443"
+            .parse()
+            .expect("parse required");
+        let two_labels = "net.connect:deep.api.example.com:443"
+            .parse()
+            .expect("parse required");
+        let apex = "net.connect:example.com:443"
+            .parse()
+            .expect("parse required");
+
+        assert!(policy.allows(&one_label));
+        assert!(!policy.allows(&two_labels));
+        assert!(!policy.allows(&apex));
+    }
+
+    #[test]
+    fn net_resource_matching_global_wildcard_matches_any_host() {
+        let grant = "net.connect:*:443".parse().expect("parse grant");
         let policy = SessionPolicy::from_grants([grant]);
         let required = "net.connect:api.example.com:443"
             .parse()

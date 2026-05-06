@@ -1532,6 +1532,41 @@ mod tests {
     }
 
     #[test]
+    fn net_fetch_leftmost_wildcard_grant_matches_one_label_only() {
+        let adapter = RecordingAdapter::default();
+        let policy = SessionPolicy::from_cli_grants(&["net.connect:*.example.com:443".to_string()])
+            .expect("policy");
+        let guard = UapiGuard::new(policy);
+        let dispatcher = UapiDispatcher::new(&guard, &adapter);
+        let one_label = HttpRequest {
+            method: HttpMethod::Get,
+            url: "https://api.example.com/v1/ping".to_string(),
+            headers: Vec::new(),
+            body: Vec::new(),
+            timeout_millis: None,
+        };
+
+        dispatcher
+            .net_fetch(one_label)
+            .expect("single-label wildcard should pass");
+        assert_eq!(adapter.calls.borrow().net_fetch, 1);
+
+        let two_labels = HttpRequest {
+            method: HttpMethod::Get,
+            url: "https://deep.api.example.com/v1/ping".to_string(),
+            headers: Vec::new(),
+            body: Vec::new(),
+            timeout_millis: None,
+        };
+        let err = dispatcher
+            .net_fetch(two_labels)
+            .expect_err("multi-label host should not match single-label wildcard grant");
+
+        assert!(matches!(err, NetDispatchError::PermissionDenied));
+        assert_eq!(adapter.calls.borrow().net_fetch, 1);
+    }
+
+    #[test]
     fn sleep_requires_time_sleep_grant() {
         let adapter = RecordingAdapter::default();
         let guard = UapiGuard::new(SessionPolicy::default());
