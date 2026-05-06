@@ -60,6 +60,8 @@ impl HostLocale {
         let mut lc_time = None;
         let mut lc_numeric = None;
         let mut lc_monetary = None;
+        let mut lc_ctype = None;
+        let mut lc_collate = None;
         let mut lc_messages = None;
         let mut language = None;
         let mut apple_locale = None;
@@ -72,6 +74,8 @@ impl HostLocale {
                 "LC_TIME" => lc_time = Some(value.as_ref().to_string()),
                 "LC_NUMERIC" => lc_numeric = Some(value.as_ref().to_string()),
                 "LC_MONETARY" => lc_monetary = Some(value.as_ref().to_string()),
+                "LC_CTYPE" => lc_ctype = Some(value.as_ref().to_string()),
+                "LC_COLLATE" => lc_collate = Some(value.as_ref().to_string()),
                 "LC_MESSAGES" => lc_messages = Some(value.as_ref().to_string()),
                 "LANGUAGE" => language = Some(value.as_ref().to_string()),
                 "AppleLocale" => apple_locale = Some(value.as_ref().to_string()),
@@ -92,6 +96,10 @@ impl HostLocale {
                 .as_deref()
                 .filter(|value| !value.trim().is_empty()))
             .or(lc_monetary
+                .as_deref()
+                .filter(|value| !value.trim().is_empty()))
+            .or(lc_ctype.as_deref().filter(|value| !value.trim().is_empty()))
+            .or(lc_collate
                 .as_deref()
                 .filter(|value| !value.trim().is_empty()))
             .or(lc_messages
@@ -779,6 +787,36 @@ mod tests {
             ("LANGUAGE", "fr_FR:de_DE"),
         ]);
         assert_eq!(locale.current().bcp47, "ja-JP");
+    }
+
+    #[test]
+    fn locale_falls_back_to_lc_ctype_after_lc_monetary() {
+        let locale = HostLocale::from_env_pairs([
+            ("LC_ALL", ""),
+            ("LANG", ""),
+            ("LC_TIME", ""),
+            ("LC_NUMERIC", ""),
+            ("LC_MONETARY", ""),
+            ("LC_CTYPE", "ko_KR.UTF-8"),
+            ("LC_COLLATE", "nl_NL.UTF-8"),
+            ("LC_MESSAGES", "es_ES.UTF-8"),
+        ]);
+        assert_eq!(locale.current().bcp47, "ko-KR");
+    }
+
+    #[test]
+    fn locale_falls_back_to_lc_collate_when_lc_ctype_is_empty() {
+        let locale = HostLocale::from_env_pairs([
+            ("LC_ALL", ""),
+            ("LANG", ""),
+            ("LC_TIME", ""),
+            ("LC_NUMERIC", ""),
+            ("LC_MONETARY", ""),
+            ("LC_CTYPE", ""),
+            ("LC_COLLATE", "nl_NL.UTF-8"),
+            ("LC_MESSAGES", "es_ES.UTF-8"),
+        ]);
+        assert_eq!(locale.current().bcp47, "nl-NL");
     }
 
     #[test]

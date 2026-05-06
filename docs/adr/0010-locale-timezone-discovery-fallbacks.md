@@ -15,7 +15,9 @@ Phase 2 needs stable locale and timezone behavior for CLI apps that use
 and `TZ`, with strict normalization and deterministic formatting.
 
 In practice, many host environments do not set all three values in a
-consistent way. Some shells set only `LANGUAGE`, `LC_MESSAGES`, or `LC_TIME`.
+consistent way. Some shells set only category-specific locale variables like
+`LC_TIME`, `LC_NUMERIC`, `LC_MONETARY`, `LC_CTYPE`, or `LC_COLLATE`.
+Others set only `LANGUAGE` or `LC_MESSAGES`.
 macOS often
 exposes locale hints through `AppleLocale`. Unix systems without `TZ` still
 carry timezone intent in `/etc/localtime` symlink targets.
@@ -31,8 +33,9 @@ We will keep deterministic normalization rules and expand environment discovery
 with a strict fallback order in Phase 2.
 
 Locale fallback order is:
-`LC_ALL` → `LANG` → `LC_TIME` → `LC_MESSAGES` → first `LANGUAGE` token → `AppleLocale`
-→ default `en-US`.
+`LC_ALL` → `LANG` → `LC_TIME` → `LC_NUMERIC` → `LC_MONETARY` → `LC_CTYPE` →
+`LC_COLLATE` → `LC_MESSAGES` → first `LANGUAGE` token → `AppleLocale` →
+default `en-US`.
 
 Timezone fallback order is:
 explicit override → `TZ` → Unix `/etc/localtime` zoneinfo symlink inference
