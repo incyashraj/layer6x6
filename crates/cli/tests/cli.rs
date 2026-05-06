@@ -1531,14 +1531,10 @@ fn configured_layer36_ts_curl_component_denies_missing_grant() {
         .output()
         .expect("run layer36-ts-curl component without grant");
 
-    assert_eq!(output.status.code(), Some(21));
+    assert_eq!(output.status.code(), Some(5));
     assert!(output.stdout.is_empty());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("layer36-ts-curl: fetch failed"));
-    assert!(
-        stderr.contains("layer36-ts-curl:"),
-        "expected TS curl to print an error line before fetch-failed marker: {stderr}"
-    );
+    assert!(stderr.contains("layer36-ts-curl: permission denied"));
 }
 
 #[test]
@@ -1564,10 +1560,144 @@ fn configured_layer36_ts_curl_component_reports_unresolved_host() {
     assert_eq!(output.status.code(), Some(21));
     assert!(output.stdout.is_empty());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("layer36-ts-curl: fetch failed"));
     assert!(
-        stderr.contains("layer36-ts-curl:"),
-        "expected TS curl to print an error line before fetch-failed marker: {stderr}"
+        stderr.contains("layer36-ts-curl: dns lookup failed")
+            || stderr.contains("layer36-ts-curl: connection failed")
+            || stderr.contains("layer36-ts-curl: fetch failed"),
+        "unexpected unresolved-host stderr: {stderr}"
+    );
+}
+
+#[test]
+fn configured_layer36_ts_curl_component_reports_invalid_url() {
+    let Some(path) = configured_ts_component(
+        "LAYER36_TS_CURL_WASM",
+        "layer36-ts-curl component test",
+        "layer36_ts_curl.wasm",
+    ) else {
+        return;
+    };
+
+    let output = layer36()
+        .args(["run", "--grant", "net.connect:*:*"])
+        .arg(path)
+        .args(["--", "not-a-url"])
+        .output()
+        .expect("run layer36-ts-curl against invalid URL");
+
+    assert_eq!(output.status.code(), Some(20));
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("layer36-ts-curl: invalid url"));
+}
+
+#[test]
+fn language_variants_curl_permission_denied_matches_rust_and_ts() {
+    let Some(rust_path) = configured_layer36_curl_component() else {
+        return;
+    };
+    let Some(ts_path) = configured_ts_component(
+        "LAYER36_TS_CURL_WASM",
+        "layer36-ts-curl component test",
+        "layer36_ts_curl.wasm",
+    ) else {
+        eprintln!(
+            "skipping language variant curl denial parity: TypeScript fixture is unavailable"
+        );
+        return;
+    };
+
+    let run_without_grant = |path: &PathBuf, label: &str| {
+        let output = layer36()
+            .arg("run")
+            .arg(path)
+            .args(["--", "http://example.com/"])
+            .output()
+            .expect("run language variant curl component without grant");
+
+        assert_eq!(
+            output.status.code(),
+            Some(5),
+            "{label} returned unexpected status for missing net grant"
+        );
+        assert!(
+            output.stdout.is_empty(),
+            "{label} wrote stdout on missing grant"
+        );
+        String::from_utf8_lossy(&output.stderr).to_string()
+    };
+
+    let rust_stderr = run_without_grant(&rust_path, "layer36-curl");
+    let ts_stderr = run_without_grant(&ts_path, "layer36-ts-curl");
+    assert!(rust_stderr.contains("permission denied"));
+    assert!(ts_stderr.contains("permission denied"));
+}
+
+#[test]
+fn language_variants_curl_invalid_url_matches_rust_and_ts() {
+    let Some(rust_path) = configured_layer36_curl_component() else {
+        return;
+    };
+    let Some(ts_path) = configured_ts_component(
+        "LAYER36_TS_CURL_WASM",
+        "layer36-ts-curl component test",
+        "layer36_ts_curl.wasm",
+    ) else {
+        eprintln!(
+            "skipping language variant curl invalid-url parity: TypeScript fixture is unavailable"
+        );
+        return;
+    };
+
+    let run_invalid_url = |path: &PathBuf, label: &str| {
+        let output = layer36()
+            .args(["run", "--grant", "net.connect:*:*"])
+            .arg(path)
+            .args(["--", "not-a-url"])
+            .output()
+            .expect("run language variant curl component against invalid URL");
+
+        assert_eq!(
+            output.status.code(),
+            Some(20),
+            "{label} returned unexpected status for invalid URL"
+        );
+        assert!(
+            output.stdout.is_empty(),
+            "{label} wrote stdout on invalid URL"
+        );
+        String::from_utf8_lossy(&output.stderr).to_string()
+    };
+
+    let rust_stderr = run_invalid_url(&rust_path, "layer36-curl");
+    let ts_stderr = run_invalid_url(&ts_path, "layer36-ts-curl");
+    assert!(rust_stderr.contains("invalid url"));
+    assert!(ts_stderr.contains("invalid url"));
+}
+
+#[test]
+fn configured_layer36_go_curl_component_reports_invalid_url() {
+    let Some(path) = configured_go_component(
+        "LAYER36_GO_CURL_WASM",
+        "layer36-go-curl component test",
+        "layer36_go_curl.wasm",
+    ) else {
+        return;
+    };
+
+    let output = layer36()
+        .args(["run", "--grant", "net.connect:*:*"])
+        .arg(path)
+        .args(["--", "not-a-url"])
+        .output()
+        .expect("run layer36-go-curl against invalid URL");
+
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("layer36-go-curl: invalid url")
+            || stderr.contains("layer36-go-curl: fetch failed"),
+        "unexpected Go invalid-url stderr: {stderr}"
     );
 }
 

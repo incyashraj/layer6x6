@@ -367,6 +367,10 @@ the TypeScript cat fixture runtime path stable in local tests.
 TypeScript curl fixture coverage now also includes non-localhost denial and
 unresolved-host error checks, so restricted runners still prove key curl failure
 paths even when localhost fixture sockets are unavailable.
+TypeScript curl error classification is now aligned with Rust for two critical
+failure paths: missing net grant now exits with code `5` and invalid URL now
+exits with code `20`. The CLI harness now includes explicit Rust versus
+TypeScript parity checks for both of those paths.
 Go curl fixture coverage now includes matching non-localhost denial and
 unresolved-host checks with stable stderr markers.
 When both Go and TypeScript fixture sets are available, the CLI harness now
