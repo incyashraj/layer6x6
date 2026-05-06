@@ -1592,8 +1592,16 @@ fn configured_layer36_ts_curl_component_reports_invalid_url() {
 }
 
 #[test]
-fn language_variants_curl_permission_denied_matches_rust_and_ts() {
+fn language_variants_curl_permission_denied_matches_rust_go_ts() {
     let Some(rust_path) = configured_layer36_curl_component() else {
+        return;
+    };
+    let Some(go_path) = configured_go_component(
+        "LAYER36_GO_CURL_WASM",
+        "layer36-go-curl component test",
+        "layer36_go_curl.wasm",
+    ) else {
+        eprintln!("skipping language variant curl denial parity: Go fixture is unavailable");
         return;
     };
     let Some(ts_path) = configured_ts_component(
@@ -1628,14 +1636,24 @@ fn language_variants_curl_permission_denied_matches_rust_and_ts() {
     };
 
     let rust_stderr = run_without_grant(&rust_path, "layer36-curl");
+    let go_stderr = run_without_grant(&go_path, "layer36-go-curl");
     let ts_stderr = run_without_grant(&ts_path, "layer36-ts-curl");
     assert!(rust_stderr.contains("permission denied"));
+    assert!(go_stderr.contains("permission denied"));
     assert!(ts_stderr.contains("permission denied"));
 }
 
 #[test]
-fn language_variants_curl_invalid_url_matches_rust_and_ts() {
+fn language_variants_curl_invalid_url_matches_rust_go_ts() {
     let Some(rust_path) = configured_layer36_curl_component() else {
+        return;
+    };
+    let Some(go_path) = configured_go_component(
+        "LAYER36_GO_CURL_WASM",
+        "layer36-go-curl component test",
+        "layer36_go_curl.wasm",
+    ) else {
+        eprintln!("skipping language variant curl invalid-url parity: Go fixture is unavailable");
         return;
     };
     let Some(ts_path) = configured_ts_component(
@@ -1670,9 +1688,85 @@ fn language_variants_curl_invalid_url_matches_rust_and_ts() {
     };
 
     let rust_stderr = run_invalid_url(&rust_path, "layer36-curl");
+    let go_stderr = run_invalid_url(&go_path, "layer36-go-curl");
     let ts_stderr = run_invalid_url(&ts_path, "layer36-ts-curl");
     assert!(rust_stderr.contains("invalid url"));
+    assert!(go_stderr.contains("invalid url"));
     assert!(ts_stderr.contains("invalid url"));
+}
+
+#[test]
+fn language_variants_curl_unresolved_host_matches_rust_go_ts() {
+    let Some(rust_path) = configured_layer36_curl_component() else {
+        return;
+    };
+    let Some(go_path) = configured_go_component(
+        "LAYER36_GO_CURL_WASM",
+        "layer36-go-curl component test",
+        "layer36_go_curl.wasm",
+    ) else {
+        eprintln!(
+            "skipping language variant curl unresolved-host parity: Go fixture is unavailable"
+        );
+        return;
+    };
+    let Some(ts_path) = configured_ts_component(
+        "LAYER36_TS_CURL_WASM",
+        "layer36-ts-curl component test",
+        "layer36_ts_curl.wasm",
+    ) else {
+        eprintln!(
+            "skipping language variant curl unresolved-host parity: TypeScript fixture is unavailable"
+        );
+        return;
+    };
+
+    let host = "layer36-does-not-exist.invalid";
+    let url = format!("http://{host}/unreachable");
+    let grant = format!("net.connect:{host}:80");
+
+    let run_unresolved = |path: &PathBuf, label: &str| {
+        let output = layer36()
+            .args(["run", "--grant", &grant])
+            .arg(path)
+            .args(["--", &url])
+            .output()
+            .expect("run language variant curl component against unresolved host");
+
+        assert_eq!(
+            output.status.code(),
+            Some(21),
+            "{label} returned unexpected status for unresolved host"
+        );
+        assert!(
+            output.stdout.is_empty(),
+            "{label} wrote stdout on unresolved-host path"
+        );
+        String::from_utf8_lossy(&output.stderr).to_string()
+    };
+
+    let rust_stderr = run_unresolved(&rust_path, "layer36-curl");
+    let go_stderr = run_unresolved(&go_path, "layer36-go-curl");
+    let ts_stderr = run_unresolved(&ts_path, "layer36-ts-curl");
+
+    let has_unresolved_error = |stderr: &str| {
+        stderr.contains("dns lookup failed")
+            || stderr.contains("connection failed")
+            || stderr.contains("fetch failed")
+    };
+
+    assert!(
+        has_unresolved_error(&rust_stderr),
+        "Rust unresolved-host stderr drifted: {rust_stderr}"
+    );
+    assert!(
+        has_unresolved_error(&go_stderr),
+        "Go unresolved-host stderr drifted: {go_stderr}"
+    );
+    assert!(
+        has_unresolved_error(&ts_stderr),
+        "TypeScript unresolved-host stderr drifted: {ts_stderr}"
+    );
 }
 
 #[test]

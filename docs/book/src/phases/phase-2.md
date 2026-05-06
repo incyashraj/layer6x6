@@ -420,6 +420,9 @@ unresolved-host checks with stable stderr markers.
 The Go curl sample now also uses a stable, case-insensitive error classifier
 with unit tests for key Layer36 net error classes, so common failure paths
 map to predictable messages and exit codes (`5`, `20`, `21`).
+The language-variant parity tests now check curl error paths across Rust, Go,
+and TypeScript too: missing grant, invalid URL, and unresolved-host cases are
+validated together without requiring localhost fixture sockets.
 The Go fixture promotion diagnostics are also clearer now. When TinyGo outputs
 are not Layer36-import pure, the import checker reports every failing Go
 artifact instead of stopping at the first one. Current local smoke artifacts
