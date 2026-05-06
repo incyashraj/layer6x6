@@ -7,7 +7,7 @@ use std::{
     cell::RefCell,
     collections::BTreeMap,
     fs::File,
-    io::{Read, SeekFrom, Write},
+    io::{SeekFrom, Write},
     net::{SocketAddr, TcpStream},
     path::{Path, PathBuf},
     rc::Rc,
@@ -882,7 +882,7 @@ impl IoAdapter for LocalPhase2Adapter {
         match state.resources.get_mut(&handle.id) {
             Some(LocalResource::Stdin) => {
                 let mut buf = vec![0; len];
-                let len = std::io::stdin().read(&mut buf).map_err(map_io_error)?;
+                let len = read_stdin_on_host(&mut buf).map_err(map_io_error)?;
                 buf.truncate(len);
                 Ok(buf)
             }
@@ -917,7 +917,7 @@ impl IoAdapter for LocalPhase2Adapter {
         let mut state = self.state.borrow_mut();
         match state.resources.get_mut(&handle.id) {
             Some(LocalResource::Stdout) => self.output.borrow_mut().write_bytes(bytes),
-            Some(LocalResource::Stderr) => std::io::stderr().write_all(bytes),
+            Some(LocalResource::Stderr) => write_stderr_on_host(bytes),
             Some(_) => Err(std::io::Error::new(
                 std::io::ErrorKind::Unsupported,
                 "stream is not writable",
@@ -934,7 +934,7 @@ impl IoAdapter for LocalPhase2Adapter {
         let mut state = self.state.borrow_mut();
         match state.resources.get_mut(&handle.id) {
             Some(LocalResource::Stdout) => self.output.borrow_mut().flush(),
-            Some(LocalResource::Stderr) => std::io::stderr().flush(),
+            Some(LocalResource::Stderr) => flush_stderr_on_host(),
             Some(_) => Ok(()),
             None => Err(std::io::Error::new(
                 std::io::ErrorKind::NotFound,
@@ -1200,6 +1200,48 @@ fn symlink_metadata_on_host(path: &Path) -> std::io::Result<std::fs::Metadata> {
     #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
     {
         std::fs::symlink_metadata(path)
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn read_stdin_on_host(buf: &mut [u8]) -> std::io::Result<usize> {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::read_stdin(buf)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        let mut stdin = std::io::stdin();
+        std::io::Read::read(&mut stdin, buf)
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn write_stderr_on_host(bytes: &[u8]) -> std::io::Result<()> {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::write_stderr(bytes)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        let mut stderr = std::io::stderr();
+        std::io::Write::write_all(&mut stderr, bytes)
+    }
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn flush_stderr_on_host() -> std::io::Result<()> {
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    {
+        host_os_adapter::flush_stderr()
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        let mut stderr = std::io::stderr();
+        std::io::Write::flush(&mut stderr)
     }
 }
 
@@ -1685,6 +1727,7 @@ fn classify_limit_error(err: &wasmtime::Error) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Read;
 
     #[test]
     fn default_config_sets_phase_1_memory_cap() {

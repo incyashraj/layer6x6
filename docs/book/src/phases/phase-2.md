@@ -224,6 +224,8 @@ Runtime component-file reads and sandbox-root directory creation now also route
 through per-OS adapters.
 File-handle read, write, seek, and metadata host calls now also route through
 per-OS adapters.
+Stdin reads and stderr write or flush host calls now also route through per-OS
+adapters.
 
 There is also a first smoke app under `test/integration/phase2-smoke`. It is not
 one of the final sample apps yet. Its job is smaller: prove that a real Phase 2

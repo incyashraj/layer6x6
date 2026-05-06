@@ -34,6 +34,24 @@ pub fn sleep_millis(millis: u32) {
     HostClock::sleep_millis(millis);
 }
 
+/// Read from host stdin through the Linux adapter path.
+pub fn read_stdin(buf: &mut [u8]) -> std::io::Result<usize> {
+    let mut stdin = std::io::stdin();
+    std::io::Read::read(&mut stdin, buf)
+}
+
+/// Write bytes to host stderr through the Linux adapter path.
+pub fn write_stderr(bytes: &[u8]) -> std::io::Result<()> {
+    let mut stderr = std::io::stderr();
+    std::io::Write::write_all(&mut stderr, bytes)
+}
+
+/// Flush host stderr through the Linux adapter path.
+pub fn flush_stderr() -> std::io::Result<()> {
+    let mut stderr = std::io::stderr();
+    std::io::Write::flush(&mut stderr)
+}
+
 /// Open a TCP stream through the Linux adapter path.
 pub fn connect_tcp(addr: SocketAddr, timeout: Option<Duration>) -> std::io::Result<TcpStream> {
     match timeout {
@@ -188,6 +206,24 @@ mod tests {
     #[test]
     fn sleep_hook_accepts_zero_millis() {
         sleep_millis(0);
+    }
+
+    #[test]
+    fn read_stdin_hook_is_available() {
+        let hook: fn(&mut [u8]) -> std::io::Result<usize> = read_stdin;
+        let _ = hook;
+    }
+
+    #[test]
+    fn write_stderr_hook_is_available() {
+        let hook: fn(&[u8]) -> std::io::Result<()> = write_stderr;
+        let _ = hook;
+    }
+
+    #[test]
+    fn flush_stderr_hook_is_available() {
+        let hook: fn() -> std::io::Result<()> = flush_stderr;
+        let _ = hook;
     }
 
     #[test]
