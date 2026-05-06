@@ -27,11 +27,11 @@ Status meanings:
 | P2E-02 | Desktop host adapters | **Partial** | `scripts/check-adapter-boundary.sh`, [Adapter Boundary](adapter-boundary.md) | Keep collecting Linux, macOS, and Windows full-gate evidence. |
 | P2E-03 | Rust bindings usable | **Partial** | `scripts/smoke-rust-sdk.sh`, [First Rust CLI](../uapi/first-rust-cli.md) | Publish only after UAPI v0.1 is frozen. |
 | P2E-04 | Go bindings usable | **Blocked** | `scripts/build-phase2-go-variant-smoke.sh`, `scripts/promote-phase2-go-runtime-fixtures.sh` | Make TinyGo outputs Layer36 import-pure or mark Go experimental for this exit. |
-| P2E-05 | TypeScript bindings usable | **Partial** | `scripts/build-phase2-language-variant-fixtures.sh`, `scripts/test-phase2-language-variants.sh` | Keep TS curl success evidence stable across restricted runners. |
+| P2E-05 | TypeScript bindings usable | **Partial** | `scripts/build-phase2-language-variant-fixtures.sh`, `scripts/test-phase2-language-variants.sh`, `language_variants_curl_*` CLI tests | Keep TS curl success evidence stable across restricted runners and keep cross-language curl error parity green (`5`, `20`, `21` classes). |
 | P2E-06 | curl cross-host | **Partial** | `scripts/record-phase2-sample-evidence.sh`, `scripts/compare-phase2-sample-evidence.sh`, [Sample Evidence](sample-evidence.md) | Record identical stdout on Linux, macOS, and Windows. |
 | P2E-07 | cat cross-host | **Partial** | `scripts/record-phase2-sample-evidence.sh`, `scripts/compare-phase2-sample-evidence.sh`, [Sample Evidence](sample-evidence.md) | Record identical stdout on Linux, macOS, and Windows. |
 | P2E-08 | clock cross-host | **Partial** | `scripts/record-phase2-sample-evidence.sh`, `scripts/compare-phase2-sample-evidence.sh`, [Sample Evidence](sample-evidence.md) | Record fixed-time output on Linux, macOS, and Windows. |
-| P2E-09 | UCap enforcement | **Partial** | `crates/policy`, `crates/runtime`, `tests/cli.rs` | Finish cross-host denial evidence at each UAPI boundary. |
+| P2E-09 | UCap enforcement | **Partial** | `crates/policy`, `crates/runtime`, `tests/cli.rs` (`language_variants_curl_permission_denied_matches_rust_go_ts`) | Finish cross-host denial evidence at each UAPI boundary. |
 | P2E-10 | Startup performance | **Partial** | `cargo bench -p layer36-runtime --bench startup`, [Dispatch Benchmarks](benchmarks.md) | Add full CLI startup measurements and cross-host baselines. |
 | P2E-11 | Dispatch performance | **Partial** | `cargo bench -p layer36-runtime --bench uapi_dispatch`, `scripts/check-benchmark-regression.sh` | Collect stable cross-host benchmark evidence. |
 | P2E-12 | Timed developer walkthrough | **Pending** | [First Rust CLI](../uapi/first-rust-cli.md) | Ask an outside Rust developer to build a small app and time the run. |
