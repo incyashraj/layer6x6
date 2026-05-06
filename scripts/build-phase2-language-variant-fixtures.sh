@@ -167,15 +167,22 @@ if [ "$ts_ready" -eq 0 ]; then
 fi
 
 if [ "$go_ready" -eq 0 ]; then
+  go_fixture_mode="optional"
+  case "$MODE" in
+    go|both)
+      go_fixture_mode="required"
+      ;;
+  esac
+
   if can_build_go_runtime_fixtures; then
     echo "Building and promoting Go language-variant runtime fixtures with TinyGo"
-    if LAYER36_GO_RUNTIME_FIXTURE_MODE=optional scripts/promote-phase2-go-runtime-fixtures.sh; then
+    if LAYER36_GO_RUNTIME_FIXTURE_MODE="$go_fixture_mode" scripts/promote-phase2-go-runtime-fixtures.sh; then
       if has_complete_set "layer36_go" && set_imports_are_pure "layer36_go"; then
         go_ready=1
       fi
     fi
   else
-    echo "Go language-variant runtime fixtures not built: TinyGo toolchain path is unavailable."
+    echo "Go language-variant runtime fixtures not built: TinyGo toolchain path is unavailable (mode: $go_fixture_mode)."
   fi
 fi
 
