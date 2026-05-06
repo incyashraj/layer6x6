@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 pub const PHASE2_CLI_WORLD: &str = "layer36:app/cli@0.1.0";
+const MAX_NET_CONNECT_HOST_BYTES: usize = 253;
 
 const PHASE2_CAPABILITY_SPECS: &[CapabilitySpec] = &[
     CapabilitySpec::resource_free("io", "stdin", true),
@@ -469,6 +470,9 @@ fn validate_connect_resource(resource: &str) -> std::result::Result<(), String> 
 }
 
 fn validate_connect_host_pattern(host: &str) -> std::result::Result<(), String> {
+    if host.len() > MAX_NET_CONNECT_HOST_BYTES {
+        return Err("network endpoint host is too long".to_string());
+    }
     if host.starts_with('.') || host.ends_with('.') || host.contains("..") {
         return Err("network endpoint host has invalid dot placement".to_string());
     }
@@ -655,6 +659,14 @@ mod tests {
             .parse::<Capability>()
             .expect("accept wildcard host");
 
+        let long_host_pattern = format!(
+            "net.connect:{}.{}.{}.{}:443",
+            "a".repeat(63),
+            "b".repeat(63),
+            "c".repeat(63),
+            "d".repeat(63)
+        );
+
         for input in [
             "net.connect::443",
             "net.connect:example.com",
@@ -680,6 +692,7 @@ mod tests {
             "net.connect:*.*.example.com:443",
             "net.connect:exa*mple.com:443",
             "net.connect:api*.example.com:443",
+            long_host_pattern.as_str(),
         ] {
             let err = input
                 .parse::<Capability>()

@@ -56,6 +56,7 @@ const MAX_HTTP_HEADER_NAME_BYTES: usize = 128;
 const MAX_HTTP_HEADER_VALUE_BYTES: usize = 4 * 1024;
 const MAX_HTTP_HEADER_BLOCK_BYTES: usize = 16 * 1024;
 const MAX_HTTP_AUTHORITY_BYTES: usize = 255;
+const MAX_HTTP_HOST_BYTES: usize = 253;
 const MAX_HTTP_BODY_BYTES: usize = 1024 * 1024;
 const MAX_HTTP_TARGET_BYTES: usize = 4096;
 const MAX_HTTP_REQUEST_BYTES: usize = MAX_HTTP_BODY_BYTES + MAX_HTTP_HEADER_BLOCK_BYTES + 4096;
@@ -172,6 +173,9 @@ fn parse_url_endpoint_with_default(
     };
 
     if host.is_empty() {
+        return Err(UrlEndpointError::InvalidUrl);
+    }
+    if host.len() > MAX_HTTP_HOST_BYTES {
         return Err(UrlEndpointError::InvalidUrl);
     }
     if !is_valid_plain_http_host(host) {
@@ -829,6 +833,17 @@ mod tests {
         );
         assert_eq!(
             parse_url_endpoint("https://001.2.3.4/path").unwrap_err(),
+            UrlEndpointError::InvalidUrl
+        );
+        let long_host = format!(
+            "{}.{}.{}.{}",
+            "a".repeat(63),
+            "b".repeat(63),
+            "c".repeat(63),
+            "d".repeat(63)
+        );
+        assert_eq!(
+            parse_url_endpoint(&format!("https://{long_host}/path")).unwrap_err(),
             UrlEndpointError::InvalidUrl
         );
         assert_eq!(
