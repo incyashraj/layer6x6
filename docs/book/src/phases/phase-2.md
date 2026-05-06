@@ -357,6 +357,12 @@ builds the CLI and Rust clock/cat/curl components, runs fixed fixtures, and
 writes a markdown report with host metadata, commands, exit codes, stdout
 hashes, and output snapshots. That gives the Phase 2 exit review a practical
 way to compare Linux, macOS, and Windows sample behavior.
+There is also a companion comparator now:
+`scripts/compare-phase2-sample-evidence.sh` wraps
+`layer36-tools --bin compare-phase2-sample-evidence` so three host reports can
+be checked in one run. It fails fast when clock/cat/curl stdout hashes drift
+across hosts and supports a temporary `--allow-blocked-curl` exception for
+restricted localhost environments.
 
 The first terminal grant prompt exists too. `layer36 run --prompt app.wasm`
 shows the app identity, lists missing manifest capabilities, accepts all or a

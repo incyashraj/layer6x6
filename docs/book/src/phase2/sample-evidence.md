@@ -32,6 +32,26 @@ You can choose another output path:
 scripts/record-phase2-sample-evidence.sh target/phase2-sample-evidence/macos-arm64.md
 ```
 
+For three-host comparison after collecting Linux, macOS, and Windows reports:
+
+```bash
+scripts/compare-phase2-sample-evidence.sh \
+  target/phase2-sample-evidence/linux.md \
+  target/phase2-sample-evidence/macos.md \
+  target/phase2-sample-evidence/windows.md
+```
+
+If curl is blocked only because localhost binding is restricted on one host,
+you can use:
+
+```bash
+scripts/compare-phase2-sample-evidence.sh \
+  target/phase2-sample-evidence/linux.md \
+  target/phase2-sample-evidence/macos.md \
+  target/phase2-sample-evidence/windows.md \
+  --allow-blocked-curl
+```
+
 ## What It Runs
 
 The recorder builds the local CLI and the three Rust sample components. Then it
@@ -63,3 +83,4 @@ If a host cannot run the curl local-server fixture, record that as a blocker
 instead of treating it as cross-host proof.
 The recorder does this automatically when localhost binding is blocked: it keeps
 clock and cat evidence, and marks curl as blocked.
+The comparator can then enforce exact hash matches and fail fast on drift.
