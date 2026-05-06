@@ -516,25 +516,9 @@ fn validate_connect_host_pattern(host: &str) -> std::result::Result<(), String> 
 }
 
 fn is_valid_ipv4_host(host: &str) -> bool {
-    let mut octets = [0u8; 4];
-    let mut parts = host.split('.');
-    for octet in &mut octets {
-        let Some(part) = parts.next() else {
-            return false;
-        };
-        if part.is_empty() {
-            return false;
-        }
-        let Ok(value) = part.parse::<u8>() else {
-            return false;
-        };
-        *octet = value;
-    }
-    if parts.next().is_some() {
+    let Ok(ip) = host.parse::<std::net::Ipv4Addr>() else {
         return false;
-    }
-
-    let ip = std::net::Ipv4Addr::new(octets[0], octets[1], octets[2], octets[3]);
+    };
     if ip.is_unspecified() || ip.is_multicast() || ip == std::net::Ipv4Addr::BROADCAST {
         return false;
     }
@@ -691,6 +675,7 @@ mod tests {
             "net.connect:0.0.0.0:443",
             "net.connect:255.255.255.255:443",
             "net.connect:239.1.2.3:443",
+            "net.connect:001.2.3.4:443",
             "net.connect:api.*.example.com:443",
             "net.connect:*.*.example.com:443",
             "net.connect:exa*mple.com:443",

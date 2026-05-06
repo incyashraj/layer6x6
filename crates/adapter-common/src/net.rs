@@ -478,25 +478,9 @@ fn is_valid_plain_http_host(host: &str) -> bool {
 }
 
 fn is_valid_ipv4_host(host: &str) -> bool {
-    let mut octets = [0u8; 4];
-    let mut parts = host.split('.');
-    for octet in &mut octets {
-        let Some(part) = parts.next() else {
-            return false;
-        };
-        if part.is_empty() {
-            return false;
-        }
-        let Ok(value) = part.parse::<u8>() else {
-            return false;
-        };
-        *octet = value;
-    }
-    if parts.next().is_some() {
+    let Ok(ip) = host.parse::<std::net::Ipv4Addr>() else {
         return false;
-    }
-
-    let ip = std::net::Ipv4Addr::new(octets[0], octets[1], octets[2], octets[3]);
+    };
     if ip.is_unspecified() || ip.is_multicast() || ip == std::net::Ipv4Addr::BROADCAST {
         return false;
     }
@@ -841,6 +825,10 @@ mod tests {
         );
         assert_eq!(
             parse_url_endpoint("https://239.1.2.3/path").unwrap_err(),
+            UrlEndpointError::InvalidUrl
+        );
+        assert_eq!(
+            parse_url_endpoint("https://001.2.3.4/path").unwrap_err(),
             UrlEndpointError::InvalidUrl
         );
         assert_eq!(

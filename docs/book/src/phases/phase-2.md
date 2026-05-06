@@ -148,6 +148,10 @@ Request framing now also enforces a shared buffered body size limit so this
 early plain-HTTP path cannot consume unbounded request payloads.
 Shared host parsing now also rejects invalid domain-label forms and invalid
 numeric IPv4 literals so URL and capability-path validation stay aligned.
+Numeric IPv4 textual parsing is now strict dotted-decimal as well, so ambiguous
+leading-zero forms like `001.2.3.4` are rejected in both URL endpoint parsing
+and manifest `net.connect` validation. Runtime dispatcher tests now also prove
+these URLs fail as invalid before adapter network calls.
 It now also rejects wildcard or non-unicast numeric IPv4 endpoint forms
 (`0.0.0.0`, `255.255.255.255`, and multicast ranges) during endpoint parsing,
 so runtime URL checks and manifest `net.connect` validation stay aligned on
