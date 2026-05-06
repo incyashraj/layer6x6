@@ -160,6 +160,9 @@ scope-less IPv6 link-local addresses) are filtered, non-unicast targets
 (IPv4 broadcast, IPv4 multicast, and IPv6 multicast) are filtered, and
 connect-attempt lists are capped to a fixed maximum so DNS result variance
 cannot create unbounded retry loops.
+When all resolved targets are filtered out by these guards, runtime resolution
+now maps that case to a deterministic not-found path instead of leaving
+host-specific behavior to later connect loops.
 In this early plain-HTTP slice, URL parsing is also ASCII-only. Non-ASCII URLs
 are rejected early so request framing and capability endpoint checks stay
 deterministic until broader URL handling lands in a later hardening pass.

@@ -1515,6 +1515,13 @@ fn resolve_plain_http_socket_addrs(
 ) -> std::result::Result<Vec<SocketAddr>, AdapterError> {
     let addrs =
         resolve_socket_addrs_on_host(url.host.as_str(), url.port).map_err(map_net_resolve_error)?;
+    normalize_resolved_socket_addrs_or_not_found(addrs)
+}
+
+#[cfg(feature = "phase2-bindings")]
+fn normalize_resolved_socket_addrs_or_not_found(
+    addrs: Vec<SocketAddr>,
+) -> std::result::Result<Vec<SocketAddr>, AdapterError> {
     let addrs = normalize_resolved_socket_addrs(addrs);
     if addrs.is_empty() {
         return Err(AdapterError::NotFound);
@@ -2668,6 +2675,31 @@ mod tests {
         };
         let err = connect_plain_http_stream(&url, None).expect_err("connection should fail");
         assert!(matches!(err, AdapterError::Network(_)));
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn normalize_resolved_socket_addrs_or_not_found_rejects_fully_filtered_sets() {
+        let unusable = vec![
+            SocketAddr::from(([0, 0, 0, 0], 8080)),
+            SocketAddr::from(([127, 0, 0, 1], 0)),
+            SocketAddr::from(([239, 1, 2, 3], 8080)),
+        ];
+        let err = normalize_resolved_socket_addrs_or_not_found(unusable)
+            .expect_err("fully filtered address sets should be treated as not found");
+        assert_eq!(err, AdapterError::NotFound);
+    }
+
+    #[cfg(feature = "phase2-bindings")]
+    #[test]
+    fn normalize_resolved_socket_addrs_or_not_found_keeps_usable_targets() {
+        let addrs = vec![
+            SocketAddr::from(([0, 0, 0, 0], 8080)),
+            SocketAddr::from(([127, 0, 0, 1], 8080)),
+        ];
+        let normalized = normalize_resolved_socket_addrs_or_not_found(addrs)
+            .expect("usable addresses should remain after normalization");
+        assert_eq!(normalized, vec![SocketAddr::from(([127, 0, 0, 1], 8080))]);
     }
 
     #[cfg(feature = "phase2-bindings")]
