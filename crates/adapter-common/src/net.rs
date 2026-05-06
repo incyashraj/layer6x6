@@ -102,8 +102,16 @@ pub fn normalize_resolved_socket_addrs(addrs: Vec<SocketAddr>) -> Vec<SocketAddr
     let mut v6_addrs = Vec::new();
 
     for addr in addrs {
+        if addr.port() == 0 {
+            continue;
+        }
         if addr.ip().is_unspecified() {
             continue;
+        }
+        if let SocketAddr::V6(v6) = addr {
+            if v6.ip().is_unicast_link_local() && v6.scope_id() == 0 {
+                continue;
+            }
         }
         if seen.insert(addr) {
             if addr.is_ipv4() {
@@ -878,6 +886,44 @@ mod tests {
         ]);
 
         assert_eq!(normalized, vec![usable_v4, usable_v6]);
+    }
+
+    #[test]
+    fn normalize_resolved_socket_addrs_filters_port_zero() {
+        let zero_port_v4 = SocketAddr::from(([127, 0, 0, 1], 0));
+        let usable_v4 = SocketAddr::from(([127, 0, 0, 1], 8080));
+        let zero_port_v6 = SocketAddr::from(([0u16, 0, 0, 0, 0, 0, 0, 1], 0));
+        let usable_v6 = SocketAddr::from(([0u16, 0, 0, 0, 0, 0, 0, 1], 8080));
+
+        let normalized =
+            normalize_resolved_socket_addrs(vec![zero_port_v4, usable_v4, zero_port_v6, usable_v6]);
+
+        assert_eq!(normalized, vec![usable_v4, usable_v6]);
+    }
+
+    #[test]
+    fn normalize_resolved_socket_addrs_filters_scope_less_link_local_ipv6() {
+        let scope_less_link_local = SocketAddr::V6(std::net::SocketAddrV6::new(
+            std::net::Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 1),
+            8080,
+            0,
+            0,
+        ));
+        let scoped_link_local = SocketAddr::V6(std::net::SocketAddrV6::new(
+            std::net::Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 2),
+            8080,
+            0,
+            3,
+        ));
+        let loopback_v6 = SocketAddr::from(([0u16, 0, 0, 0, 0, 0, 0, 1], 8080));
+
+        let normalized = normalize_resolved_socket_addrs(vec![
+            scope_less_link_local,
+            scoped_link_local,
+            loopback_v6,
+        ]);
+
+        assert_eq!(normalized, vec![scoped_link_local, loopback_v6]);
     }
 
     #[test]
