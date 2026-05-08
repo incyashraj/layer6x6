@@ -49,9 +49,11 @@ The compare step checks:
 - startup, dispatch, and regression steps passed on all three reports
 - required metric rows exist with current values
 - baseline and threshold metadata is consistent across hosts
+- each metric stays within its baseline threshold on each host report
 
 ## Notes
 
 - Runtime numbers are expected to differ across host hardware.
 - This compare gate does not force numeric equality across hosts.
+- It does enforce per-host threshold bounds from the recorded baseline table.
 - It proves shape and pass state consistency for the same code revision.

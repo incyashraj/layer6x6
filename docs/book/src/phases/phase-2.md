@@ -385,6 +385,9 @@ Performance evidence now has the same repeatable flow:
 [Benchmark Evidence](../phase2/benchmark-evidence.md) shows how to record
 startup and dispatch benchmark results, run baseline regression checks, and
 compare Linux/macOS/Windows benchmark reports for commit and gate consistency.
+The benchmark comparator also enforces per-host threshold bounds from the
+metric table, so a host can no longer pass this lane with an over-threshold
+metric hidden behind warning-only regression mode.
 This gives `P2E-10` and `P2E-11` clearer cross-host proof tracking even when
 raw timing numbers differ by hardware.
 

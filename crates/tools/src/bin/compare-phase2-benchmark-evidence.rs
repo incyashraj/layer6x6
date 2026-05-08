@@ -159,11 +159,11 @@ struct StepRow {
     result: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 struct MetricRow {
     current_ns: Option<u64>,
     baseline_ns: u64,
-    threshold_pct: String,
+    threshold_pct: f64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -248,7 +248,9 @@ fn parse_tables(source: &str) -> Result<(BTreeMap<String, StepRow>, BTreeMap<Str
                 let baseline_ns = columns[2]
                     .parse::<u64>()
                     .with_context(|| format!("invalid baseline ns `{}`", columns[2]))?;
-                let threshold_pct = columns[3].clone();
+                let threshold_pct = columns[3]
+                    .parse::<f64>()
+                    .with_context(|| format!("invalid threshold % `{}`", columns[3]))?;
                 metrics.insert(
                     metric,
                     MetricRow {
@@ -287,6 +289,7 @@ fn compare_reports(reports: &[HostReport]) -> Result<()> {
     validate_host_assignments(reports)?;
     validate_step_outcomes(reports)?;
     validate_metric_shape(reports)?;
+    validate_metric_thresholds(reports)?;
 
     println!("comparison passed: benchmark evidence is aligned");
     Ok(())
@@ -419,14 +422,58 @@ fn validate_metric_shape(reports: &[HostReport]) -> Result<()> {
     Ok(())
 }
 
+fn validate_metric_thresholds(reports: &[HostReport]) -> Result<()> {
+    for metric in REQUIRED_METRICS {
+        for report in reports {
+            let row = report.metric_rows.get(*metric).with_context(|| {
+                format!(
+                    "{} is missing required metric row `{metric}`",
+                    report.source.display()
+                )
+            })?;
+            let Some(current) = row.current_ns else {
+                bail!(
+                    "{} metric `{metric}` has no current value (n/a)",
+                    report.source.display()
+                );
+            };
+
+            let allowed = (row.baseline_ns as f64) * (1.0 + row.threshold_pct / 100.0);
+            if (current as f64) > allowed {
+                bail!(
+                    "{} metric `{metric}` regressed: current {} ns, baseline {} ns, threshold {}%, allowed {} ns",
+                    report.source.display(),
+                    current,
+                    row.baseline_ns,
+                    row.threshold_pct,
+                    allowed.round() as u64
+                );
+            }
+        }
+    }
+
+    println!("- metrics: current values are within baseline thresholds on all hosts");
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn sample_report(host_os: &str, commit: &str, step_result: &str, step_code: i32) -> String {
+    fn sample_report(
+        host_os: &str,
+        commit: &str,
+        step_result: &str,
+        step_code: i32,
+        metric_override: Option<(&str, u64)>,
+    ) -> String {
         let mut metrics = String::new();
         for metric in REQUIRED_METRICS {
-            metrics.push_str(&format!("| {metric} | 100 | 90 | 10 |\n"));
+            let current = match metric_override {
+                Some((target, value)) if *metric == target => value,
+                _ => 95,
+            };
+            metrics.push_str(&format!("| {metric} | {current} | 90 | 10 |\n"));
         }
         format!(
             r#"# Phase 2 Benchmark Evidence
@@ -460,8 +507,8 @@ mod tests {
 
     #[test]
     fn parses_benchmark_tables() {
-        let (steps, metrics) =
-            parse_tables(&sample_report("Linux", "abc123", "passed", 0)).expect("parse tables");
+        let (steps, metrics) = parse_tables(&sample_report("Linux", "abc123", "passed", 0, None))
+            .expect("parse tables");
         assert_eq!(steps.len(), REQUIRED_STEPS.len());
         assert_eq!(metrics.len(), REQUIRED_METRICS.len());
     }
@@ -469,19 +516,57 @@ mod tests {
     #[test]
     fn rejects_failed_step() {
         let reports = vec![
-            HostReport::parse_report_text("linux", sample_report("Linux", "abc123", "failed", 1))
-                .expect("linux"),
-            HostReport::parse_report_text("macos", sample_report("Darwin", "abc123", "passed", 0))
-                .expect("macos"),
+            HostReport::parse_report_text(
+                "linux",
+                sample_report("Linux", "abc123", "failed", 1, None),
+            )
+            .expect("linux"),
+            HostReport::parse_report_text(
+                "macos",
+                sample_report("Darwin", "abc123", "passed", 0, None),
+            )
+            .expect("macos"),
             HostReport::parse_report_text(
                 "windows",
-                sample_report("Windows_NT", "abc123", "passed", 0),
+                sample_report("Windows_NT", "abc123", "passed", 0, None),
             )
             .expect("windows"),
         ];
 
         let err = compare_reports(&reports).expect_err("should fail");
         assert!(err.to_string().contains("Startup benchmark"));
+    }
+
+    #[test]
+    fn rejects_metric_regression() {
+        let bad_linux = sample_report(
+            "Linux",
+            "abc123",
+            "passed",
+            0,
+            Some(("phase2_uapi_default_stdout_grant", 1000)),
+        );
+        let (_, bad_metrics) = parse_tables(&bad_linux).expect("parse bad metrics");
+        assert_eq!(
+            bad_metrics["phase2_uapi_default_stdout_grant"].current_ns,
+            Some(1000)
+        );
+        let reports = vec![
+            HostReport::parse_report_text("linux", bad_linux).expect("linux"),
+            HostReport::parse_report_text(
+                "macos",
+                sample_report("Darwin", "abc123", "passed", 0, None),
+            )
+            .expect("macos"),
+            HostReport::parse_report_text(
+                "windows",
+                sample_report("Windows_NT", "abc123", "passed", 0, None),
+            )
+            .expect("windows"),
+        ];
+
+        let err = compare_reports(&reports).expect_err("should fail");
+        assert!(err.to_string().contains("phase2_uapi_default_stdout_grant"));
     }
 
     impl HostReport {
