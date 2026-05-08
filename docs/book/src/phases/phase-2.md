@@ -349,6 +349,11 @@ plain terms: the runtime checks policy, then the OS adapter touches the host.
 the Linux, macOS, and Windows adapter crates expose the matching functions.
 Hosted CI and the self-hosted full gate run that check so direct host-call
 backsliding is easier to catch.
+There is now an [Adapter Evidence](../phase2/adapter-evidence.md) flow too:
+`scripts/record-phase2-adapter-evidence.sh` records a host report and
+`scripts/compare-phase2-adapter-evidence.sh` compares Linux/macOS/Windows
+reports for one commit. Hosted full CI now publishes per-OS adapter evidence
+artifacts and runs the compare gate automatically.
 
 Sample evidence has a repeatable recorder now too. The
 [Sample Evidence](../phase2/sample-evidence.md) page explains how to run

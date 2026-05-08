@@ -48,6 +48,7 @@
   - [Threat Model v0.2](phase2/threat-model-v0-2.md)
   - [Migrating From Phase 1](phase2/migrating-from-phase1.md)
   - [Adapter Boundary](phase2/adapter-boundary.md)
+  - [Adapter Evidence](phase2/adapter-evidence.md)
   - [Sample Evidence](phase2/sample-evidence.md)
   - [Language Variant Evidence](phase2/language-variant-evidence.md)
   - [UCap Enforcement Evidence](phase2/ucap-enforcement-evidence.md)
