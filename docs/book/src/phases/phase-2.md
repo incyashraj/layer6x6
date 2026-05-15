@@ -368,6 +368,10 @@ There is also a companion comparator now:
 be checked in one run. It fails fast when clock/cat/curl stdout hashes drift
 across hosts and supports a temporary `--allow-blocked-curl` exception for
 restricted localhost environments.
+Hosted full CI now also records per-OS sample evidence artifacts and runs a
+`sample-evidence-compare` job automatically. That compare step currently uses
+the curl blocked exception, while still enforcing strict cross-host hash parity
+for clock and cat outputs.
 Language-variant evidence now has a recorder as well:
 [Language Variant Evidence](../phase2/language-variant-evidence.md) explains
 how to run `scripts/record-phase2-language-variant-evidence.sh`. That report

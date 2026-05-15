@@ -88,3 +88,19 @@ It also verifies two safety checks before hash comparison:
 
 - each report matches the flag you pass (`--linux`, `--macos`, `--windows`)
 - all three reports were recorded from the same git commit
+
+## Hosted CI Evidence
+
+Full hosted CI now records one sample evidence report per OS lane and uploads:
+
+- `sample-evidence-ubuntu-latest`
+- `sample-evidence-macos-latest`
+- `sample-evidence-windows-latest`
+
+Then CI runs:
+
+- `Sample evidence compare`
+
+The compare step currently uses `--allow-blocked-curl` so the lane can stay
+useful when one hosted runner blocks localhost fixture sockets. Clock and cat
+still require strict cross-host hash alignment.

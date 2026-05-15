@@ -1,25 +1,25 @@
 # Layer36 Status
 
-Last updated: 2026-05-08
+Last updated: 2026-05-15
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `87e83b0`
-Working tree at this status update: sample-evidence comparator host-label and same-commit hardening validated locally
+Latest checked completed push before this slice: `c13e896`
+Working tree at this status update: hosted sample evidence artifact and compare gate wiring validated locally
 
 ## 1) Project size today
 
-- Commits after this slice lands: 247
-- Tracked files after this slice lands: about 246
-- Total tracked lines after this slice lands: about 72,492
-- Rust lines (`.rs`) after this slice lands: about 36,445
-- Docs lines (`.md`) after this slice lands: about 26,514
+- Commits after this slice lands: 260
+- Tracked files after this slice lands: about 262
+- Total tracked lines after this slice lands: about 75,932
+- Rust lines (`.rs`) after this slice lands: about 38,586
+- Docs lines (`.md`) after this slice lands: about 26,881
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`fdda72e`) checks:
+Latest completed push (`c13e896`) checks:
 
-- CI: success (run `25436832524`)
-- Deploy docs to GitHub Pages: success from latest docs push (run `25436647881`)
+- CI: success (run `25535991511`)
+- Deploy docs to GitHub Pages: success (run `25535991499`)
 
 Recent pushes before that are also green.
 
@@ -83,6 +83,7 @@ Top pending items:
 - Tightened benchmark evidence comparison so each host report must also stay within per-metric baseline thresholds, not only match report shape and step pass state
 - Added an adapter evidence recorder and comparator (`record-phase2-adapter-evidence` + `compare-phase2-adapter-evidence`) to track adapter-boundary proof per host and compare Linux/macOS/Windows reports for one commit
 - Wired hosted full CI to publish per-OS adapter evidence artifacts and run a dedicated cross-host adapter evidence compare gate
+- Wired hosted full CI to publish per-OS sample evidence artifacts and run a cross-host sample evidence compare gate (with temporary curl-blocked fallback)
 - Added a dedicated benchmark evidence docs page and linked it from Phase 2 and the exit ledger for P2E-10 and P2E-11 tracking
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`

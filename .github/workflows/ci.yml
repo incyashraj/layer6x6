@@ -345,6 +345,18 @@ jobs:
           name: adapter-evidence-${{ matrix.os }}
           path: layer36-evidence/adapter-evidence-${{ matrix.os }}.md
           if-no-files-found: error
+      - name: Record Phase 2 sample evidence
+        shell: bash
+        run: |
+          mkdir -p layer36-evidence
+          scripts/record-phase2-sample-evidence.sh \
+            "layer36-evidence/sample-evidence-${{ matrix.os }}.md"
+      - name: Upload sample evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-evidence-${{ matrix.os }}
+          path: layer36-evidence/sample-evidence-${{ matrix.os }}.md
+          if-no-files-found: error
 
   # ──────────────────────────────────────────────
   # 9. Compare language-variant evidence across hosts
@@ -452,7 +464,43 @@ jobs:
             layer36-evidence/windows/adapter-evidence-windows-latest.md
 
   # ──────────────────────────────────────────────
-  # 12. Documentation build
+  # 12. Compare sample evidence across hosts
+  # ──────────────────────────────────────────────
+  sample-evidence-compare:
+    name: Sample evidence compare
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.full) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[full-ci]')) }}
+    runs-on: ubuntu-latest
+    needs: full-test
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@1.91.1
+      - name: Download Linux sample evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: sample-evidence-ubuntu-latest
+          path: layer36-evidence/linux
+      - name: Download macOS sample evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: sample-evidence-macos-latest
+          path: layer36-evidence/macos
+      - name: Download Windows sample evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: sample-evidence-windows-latest
+          path: layer36-evidence/windows
+      - name: Compare sample evidence reports
+        shell: bash
+        run: |
+          scripts/compare-phase2-sample-evidence.sh \
+            layer36-evidence/linux/sample-evidence-ubuntu-latest.md \
+            layer36-evidence/macos/sample-evidence-macos-latest.md \
+            layer36-evidence/windows/sample-evidence-windows-latest.md \
+            --allow-blocked-curl
+
+  # ──────────────────────────────────────────────
+  # 13. Documentation build
   # ──────────────────────────────────────────────
   docs:
     name: Docs (mdBook)
@@ -473,7 +521,7 @@ jobs:
         run: node packages/sdk-go/scripts/check-shape.mjs
 
   # ──────────────────────────────────────────────
-  # 13. Benchmark smoke + warning-only regression check
+  # 14. Benchmark smoke + warning-only regression check
   # ──────────────────────────────────────────────
   benchmarks:
     name: Benchmarks (Phase 2 baseline, warning only)
@@ -516,7 +564,7 @@ jobs:
         run: scripts/check-benchmark-regression.sh
 
   # ──────────────────────────────────────────────
-  # 14. Dependency audit (cargo-deny)
+  # 15. Dependency audit (cargo-deny)
   # ──────────────────────────────────────────────
   deny:
     name: Dependency audit (cargo-deny)
