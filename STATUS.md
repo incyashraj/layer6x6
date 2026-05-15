@@ -3,23 +3,23 @@
 Last updated: 2026-05-15
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `cf14ab3`
-Working tree at this status update: Phase 2 exit bundle recorder, docs, and plan notes validated locally
+Latest checked completed push before this slice: `3b0f5c0`
+Working tree at this status update: UAPI freeze candidate lock, checker, docs, CI wiring, and exit-bundle integration validated locally
 
 ## 1) Project size today
 
-- Commits after this slice lands: 264
-- Tracked files after this slice lands: about 266
-- Total tracked lines after this slice lands: about 76,504
-- Rust lines (`.rs`) after this slice lands: about 38,586
-- Docs lines (`.md`) after this slice lands: about 27,027
+- Commits after this slice lands: 265
+- Tracked files after this slice lands: about 270
+- Total tracked lines after this slice lands: about 76,780
+- Rust lines (`.rs`) after this slice lands: about 38,772
+- Docs lines (`.md`) after this slice lands: about 27,076
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`cf14ab3`) checks:
+Latest completed push (`3b0f5c0`) checks:
 
-- CI: success (run `25899387906`)
-- Deploy docs to GitHub Pages: success (run `25899387899`)
+- CI: success (run `25899681121`)
+- Deploy docs to GitHub Pages: success (run `25899681122`)
 
 Recent pushes before that are also green.
 
@@ -43,8 +43,8 @@ Current capability set includes:
 
 Practical engineering progress is strong and close to completion for the first useful slice.
 
-- Core engineering slice: around 89% to 91%
-- Formal Phase 2 exit gates: around 74% to 79%
+- Core engineering slice: around 90% to 92%
+- Formal Phase 2 exit gates: around 80% to 83%
 
 Main reason formal completion is lower than engineering completion:
 the remaining work is mostly evidence and gate closure, not missing base architecture.
@@ -88,6 +88,7 @@ Top pending items:
 - Added a dedicated benchmark evidence docs page and linked it from Phase 2 and the exit ledger for P2E-10 and P2E-11 tracking
 - Added a Rust SDK evidence recorder and hosted artifact path so P2E-03 has one proof file for package smoke, SDK doc build, and packaged-file presence
 - Added a Phase 2 exit bundle recorder so local review can capture UAPI, adapter, exit-ledger, docs, gate snapshot, working tree state, and log tails in one report
+- Added a UAPI freeze candidate lock with per-WIT SHA-256 hashes, a checker, and CI freshness wiring so contract drift is visible before and after the final freeze decision
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`
 - Generated UAPI reference now includes those WIT contract comments

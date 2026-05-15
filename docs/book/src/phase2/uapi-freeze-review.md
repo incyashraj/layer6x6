@@ -19,6 +19,8 @@ What is already in place:
 - the generated reference is published in the book
 - the current contract evidence snapshot is published in
   [UAPI Freeze Evidence](uapi-freeze-evidence.md)
+- the current WIT file hash lock is published in
+  [UAPI Freeze Lock](uapi-freeze-lock.md)
 - the full Phase 2 gate list is tracked in
   [Phase 2 Exit Evidence](exit-evidence.md)
 - hosted CI and self-hosted CI fail if that evidence page is stale
@@ -58,6 +60,8 @@ Before checking the Phase 2 WIT freeze box, all items below should be true.
 - [ ] `scripts/check-uapi.sh` passes on a clean checkout
 - [ ] `scripts/generate-uapi-freeze-evidence.sh` refreshes the published
       evidence page without manual edits
+- [ ] `scripts/generate-uapi-freeze-lock.sh` refreshes the published WIT hash
+      lock without manual edits
 - [ ] generated UAPI reference is current
 - [ ] every public WIT item has clear docs
 - [ ] every function has a plain behavior note in the reference or the WIT docs
@@ -105,6 +109,8 @@ Run these from repo root:
 ```bash
 scripts/check-uapi.sh
 scripts/generate-uapi-freeze-evidence.sh
+scripts/generate-uapi-freeze-lock.sh
+scripts/check-uapi-freeze-lock.sh
 cargo test -p layer36-tools
 env PATH="$HOME/.cargo/bin:$PATH" mdbook build docs/book
 scripts/smoke-rust-sdk.sh

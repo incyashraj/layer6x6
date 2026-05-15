@@ -138,6 +138,10 @@ fn print_markdown_report(report: &CheckReport) {
     println!();
     println!("Status: serious draft, not frozen yet.");
     println!();
+    println!(
+        "See also: [UAPI Freeze Lock](uapi-freeze-lock.md). The lock records the exact WIT file hashes for the current freeze candidate."
+    );
+    println!();
     println!("## Contract Summary");
     println!();
     println!("- App package: `{}`", report.app_package);
@@ -170,7 +174,7 @@ fn print_markdown_report(report: &CheckReport) {
     println!("## Freeze Note");
     println!();
     println!(
-        "This evidence proves the current UAPI contract shape is internally consistent. It does not freeze v0.1 by itself. The remaining freeze decision still needs cross-host evidence, language-track evidence, and a final human review."
+        "This evidence proves the current UAPI contract shape is internally consistent. It does not freeze v0.1 by itself. The freeze lock records the exact WIT file hashes for this candidate. The remaining freeze decision still needs cross-host evidence, language-track evidence, and a final human review."
     );
 }
 

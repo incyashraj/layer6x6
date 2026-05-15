@@ -4,6 +4,8 @@
 
 Status: serious draft, not frozen yet.
 
+See also: [UAPI Freeze Lock](uapi-freeze-lock.md). The lock records the exact WIT file hashes for the current freeze candidate.
+
 ## Contract Summary
 
 - App package: `layer36:app@0.1.0`
@@ -49,4 +51,4 @@ Status: serious draft, not frozen yet.
 
 ## Freeze Note
 
-This evidence proves the current UAPI contract shape is internally consistent. It does not freeze v0.1 by itself. The remaining freeze decision still needs cross-host evidence, language-track evidence, and a final human review.
+This evidence proves the current UAPI contract shape is internally consistent. It does not freeze v0.1 by itself. The freeze lock records the exact WIT file hashes for this candidate. The remaining freeze decision still needs cross-host evidence, language-track evidence, and a final human review.

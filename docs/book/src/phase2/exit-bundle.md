@@ -6,6 +6,7 @@ It does not say Phase 2 is finished. It collects the checks we want to see
 green before a final exit review:
 
 - UAPI contract shape
+- UAPI freeze lock
 - adapter boundary shape
 - exit ledger coverage
 - docs build
@@ -51,6 +52,7 @@ The report includes:
 
 - host and commit metadata
 - pass or fail status for each included command
+- the freeze candidate lock check result
 - the current `P2E-*` gate snapshot from the exit ledger
 - the current working tree state
 - short log tails for each check

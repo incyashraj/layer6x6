@@ -64,6 +64,7 @@ TMP_DIR="target/phase2-exit-bundle/.tmp"
 mkdir -p "$TMP_DIR"
 
 UAPI_LOG="$TMP_DIR/check-uapi.log"
+FREEZE_LOCK_LOG="$TMP_DIR/check-uapi-freeze-lock.log"
 ADAPTER_LOG="$TMP_DIR/check-adapter-boundary.log"
 EXIT_LEDGER_LOG="$TMP_DIR/check-phase2-exit-evidence.log"
 DOCS_LOG="$TMP_DIR/mdbook.log"
@@ -74,6 +75,12 @@ if scripts/check-uapi.sh >"$UAPI_LOG" 2>&1; then
   UAPI_CODE=0
 else
   UAPI_CODE=$?
+fi
+
+if scripts/check-uapi-freeze-lock.sh >"$FREEZE_LOCK_LOG" 2>&1; then
+  FREEZE_LOCK_CODE=0
+else
+  FREEZE_LOCK_CODE=$?
 fi
 
 if scripts/check-adapter-boundary.sh >"$ADAPTER_LOG" 2>&1; then
@@ -162,6 +169,7 @@ included_of() {
   echo "| Step | Exit code | Result |"
   echo "|---|---:|---|"
   echo "| UAPI contract check (\`scripts/check-uapi.sh\`) | $UAPI_CODE | $(result_of "$UAPI_CODE") |"
+  echo "| UAPI freeze lock check (\`scripts/check-uapi-freeze-lock.sh\`) | $FREEZE_LOCK_CODE | $(result_of "$FREEZE_LOCK_CODE") |"
   echo "| Adapter boundary check (\`scripts/check-adapter-boundary.sh\`) | $ADAPTER_CODE | $(result_of "$ADAPTER_CODE") |"
   echo "| Exit ledger check (\`scripts/check-phase2-exit-evidence.sh\`) | $EXIT_LEDGER_CODE | $(result_of "$EXIT_LEDGER_CODE") |"
   echo "| Docs build (\`mdbook build docs/book\`) | $DOCS_CODE | $(result_of "$DOCS_CODE") |"
@@ -203,6 +211,12 @@ included_of() {
   tail -n 120 "$UAPI_LOG"
   echo '```'
   echo
+  echo "## UAPI Freeze Lock Log (tail)"
+  echo
+  echo '```text'
+  tail -n 120 "$FREEZE_LOCK_LOG"
+  echo '```'
+  echo
   echo "## Adapter Boundary Log (tail)"
   echo
   echo '```text'
@@ -238,6 +252,7 @@ echo "wrote $OUTPUT"
 
 if [ "$STRICT" = "1" ] && {
   [ "$UAPI_CODE" -ne 0 ] ||
+  [ "$FREEZE_LOCK_CODE" -ne 0 ] ||
   [ "$ADAPTER_CODE" -ne 0 ] ||
   [ "$EXIT_LEDGER_CODE" -ne 0 ] ||
   [ "$DOCS_CODE" -ne 0 ] ||
