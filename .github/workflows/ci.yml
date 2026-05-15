@@ -130,8 +130,18 @@ jobs:
             ~/.cargo/git
             target/
           key: ${{ runner.os }}-cargo-sdk-package-${{ hashFiles('**/Cargo.lock') }}
-      - name: Package Rust SDK
-        run: sh scripts/smoke-rust-sdk.sh
+      - name: Record Rust SDK evidence
+        run: |
+          mkdir -p layer36-evidence
+          scripts/record-phase2-rust-sdk-evidence.sh \
+            --strict \
+            --output layer36-evidence/rust-sdk-evidence.md
+      - name: Upload Rust SDK evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-sdk-evidence
+          path: layer36-evidence/rust-sdk-evidence.md
+          if-no-files-found: error
 
   # ──────────────────────────────────────────────
   # 6. UAPI contract and generated reference freshness

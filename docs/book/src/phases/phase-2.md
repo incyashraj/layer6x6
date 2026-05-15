@@ -329,6 +329,11 @@ The Rust SDK publish-readiness smoke is stricter too. It still packages the
 `layer36` crate and compiles a tiny outside-workspace component against that
 packaged crate, and now it also checks that the packaged crate contains the
 public README, SDK root, and generated bindings files before passing.
+There is now a [Rust SDK Evidence](../phase2/rust-sdk-evidence.md) page too.
+`scripts/record-phase2-rust-sdk-evidence.sh` records package smoke results,
+SDK doc-build results, and packaged-file presence in one report. Normal hosted
+CI uploads that report as a `rust-sdk-evidence` artifact, which gives `P2E-03`
+a concrete proof source while crates.io publishing waits for UAPI freeze.
 
 There is now a dedicated [UAPI Freeze Review](../phase2/uapi-freeze-review.md)
 page. It turns the remaining freeze work into a clear checklist for contract

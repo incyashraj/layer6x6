@@ -12,6 +12,9 @@ publish it to crates.io while UAPI v0.1 is moving, but `cargo package -p
 layer36` is part of CI so packaging problems show up early. CI also runs
 `scripts/smoke-rust-sdk.sh`, which creates a temporary app outside the
 workspace and checks that the packaged SDK can compile a tiny Layer36 component.
+The smoke path now has a matching Phase 2 evidence recorder:
+[Rust SDK Evidence](../phase2/rust-sdk-evidence.md). Normal hosted CI uploads
+that report as the `rust-sdk-evidence` artifact.
 
 ## What It Gives You
 

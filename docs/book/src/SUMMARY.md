@@ -50,6 +50,7 @@
   - [Adapter Boundary](phase2/adapter-boundary.md)
   - [Adapter Evidence](phase2/adapter-evidence.md)
   - [Sample Evidence](phase2/sample-evidence.md)
+  - [Rust SDK Evidence](phase2/rust-sdk-evidence.md)
   - [Language Variant Evidence](phase2/language-variant-evidence.md)
   - [UCap Enforcement Evidence](phase2/ucap-enforcement-evidence.md)
   - [Benchmark Evidence](phase2/benchmark-evidence.md)
