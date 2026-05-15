@@ -41,6 +41,10 @@ runner labeled `layer36-local`. Use it when you want GitHub to run the full
 local gate on your own machine instead of a hosted runner.
 Self-hosted workflows currently keep `actions/checkout@v4` to preserve
 compatibility with older local runner installs.
+The scheduled `Self-hosted Fuzz Nightly` workflow now keeps older queued runs
+when the runner is offline. Automatic schedule runs do not cancel each other
+anymore, while manual dispatch still cancels in-progress runs for the same
+branch.
 That local gate now also runs a short Phase 2 fuzz smoke over the first fuzz
 targets.
 The benchmark regression step is warning-only by default in this manual
