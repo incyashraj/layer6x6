@@ -68,6 +68,8 @@ FREEZE_LOCK_LOG="$TMP_DIR/check-uapi-freeze-lock.log"
 ADAPTER_LOG="$TMP_DIR/check-adapter-boundary.log"
 EXIT_LEDGER_LOG="$TMP_DIR/check-phase2-exit-evidence.log"
 DOCS_LOG="$TMP_DIR/mdbook.log"
+DEPENDENCY_LOG="$TMP_DIR/dependency-evidence.log"
+DEPENDENCY_REPORT="$TMP_DIR/dependency-evidence.md"
 SDK_LOG="$TMP_DIR/rust-sdk-evidence.log"
 SDK_REPORT="$TMP_DIR/rust-sdk-evidence.md"
 
@@ -112,6 +114,12 @@ if [ -n "$MDBOOK" ]; then
 else
   DOCS_CODE=127
   printf 'mdbook not found in PATH or $HOME/.cargo/bin\n' >"$DOCS_LOG"
+fi
+
+if scripts/record-phase2-dependency-evidence.sh --strict --output "$DEPENDENCY_REPORT" >"$DEPENDENCY_LOG" 2>&1; then
+  DEPENDENCY_CODE=0
+else
+  DEPENDENCY_CODE=$?
 fi
 
 if [ "$INCLUDE_RUST_SDK" = "1" ]; then
@@ -173,6 +181,7 @@ included_of() {
   echo "| Adapter boundary check (\`scripts/check-adapter-boundary.sh\`) | $ADAPTER_CODE | $(result_of "$ADAPTER_CODE") |"
   echo "| Exit ledger check (\`scripts/check-phase2-exit-evidence.sh\`) | $EXIT_LEDGER_CODE | $(result_of "$EXIT_LEDGER_CODE") |"
   echo "| Docs build (\`mdbook build docs/book\`) | $DOCS_CODE | $(result_of "$DOCS_CODE") |"
+  echo "| Dependency evidence (\`scripts/record-phase2-dependency-evidence.sh --strict\`) | $DEPENDENCY_CODE | $(result_of "$DEPENDENCY_CODE") |"
   if [ "$INCLUDE_RUST_SDK" = "1" ]; then
     echo "| Rust SDK evidence (\`scripts/record-phase2-rust-sdk-evidence.sh --strict\`) | $SDK_CODE | $(result_of "$SDK_CODE") |"
   else
@@ -235,6 +244,18 @@ included_of() {
   tail -n 120 "$DOCS_LOG"
   echo '```'
   echo
+  echo "## Dependency Evidence Log (tail)"
+  echo
+  echo '```text'
+  tail -n 120 "$DEPENDENCY_LOG"
+  echo '```'
+  if [ -f "$DEPENDENCY_REPORT" ]; then
+    echo
+    echo "## Dependency Evidence Summary"
+    echo
+    sed -n '1,42p' "$DEPENDENCY_REPORT"
+  fi
+  echo
   echo "## Rust SDK Evidence Log (tail)"
   echo
   echo '```text'
@@ -256,6 +277,7 @@ if [ "$STRICT" = "1" ] && {
   [ "$ADAPTER_CODE" -ne 0 ] ||
   [ "$EXIT_LEDGER_CODE" -ne 0 ] ||
   [ "$DOCS_CODE" -ne 0 ] ||
+  [ "$DEPENDENCY_CODE" -ne 0 ] ||
   [ "$SDK_CODE" -ne 0 ];
 }; then
   exit 1

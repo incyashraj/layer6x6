@@ -98,7 +98,7 @@ Before checking the Phase 2 WIT freeze box, all items below should be true.
 
 - [ ] hosted CI is green after the freeze commit
 - [ ] self-hosted full gate has a recent green run
-- [ ] dependency audit is clean or has a documented temporary exception
+- [ ] dependency evidence is recorded and clean, or has a documented temporary exception
 - [ ] benchmark gate has a recent Phase 2 baseline check
 - [ ] fuzz smoke has passed after the last WIT or parser change
 
@@ -113,6 +113,7 @@ scripts/generate-uapi-freeze-lock.sh
 scripts/check-uapi-freeze-lock.sh
 cargo test -p layer36-tools
 env PATH="$HOME/.cargo/bin:$PATH" mdbook build docs/book
+scripts/record-phase2-dependency-evidence.sh --strict
 scripts/smoke-rust-sdk.sh
 scripts/test-phase2-language-variants.sh
 ```

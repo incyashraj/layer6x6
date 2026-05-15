@@ -33,7 +33,7 @@ Status meanings:
 | P2E-08 | clock cross-host | **Partial** | `scripts/record-phase2-sample-evidence.sh`, `scripts/compare-phase2-sample-evidence.sh`, hosted full CI artifacts `sample-evidence-<os>`, hosted full CI `Sample evidence compare` job, [Sample Evidence](sample-evidence.md) | Keep strict fixed-time clock hash parity green in hosted and self-hosted evidence runs. |
 | P2E-09 | UCap enforcement | **Partial** | `crates/policy`, `crates/runtime`, `tests/cli.rs` (`language_variants_curl_permission_denied_matches_rust_go_ts`), `scripts/record-phase2-ucap-evidence.sh`, `scripts/compare-phase2-ucap-evidence.sh`, hosted full CI artifacts `ucap-enforcement-evidence-<os>`, hosted full CI `UCap enforcement evidence compare` job, [UCap Enforcement Evidence](ucap-enforcement-evidence.md) | Keep collecting clean Linux macOS Windows deny evidence and expand from fs and net to every non-default capability boundary. |
 | P2E-10 | Startup performance | **Partial** | `cargo bench -p layer36-runtime --bench startup`, `record-phase2-cli-startup`, `scripts/record-phase2-benchmark-evidence.sh`, `scripts/compare-phase2-benchmark-evidence.sh`, [Dispatch Benchmarks](benchmarks.md), [Benchmark Evidence](benchmark-evidence.md) | Collect Linux macOS Windows benchmark reports for the same commit, then set a full-CLI startup threshold from that evidence. |
-| P2E-11 | Dispatch performance | **Partial** | `cargo bench -p layer36-runtime --bench uapi_dispatch`, `scripts/check-benchmark-regression.sh`, `scripts/record-phase2-benchmark-evidence.sh`, `scripts/compare-phase2-benchmark-evidence.sh`, [Benchmark Evidence](benchmark-evidence.md) | Keep stable regression checks and cross-host benchmark evidence linked to one baseline set, with comparator threshold enforcement green on all hosts. |
+| P2E-11 | Dispatch performance | **Partial** | `cargo bench -p layer36-runtime --bench uapi_dispatch`, `scripts/check-benchmark-regression.sh`, `scripts/record-phase2-benchmark-evidence.sh`, `scripts/compare-phase2-benchmark-evidence.sh`, [Benchmark Evidence](benchmark-evidence.md), [Dependency Evidence](dependency-evidence.md) | Keep stable regression checks, cross-host benchmark evidence, and dependency-audit signoff linked to the final Phase 2 commit. |
 | P2E-12 | Timed developer walkthrough | **Pending** | [First Rust CLI](../uapi/first-rust-cli.md) | Ask an outside Rust developer to build a small app and time the run. |
 | P2E-13 | Generated UAPI reference | **Done** | `scripts/generate-uapi-reference.sh`, [Generated Reference](../reference/uapi/index.md) | Keep CI freshness checks enabled. |
 | P2E-14 | WIT style guide | **Done** | [WIT Style Guide](../wit-style.md) | Keep using it during freeze review. |
@@ -90,6 +90,7 @@ scripts/record-phase2-ucap-evidence.sh
 scripts/compare-phase2-ucap-evidence.sh
 scripts/record-phase2-benchmark-evidence.sh
 scripts/compare-phase2-benchmark-evidence.sh
+scripts/record-phase2-dependency-evidence.sh
 scripts/smoke-rust-sdk.sh
 scripts/build-phase2-language-variant-fixtures.sh
 scripts/test-phase2-language-variants.sh
@@ -104,6 +105,7 @@ For performance and soak checks:
 cargo bench -p layer36-runtime --bench startup
 cargo bench -p layer36-runtime --bench uapi_dispatch
 scripts/check-benchmark-regression.sh
+scripts/check-dependencies.sh
 scripts/run-phase2-fuzz-smoke.sh
 ```
 
@@ -116,6 +118,8 @@ For formal exit, save the run links in the Phase 2 plan:
 - Linux and Windows hosted or trusted runner evidence for the sample outputs
 - one longer self-hosted fuzz run after the final UAPI freeze candidate
 - one benchmark baseline check after the final sample set is fixed
+- one dependency evidence report for the final commit, with hosted advisory
+  proof if local advisory DB locking is unavailable
 
 That is enough to move Phase 2 from strong engineering progress to a clean
 phase exit.

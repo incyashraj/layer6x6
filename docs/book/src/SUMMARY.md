@@ -54,6 +54,7 @@
   - [Language Variant Evidence](phase2/language-variant-evidence.md)
   - [UCap Enforcement Evidence](phase2/ucap-enforcement-evidence.md)
   - [Benchmark Evidence](phase2/benchmark-evidence.md)
+  - [Dependency Evidence](phase2/dependency-evidence.md)
   - [UAPI Freeze Review](phase2/uapi-freeze-review.md)
   - [UAPI Freeze Evidence](phase2/uapi-freeze-evidence.md)
   - [UAPI Freeze Lock](phase2/uapi-freeze-lock.md)

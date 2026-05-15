@@ -1792,7 +1792,7 @@ Additional ADRs as decisions surface. Rule of thumb: if you have to ask "should 
 - [x] First UAPI dispatch microbenchmark target exists.
 - [x] First UAPI component startup benchmark target exists.
 - [ ] Benchmark regressions ≤ 10% vs Phase 1 baseline.
-- [ ] `cargo-deny` still clean with new deps.
+- [ ] `cargo-deny` still clean with new deps, with dependency evidence recorded for the final commit.
 
 ### Documentation
 - [x] WIT style guide published.
@@ -2399,6 +2399,7 @@ formal exit gates.
 | P2-TEST-12 | Benchmark evidence recorder and comparator | 2026-05-08 | Added `scripts/record-phase2-benchmark-evidence.sh`, `layer36-tools --bin compare-phase2-benchmark-evidence`, and `scripts/compare-phase2-benchmark-evidence.sh`, plus docs. The recorder captures startup and dispatch benchmark runs plus regression-check output in one markdown report, and the comparator validates cross-host commit alignment, required benchmark-step pass state, and metric-table shape consistency. |
 | P2-TEST-13 | Benchmark comparator threshold enforcement | 2026-05-08 | Tightened `compare-phase2-benchmark-evidence` so it now enforces per-metric threshold bounds from the report table (`current <= baseline * (1 + threshold%)`) on every host report. This prevents warning-only regression mode from masking over-threshold metrics in cross-host benchmark evidence comparison. |
 | P2-PERF-01C | Full external CLI startup evidence recorder | 2026-05-15 | Added `layer36-tools --bin record-phase2-cli-startup` and wired it into `scripts/record-phase2-benchmark-evidence.sh`. The benchmark evidence now records the full `layer36 run` process path for deterministic `layer36-clock`, including CLI process start, manifest handling, grant resolution, runtime setup, component execution, and stdout verification. |
+| P2-CI-20 | Phase 2 dependency evidence recorder | 2026-05-15 | Added `scripts/record-phase2-dependency-evidence.sh` and a matching mdBook page. The recorder captures `scripts/check-dependencies.sh`, tool versions, advisory-check status, license/bans/source status, and log tails so dependency signoff is reviewable without digging through CI logs. Local evidence currently passes licenses, bans, and sources while noting the advisory DB lock warning on this machine. |
 | P2-TEST-14 | Adapter evidence recorder and comparator | 2026-05-08 | Added `scripts/record-phase2-adapter-evidence.sh`, `layer36-tools --bin compare-phase2-adapter-evidence`, and `scripts/compare-phase2-adapter-evidence.sh`, plus docs. The recorder captures adapter-boundary command results in one markdown report, and the comparator validates Linux/macOS/Windows commit alignment, host labeling, and required adapter-step pass outcomes. |
 | P2-TEST-15 | Hosted sample evidence compare rollout | 2026-05-15 | Wired sample evidence recorder output into hosted full CI artifacts and added an automated cross-host compare step. This moves sample proof from manual-only collection to repeatable CI evidence while preserving a temporary curl blocked fallback mode for restricted runners. |
 

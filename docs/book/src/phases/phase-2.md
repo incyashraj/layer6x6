@@ -416,6 +416,10 @@ metric table, so a host can no longer pass this lane with an over-threshold
 metric hidden behind warning-only regression mode.
 This gives `P2E-10` and `P2E-11` clearer cross-host proof tracking even when
 raw timing numbers differ by hardware.
+Dependency evidence is tracked beside those performance checks:
+[Dependency Evidence](../phase2/dependency-evidence.md) records the
+`cargo-deny` wrapper output, tool versions, and any advisory-database warning
+so dependency signoff is explicit instead of buried in CI logs.
 
 The first terminal grant prompt exists too. `layer36 run --prompt app.wasm`
 shows the app identity, lists missing manifest capabilities, accepts all or a
