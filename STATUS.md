@@ -3,23 +3,23 @@
 Last updated: 2026-05-16
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `be2ca33`
-Working tree at this status update: Phase 2 UCap deny-before-adapter evidence expansion in progress
+Latest checked completed push before this slice: `f8b8764`
+Working tree at this status update: Phase 2 sample evidence comparator hardening validated locally
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 270
+- Commits after this slice lands: about 271
 - Tracked files after this slice lands: about 275
-- Total tracked lines after this slice lands: about 78,113
-- Rust lines (`.rs`) after this slice lands: about 39,315
-- Docs lines (`.md`) after this slice lands: about 27,317
+- Total tracked lines after this slice lands: about 78,180
+- Rust lines (`.rs`) after this slice lands: about 39,374
+- Docs lines (`.md`) after this slice lands: about 27,325
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`654ab4c`) checks:
+Latest completed push (`f8b8764`) checks:
 
-- CI: success (run `25903754182`)
-- Deploy docs to GitHub Pages: success (run `25903754160`)
+- CI: success (run `25954830699`)
+- Deploy docs to GitHub Pages: success (run `25954830693`)
 
 Recent pushes before that are also green.
 
@@ -109,6 +109,7 @@ Top pending items:
 - Added a Phase 2 cross-host sample evidence comparator for Linux/macOS/Windows report parity checks
 - Hardened sample-evidence comparison with host-label validation so `--linux`, `--macos`, and `--windows` cannot silently point to the wrong host report
 - Hardened sample-evidence comparison with same-commit validation so cross-host reports must come from one code revision
+- Tightened sample-evidence comparison so `--allow-blocked-curl` still compares curl stdout hashes across hosts where curl did run
 
 ## 7) Source of truth files
 

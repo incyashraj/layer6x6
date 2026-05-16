@@ -104,3 +104,6 @@ Then CI runs:
 The compare step currently uses `--allow-blocked-curl` so the lane can stay
 useful when one hosted runner blocks localhost fixture sockets. Clock and cat
 still require strict cross-host hash alignment.
+When curl is blocked on one host, the comparator still checks the curl stdout
+hashes from any hosts that did run it. The exception only covers the blocked
+host; it does not hide drift between successful curl runs.

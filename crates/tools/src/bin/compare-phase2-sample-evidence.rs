@@ -327,10 +327,19 @@ fn compare_sample(reports: &[HostReport], sample: &str, allow_blocked_curl: bool
 
     if !blocked_hosts.is_empty() {
         if sample == "layer36-curl" && allow_blocked_curl {
-            println!(
-                "- {sample}: blocked on {} (allowed by flag)",
-                blocked_hosts.join(", ")
-            );
+            if passed_hashes.len() >= 2 {
+                validate_passed_hashes_match(sample, &passed_hashes)?;
+                println!(
+                    "- {sample}: blocked on {}; passed hosts match ({})",
+                    blocked_hosts.join(", "),
+                    passed_hashes[0].1
+                );
+            } else {
+                println!(
+                    "- {sample}: blocked on {} (allowed by flag)",
+                    blocked_hosts.join(", ")
+                );
+            }
             return Ok(());
         }
         bail!(
@@ -339,6 +348,15 @@ fn compare_sample(reports: &[HostReport], sample: &str, allow_blocked_curl: bool
         );
     }
 
+    validate_passed_hashes_match(sample, &passed_hashes)?;
+    println!("- {sample}: match ({})", passed_hashes[0].1);
+    Ok(())
+}
+
+fn validate_passed_hashes_match(
+    sample: &str,
+    passed_hashes: &[(&'static str, String)],
+) -> Result<()> {
     let first_hash = &passed_hashes[0].1;
     if passed_hashes.iter().any(|(_, hash)| hash != first_hash) {
         let detail = passed_hashes
@@ -348,8 +366,6 @@ fn compare_sample(reports: &[HostReport], sample: &str, allow_blocked_curl: bool
             .join(", ");
         bail!("{sample} stdout hash mismatch across hosts: {detail}");
     }
-
-    println!("- {sample}: match ({first_hash})");
     Ok(())
 }
 
@@ -418,6 +434,49 @@ mod tests {
             true,
         )
         .expect("comparison should pass");
+    }
+
+    #[test]
+    fn compare_still_checks_passed_curl_hashes_when_another_host_is_blocked() {
+        let host = |label: &'static str,
+                    host_os: &'static str,
+                    curl_status: &'static str,
+                    curl_exit: &'static str,
+                    curl_hash: &'static str|
+         -> HostReport {
+            HostReport {
+                label,
+                source: PathBuf::from(format!("{label}.md")),
+                git_commit: "abc1234".to_string(),
+                host_line: format!("- Host: `{host_os}` / `x86_64`"),
+                host_os: host_os.to_string(),
+                sample_rows: parse_sample_rows(&format!(
+                    r#"# Phase 2 Sample Evidence Run
+## Host
+- Git commit: `abc1234`
+- Host: `{host_os}` / `x86_64`
+## Results
+| Sample | Status | Exit | Stdout SHA-256 | Stderr SHA-256 |
+|---|---|---:|---|---|
+| layer36-clock | passed | 0 | `clock1` | `z` |
+| layer36-cat | passed | 0 | `cat1` | `z` |
+| layer36-curl | {curl_status} | {curl_exit} | `{curl_hash}` | `z` |
+"#
+                ))
+                .expect("rows"),
+            }
+        };
+
+        let result = compare_reports(
+            &[
+                host("linux", "linux", "passed", "0", "curl1"),
+                host("macos", "macos", "passed", "0", "curl2"),
+                host("windows", "windows", "blocked", "n/a", "n/a"),
+            ],
+            true,
+        );
+
+        assert!(result.is_err());
     }
 
     #[test]
