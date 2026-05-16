@@ -3,23 +3,23 @@
 Last updated: 2026-05-16
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `f8b8764`
-Working tree at this status update: Phase 2 sample evidence comparator hardening validated locally
+Latest checked completed push before this slice: `1253eed`
+Working tree at this status update: Phase 2 UAPI freeze-review evidence recorder validated locally
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 271
-- Tracked files after this slice lands: about 275
-- Total tracked lines after this slice lands: about 78,180
+- Commits after this slice lands: about 272
+- Tracked files after this slice lands: about 279
+- Total tracked lines after this slice lands: about 78,700
 - Rust lines (`.rs`) after this slice lands: about 39,374
-- Docs lines (`.md`) after this slice lands: about 27,325
+- Docs lines (`.md`) after this slice lands: about 27,478
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`f8b8764`) checks:
+Latest completed push (`1253eed`) checks:
 
-- CI: success (run `25954830699`)
-- Deploy docs to GitHub Pages: success (run `25954830693`)
+- CI: success (run `25955017695`)
+- Deploy docs to GitHub Pages: success (run `25955017697`)
 
 Recent pushes before that are also green.
 
@@ -93,6 +93,9 @@ Top pending items:
 - Added a Rust SDK evidence recorder and hosted artifact path so P2E-03 has one proof file for package smoke, SDK doc build, and packaged-file presence
 - Added a Phase 2 exit bundle recorder so local review can capture UAPI, adapter, exit-ledger, docs, gate snapshot, working tree state, and log tails in one report
 - Added a UAPI freeze candidate lock with per-WIT SHA-256 hashes, a checker, and CI freshness wiring so contract drift is visible before and after the final freeze decision
+- Added a Phase 2 UAPI freeze-review evidence recorder so the freeze candidate can be checked as one report before the final human decision
+- Wired the self-hosted full gate to regenerate and check the UAPI freeze lock, then record a freeze-review evidence artifact
+- Added a timed Rust walkthrough evidence template so the outside developer proof can be recorded against a specific commit
 - Expanded UCap evidence with a named dispatcher deny-before-adapter matrix that covers every non-default filesystem and network boundary
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`

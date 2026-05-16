@@ -136,10 +136,27 @@ jobs:
           LAYER36_OFFLINE=1 sh scripts/check-uapi.sh
           LAYER36_OFFLINE=1 sh scripts/generate-uapi-reference.sh
           LAYER36_OFFLINE=1 sh scripts/generate-uapi-freeze-evidence.sh
+          LAYER36_OFFLINE=1 sh scripts/generate-uapi-freeze-lock.sh
           git diff --exit-code -- docs/book/src/reference/uapi/index.md
           git diff --exit-code -- docs/book/src/phase2/uapi-freeze-evidence.md
+          git diff --exit-code -- docs/book/src/phase2/uapi-freeze-lock.md
+          LAYER36_OFFLINE=1 sh scripts/check-uapi-freeze-lock.sh
           LAYER36_OFFLINE=1 sh scripts/check-adapter-boundary.sh
           LAYER36_OFFLINE=1 sh scripts/check-phase2-exit-evidence.sh
+
+      - name: Record UAPI freeze review evidence
+        run: |
+          mkdir -p layer36-evidence
+          LAYER36_OFFLINE=1 sh scripts/record-phase2-uapi-freeze-review.sh \
+            --strict \
+            --output layer36-evidence/uapi-freeze-review.md
+
+      - name: Upload UAPI freeze review evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: uapi-freeze-review-evidence
+          path: layer36-evidence/uapi-freeze-review.md
+          if-no-files-found: error
 
       - name: Dependency audit
         run: scripts/check-dependencies.sh

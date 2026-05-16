@@ -347,6 +347,11 @@ There is also a generated [UAPI Freeze Lock](../phase2/uapi-freeze-lock.md).
 It records SHA-256 hashes for the exact Phase 2 WIT files under review. CI
 regenerates it and fails if the committed lock is stale, so UAPI contract drift
 has to be intentional and visible.
+The [UAPI Freeze Review Evidence](../phase2/uapi-freeze-review-evidence.md)
+page now explains the local review recorder. That recorder checks the WIT
+contract, generated reference, freeze evidence, freeze lock, adapter-boundary
+guard, and exit ledger in one report. It gives the freeze review a concrete
+artifact without pretending the final decision is already made.
 There is now a [Phase 2 Exit Evidence](../phase2/exit-evidence.md) ledger too.
 It tracks all 15 exit gates with a status, proof source, and next step, and CI
 checks the page shape so the list cannot silently drift from the plan.
@@ -355,6 +360,10 @@ The quick local review path is now [Exit Bundle](../phase2/exit-bundle.md).
 writes one report with command results, the current gate snapshot, working tree
 state, and log tails. This is not a completion stamp. It is a cleaner handoff
 file for review before the final Phase 2 decision.
+For the one human proof gate, there is now a
+[Timed Walkthrough Evidence](../phase2/walkthrough-evidence.md) page and a
+template generator. This keeps the outside Rust walkthrough tied to a commit,
+with one place for timing, step results, and notes.
 
 The adapter split now has a guard too. The
 [Adapter Boundary](../phase2/adapter-boundary.md) page explains the rule in

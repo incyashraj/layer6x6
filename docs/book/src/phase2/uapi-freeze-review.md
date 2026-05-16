@@ -21,6 +21,9 @@ What is already in place:
   [UAPI Freeze Evidence](uapi-freeze-evidence.md)
 - the current WIT file hash lock is published in
   [UAPI Freeze Lock](uapi-freeze-lock.md)
+- the freeze-review recorder writes one local report that checks the contract,
+  generated reference, freeze evidence, freeze lock, adapter-boundary guard, and
+  exit ledger together
 - the full Phase 2 gate list is tracked in
   [Phase 2 Exit Evidence](exit-evidence.md)
 - hosted CI and self-hosted CI fail if that evidence page is stale
@@ -111,6 +114,7 @@ scripts/check-uapi.sh
 scripts/generate-uapi-freeze-evidence.sh
 scripts/generate-uapi-freeze-lock.sh
 scripts/check-uapi-freeze-lock.sh
+scripts/record-phase2-uapi-freeze-review.sh --strict
 cargo test -p layer36-tools
 env PATH="$HOME/.cargo/bin:$PATH" mdbook build docs/book
 scripts/record-phase2-dependency-evidence.sh --strict
@@ -135,6 +139,11 @@ scripts/record-phase2-go-readiness-evidence.sh
 The promotion command should only copy fixtures when all Go artifacts import
 `layer36:*` APIs only. The recorder keeps the build result and the current
 import-purity log in one review file.
+
+The freeze-review recorder writes
+`target/phase2-uapi-freeze-review/uapi-freeze-review.md`. Read it beside the
+[UAPI Freeze Review Evidence](uapi-freeze-review-evidence.md) page before making
+the final freeze decision.
 
 ## Freeze Decision
 
