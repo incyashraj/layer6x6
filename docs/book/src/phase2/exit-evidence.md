@@ -67,6 +67,18 @@ The remaining work is mostly proof:
 5. do one timed external walkthrough
 6. record the retrospective and Phase 3 kickoff
 
+## Quick Readiness Command
+
+To get the current gate count in one terminal command:
+
+```bash
+scripts/phase2-exit-readiness.sh
+```
+
+This does not replace the ledger. It reads this page and prints the current
+number of done, strong-draft, partial, pending, and blocked gates. It also
+prints the hard blockers so a returning session can start from the right place.
+
 ## Local Evidence Commands
 
 Run these before a Phase 2 exit review:
@@ -95,6 +107,7 @@ scripts/record-phase2-dependency-evidence.sh
 scripts/smoke-rust-sdk.sh
 scripts/build-phase2-language-variant-fixtures.sh
 scripts/test-phase2-language-variants.sh
+scripts/phase2-exit-readiness.sh
 ```
 
 The [Exit Bundle](exit-bundle.md) command gives the quick local review report.

@@ -1,0 +1,60 @@
+# Phase 2 Exit Readiness
+
+This page explains the quick readiness command for Phase 2.
+
+The command does not decide that Phase 2 is complete. It reads the exit ledger
+and gives a plain summary of what is done, what has proof in progress, and what
+is still blocked.
+
+```bash
+scripts/phase2-exit-readiness.sh
+```
+
+It reports:
+
+- how many exit gates are tracked
+- how many are fully done
+- how many are strong drafts
+- how many have proof in progress
+- how many are pending or blocked
+- which gates still need final proof or a decision
+
+## Why This Exists
+
+Phase 2 has many proof files now. That is good, but it can become hard to see
+the whole picture from one page.
+
+The readiness command keeps the answer repeatable. Instead of guessing from
+memory, it reads `docs/book/src/phase2/exit-evidence.md` and prints the current
+gate state.
+
+## Current Shape
+
+The important split is:
+
+- Fully done gates are complete for the current Phase 2 scope.
+- Strong draft and partial gates have real work behind them, but still need a
+  final review, cross-host proof, or a human decision.
+- Pending and blocked gates are the hard remaining items.
+
+This matches the current state of Phase 2: the runtime and UAPI shape are
+strong, while formal exit still needs proof from more than one machine, one
+outside walkthrough, and an honest Go decision.
+
+## When To Run It
+
+Run it before:
+
+- deciding whether Phase 2 is ready to freeze
+- asking what is left in Phase 2
+- creating a handoff status file
+- opening the Phase 3 kickoff issue
+
+For deeper review, also run:
+
+```bash
+scripts/record-phase2-exit-bundle.sh --strict
+scripts/check-phase2-exit-evidence.sh
+```
+
+The readiness command is the map. The exit bundle is the evidence packet.

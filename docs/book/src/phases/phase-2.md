@@ -18,6 +18,10 @@ Phase 2 replaces the temporary Phase 1 host interface with real APIs:
 The first draft of those WIT contracts now lives at `wit/layer36/phase2`.
 It is not frozen yet, but it is real source code and CI parses it so syntax
 mistakes are caught early.
+Phase 2 also has a quick readiness command now:
+`scripts/phase2-exit-readiness.sh`. It reads the exit ledger and prints the
+current count of done, partial, pending, and blocked gates, so progress checks
+do not depend on memory.
 
 The capability layer has also started. Layer36 can parse a sidecar
 `manifest.toml`, check launch-time grants, and carry the session policy into the

@@ -3,23 +3,23 @@
 Last updated: 2026-05-16
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `aca6d67`
-Working tree at this status update: GitHub Actions Node 24 runtime opt-in validated locally
+Latest checked completed push before this slice: `94c1cb2`
+Working tree at this status update: Phase 2 exit readiness command validated locally
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 272
-- Tracked files after this slice lands: about 279
-- Total tracked lines after this slice lands: about 78,700
-- Rust lines (`.rs`) after this slice lands: about 39,374
-- Docs lines (`.md`) after this slice lands: about 27,478
+- Commits after this slice lands: about 275
+- Tracked files after this slice lands: about 282
+- Total tracked lines after this slice lands: about 79,090
+- Rust lines (`.rs`) after this slice lands: about 39,606
+- Docs lines (`.md`) after this slice lands: about 27,607
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`aca6d67`) checks:
+Latest completed push (`94c1cb2`) checks:
 
-- CI: success (run `25955259061`)
-- Deploy docs to GitHub Pages: success (run `25955259059`)
+- CI: success (run `25955506226`)
+- Deploy docs to GitHub Pages: success (run `25955506232`)
 
 Recent pushes before that are also green.
 
@@ -97,6 +97,7 @@ Top pending items:
 - Wired the self-hosted full gate to regenerate and check the UAPI freeze lock, then record a freeze-review evidence artifact
 - Added a timed Rust walkthrough evidence template so the outside developer proof can be recorded against a specific commit
 - Opted GitHub Actions workflows into the Node 24 JavaScript action runtime and moved cache/artifact/Pages upload steps to Node 24 action majors where available
+- Added a Phase 2 exit readiness command so the current gate count and hard blockers can be checked from the ledger without reading the whole page by hand
 - Expanded UCap evidence with a named dispatcher deny-before-adapter matrix that covers every non-default filesystem and network boundary
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`

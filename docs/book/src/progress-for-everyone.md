@@ -1,6 +1,6 @@
 # Layer36 for Everyone
 
-Updated on May 6, 2026.
+Updated on May 16, 2026.
 
 This page explains the project in plain language. It is written for people who are not deep in systems programming.
 
@@ -53,6 +53,8 @@ flowchart LR
    - strict Go modes fail clearly if Go fixtures are missing or not import-pure
 6. The Rust sample apps now have a repeatable evidence recorder, so each host
    can produce the same kind of proof file for clock, cat, and curl.
+7. Phase 2 now has a simple readiness command that reads the exit ledger and
+   shows what is done, what has proof in progress, and what is still blocked.
 
 ## Current Build Timeline
 
@@ -90,9 +92,30 @@ This is a simple status view for non technical readers.
 | Runtime base | Working |
 | Security model (capability checks) | Working in current Phase 2 scope |
 | CLI sample apps | Working |
+| Phase 2 proof tracking | Working, with a readiness command and evidence pages |
 | Desktop GUI path | Not started in implementation |
 | Mobile host path | Not started in implementation |
 | Packaging and app store style distribution | Not started in implementation |
+
+## Phase 2 In Simple Terms
+
+Phase 2 is close in engineering terms. The app can call Layer36 for files,
+network, time, locale, and terminal input or output. Those calls go through
+permission checks before native host code runs.
+
+The remaining Phase 2 work is mostly proof, not a rewrite:
+
+- freeze the API contract after review
+- collect clean Linux, macOS, and Windows evidence
+- decide whether Go is promoted now or marked experimental
+- run longer fuzz and benchmark checks
+- have one outside developer follow the tutorial and record the result
+
+To check the current gate state from the repo:
+
+```bash
+scripts/phase2-exit-readiness.sh
+```
 
 ## Key Terms in Simple Words
 
@@ -106,8 +129,10 @@ This is a simple status view for non technical readers.
 
 The main Phase 2 work still open is:
 
-1. Deeper adapter hardening and platform parity checks.
-2. Full Go runtime fixture proof with Layer36 import-pure bindings across runners.
-3. Cross host confidence gates staying green over time.
+1. Final UAPI freeze review.
+2. Cross host evidence for the sample apps and adapters.
+3. Go runtime fixture proof, or a clear experimental label for Go in this phase.
+4. Longer fuzz, benchmark, and dependency signoff runs.
+5. One timed outside developer walkthrough.
 
 When those are done, we can exit Phase 2 and start Phase 3 desktop UI work.

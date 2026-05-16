@@ -62,6 +62,7 @@
   - [UAPI Freeze Evidence](phase2/uapi-freeze-evidence.md)
   - [UAPI Freeze Lock](phase2/uapi-freeze-lock.md)
   - [Exit Bundle](phase2/exit-bundle.md)
+  - [Exit Readiness](phase2/exit-readiness.md)
   - [Exit Evidence](phase2/exit-evidence.md)
 - [Phase 3: UI + Graphics](phases/phase-3.md)
 - [Phase 4: Mobile](phases/phase-4.md)
