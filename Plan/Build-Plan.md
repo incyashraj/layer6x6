@@ -1749,6 +1749,7 @@ Short time-stamped entries for anything significant: ecosystem developments, piv
 | 2026-05-16 | Tightened Phase 2 sample-evidence comparison so the temporary curl blocked exception still enforces matching curl hashes across hosts where curl did run. |
 | 2026-05-16 | Added a Phase 2 UAPI freeze-review evidence recorder and wired the self-hosted full gate to check the freeze lock before recording that artifact. |
 | 2026-05-16 | Added a timed Rust walkthrough evidence template so the external Phase 2 usability gate can be recorded against a specific commit. |
+| 2026-05-16 | Opted GitHub Actions workflows into the Node 24 JavaScript action runtime so cache, artifact, and Pages steps stop depending on the outgoing Node 20 runtime. |
 | 2026-05-04 | Expanded the Phase 2 plain HTTP adapter from GET-only framing to lower-level request framing with method, app headers, buffered body, and host-owned transport headers. |
 | 2026-05-04 | Hardened Phase 2 stdio stream resources so stdin/stdout/stderr handles carry their origin and stream read/write/flush methods re-check capability metadata before adapter calls. |
 | 2026-05-04 | Added Phase 2 UAPI policy coverage tests so every supported capability name maps to a UAPI call and the current dispatcher adapter surface is exercised through the policy gate. |

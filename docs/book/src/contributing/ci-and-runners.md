@@ -20,9 +20,12 @@ The expensive checks stay opt-in. Run the `CI` workflow manually with
 - benchmarks
 - `cargo-deny`
 
-Hosted workflows now use Node 24-ready core actions (`actions/checkout@v5` and
-`actions/setup-node@v5`). This removes the recurring Node 20 deprecation
-warnings in normal hosted CI runs.
+Hosted workflows use Node 24-ready core actions (`actions/checkout@v5` and
+`actions/setup-node@v5`). All workflows also set
+`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, so artifact, cache, and Pages actions
+run under the Node 24 action runtime before GitHub makes that the default. This
+keeps CI evidence cleaner and avoids waiting for the June 2026 runtime switch to
+surprise us.
 
 In hosted full CI, the Phase 2 TypeScript language-variant lane now runs in
 `ts` mode by default. The fixture build step can install jco through `npx`
@@ -41,6 +44,8 @@ runner labeled `layer36-local`. Use it when you want GitHub to run the full
 local gate on your own machine instead of a hosted runner.
 Self-hosted workflows currently keep `actions/checkout@v4` to preserve
 compatibility with older local runner installs.
+They still opt JavaScript actions into Node 24, so a local runner must be new
+enough to support that runtime.
 The scheduled `Self-hosted Fuzz Nightly` workflow now keeps older queued runs
 when the runner is offline. Automatic schedule runs do not cancel each other
 anymore, while manual dispatch still cancels in-progress runs for the same

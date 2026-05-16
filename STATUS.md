@@ -3,8 +3,8 @@
 Last updated: 2026-05-16
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `1253eed`
-Working tree at this status update: Phase 2 UAPI freeze-review evidence recorder validated locally
+Latest checked completed push before this slice: `aca6d67`
+Working tree at this status update: GitHub Actions Node 24 runtime opt-in validated locally
 
 ## 1) Project size today
 
@@ -16,10 +16,10 @@ Working tree at this status update: Phase 2 UAPI freeze-review evidence recorder
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`1253eed`) checks:
+Latest completed push (`aca6d67`) checks:
 
-- CI: success (run `25955017695`)
-- Deploy docs to GitHub Pages: success (run `25955017697`)
+- CI: success (run `25955259061`)
+- Deploy docs to GitHub Pages: success (run `25955259059`)
 
 Recent pushes before that are also green.
 
@@ -96,6 +96,7 @@ Top pending items:
 - Added a Phase 2 UAPI freeze-review evidence recorder so the freeze candidate can be checked as one report before the final human decision
 - Wired the self-hosted full gate to regenerate and check the UAPI freeze lock, then record a freeze-review evidence artifact
 - Added a timed Rust walkthrough evidence template so the outside developer proof can be recorded against a specific commit
+- Opted GitHub Actions workflows into the Node 24 JavaScript action runtime so CI evidence is ready for GitHub's upcoming runtime change
 - Expanded UCap evidence with a named dispatcher deny-before-adapter matrix that covers every non-default filesystem and network boundary
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`
