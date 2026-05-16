@@ -6,7 +6,8 @@ use std::path::{Path, PathBuf};
 use anyhow::{bail, Context, Result};
 
 const REQUIRED_STEPS: &[&str] = &[
-    "Runtime UCap deny matrix (`cargo test -p layer36-runtime non_default_capabilities_are_denied_by_default_policy -- --exact`)",
+    "Runtime UCap deny matrix (`cargo test -p layer36-runtime uapi::tests::non_default_capabilities_are_denied_by_default_policy -- --exact`)",
+    "Dispatcher deny-before-adapter matrix (`cargo test -p layer36-runtime uapi_dispatch::tests::dispatcher_denies_all_non_default_boundaries_before_adapter -- --exact`)",
     "Cat denies missing fs grant (`cargo test -p layer36-cli --test cli configured_layer36_cat_component_denies_missing_file_grant -- --exact`)",
     "Curl denies missing net grant (`cargo test -p layer36-cli --test cli configured_layer36_curl_component_denies_missing_net_grant -- --exact`)",
     "Manifest denies missing required cap (`cargo test -p layer36-cli --test cli run_with_manifest_denies_missing_required_capability -- --exact`)",
@@ -306,7 +307,8 @@ mod tests {
 
 | Step | Exit code | Result |
 |---|---:|---|
-| Runtime UCap deny matrix (`cargo test -p layer36-runtime non_default_capabilities_are_denied_by_default_policy -- --exact`) | {code} | {result} |
+| Runtime UCap deny matrix (`cargo test -p layer36-runtime uapi::tests::non_default_capabilities_are_denied_by_default_policy -- --exact`) | {code} | {result} |
+| Dispatcher deny-before-adapter matrix (`cargo test -p layer36-runtime uapi_dispatch::tests::dispatcher_denies_all_non_default_boundaries_before_adapter -- --exact`) | {code} | {result} |
 | Cat denies missing fs grant (`cargo test -p layer36-cli --test cli configured_layer36_cat_component_denies_missing_file_grant -- --exact`) | {code} | {result} |
 | Curl denies missing net grant (`cargo test -p layer36-cli --test cli configured_layer36_curl_component_denies_missing_net_grant -- --exact`) | {code} | {result} |
 | Manifest denies missing required cap (`cargo test -p layer36-cli --test cli run_with_manifest_denies_missing_required_capability -- --exact`) | {code} | {result} |

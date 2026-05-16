@@ -5,13 +5,18 @@ are really enforced at runtime boundaries.
 
 ## What This Covers
 
-The current evidence run checks five deny paths:
+The current evidence run checks six deny paths:
 
 1. Runtime deny matrix for non-default capabilities
-2. `layer36-cat` denies missing `fs.read` grant
-3. `layer36-curl` denies missing `net.connect` grant
-4. Manifest-required capability deny path
-5. Rust Go TypeScript curl missing-grant parity test
+2. Dispatcher deny-before-adapter matrix for every non-default Phase 2 boundary
+3. `layer36-cat` denies missing `fs.read` grant
+4. `layer36-curl` denies missing `net.connect` grant
+5. Manifest-required capability deny path
+6. Rust Go TypeScript curl missing-grant parity test
+
+The second check is important. It proves the runtime returns permission denied
+before the host adapter can open a file, list a directory, remove a path, create
+a directory, rename a path, or start a network fetch.
 
 ## Record One Host Report
 

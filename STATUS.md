@@ -1,18 +1,18 @@
 # Layer36 Status
 
-Last updated: 2026-05-15
+Last updated: 2026-05-16
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `654ab4c`
-Working tree at this status update: Phase 2 adapter evidence behavior-test expansion validated locally
+Latest checked completed push before this slice: `be2ca33`
+Working tree at this status update: Phase 2 UCap deny-before-adapter evidence expansion in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: 269
+- Commits after this slice lands: about 270
 - Tracked files after this slice lands: about 275
-- Total tracked lines after this slice lands: about 77,960
-- Rust lines (`.rs`) after this slice lands: about 39,188
-- Docs lines (`.md`) after this slice lands: about 27,306
+- Total tracked lines after this slice lands: about 78,113
+- Rust lines (`.rs`) after this slice lands: about 39,315
+- Docs lines (`.md`) after this slice lands: about 27,317
 
 ## 2) Latest CI and Pages state
 
@@ -93,6 +93,7 @@ Top pending items:
 - Added a Rust SDK evidence recorder and hosted artifact path so P2E-03 has one proof file for package smoke, SDK doc build, and packaged-file presence
 - Added a Phase 2 exit bundle recorder so local review can capture UAPI, adapter, exit-ledger, docs, gate snapshot, working tree state, and log tails in one report
 - Added a UAPI freeze candidate lock with per-WIT SHA-256 hashes, a checker, and CI freshness wiring so contract drift is visible before and after the final freeze decision
+- Expanded UCap evidence with a named dispatcher deny-before-adapter matrix that covers every non-default filesystem and network boundary
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`
 - Generated UAPI reference now includes those WIT contract comments

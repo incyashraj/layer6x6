@@ -405,6 +405,9 @@ UCap deny evidence now follows the same pattern:
 [UCap Enforcement Evidence](../phase2/ucap-enforcement-evidence.md) shows how
 to record one report per host with `scripts/record-phase2-ucap-evidence.sh` and
 compare those reports with `scripts/compare-phase2-ucap-evidence.sh`.
+The report now includes a named dispatcher matrix that proves every non-default
+filesystem and network boundary returns permission denied before an adapter can
+touch the host.
 Hosted full CI now uploads per-host UCap evidence artifacts and runs a compare
 job so deny-path regressions are caught as a cross-host gate, not only in local
 checks.

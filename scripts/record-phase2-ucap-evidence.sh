@@ -57,15 +57,22 @@ TMP_DIR="target/phase2-ucap-evidence/.tmp"
 mkdir -p "$TMP_DIR"
 
 RUNTIME_LOG="$TMP_DIR/runtime.log"
+DISPATCHER_LOG="$TMP_DIR/dispatcher.log"
 CAT_LOG="$TMP_DIR/cat.log"
 CURL_LOG="$TMP_DIR/curl.log"
 MANIFEST_LOG="$TMP_DIR/manifest.log"
 LANGUAGE_LOG="$TMP_DIR/language.log"
 
-if cargo test -p layer36-runtime non_default_capabilities_are_denied_by_default_policy -- --exact >"$RUNTIME_LOG" 2>&1; then
+if cargo test -p layer36-runtime uapi::tests::non_default_capabilities_are_denied_by_default_policy -- --exact >"$RUNTIME_LOG" 2>&1; then
   RUNTIME_CODE=0
 else
   RUNTIME_CODE=$?
+fi
+
+if cargo test -p layer36-runtime uapi_dispatch::tests::dispatcher_denies_all_non_default_boundaries_before_adapter -- --exact >"$DISPATCHER_LOG" 2>&1; then
+  DISPATCHER_CODE=0
+else
+  DISPATCHER_CODE=$?
 fi
 
 if cargo test -p layer36-cli --test cli configured_layer36_cat_component_denies_missing_file_grant -- --exact >"$CAT_LOG" 2>&1; then
@@ -121,7 +128,8 @@ result_of() {
   echo
   echo "| Step | Exit code | Result |"
   echo "|---|---:|---|"
-  echo "| Runtime UCap deny matrix (\`cargo test -p layer36-runtime non_default_capabilities_are_denied_by_default_policy -- --exact\`) | $RUNTIME_CODE | $(result_of "$RUNTIME_CODE") |"
+  echo "| Runtime UCap deny matrix (\`cargo test -p layer36-runtime uapi::tests::non_default_capabilities_are_denied_by_default_policy -- --exact\`) | $RUNTIME_CODE | $(result_of "$RUNTIME_CODE") |"
+  echo "| Dispatcher deny-before-adapter matrix (\`cargo test -p layer36-runtime uapi_dispatch::tests::dispatcher_denies_all_non_default_boundaries_before_adapter -- --exact\`) | $DISPATCHER_CODE | $(result_of "$DISPATCHER_CODE") |"
   echo "| Cat denies missing fs grant (\`cargo test -p layer36-cli --test cli configured_layer36_cat_component_denies_missing_file_grant -- --exact\`) | $CAT_CODE | $(result_of "$CAT_CODE") |"
   echo "| Curl denies missing net grant (\`cargo test -p layer36-cli --test cli configured_layer36_curl_component_denies_missing_net_grant -- --exact\`) | $CURL_CODE | $(result_of "$CURL_CODE") |"
   echo "| Manifest denies missing required cap (\`cargo test -p layer36-cli --test cli run_with_manifest_denies_missing_required_capability -- --exact\`) | $MANIFEST_CODE | $(result_of "$MANIFEST_CODE") |"
@@ -131,6 +139,12 @@ result_of() {
   echo
   echo '```text'
   tail -n 120 "$RUNTIME_LOG"
+  echo '```'
+  echo
+  echo "## Dispatcher deny-before-adapter matrix log (tail)"
+  echo
+  echo '```text'
+  tail -n 120 "$DISPATCHER_LOG"
   echo '```'
   echo
   echo "## Cat deny log (tail)"
@@ -162,6 +176,7 @@ echo "wrote $OUTPUT"
 
 if [ "$STRICT" = "1" ] && {
   [ "$RUNTIME_CODE" -ne 0 ] ||
+  [ "$DISPATCHER_CODE" -ne 0 ] ||
   [ "$CAT_CODE" -ne 0 ] ||
   [ "$CURL_CODE" -ne 0 ] ||
   [ "$MANIFEST_CODE" -ne 0 ] ||

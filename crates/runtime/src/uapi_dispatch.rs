@@ -1344,6 +1344,131 @@ mod tests {
     }
 
     #[test]
+    fn dispatcher_denies_all_non_default_boundaries_before_adapter() {
+        let adapter = RecordingAdapter::default();
+        let guard = UapiGuard::new(SessionPolicy::default());
+        let dispatcher = UapiDispatcher::new(&guard, &adapter);
+
+        assert!(matches!(
+            dispatcher
+                .fs_open("./notes/today.txt", OpenMode::Read)
+                .expect_err("fs read open should need fs.read"),
+            FsDispatchError::PermissionDenied
+        ));
+        assert!(matches!(
+            dispatcher
+                .fs_open("./notes/today.txt", OpenMode::Write)
+                .expect_err("fs write open should need fs.write"),
+            FsDispatchError::PermissionDenied
+        ));
+        assert!(matches!(
+            dispatcher
+                .fs_open("./notes/today.txt", OpenMode::ReadWrite)
+                .expect_err("fs read-write open should need fs.read and fs.write"),
+            FsDispatchError::PermissionDenied
+        ));
+
+        let read_handle = FileHandle::opened_file(10, "./notes/today.txt", OpenMode::Read);
+        let write_handle = FileHandle::opened_file(11, "./notes/today.txt", OpenMode::Write);
+        assert!(matches!(
+            dispatcher
+                .fs_read(&read_handle, 128)
+                .expect_err("file read should still need fs.read"),
+            FsDispatchError::PermissionDenied
+        ));
+        assert!(matches!(
+            dispatcher
+                .fs_write(&write_handle, b"changed")
+                .expect_err("file write should still need fs.write"),
+            FsDispatchError::PermissionDenied
+        ));
+        assert!(matches!(
+            dispatcher
+                .fs_seek_set(&read_handle, 0)
+                .expect_err("file seek should still need an opened file grant"),
+            FsDispatchError::PermissionDenied
+        ));
+        assert!(matches!(
+            dispatcher
+                .fs_seek_end(&read_handle)
+                .expect_err("file seek-end should still need fs.read"),
+            FsDispatchError::PermissionDenied
+        ));
+        assert!(matches!(
+            dispatcher
+                .fs_stat_handle(&read_handle)
+                .expect_err("file stat should still need fs.read"),
+            FsDispatchError::PermissionDenied
+        ));
+
+        assert!(matches!(
+            dispatcher
+                .fs_stat("./notes/today.txt")
+                .expect_err("path stat should need fs.read"),
+            FsDispatchError::PermissionDenied
+        ));
+        assert!(matches!(
+            dispatcher
+                .fs_list("./notes")
+                .expect_err("list should need fs.list"),
+            FsDispatchError::PermissionDenied
+        ));
+        assert!(matches!(
+            dispatcher
+                .fs_remove_file("./notes/today.txt")
+                .expect_err("remove file should need fs.remove"),
+            FsDispatchError::PermissionDenied
+        ));
+        assert!(matches!(
+            dispatcher
+                .fs_remove_dir("./notes/archive")
+                .expect_err("remove dir should need fs.remove"),
+            FsDispatchError::PermissionDenied
+        ));
+        assert!(matches!(
+            dispatcher
+                .fs_mkdir("./notes/new")
+                .expect_err("mkdir should need fs.mkdir"),
+            FsDispatchError::PermissionDenied
+        ));
+        assert!(matches!(
+            dispatcher
+                .fs_rename("./notes/old.txt", "./notes/new.txt")
+                .expect_err("rename should need fs.remove and fs.write"),
+            FsDispatchError::PermissionDenied
+        ));
+
+        let req = HttpRequest {
+            method: HttpMethod::Get,
+            url: "https://api.example.com/v1/ping".to_string(),
+            headers: Vec::new(),
+            body: Vec::new(),
+            timeout_millis: None,
+        };
+        assert!(matches!(
+            dispatcher
+                .net_fetch(req)
+                .expect_err("net fetch should need net.connect"),
+            NetDispatchError::PermissionDenied
+        ));
+
+        let calls = adapter.calls.borrow();
+        assert_eq!(calls.fs_open, 0);
+        assert_eq!(calls.fs_read, 0);
+        assert_eq!(calls.fs_write, 0);
+        assert_eq!(calls.fs_seek_set, 0);
+        assert_eq!(calls.fs_seek_end, 0);
+        assert_eq!(calls.fs_stat_handle, 0);
+        assert_eq!(calls.fs_stat, 0);
+        assert_eq!(calls.fs_list, 0);
+        assert_eq!(calls.fs_remove_file, 0);
+        assert_eq!(calls.fs_remove_dir, 0);
+        assert_eq!(calls.fs_mkdir, 0);
+        assert_eq!(calls.fs_rename, 0);
+        assert_eq!(calls.net_fetch, 0);
+    }
+
+    #[test]
     fn net_fetch_checks_url_endpoint_before_adapter() {
         let adapter = RecordingAdapter::default();
         let policy =
