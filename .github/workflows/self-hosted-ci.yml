@@ -153,7 +153,7 @@ jobs:
             --output layer36-evidence/uapi-freeze-review.md
 
       - name: Upload UAPI freeze review evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: uapi-freeze-review-evidence
           path: layer36-evidence/uapi-freeze-review.md

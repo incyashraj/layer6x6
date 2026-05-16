@@ -2081,12 +2081,14 @@ Linux/macOS/Windows, benchmarks, cargo-deny, and the dedicated Phase 2 binding
 checkpoint only when manually dispatched with `full = true` or when a push
 commit message contains `[full-ci]`.
 Hosted workflow core actions now use Node 24-ready versions
-(`actions/checkout@v5` and `actions/setup-node@v5`). All workflows also set
-`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, so cache, artifact, and Pages actions
-run under the Node 24 action runtime before GitHub makes that runtime the
-default. Self-hosted workflows still keep `actions/checkout@v4` for local
-runner compatibility, but the local runner must support Node 24 JavaScript
-actions.
+(`actions/checkout@v5` and `actions/setup-node@v5`). Cache and artifact paths
+now use Node 24 action families too: `actions/cache@v5`,
+`actions/upload-artifact@v7`, and `actions/download-artifact@v8`. Pages uses
+`actions/configure-pages@v5` and `actions/upload-pages-artifact@v4`.
+All workflows also set `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` so any action
+that has not moved its major tag yet still runs under Node 24. Self-hosted
+workflows still keep `actions/checkout@v4` for local runner compatibility, but
+the local runner must support Node 24 JavaScript actions.
 
 The language-variant runtime lane now has explicit cross-language parity tests
 for Rust, Go, and TypeScript sample outputs (`clock`, `cat`, and `curl`).
@@ -2392,7 +2394,7 @@ formal exit gates.
 | P2-CI-18 | Hosted Rust SDK evidence artifact | 2026-05-15 | Normal hosted CI now runs the Rust SDK evidence recorder and uploads the `rust-sdk-evidence` artifact. This gives the Rust binding exit gate a concrete package smoke, doc-build, and packaged-file report on each push. |
 | P2-CI-19 | Hosted UAPI freeze lock freshness gate | 2026-05-15 | Hosted UAPI contract CI now regenerates `docs/book/src/phase2/uapi-freeze-lock.md` and fails if it differs from the committed lock. The Phase 2 exit bundle also checks the same lock locally. |
 | P2-CI-21 | Self-hosted UAPI freeze lock and review evidence | 2026-05-16 | The self-hosted full gate now regenerates and checks the UAPI freeze lock, then records a `uapi-freeze-review-evidence` artifact for the current freeze candidate. This keeps the local runner aligned with the hosted UAPI freshness checks. |
-| P2-CI-22 | GitHub Actions Node 24 runtime opt-in | 2026-05-16 | Added `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` to hosted, Pages, release, self-hosted CI, and self-hosted fuzz workflows so cache, artifact, and Pages actions run under the upcoming Node 24 action runtime before GitHub changes the default. |
+| P2-CI-22 | GitHub Actions Node 24 runtime opt-in | 2026-05-16 | Added `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` to hosted, Pages, release, self-hosted CI, and self-hosted fuzz workflows. Upgraded cache/artifact actions to Node 24 major families (`cache@v5`, `upload-artifact@v7`, `download-artifact@v8`) and Pages setup/upload actions to `configure-pages@v5` and `upload-pages-artifact@v4`. |
 | P2-TEST-16 | Phase 2 exit bundle recorder | 2026-05-15 | Added `scripts/record-phase2-exit-bundle.sh` and a matching mdBook page. The recorder runs the core local exit-review checks, captures the current `P2E-*` gate snapshot, records working tree state, and writes one handoff report for review without pretending Phase 2 is complete. |
 | P2-TEST-17 | UAPI freeze review recorder | 2026-05-16 | Added `scripts/record-phase2-uapi-freeze-review.sh` and a matching mdBook page. The recorder checks the UAPI contract, generated reference freshness, freeze evidence freshness, freeze lock freshness, adapter boundary guard, and exit ledger in one report. |
 | P2-TEST-18 | Timed Rust walkthrough evidence packet | 2026-05-16 | Added `scripts/record-phase2-walkthrough-template.sh` and a matching mdBook page so an outside Rust reviewer can record timing, step results, notes, and the commit used for `P2E-12`. This prepares the evidence path but does not close the external walkthrough gate. |

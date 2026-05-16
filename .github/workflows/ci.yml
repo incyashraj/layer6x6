@@ -56,7 +56,7 @@ jobs:
         with:
           components: clippy
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -78,7 +78,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.91.1
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -101,7 +101,7 @@ jobs:
         with:
           targets: wasm32-wasip1, wasm32-wasip2, wasm32-unknown-unknown
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -124,7 +124,7 @@ jobs:
         with:
           targets: wasm32-wasip1
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -138,7 +138,7 @@ jobs:
             --strict \
             --output layer36-evidence/rust-sdk-evidence.md
       - name: Upload Rust SDK evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rust-sdk-evidence
           path: layer36-evidence/rust-sdk-evidence.md
@@ -155,7 +155,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.91.1
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -199,7 +199,7 @@ jobs:
         with:
           targets: wasm32-wasip1, wasm32-wasip2
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -252,7 +252,7 @@ jobs:
           echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
           echo "hello fixture sha256: $sha256"
       - name: Upload component fixtures
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: phase-component-fixtures
           path: layer36-fixture/
@@ -277,7 +277,7 @@ jobs:
         with:
           targets: wasm32-wasip1, wasm32-wasip2, wasm32-unknown-unknown
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -289,7 +289,7 @@ jobs:
       - name: Build release binary
         run: cargo build --release --workspace
       - name: Download shared component fixtures
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: phase-component-fixtures
           path: layer36-fixture
@@ -329,7 +329,7 @@ jobs:
             --strict \
             --output "layer36-evidence/language-variant-${{ matrix.os }}.md"
       - name: Upload language-variant evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: language-variant-evidence-${{ matrix.os }}
           path: layer36-evidence/language-variant-${{ matrix.os }}.md
@@ -342,7 +342,7 @@ jobs:
             --strict \
             --output "layer36-evidence/ucap-enforcement-${{ matrix.os }}.md"
       - name: Upload UCap enforcement evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ucap-enforcement-evidence-${{ matrix.os }}
           path: layer36-evidence/ucap-enforcement-${{ matrix.os }}.md
@@ -355,7 +355,7 @@ jobs:
             --strict \
             --output "layer36-evidence/adapter-evidence-${{ matrix.os }}.md"
       - name: Upload adapter evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: adapter-evidence-${{ matrix.os }}
           path: layer36-evidence/adapter-evidence-${{ matrix.os }}.md
@@ -367,7 +367,7 @@ jobs:
           scripts/record-phase2-sample-evidence.sh \
             "layer36-evidence/sample-evidence-${{ matrix.os }}.md"
       - name: Upload sample evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sample-evidence-${{ matrix.os }}
           path: layer36-evidence/sample-evidence-${{ matrix.os }}.md
@@ -386,17 +386,17 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.91.1
       - name: Download Linux language-variant evidence
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: language-variant-evidence-ubuntu-latest
           path: layer36-evidence/linux
       - name: Download macOS language-variant evidence
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: language-variant-evidence-macos-latest
           path: layer36-evidence/macos
       - name: Download Windows language-variant evidence
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: language-variant-evidence-windows-latest
           path: layer36-evidence/windows
@@ -421,17 +421,17 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.91.1
       - name: Download Linux UCap evidence
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ucap-enforcement-evidence-ubuntu-latest
           path: layer36-evidence/linux
       - name: Download macOS UCap evidence
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ucap-enforcement-evidence-macos-latest
           path: layer36-evidence/macos
       - name: Download Windows UCap evidence
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ucap-enforcement-evidence-windows-latest
           path: layer36-evidence/windows
@@ -456,17 +456,17 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.91.1
       - name: Download Linux adapter evidence
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: adapter-evidence-ubuntu-latest
           path: layer36-evidence/linux
       - name: Download macOS adapter evidence
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: adapter-evidence-macos-latest
           path: layer36-evidence/macos
       - name: Download Windows adapter evidence
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: adapter-evidence-windows-latest
           path: layer36-evidence/windows
@@ -491,17 +491,17 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.91.1
       - name: Download Linux sample evidence
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: sample-evidence-ubuntu-latest
           path: layer36-evidence/linux
       - name: Download macOS sample evidence
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: sample-evidence-macos-latest
           path: layer36-evidence/macos
       - name: Download Windows sample evidence
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: sample-evidence-windows-latest
           path: layer36-evidence/windows
@@ -549,7 +549,7 @@ jobs:
         with:
           targets: wasm32-wasip1, wasm32-wasip2
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
