@@ -67,6 +67,7 @@ UAPI_LOG="$TMP_DIR/check-uapi.log"
 FREEZE_LOCK_LOG="$TMP_DIR/check-uapi-freeze-lock.log"
 ADAPTER_LOG="$TMP_DIR/check-adapter-boundary.log"
 EXIT_LEDGER_LOG="$TMP_DIR/check-phase2-exit-evidence.log"
+CLOSEOUT_DOCS_LOG="$TMP_DIR/check-phase2-closeout-docs.log"
 DOCS_LOG="$TMP_DIR/mdbook.log"
 DEPENDENCY_LOG="$TMP_DIR/dependency-evidence.log"
 DEPENDENCY_REPORT="$TMP_DIR/dependency-evidence.md"
@@ -97,6 +98,12 @@ if scripts/check-phase2-exit-evidence.sh >"$EXIT_LEDGER_LOG" 2>&1; then
   EXIT_LEDGER_CODE=0
 else
   EXIT_LEDGER_CODE=$?
+fi
+
+if scripts/check-phase2-closeout-docs.sh >"$CLOSEOUT_DOCS_LOG" 2>&1; then
+  CLOSEOUT_DOCS_CODE=0
+else
+  CLOSEOUT_DOCS_CODE=$?
 fi
 
 if command -v mdbook >/dev/null 2>&1; then
@@ -188,6 +195,7 @@ included_of() {
   echo "| UAPI freeze lock check (\`scripts/check-uapi-freeze-lock.sh\`) | $FREEZE_LOCK_CODE | $(result_of "$FREEZE_LOCK_CODE") |"
   echo "| Adapter boundary check (\`scripts/check-adapter-boundary.sh\`) | $ADAPTER_CODE | $(result_of "$ADAPTER_CODE") |"
   echo "| Exit ledger check (\`scripts/check-phase2-exit-evidence.sh\`) | $EXIT_LEDGER_CODE | $(result_of "$EXIT_LEDGER_CODE") |"
+  echo "| Closeout docs check (\`scripts/check-phase2-closeout-docs.sh\`) | $CLOSEOUT_DOCS_CODE | $(result_of "$CLOSEOUT_DOCS_CODE") |"
   echo "| Docs build (\`mdbook build docs/book\`) | $DOCS_CODE | $(result_of "$DOCS_CODE") |"
   echo "| Dependency evidence (\`scripts/record-phase2-dependency-evidence.sh --strict\`) | $DEPENDENCY_CODE | $(result_of "$DEPENDENCY_CODE") |"
   echo "| Go readiness evidence (\`scripts/record-phase2-go-readiness-evidence.sh\`) | $GO_READINESS_CODE | $(result_of "$GO_READINESS_CODE") |"
@@ -247,6 +255,12 @@ included_of() {
   tail -n 120 "$EXIT_LEDGER_LOG"
   echo '```'
   echo
+  echo "## Closeout Docs Log (tail)"
+  echo
+  echo '```text'
+  tail -n 120 "$CLOSEOUT_DOCS_LOG"
+  echo '```'
+  echo
   echo "## Docs Build Log (tail)"
   echo
   echo '```text'
@@ -297,6 +311,7 @@ if [ "$STRICT" = "1" ] && {
   [ "$FREEZE_LOCK_CODE" -ne 0 ] ||
   [ "$ADAPTER_CODE" -ne 0 ] ||
   [ "$EXIT_LEDGER_CODE" -ne 0 ] ||
+  [ "$CLOSEOUT_DOCS_CODE" -ne 0 ] ||
   [ "$DOCS_CODE" -ne 0 ] ||
   [ "$DEPENDENCY_CODE" -ne 0 ] ||
   [ "$SDK_CODE" -ne 0 ];

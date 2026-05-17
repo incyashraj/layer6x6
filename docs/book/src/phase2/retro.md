@@ -101,6 +101,10 @@ The next improvement is to keep final review pages short and direct. Long plans
 are useful for implementation, but exit pages should tell a reviewer what to run,
 what passed, and what still needs judgment.
 
+The closeout docs check now runs in the normal hosted UAPI proof path and the
+self-hosted full gate. That keeps this retrospective draft and the Phase 3
+kickoff draft from drifting away from the evidence ledger.
+
 ## Build Plan Changes To Carry Forward
 
 - Keep evidence recorders for every formal phase gate.

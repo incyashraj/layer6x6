@@ -9,6 +9,7 @@ green before a final exit review:
 - UAPI freeze lock
 - adapter boundary shape
 - exit ledger coverage
+- closeout docs draft guard
 - docs build
 - dependency evidence
 - Go readiness evidence
@@ -65,6 +66,7 @@ The report includes:
 - host and commit metadata
 - pass or fail status for each included command
 - the freeze candidate lock check result
+- the closeout docs draft guard result
 - the dependency audit evidence result
 - the Go readiness result and current import-purity status
 - the current `P2E-*` gate snapshot from the exit ledger
