@@ -58,6 +58,8 @@ git_commit="$(git rev-parse --short HEAD 2>/dev/null || printf 'unknown')"
   echo "Use it with [Your First UAPI App In Rust](docs/book/src/uapi/first-rust-cli.md)."
   echo "The reviewer should start a timer before step 1 and stop it after the denial"
   echo "path in step 7 succeeds."
+  echo "After the reviewer fills it, validate it with"
+  echo "\`scripts/check-phase2-walkthrough-evidence.sh <this-file>\`."
   echo
   echo "## Run Metadata"
   echo

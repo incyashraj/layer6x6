@@ -3,23 +3,23 @@
 Last updated: 2026-05-17
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `8ac1be2`
-Working tree at this status update: CI stability evidence recorder validated locally
+Latest checked completed push before this slice: `9abfd02`
+Working tree at this status update: timed walkthrough evidence checker validated locally
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 277
-- Tracked files after this slice lands: about 285
-- Total tracked lines after this slice lands: about 79,182
-- Rust lines (`.rs`) after this slice lands: about 39,606
-- Docs lines (`.md`) after this slice lands: about 27,691
+- Commits after this slice lands: about 278
+- Tracked files after this slice lands: about 287
+- Total tracked lines after this slice lands: about 79,841
+- Rust lines (`.rs`) after this slice lands: about 39,960
+- Docs lines (`.md`) after this slice lands: about 27,771
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`8ac1be2`) checks:
+Latest completed push (`9abfd02`) checks:
 
-- CI: success (run `25989170143`)
-- Deploy docs to GitHub Pages: success (run `25989170147`)
+- CI: success (run `25989435031`)
+- Deploy docs to GitHub Pages: success (run `25989435035`)
 
 Recent pushes before that are also green.
 
@@ -44,7 +44,7 @@ Current capability set includes:
 Practical engineering progress is strong and close to completion for the first useful slice.
 
 - Core engineering slice: around 90% to 92%
-- Formal Phase 2 exit gates: around 83% to 86%
+- Formal Phase 2 exit gates: around 84% to 87%
 
 Main reason formal completion is lower than engineering completion:
 the remaining work is mostly evidence and gate closure, not missing base architecture.
@@ -100,6 +100,7 @@ Top pending items:
 - Added a Phase 2 exit readiness command so the current gate count and hard blockers can be checked from the ledger without reading the whole page by hand
 - Recorded the Go Phase 2 decision: Go remains in the SDK and TinyGo smoke-build track, but runtime parity is experimental until artifacts import only `layer36:*`
 - Added a hosted CI stability evidence recorder so recent CI and Pages run history can be attached to Phase 2 exit review
+- Added a timed walkthrough evidence checker so the outside Rust walkthrough packet must have filled metadata, numeric timing, a pass/fail result, and reviewer results before `P2E-12` can be accepted
 - Expanded UCap evidence with a named dispatcher deny-before-adapter matrix that covers every non-default filesystem and network boundary
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`

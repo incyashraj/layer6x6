@@ -23,6 +23,23 @@ target/phase2-walkthrough/walkthrough-template.md
 The template records the commit under review and gives the reviewer one place to
 fill in timing, step results, notes, and the final pass or fail.
 
+## Check The Filled Packet
+
+After the reviewer fills the packet, run:
+
+```bash
+scripts/check-phase2-walkthrough-evidence.sh target/phase2-walkthrough/walkthrough-template.md
+```
+
+The checker does not replace the human review. It only checks that the packet is
+usable evidence:
+
+- metadata fields are filled
+- result is `pass` or `fail`
+- total minutes is a number
+- a passing run is 30 minutes or less
+- every walkthrough step has a reviewer result
+
 ## What The Reviewer Does
 
 The reviewer follows:
@@ -46,6 +63,7 @@ the original timing result should stay honest.
 Save:
 
 - the filled walkthrough template
+- the checker output
 - the terminal transcript or log
 - the commit hash used for the run
 - any notes about confusing wording or missing setup steps

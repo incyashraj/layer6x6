@@ -34,7 +34,7 @@ Status meanings:
 | P2E-09 | UCap enforcement | **Partial** | `crates/policy`, `crates/runtime`, `dispatcher_denies_all_non_default_boundaries_before_adapter`, `tests/cli.rs` (`language_variants_curl_permission_denied_matches_rust_go_ts`), `scripts/record-phase2-ucap-evidence.sh`, `scripts/compare-phase2-ucap-evidence.sh`, hosted full CI artifacts `ucap-enforcement-evidence-<os>`, hosted full CI `UCap enforcement evidence compare` job, [UCap Enforcement Evidence](ucap-enforcement-evidence.md) | Keep collecting clean Linux macOS Windows deny evidence for the full deny-before-adapter matrix. |
 | P2E-10 | Startup performance | **Partial** | `cargo bench -p layer36-runtime --bench startup`, `record-phase2-cli-startup`, `scripts/record-phase2-benchmark-evidence.sh`, `scripts/compare-phase2-benchmark-evidence.sh`, [Dispatch Benchmarks](benchmarks.md), [Benchmark Evidence](benchmark-evidence.md) | Collect Linux macOS Windows benchmark reports for the same commit, then set a full-CLI startup threshold from that evidence. |
 | P2E-11 | Dispatch performance | **Partial** | `cargo bench -p layer36-runtime --bench uapi_dispatch`, `scripts/check-benchmark-regression.sh`, `scripts/record-phase2-benchmark-evidence.sh`, `scripts/compare-phase2-benchmark-evidence.sh`, [Benchmark Evidence](benchmark-evidence.md), [Dependency Evidence](dependency-evidence.md) | Keep stable regression checks, cross-host benchmark evidence, and dependency-audit signoff linked to the final Phase 2 commit. |
-| P2E-12 | Timed developer walkthrough | **Pending** | `scripts/record-phase2-walkthrough-template.sh`, [First Rust CLI](../uapi/first-rust-cli.md), [Timed Walkthrough Evidence](walkthrough-evidence.md) | Ask an outside Rust developer to fill the walkthrough packet and time the run. |
+| P2E-12 | Timed developer walkthrough | **Pending** | `scripts/record-phase2-walkthrough-template.sh`, `scripts/check-phase2-walkthrough-evidence.sh`, [First Rust CLI](../uapi/first-rust-cli.md), [Timed Walkthrough Evidence](walkthrough-evidence.md) | Ask an outside Rust developer to fill the walkthrough packet, time the run, and pass the filled-packet checker. |
 | P2E-13 | Generated UAPI reference | **Done** | `scripts/generate-uapi-reference.sh`, [Generated Reference](../reference/uapi/index.md) | Keep CI freshness checks enabled. |
 | P2E-14 | WIT style guide | **Done** | [WIT Style Guide](../wit-style.md) | Keep using it during freeze review. |
 | P2E-15 | ADR set | **Done** | `docs/adr/0006-wit-versioning.md` through `docs/adr/0012-adapter-crate-split.md` | Add a freeze ADR only if the final review changes a rule. |
@@ -104,6 +104,8 @@ scripts/compare-phase2-ucap-evidence.sh
 scripts/record-phase2-benchmark-evidence.sh
 scripts/compare-phase2-benchmark-evidence.sh
 scripts/record-phase2-dependency-evidence.sh
+scripts/record-phase2-walkthrough-template.sh
+scripts/check-phase2-walkthrough-evidence.sh <filled-walkthrough.md>
 scripts/smoke-rust-sdk.sh
 scripts/build-phase2-language-variant-fixtures.sh
 scripts/test-phase2-language-variants.sh

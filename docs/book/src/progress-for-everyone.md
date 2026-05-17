@@ -1,6 +1,6 @@
 # Layer36 for Everyone
 
-Updated on May 16, 2026.
+Updated on May 17, 2026.
 
 This page explains the project in plain language. It is written for people who are not deep in systems programming.
 
@@ -57,6 +57,8 @@ flowchart LR
    shows what is done, what has proof in progress, and what is still blocked.
 8. Hosted CI and Pages stability can now be recorded as a plain evidence file
    instead of relying on screenshots or memory.
+9. The outside developer walkthrough now has a checker, so a filled timing
+   report must include the basics before we count it as Phase 2 evidence.
 
 ## Current Build Timeline
 
@@ -96,6 +98,7 @@ This is a simple status view for non technical readers.
 | CLI sample apps | Working |
 | Phase 2 proof tracking | Working, with a readiness command and evidence pages |
 | CI and docs stability proof | Working, with a GitHub run-history recorder |
+| Outside walkthrough proof | Ready to collect, with a timing packet and checker |
 | Desktop GUI path | Not started in implementation |
 | Mobile host path | Not started in implementation |
 | Packaging and app store style distribution | Not started in implementation |
@@ -112,7 +115,7 @@ The remaining Phase 2 work is mostly proof, not a rewrite:
 - collect clean Linux, macOS, and Windows evidence
 - decide whether Go is promoted now or marked experimental
 - run longer fuzz and benchmark checks
-- have one outside developer follow the tutorial and record the result
+- have one outside developer follow the tutorial and pass the filled-packet check
 
 To check the current gate state from the repo:
 
@@ -137,6 +140,6 @@ The main Phase 2 work still open is:
 3. Keep Go experimental for runtime parity until its compiled components stop
    importing host APIs directly.
 4. Longer fuzz, benchmark, and dependency signoff runs.
-5. One timed outside developer walkthrough.
+5. One timed outside developer walkthrough using the packet checker.
 
 When those are done, we can exit Phase 2 and start Phase 3 desktop UI work.
