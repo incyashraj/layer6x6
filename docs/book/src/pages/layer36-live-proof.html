@@ -111,10 +111,63 @@
   }
   .map b { display: block; font-family: ui-sans-serif, system-ui, sans-serif; line-height: 1.1; margin-bottom: 8px; }
   .map span { display: block; color: var(--muted); font-size: 15px; line-height: 1.42; }
+  .flow-wrap {
+    overflow-x: auto;
+    padding: 4px 0 12px;
+  }
+  .system-flow {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(150px, 1fr));
+    gap: 12px;
+    min-width: 940px;
+    align-items: stretch;
+  }
+  .flow-step {
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    padding: 14px;
+    position: relative;
+    min-height: 166px;
+  }
+  .flow-step:not(:last-child)::after {
+    content: ">";
+    position: absolute;
+    right: -11px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--paper);
+    color: var(--red);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-weight: 700;
+    padding: 0 4px;
+  }
+  .flow-step small {
+    display: inline-block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--blue);
+    padding: 3px 6px;
+    margin-bottom: 10px;
+  }
+  .flow-step b { display: block; font-family: ui-sans-serif, system-ui, sans-serif; line-height: 1.12; margin-bottom: 8px; }
+  .flow-step span { display: block; color: var(--muted); font-size: 15px; line-height: 1.42; }
+  .flow-step.output small { background: var(--green); }
   footer { padding: 34px 0 70px; color: var(--muted); border-top: 2px dashed rgba(24, 23, 20, 0.2); }
   @media (max-width: 900px) {
     .grid, .map { grid-template-columns: 1fr; }
     header, main, footer { width: min(100% - 28px, 1180px); }
+    .system-flow { min-width: 0; grid-template-columns: 1fr; }
+    .flow-step:not(:last-child)::after {
+      content: "down";
+      right: auto;
+      top: auto;
+      left: 14px;
+      bottom: -17px;
+      transform: none;
+    }
   }
 </style>
 </head>
@@ -139,6 +192,46 @@
       <div><b>Grant and run</b><span>The same app succeeds when permission is explicit.</span></div>
       <div><b>Show evidence status</b><span>The repo tracks what is proven and what is still open.</span></div>
     </div>
+  </section>
+
+  <section class="section">
+    <h2>The complete `layer36-clock` path</h2>
+    <p class="lede">Use this diagram before the terminal command. It shows what happens between the sample app and the final printed date.</p>
+    <div class="flow-wrap">
+      <div class="system-flow">
+        <div class="flow-step">
+          <small>1 app</small>
+          <b>`layer36-clock` source</b>
+          <span>The app asks for time, locale, timezone, and stdout.</span>
+        </div>
+        <div class="flow-step">
+          <small>2 build</small>
+          <b>`layer36_clock.wasm`</b>
+          <span>The source becomes a portable WebAssembly component.</span>
+        </div>
+        <div class="flow-step">
+          <small>3 runtime</small>
+          <b>`layer36 run`</b>
+          <span>The CLI starts the runtime session and loads the component.</span>
+        </div>
+        <div class="flow-step">
+          <small>4 UAPI</small>
+          <b>time + locale + stdout</b>
+          <span>The app talks to Layer36 APIs instead of host-specific APIs.</span>
+        </div>
+        <div class="flow-step">
+          <small>5 host</small>
+          <b>UCap + adapter</b>
+          <span>Layer36 checks permission shape, then the adapter supplies host behavior.</span>
+        </div>
+        <div class="flow-step output">
+          <small>6 result</small>
+          <b>terminal output</b>
+          <span>`date=1970-01-15 06:56` appears from a real runtime path.</span>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway"><strong>Plain-English takeaway:</strong> even this tiny clock app passes through the same layers future apps will use: portable artifact, runtime, UAPI, capability model, host adapter, output.</div>
   </section>
 
   <section class="section grid">

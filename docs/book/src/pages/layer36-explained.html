@@ -115,6 +115,66 @@
     gap: 14px;
     margin-top: 12px;
   }
+  .flow-wrap {
+    overflow-x: auto;
+    padding: 4px 0 12px;
+  }
+  .system-flow {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(150px, 1fr));
+    gap: 12px;
+    min-width: 920px;
+    align-items: stretch;
+  }
+  .flow-step {
+    background: #fffdf7;
+    border: 1.5px solid var(--ink);
+    padding: 14px;
+    position: relative;
+    min-height: 168px;
+  }
+  .flow-step:not(:last-child)::after {
+    content: ">";
+    position: absolute;
+    right: -11px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--paper);
+    color: var(--red);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-weight: 700;
+    padding: 0 4px;
+    z-index: 2;
+  }
+  .flow-step small {
+    display: inline-block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--blue);
+    padding: 3px 6px;
+    margin-bottom: 10px;
+  }
+  .flow-step b {
+    display: block;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+  .flow-step span {
+    display: block;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.42;
+  }
+  .flow-step.output small { background: var(--green); }
+  .flow-caption {
+    margin-top: 16px;
+    color: var(--muted);
+  }
   .node {
     border: 1.5px solid var(--ink);
     background: #fffdf7;
@@ -224,6 +284,15 @@
     .split, .compare, .cards, .timeline { grid-template-columns: 1fr; }
     .term { grid-template-columns: 1fr; gap: 4px; }
     header, main, footer { width: min(100% - 28px, 1120px); }
+    .system-flow { min-width: 0; grid-template-columns: 1fr; }
+    .flow-step:not(:last-child)::after {
+      content: "down";
+      right: auto;
+      top: auto;
+      left: 14px;
+      bottom: -17px;
+      transform: none;
+    }
   }
 </style>
 </head>
@@ -276,6 +345,45 @@
       <div class="arrow">down</div>
       <div class="node"><b>Host adapter</b><span>The adapter translates approved calls to macOS, Windows, Linux, mobile, or web behavior.</span></div>
     </div>
+  </section>
+
+  <section class="section">
+    <h2>Example: how `layer36-clock` becomes terminal output</h2>
+    <div class="flow-wrap">
+      <div class="system-flow">
+        <div class="flow-step">
+          <small>App code</small>
+          <b>`layer36-clock` source</b>
+          <span>The sample app asks for time, locale, timezone, and stdout. In simple terms: "What time should I show, and where do I print it?"</span>
+        </div>
+        <div class="flow-step">
+          <small>Portable file</small>
+          <b>WebAssembly component</b>
+          <span>The app is compiled into `layer36_clock.wasm`, a portable artifact that the Layer36 runtime can load.</span>
+        </div>
+        <div class="flow-step">
+          <small>Runtime</small>
+          <b>`layer36 run`</b>
+          <span>The CLI starts a runtime session, loads the component, applies test time/locale flags, and connects the app to UAPI.</span>
+        </div>
+        <div class="flow-step">
+          <small>UAPI</small>
+          <b>Time, locale, stdout</b>
+          <span>The app calls Layer36 APIs instead of directly calling macOS, Windows, or Linux APIs.</span>
+        </div>
+        <div class="flow-step">
+          <small>UCap + adapter</small>
+          <b>Check then translate</b>
+          <span>Layer36 checks allowed capabilities, then the host adapter provides normalized time, locale, and output behavior.</span>
+        </div>
+        <div class="flow-step output">
+          <small>Output</small>
+          <b>Terminal result</b>
+          <span>`app=layer36-clock`, `timezone=UTC`, `locale=en-US`, `date=1970-01-15 06:56`.</span>
+        </div>
+      </div>
+    </div>
+    <p class="flow-caption">This is a small example, but it shows the complete shape: portable app artifact, Layer36 runtime, common APIs, capability checks, host adapter, and final output.</p>
   </section>
 
   <section class="section split">
