@@ -506,16 +506,21 @@
     padding: 22px;
     min-height: 192px;
   }
-  .paper-card .icon {
+  .comparison-icon {
     width: 72px;
     height: 90px;
-    border: 2px solid var(--blue);
-    border-radius: 10px;
-    background: var(--blue-soft);
     margin-bottom: 18px;
     position: relative;
   }
-  .paper-card .icon::after {
+  .pdf-icon {
+    border: 2px solid var(--blue);
+    border-radius: 10px;
+    background:
+      linear-gradient(#ffffff 0 0) 14px 50px / 42px 4px no-repeat,
+      linear-gradient(#ffffff 0 0) 14px 61px / 32px 4px no-repeat,
+      var(--blue-soft);
+  }
+  .pdf-icon::after {
     content: "";
     position: absolute;
     right: -2px;
@@ -526,6 +531,65 @@
     border-bottom: 2px solid var(--blue);
     background: #fff;
     border-bottom-left-radius: 7px;
+  }
+  .pdf-icon::before {
+    content: "PDF";
+    position: absolute;
+    left: 13px;
+    top: 20px;
+    color: var(--blue);
+    font-size: 14px;
+    font-weight: 900;
+  }
+  .app-icon {
+    width: 92px;
+    height: 82px;
+  }
+  .app-window {
+    position: absolute;
+    border: 2px solid var(--blue);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 10px 20px rgba(36, 87, 166, 0.10);
+  }
+  .app-window::before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    top: 12px;
+    height: 6px;
+    border-radius: 999px;
+    background: #c9d8f5;
+  }
+  .app-window::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    right: 20px;
+    top: 28px;
+    height: 6px;
+    border-radius: 999px;
+    background: #dbe5f6;
+  }
+  .app-window.mac {
+    width: 52px;
+    height: 54px;
+    left: 0;
+    top: 18px;
+  }
+  .app-window.win {
+    width: 52px;
+    height: 54px;
+    left: 20px;
+    top: 4px;
+    background: var(--blue-soft);
+  }
+  .app-window.linux {
+    width: 52px;
+    height: 54px;
+    right: 0;
+    top: 20px;
   }
   .desktop-mock {
     border: 1px solid var(--line);
@@ -738,12 +802,16 @@ const scenes = [
       <div class="visual-title"><b>The plain-English model</b><span>From familiar file portability to app portability</span></div>
       <div class="pdf-row">
         <div class="paper-card">
-          <div class="icon"></div>
+          <div class="comparison-icon pdf-icon"></div>
           <h3>PDF</h3>
           <p>One portable file. Different machines know how to open it.</p>
         </div>
         <div class="paper-card">
-          <div class="icon"></div>
+          <div class="comparison-icon app-icon">
+            <span class="app-window mac"></span>
+            <span class="app-window win"></span>
+            <span class="app-window linux"></span>
+          </div>
           <h3>Typical app</h3>
           <p>Different builds, different APIs, different permission behavior.</p>
         </div>
