@@ -17,6 +17,7 @@ green before a final exit review:
 - dependency evidence
 - Go readiness evidence
 - optional hosted CI and Pages stability evidence
+- optional hosted full cross-host CI evidence
 - optional self-hosted full-gate evidence
 - optional fuzz evidence
 - optional Rust SDK package evidence
@@ -53,11 +54,11 @@ scripts/record-phase2-exit-bundle.sh --final-review
 ```
 
 That is shorthand for strict mode plus Rust SDK proof, hosted CI stability
-proof, self-hosted full-gate proof, and fuzz evidence. Set
-`LAYER36_CI_STABILITY_CREATED` and `LAYER36_SELF_HOSTED_CREATED` first if you
-want the GitHub run history limited to a review window. Set
-`LAYER36_FUZZ_MAX_TOTAL_TIME` first if the final packet should record a longer
-fuzz soak.
+proof, hosted full CI proof, self-hosted full-gate proof, and fuzz evidence.
+Set `LAYER36_CI_STABILITY_CREATED`, `LAYER36_HOSTED_FULL_CI_CREATED`, and
+`LAYER36_SELF_HOSTED_CREATED` first if you want GitHub run history limited to a
+review window. Set `LAYER36_FUZZ_MAX_TOTAL_TIME` first if the final packet
+should record a longer fuzz soak.
 
 ## Include Rust SDK Proof
 
@@ -87,6 +88,23 @@ or GitHub Pages does not show a completed green run.
 For the final candidate, set `LAYER36_CI_STABILITY_CREATED` to the review
 window you want, for example `>=2026-05-18`, before running the bundle. That
 keeps older green hosted runs from being mistaken for final proof.
+
+## Include Hosted Full CI Proof
+
+Hosted full CI evidence is separate from normal hosted CI stability. Include it
+when a recent full cross-host run has completed:
+
+```bash
+scripts/record-phase2-exit-bundle.sh --strict --include-hosted-full-ci
+```
+
+This adds `scripts/record-phase2-hosted-full-ci-evidence.sh --require-success`.
+The strict bundle fails if the inspected history does not contain a completed
+full CI run where the Linux, macOS, Windows, language, UCap, adapter, sample,
+benchmark, and dependency jobs all ran and passed.
+
+For the final candidate, set `LAYER36_HOSTED_FULL_CI_CREATED` to the review
+window you want, for example `>=2026-05-18`.
 
 ## Include Self-Hosted Full-Gate Proof
 
@@ -141,6 +159,7 @@ The report includes:
 - the dependency audit evidence result
 - the Go readiness result and current import-purity status
 - the hosted CI stability result when included
+- the hosted full CI result when included
 - the self-hosted full-gate result when included
 - the fuzz result when included
 - the current `P2E-*` gate snapshot from the exit ledger

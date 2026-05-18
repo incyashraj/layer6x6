@@ -57,6 +57,7 @@
   - [UCap Enforcement Evidence](phase2/ucap-enforcement-evidence.md)
   - [Timed Walkthrough Evidence](phase2/walkthrough-evidence.md)
   - [CI Stability Evidence](phase2/ci-stability-evidence.md)
+  - [Hosted Full CI Evidence](phase2/hosted-full-ci-evidence.md)
   - [Self-Hosted Evidence](phase2/self-hosted-evidence.md)
   - [Fuzz Evidence](phase2/fuzz-evidence.md)
   - [Benchmark Evidence](phase2/benchmark-evidence.md)

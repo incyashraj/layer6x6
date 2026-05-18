@@ -3,23 +3,23 @@
 Last updated: 2026-05-18
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `375f4f4`
-Working tree at this status update: Rust walkthrough rehearsal in progress
+Latest checked completed push before this slice: `c26c2f5`
+Working tree at this status update: hosted full CI evidence recorder in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 302
-- Tracked files after this slice lands: about 303
-- Total tracked lines after this slice lands: about 84,608
+- Commits after this slice lands: about 303
+- Tracked files after this slice lands: about 305
+- Total tracked lines after this slice lands: about 85,171
 - Rust lines (`.rs`) after this slice lands: about 40,208
-- Docs lines (`.md`) after this slice lands: about 28,543
+- Docs lines (`.md`) after this slice lands: about 28,692
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`375f4f4`) checks:
+Latest completed push (`c26c2f5`) checks:
 
-- CI: success (run `26039874868`)
-- Deploy docs to GitHub Pages: success (run `26039875684`)
+- CI: success (run `26040830884`)
+- Deploy docs to GitHub Pages: success (run `26040830824`)
 
 Recent pushes before that are also green.
 
@@ -113,6 +113,7 @@ Top pending items:
 - Added a fuzz evidence recorder and exit-bundle inclusion path so smoke and longer soak runs can be reviewed as markdown proof
 - Added a full Phase 2 readiness mode and wired it into the exit bundle so review packets list every unfinished gate with its next step
 - Added a Rust walkthrough rehearsal script and exit-bundle row so the reviewer path can be checked locally before the outside walkthrough
+- Added a hosted full CI evidence recorder so normal fast CI is not mistaken for Linux, macOS, Windows cross-host proof
 - Expanded UCap evidence with a named dispatcher deny-before-adapter matrix that covers every non-default filesystem and network boundary
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`

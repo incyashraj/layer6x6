@@ -8,18 +8,21 @@ OUTPUT="target/phase2-exit-bundle/exit-bundle.md"
 STRICT="${LAYER36_EXIT_BUNDLE_STRICT:-0}"
 INCLUDE_RUST_SDK="${LAYER36_EXIT_BUNDLE_INCLUDE_RUST_SDK:-0}"
 INCLUDE_CI_STABILITY="${LAYER36_EXIT_BUNDLE_INCLUDE_CI_STABILITY:-0}"
+INCLUDE_HOSTED_FULL_CI="${LAYER36_EXIT_BUNDLE_INCLUDE_HOSTED_FULL_CI:-0}"
 INCLUDE_SELF_HOSTED="${LAYER36_EXIT_BUNDLE_INCLUDE_SELF_HOSTED:-0}"
 INCLUDE_FUZZ="${LAYER36_EXIT_BUNDLE_INCLUDE_FUZZ:-0}"
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/record-phase2-exit-bundle.sh [--strict] [--final-review] [--include-rust-sdk] [--include-ci-stability] [--include-self-hosted] [--include-fuzz] [--output <path>]
+Usage: scripts/record-phase2-exit-bundle.sh [--strict] [--final-review] [--include-rust-sdk] [--include-ci-stability] [--include-hosted-full-ci] [--include-self-hosted] [--include-fuzz] [--output <path>]
 
 Options:
   --strict                Exit non-zero when any included evidence step fails
-  --final-review          Enable strict mode plus Rust SDK, hosted CI, self-hosted, and fuzz evidence
+  --final-review          Enable strict mode plus Rust SDK, hosted CI, hosted full CI, self-hosted, and fuzz evidence
   --include-rust-sdk      Also run the Rust SDK package evidence recorder
   --include-ci-stability  Also record hosted CI and Pages stability evidence
+  --include-hosted-full-ci
+                          Also record hosted full cross-host CI evidence
   --include-self-hosted   Also record self-hosted full-gate evidence
   --include-fuzz          Also record Phase 2 fuzz smoke evidence
   --output <path>         Output markdown file path
@@ -28,6 +31,7 @@ Environment:
   LAYER36_EXIT_BUNDLE_STRICT                1 to exit non-zero on failed included steps
   LAYER36_EXIT_BUNDLE_INCLUDE_RUST_SDK      1 to include Rust SDK package evidence
   LAYER36_EXIT_BUNDLE_INCLUDE_CI_STABILITY  1 to include hosted CI stability evidence
+  LAYER36_EXIT_BUNDLE_INCLUDE_HOSTED_FULL_CI 1 to include hosted full CI evidence
   LAYER36_EXIT_BUNDLE_INCLUDE_SELF_HOSTED   1 to include self-hosted evidence
   LAYER36_EXIT_BUNDLE_INCLUDE_FUZZ          1 to include fuzz smoke evidence
 USAGE
@@ -43,6 +47,7 @@ while [ "$#" -gt 0 ]; do
       STRICT="1"
       INCLUDE_RUST_SDK="1"
       INCLUDE_CI_STABILITY="1"
+      INCLUDE_HOSTED_FULL_CI="1"
       INCLUDE_SELF_HOSTED="1"
       INCLUDE_FUZZ="1"
       shift
@@ -53,6 +58,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     --include-ci-stability)
       INCLUDE_CI_STABILITY="1"
+      shift
+      ;;
+    --include-hosted-full-ci)
+      INCLUDE_HOSTED_FULL_CI="1"
       shift
       ;;
     --include-self-hosted)
@@ -109,6 +118,8 @@ GO_READINESS_LOG="$TMP_DIR/go-readiness-evidence.log"
 GO_READINESS_REPORT="$TMP_DIR/go-readiness-evidence.md"
 CI_STABILITY_LOG="$TMP_DIR/ci-stability-evidence.log"
 CI_STABILITY_REPORT="$TMP_DIR/ci-stability-evidence.md"
+HOSTED_FULL_CI_LOG="$TMP_DIR/hosted-full-ci-evidence.log"
+HOSTED_FULL_CI_REPORT="$TMP_DIR/hosted-full-ci-evidence.md"
 SELF_HOSTED_LOG="$TMP_DIR/self-hosted-evidence.log"
 SELF_HOSTED_REPORT="$TMP_DIR/self-hosted-evidence.md"
 FUZZ_LOG="$TMP_DIR/fuzz-evidence.log"
@@ -206,6 +217,17 @@ else
   printf 'Hosted CI stability evidence skipped. Run with --include-ci-stability to include it.\n' >"$CI_STABILITY_LOG"
 fi
 
+if [ "$INCLUDE_HOSTED_FULL_CI" = "1" ]; then
+  if scripts/record-phase2-hosted-full-ci-evidence.sh --require-success --output "$HOSTED_FULL_CI_REPORT" >"$HOSTED_FULL_CI_LOG" 2>&1; then
+    HOSTED_FULL_CI_CODE=0
+  else
+    HOSTED_FULL_CI_CODE=$?
+  fi
+else
+  HOSTED_FULL_CI_CODE=0
+  printf 'Hosted full CI evidence skipped. Run with --include-hosted-full-ci to include it.\n' >"$HOSTED_FULL_CI_LOG"
+fi
+
 if [ "$INCLUDE_SELF_HOSTED" = "1" ]; then
   if scripts/record-phase2-self-hosted-evidence.sh --require-success --output "$SELF_HOSTED_REPORT" >"$SELF_HOSTED_LOG" 2>&1; then
     SELF_HOSTED_CODE=0
@@ -278,6 +300,7 @@ included_of() {
   echo "- Generated at (UTC): \`$now_utc\`"
   echo "- Rust SDK package evidence included: \`$(included_of "$INCLUDE_RUST_SDK")\`"
   echo "- Hosted CI stability evidence included: \`$(included_of "$INCLUDE_CI_STABILITY")\`"
+  echo "- Hosted full CI evidence included: \`$(included_of "$INCLUDE_HOSTED_FULL_CI")\`"
   echo "- Self-hosted full-gate evidence included: \`$(included_of "$INCLUDE_SELF_HOSTED")\`"
   echo "- Fuzz evidence included: \`$(included_of "$INCLUDE_FUZZ")\`"
   echo
@@ -300,6 +323,11 @@ included_of() {
     echo "| Hosted CI stability evidence (\`scripts/record-phase2-ci-stability-evidence.sh --require-success\`) | $CI_STABILITY_CODE | $(result_of "$CI_STABILITY_CODE") |"
   else
     echo "| Hosted CI stability evidence | 0 | skipped |"
+  fi
+  if [ "$INCLUDE_HOSTED_FULL_CI" = "1" ]; then
+    echo "| Hosted full CI evidence (\`scripts/record-phase2-hosted-full-ci-evidence.sh --require-success\`) | $HOSTED_FULL_CI_CODE | $(result_of "$HOSTED_FULL_CI_CODE") |"
+  else
+    echo "| Hosted full CI evidence | 0 | skipped |"
   fi
   if [ "$INCLUDE_SELF_HOSTED" = "1" ]; then
     echo "| Self-hosted full-gate evidence (\`scripts/record-phase2-self-hosted-evidence.sh --require-success\`) | $SELF_HOSTED_CODE | $(result_of "$SELF_HOSTED_CODE") |"
@@ -439,6 +467,18 @@ included_of() {
     sed -n '1,44p' "$CI_STABILITY_REPORT"
   fi
   echo
+  echo "## Hosted Full CI Evidence Log (tail)"
+  echo
+  echo '```text'
+  tail -n 120 "$HOSTED_FULL_CI_LOG"
+  echo '```'
+  if [ "$INCLUDE_HOSTED_FULL_CI" = "1" ] && [ -f "$HOSTED_FULL_CI_REPORT" ]; then
+    echo
+    echo "## Hosted Full CI Evidence Summary"
+    echo
+    sed -n '1,58p' "$HOSTED_FULL_CI_REPORT"
+  fi
+  echo
   echo "## Self-Hosted Full-Gate Evidence Log (tail)"
   echo
   echo '```text'
@@ -490,6 +530,7 @@ if [ "$STRICT" = "1" ] && {
   [ "$DOCS_CODE" -ne 0 ] ||
   [ "$DEPENDENCY_CODE" -ne 0 ] ||
   [ "$CI_STABILITY_CODE" -ne 0 ] ||
+  [ "$HOSTED_FULL_CI_CODE" -ne 0 ] ||
   [ "$SELF_HOSTED_CODE" -ne 0 ] ||
   [ "$FUZZ_CODE" -ne 0 ] ||
   [ "$SDK_CODE" -ne 0 ];
