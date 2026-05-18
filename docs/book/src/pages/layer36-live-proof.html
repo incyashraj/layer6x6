@@ -155,11 +155,84 @@
   .flow-step b { display: block; font-family: ui-sans-serif, system-ui, sans-serif; line-height: 1.12; margin-bottom: 8px; }
   .flow-step span { display: block; color: var(--muted); font-size: 15px; line-height: 1.42; }
   .flow-step.output small { background: var(--green); }
+  .phase3-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 18px;
+  }
+  .phase3-card {
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    padding: 20px;
+  }
+  .phase3-step {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 12px;
+    border: 1.5px solid var(--line);
+    background: #fffdf7;
+    padding: 12px;
+    margin-top: 10px;
+  }
+  .phase3-num {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    color: var(--paper);
+    background: var(--ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .phase3-step b { display: block; font-family: ui-sans-serif, system-ui, sans-serif; margin-bottom: 3px; }
+  .phase3-step span { color: var(--muted); font-size: 15px; line-height: 1.42; }
+  .desktop-mock {
+    border: 1.5px solid var(--ink);
+    background: #fbf8f0;
+    overflow: hidden;
+    margin-top: 14px;
+  }
+  .desktop-titlebar {
+    height: 34px;
+    border-bottom: 1.5px solid var(--ink);
+    background: #eadfcf;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 999px; border: 1px solid var(--ink); }
+  .dot.red { background: var(--red); }
+  .dot.yellow { background: var(--yellow); }
+  .dot.green { background: var(--green); }
+  .window-body {
+    display: grid;
+    grid-template-columns: 145px 1fr;
+    min-height: 210px;
+  }
+  .window-sidebar {
+    border-right: 1.5px solid var(--line);
+    background: #f3eadc;
+    padding: 14px;
+  }
+  .window-main { padding: 16px; }
+  .window-line { height: 11px; background: var(--line); margin-bottom: 10px; }
+  .window-line.short { width: 64%; }
+  .window-card {
+    border: 1.5px solid var(--ink);
+    background: #fffdf7;
+    padding: 12px;
+    margin-top: 14px;
+  }
   footer { padding: 34px 0 70px; color: var(--muted); border-top: 2px dashed rgba(24, 23, 20, 0.2); }
   @media (max-width: 900px) {
-    .grid, .map { grid-template-columns: 1fr; }
+    .grid, .map, .phase3-grid { grid-template-columns: 1fr; }
     header, main, footer { width: min(100% - 28px, 1180px); }
     .system-flow { min-width: 0; grid-template-columns: 1fr; }
+    .window-body { grid-template-columns: 1fr; }
+    .window-sidebar { border-right: 0; border-bottom: 1.5px solid var(--line); }
     .flow-step:not(:last-child)::after {
       content: "down";
       right: auto;
@@ -232,6 +305,33 @@
       </div>
     </div>
     <div class="takeaway"><strong>Plain-English takeaway:</strong> even this tiny clock app passes through the same layers future apps will use: portable artifact, runtime, UAPI, capability model, host adapter, output.</div>
+  </section>
+
+  <section class="section">
+    <h2>What Phase 3 should make possible</h2>
+    <p class="lede">After the Phase 2 proof is closed, the next visual leap is desktop UI: the same app model opening a real native window instead of only printing to a terminal.</p>
+    <div class="phase3-grid">
+      <div class="phase3-card">
+        <h3>What stays the same</h3>
+        <div class="phase3-step"><div class="phase3-num">1</div><div><b>Portable artifact</b><span>The app still compiles to a WebAssembly component.</span></div></div>
+        <div class="phase3-step"><div class="phase3-num">2</div><div><b>UAPI boundary</b><span>The app still asks Layer36 for host services instead of calling each OS directly.</span></div></div>
+        <div class="phase3-step"><div class="phase3-num">3</div><div><b>Capability checks</b><span>Windowing, files, network, and other host powers still need explicit permission shape.</span></div></div>
+      </div>
+      <div class="phase3-card">
+        <h3>What gets added</h3>
+        <div class="phase3-step"><div class="phase3-num">1</div><div><b>Window + events</b><span>A UAPI slice for opening a native window and receiving user input.</span></div></div>
+        <div class="phase3-step"><div class="phase3-num">2</div><div><b>Drawing surface</b><span>A way for the app to render UI through Layer36 without becoming OS-specific.</span></div></div>
+        <div class="phase3-step"><div class="phase3-num">3</div><div><b>Desktop adapters</b><span>macOS, Windows, and Linux adapters translate the same app calls into native desktop behavior.</span></div></div>
+        <div class="desktop-mock" aria-label="Phase 3 desktop app mockup">
+          <div class="desktop-titlebar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+          <div class="window-body">
+            <div class="window-sidebar"><div class="window-line"></div><div class="window-line short"></div><div class="window-line"></div></div>
+            <div class="window-main"><div class="window-line"></div><div class="window-line short"></div><div class="window-card"><strong>Phase 3 preview</strong><br><span style="color: var(--muted);">One WebAssembly app, native host window, explicit permissions.</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway"><strong>Plain-English takeaway:</strong> Phase 2 proves safe portable CLI behavior. Phase 3 should prove safe portable desktop app behavior.</div>
   </section>
 
   <section class="section grid">
