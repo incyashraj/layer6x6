@@ -208,6 +208,58 @@
   }
   .flow-card b { display: block; margin-bottom: 5px; }
   .flow-card span { color: var(--muted); font-size: 15px; line-height: 1.38; }
+  .contrast-strip {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: stretch;
+    margin-top: 16px;
+  }
+  .contrast-panel {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #fbfcff;
+    padding: 16px;
+  }
+  .contrast-panel.target {
+    border-color: #9cd8bd;
+    background: linear-gradient(180deg, #fbfffd 0%, #ebf8f1 100%);
+  }
+  .contrast-panel b {
+    display: block;
+    font-size: 17px;
+    margin-bottom: 10px;
+  }
+  .contrast-item {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 8px;
+    align-items: start;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.32;
+    margin-top: 8px;
+  }
+  .contrast-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    background: var(--blue);
+    font-size: 11px;
+    font-weight: 850;
+  }
+  .contrast-panel.problem .contrast-dot {
+    background: var(--red);
+  }
+  .contrast-arrow {
+    align-self: center;
+    color: var(--blue);
+    font-size: 28px;
+    font-weight: 900;
+  }
   .sequence {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -489,6 +541,161 @@
     font-size: 12px;
     line-height: 1.45;
   }
+  .artifact-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .artifact-card {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fbfcff;
+    padding: 14px;
+    min-height: 128px;
+  }
+  .artifact-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    background: var(--blue);
+    font-size: 12px;
+    font-weight: 900;
+    margin-bottom: 10px;
+  }
+  .artifact-mark.wasm {
+    color: var(--blue);
+    background: var(--blue-soft);
+    border: 1px solid #b9c9e8;
+  }
+  .artifact-card b {
+    display: block;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  .artifact-card span {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .permission-board {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .permission-row {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr 1fr;
+    gap: 10px;
+    align-items: center;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fbfcff;
+    padding: 12px;
+  }
+  .permission-row.restricted {
+    border-color: #f0b5ad;
+    background: #fff8f6;
+  }
+  .permission-row b {
+    font-size: 14px;
+  }
+  .permission-row span {
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .cap-chip {
+    width: fit-content;
+    border-radius: 999px;
+    padding: 5px 9px;
+    font-size: 11px;
+    font-weight: 850;
+  }
+  .cap-chip.default {
+    color: #164632;
+    background: var(--green-soft);
+    border: 1px solid #b8dec9;
+  }
+  .cap-chip.grant {
+    color: var(--red);
+    background: var(--red-soft);
+    border: 1px solid #f0b5ad;
+  }
+  .gate-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 12px;
+    align-items: stretch;
+    margin: 18px 0 14px;
+  }
+  .gate-card {
+    min-height: 140px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #fbfcff;
+    padding: 16px;
+  }
+  .gate-card.denied {
+    border-color: #f0b5ad;
+    background: var(--red-soft);
+  }
+  .gate-card.allowed {
+    border-color: #9cd8bd;
+    background: var(--green-soft);
+  }
+  .gate-card small {
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 850;
+    text-transform: uppercase;
+  }
+  .gate-card b {
+    display: block;
+    margin: 8px 0 5px;
+    font-size: 18px;
+  }
+  .gate-card span {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .gate-arrow {
+    align-self: center;
+    color: var(--blue);
+    font-size: 24px;
+    font-weight: 900;
+  }
+  .network-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 12px;
+    align-items: stretch;
+    margin: 16px 0 14px;
+  }
+  .network-card {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #fbfcff;
+    padding: 16px;
+    min-height: 132px;
+  }
+  .network-card.grant {
+    border-color: #9cd8bd;
+    background: var(--green-soft);
+  }
+  .network-card b {
+    display: block;
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+  .network-card span {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.35;
+  }
   @keyframes procedure-focus {
     0%, 100% { border-color: var(--line); box-shadow: none; transform: translateY(0); }
     6%, 17% { border-color: #7ea6e8; box-shadow: 0 14px 28px rgba(36, 87, 166, 0.16); transform: translateY(-3px); }
@@ -631,6 +838,95 @@
     padding: 16px;
     margin-top: 18px;
   }
+  .phase-bridge {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .phase-node {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fbfcff;
+    padding: 14px;
+    min-height: 118px;
+    position: relative;
+  }
+  .phase-node::after {
+    content: "->";
+    position: absolute;
+    right: -15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--blue);
+    font-weight: 900;
+  }
+  .phase-node:last-child::after {
+    content: "";
+  }
+  .phase-node.runtime {
+    border-color: #b9c9e8;
+    background: linear-gradient(180deg, #f9fbff 0%, #eef5ff 100%);
+  }
+  .phase-node.output {
+    border-color: #9cd8bd;
+    background: var(--green-soft);
+  }
+  .phase-node small {
+    display: block;
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 850;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+  .phase-node b {
+    display: block;
+    font-size: 16px;
+    line-height: 1.15;
+    margin-bottom: 6px;
+  }
+  .phase-node span {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.32;
+  }
+  .evidence-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0 14px;
+  }
+  .evidence-card {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fbfcff;
+    padding: 15px;
+    min-height: 148px;
+  }
+  .evidence-card.good {
+    border-color: #9cd8bd;
+    background: var(--green-soft);
+  }
+  .evidence-card.open {
+    border-color: #f2cc8d;
+    background: #fff8eb;
+  }
+  .evidence-card b {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .evidence-card ul {
+    margin: 0;
+    padding-left: 17px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .evidence-card li + li {
+    margin-top: 5px;
+  }
   .decision {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -744,12 +1040,13 @@
     .stage { height: auto; min-height: 100vh; padding: 14px; }
     .scene { grid-template-columns: 1fr; }
     .narration, .visual { min-height: auto; }
-    .flow, .pdf-row, .window-body, .decision, .metric-row, .clock-demo { grid-template-columns: 1fr; }
+    .flow, .pdf-row, .window-body, .decision, .metric-row, .clock-demo, .artifact-grid, .permission-row, .gate-flow, .network-flow, .contrast-strip, .phase-bridge, .evidence-split { grid-template-columns: 1fr; }
     .sequence { grid-template-columns: 1fr 1fr; }
     .architecture { grid-template-columns: 1fr; }
     .procedure-row, .procedure-row.clock, .procedure-stack, .platform-row { grid-template-columns: 1fr; }
-    .procedure-arrow { display: none; }
+    .procedure-arrow, .gate-arrow, .contrast-arrow { display: none; }
     .arch-arrow { display: none; }
+    .phase-node::after { content: ""; }
     .step::after { content: ""; }
     .decision-arrow { display: none; }
     .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
@@ -820,6 +1117,21 @@ const scenes = [
         <div class="flow-card"><small>Goal</small><b>One app artifact</b><span>Run through a common runtime model.</span></div>
         <div class="flow-card"><small>Safety</small><b>Explicit permissions</b><span>The app declares what it needs.</span></div>
         <div class="flow-card"><small>Host</small><b>Native behavior</b><span>Adapters translate to the real OS.</span></div>
+      </div>
+      <div class="contrast-strip">
+        <div class="contrast-panel problem">
+          <b>Today</b>
+          <div class="contrast-item"><span class="contrast-dot">1</span><span>Apps are rebuilt for each platform.</span></div>
+          <div class="contrast-item"><span class="contrast-dot">2</span><span>Host access is often hidden inside the app.</span></div>
+          <div class="contrast-item"><span class="contrast-dot">3</span><span>Behavior changes across machines.</span></div>
+        </div>
+        <div class="contrast-arrow">-></div>
+        <div class="contrast-panel target">
+          <b>Layer36</b>
+          <div class="contrast-item"><span class="contrast-dot">1</span><span>One portable component becomes the app artifact.</span></div>
+          <div class="contrast-item"><span class="contrast-dot">2</span><span>Permissions are declared before launch.</span></div>
+          <div class="contrast-item"><span class="contrast-dot">3</span><span>Host adapters keep native behavior controlled.</span></div>
+        </div>
       </div>`
   },
   {
@@ -888,6 +1200,12 @@ uapi::fs.read(path);</pre>
     takeaway: "Proof point: there are real artifacts on disk, not just a diagram.",
     visual: `
       <div class="visual-title"><b>Build proof</b><span>CLI + sample apps compile locally</span></div>
+      <div class="artifact-grid">
+        <div class="artifact-card"><div class="artifact-mark">CLI</div><b>layer36</b><span>The runtime command that launches components.</span></div>
+        <div class="artifact-card"><div class="artifact-mark wasm">WASM</div><b>clock</b><span>Time and locale through UAPI.</span></div>
+        <div class="artifact-card"><div class="artifact-mark wasm">WASM</div><b>cat</b><span>File read through explicit grants.</span></div>
+        <div class="artifact-card"><div class="artifact-mark wasm">WASM</div><b>curl</b><span>Network connect through explicit grants.</span></div>
+      </div>
       <pre class="terminal compact"><span class="cmd">cargo build -p layer36-cli</span>
 <span class="cmd">scripts/build-layer36-clock-component.sh</span>
 <span class="cmd">scripts/build-layer36-cat-component.sh</span>
@@ -905,6 +1223,10 @@ uapi::fs.read(path);</pre>
     takeaway: "Simple version: Layer36 shows the permission request before the app gets the power.",
     visual: `
       <div class="visual-title"><b>Permission label</b><span>The app declares what host access it needs</span></div>
+      <div class="permission-board">
+        <div class="permission-row"><b>io.args / io.stdout / io.stderr</b><span>basic app plumbing</span><div class="cap-chip default">default grant</div></div>
+        <div class="permission-row restricted"><b>fs.read:fixtures/**</b><span>host file system power</span><div class="cap-chip grant">launch grant needed</div></div>
+      </div>
       <pre class="terminal compact"><span class="cmd">target/debug/layer36 manifest explain apps/layer36-cat/manifest.toml</span>
 
 Capabilities
@@ -964,10 +1286,12 @@ date=1970-01-15 06:56</span></pre>
     takeaway: "Important investor point: portability and safety are the same system, not two separate stories.",
     visual: `
       <div class="visual-title"><b>Permission boundary</b><span>Access is denied unless the grant is present</span></div>
-      <div class="decision">
-        <div class="decision-card bad"><h3>No file grant</h3><p>The app requests <b>fs.read:fixtures/**</b>, but this launch did not grant it.</p></div>
-        <div class="decision-arrow">-></div>
-        <div class="decision-card bad"><h3>Layer36 blocks</h3><p>The host file system is not exposed to the app.</p></div>
+      <div class="gate-flow">
+        <div class="gate-card"><small>App request</small><b>Read ./fixtures/hello.txt</b><span>The component asks through its declared manifest.</span></div>
+        <div class="gate-arrow">-></div>
+        <div class="gate-card denied"><small>UCap gate</small><b>No fs grant</b><span>Layer36 refuses before host file access happens.</span></div>
+        <div class="gate-arrow">-></div>
+        <div class="gate-card denied"><small>Result</small><b>Denied</b><span>The host file system stays closed.</span></div>
       </div>
       <pre class="terminal compact"><span class="cmd">layer36 run --manifest manifest.toml layer36_cat.wasm -- ./fixtures/hello.txt</span>
 
@@ -982,10 +1306,12 @@ date=1970-01-15 06:56</span></pre>
     takeaway: "Simple version: denied without the key, works with the key.",
     visual: `
       <div class="visual-title"><b>Approved launch</b><span>Same artifact, explicit permission granted</span></div>
-      <div class="decision">
-        <div class="decision-card good"><h3>Grant present</h3><p>Layer36 sees that the declared file access has been approved.</p></div>
-        <div class="decision-arrow">-></div>
-        <div class="decision-card good"><h3>App runs</h3><p>The app can read the approved fixture and print the output.</p></div>
+      <div class="gate-flow">
+        <div class="gate-card"><small>Same app</small><b>layer36_cat.wasm</b><span>The component and file path do not change.</span></div>
+        <div class="gate-arrow">-></div>
+        <div class="gate-card allowed"><small>UCap gate</small><b>fs grant present</b><span>The declared capability is approved for this launch.</span></div>
+        <div class="gate-arrow">-></div>
+        <div class="gate-card allowed"><small>Result</small><b>File output</b><span>The app reads only the approved fixture path.</span></div>
       </div>
       <pre class="terminal compact"><span class="cmd">layer36 run --manifest manifest.toml --auto-grant layer36_cat.wasm -- ./fixtures/hello.txt</span>
 
@@ -999,6 +1325,13 @@ date=1970-01-15 06:56</span></pre>
     takeaway: "The permission model generalizes beyond one file demo.",
     visual: `
       <div class="visual-title"><b>Network proof</b><span>Host powers are granted explicitly</span></div>
+      <div class="network-flow">
+        <div class="network-card"><b>curl component</b><span>Portable app artifact asks for a local HTTP endpoint.</span></div>
+        <div class="gate-arrow">-></div>
+        <div class="network-card grant"><b>Grant</b><span>net.connect:127.0.0.1:8765 is approved for this run.</span></div>
+        <div class="gate-arrow">-></div>
+        <div class="network-card grant"><b>Response</b><span>Only the granted endpoint returns data.</span></div>
+      </div>
       <pre class="terminal compact"><span class="cmd">layer36 run --grant net.connect:127.0.0.1:8765 layer36_curl.wasm -- http://127.0.0.1:8765/demo.txt</span>
 
 <span class="ok">portable runtime response</span></pre>`
@@ -1022,10 +1355,12 @@ date=1970-01-15 06:56</span></pre>
           </div>
         </div>
       </div>
-      <div class="flow">
-        <div class="flow-card"><small>Stays</small><b>Portable artifact</b><span>The app still ships as WebAssembly.</span></div>
-        <div class="flow-card"><small>Adds</small><b>Window + events</b><span>Desktop UI becomes part of UAPI.</span></div>
-        <div class="flow-card"><small>Result</small><b>Native window</b><span>Adapters translate one app to desktop hosts.</span></div>
+      <div class="phase-bridge">
+        <div class="phase-node"><small>Artifact</small><b>app.wasm</b><span>Same portable app package.</span></div>
+        <div class="phase-node runtime"><small>Runtime</small><b>Layer36</b><span>Loads the app and owns host decisions.</span></div>
+        <div class="phase-node runtime"><small>UAPI</small><b>Window, input, storage</b><span>Desktop asks go through one API surface.</span></div>
+        <div class="phase-node"><small>Adapters</small><b>macOS / Windows / Linux</b><span>Translate approved calls into host behavior.</span></div>
+        <div class="phase-node output"><small>Proof</small><b>Native preview app</b><span>A developer can run and inspect it.</span></div>
       </div>`
   },
   {
@@ -1041,6 +1376,11 @@ date=1970-01-15 06:56</span></pre>
         <div class="metric"><b>14/15</b><span>Repeatable proof path exists</span></div>
         <div class="metric"><b>3</b><span>Fully done gates</span></div>
         <div class="metric"><b>0</b><span>Blocked gates</span></div>
+      </div>
+      <div class="evidence-split">
+        <div class="evidence-card good"><b>Works now</b><ul><li>CLI launches real components</li><li>Manifest explains capabilities</li><li>File and network grants are enforced</li></ul></div>
+        <div class="evidence-card open"><b>Still pre-alpha</b><ul><li>Desktop UI path is next</li><li>Outside walkthrough is pending</li><li>Cross-host proof needs more runs</li></ul></div>
+        <div class="evidence-card"><b>Investment use</b><ul><li>Turn proof into developer preview</li><li>Validate with design partners</li><li>Make the next round usage-led</li></ul></div>
       </div>
       <pre class="terminal compact"><span class="cmd">scripts/phase2-exit-readiness.sh</span>
 
