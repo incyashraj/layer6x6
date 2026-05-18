@@ -98,6 +98,7 @@ FREEZE_LOCK_LOG="$TMP_DIR/check-uapi-freeze-lock.log"
 FREEZE_DECISION_LOG="$TMP_DIR/check-phase2-freeze-decision.log"
 ADAPTER_LOG="$TMP_DIR/check-adapter-boundary.log"
 EXIT_LEDGER_LOG="$TMP_DIR/check-phase2-exit-evidence.log"
+READINESS_LOG="$TMP_DIR/phase2-exit-readiness.log"
 CLOSEOUT_DOCS_LOG="$TMP_DIR/check-phase2-closeout-docs.log"
 DOCS_LOG="$TMP_DIR/mdbook.log"
 DEPENDENCY_LOG="$TMP_DIR/dependency-evidence.log"
@@ -141,6 +142,12 @@ if scripts/check-phase2-exit-evidence.sh >"$EXIT_LEDGER_LOG" 2>&1; then
   EXIT_LEDGER_CODE=0
 else
   EXIT_LEDGER_CODE=$?
+fi
+
+if scripts/phase2-exit-readiness.sh --all >"$READINESS_LOG" 2>&1; then
+  READINESS_CODE=0
+else
+  READINESS_CODE=$?
 fi
 
 if scripts/check-phase2-closeout-docs.sh >"$CLOSEOUT_DOCS_LOG" 2>&1; then
@@ -275,6 +282,7 @@ included_of() {
   echo "| UAPI freeze decision check (\`scripts/check-phase2-freeze-decision.sh\`) | $FREEZE_DECISION_CODE | $(result_of "$FREEZE_DECISION_CODE") |"
   echo "| Adapter boundary check (\`scripts/check-adapter-boundary.sh\`) | $ADAPTER_CODE | $(result_of "$ADAPTER_CODE") |"
   echo "| Exit ledger check (\`scripts/check-phase2-exit-evidence.sh\`) | $EXIT_LEDGER_CODE | $(result_of "$EXIT_LEDGER_CODE") |"
+  echo "| Exit readiness snapshot (\`scripts/phase2-exit-readiness.sh --all\`) | $READINESS_CODE | $(result_of "$READINESS_CODE") |"
   echo "| Closeout docs check (\`scripts/check-phase2-closeout-docs.sh\`) | $CLOSEOUT_DOCS_CODE | $(result_of "$CLOSEOUT_DOCS_CODE") |"
   echo "| Docs build (\`mdbook build docs/book\`) | $DOCS_CODE | $(result_of "$DOCS_CODE") |"
   echo "| Dependency evidence (\`scripts/record-phase2-dependency-evidence.sh --strict\`) | $DEPENDENCY_CODE | $(result_of "$DEPENDENCY_CODE") |"
@@ -354,6 +362,12 @@ included_of() {
   echo
   echo '```text'
   tail -n 120 "$EXIT_LEDGER_LOG"
+  echo '```'
+  echo
+  echo "## Exit Readiness Snapshot"
+  echo
+  echo '```text'
+  tail -n 120 "$READINESS_LOG"
   echo '```'
   echo
   echo "## Closeout Docs Log (tail)"
@@ -449,6 +463,7 @@ if [ "$STRICT" = "1" ] && {
   [ "$FREEZE_DECISION_CODE" -ne 0 ] ||
   [ "$ADAPTER_CODE" -ne 0 ] ||
   [ "$EXIT_LEDGER_CODE" -ne 0 ] ||
+  [ "$READINESS_CODE" -ne 0 ] ||
   [ "$CLOSEOUT_DOCS_CODE" -ne 0 ] ||
   [ "$DOCS_CODE" -ne 0 ] ||
   [ "$DEPENDENCY_CODE" -ne 0 ] ||

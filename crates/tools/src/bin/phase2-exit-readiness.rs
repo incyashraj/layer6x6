@@ -13,18 +13,20 @@ fn main() -> Result<()> {
     let rows = gate_rows(&source)?;
     let report = ReadinessReport::from_rows(rows);
 
-    print_report(&config.evidence_page, &report);
+    print_report(&config.evidence_page, &report, config.show_all);
     Ok(())
 }
 
 #[derive(Debug, Clone)]
 struct Config {
     evidence_page: PathBuf,
+    show_all: bool,
 }
 
 impl Config {
     fn parse(args: impl IntoIterator<Item = String>) -> Result<Self> {
         let mut evidence_page = workspace_root().join(EVIDENCE_PAGE);
+        let mut show_all = false;
 
         let mut args = args.into_iter();
         while let Some(arg) = args.next() {
@@ -35,9 +37,12 @@ impl Config {
                     };
                     evidence_page = PathBuf::from(path);
                 }
+                "--all" => {
+                    show_all = true;
+                }
                 "--help" | "-h" => {
                     println!(
-                        "Usage: phase2-exit-readiness [--evidence-page docs/book/src/phase2/exit-evidence.md]"
+                        "Usage: phase2-exit-readiness [--all] [--evidence-page docs/book/src/phase2/exit-evidence.md]"
                     );
                     std::process::exit(0);
                 }
@@ -45,7 +50,10 @@ impl Config {
             }
         }
 
-        Ok(Self { evidence_page })
+        Ok(Self {
+            evidence_page,
+            show_all,
+        })
     }
 }
 
@@ -103,7 +111,7 @@ impl ReadinessReport {
     }
 }
 
-fn print_report(evidence_page: &Path, report: &ReadinessReport) {
+fn print_report(evidence_page: &Path, report: &ReadinessReport, show_all: bool) {
     println!("Layer36 Phase 2 exit readiness");
     println!("- evidence page: {}", evidence_page.display());
     println!("- gates tracked: {}", report.gates);
@@ -133,17 +141,35 @@ fn print_report(evidence_page: &Path, report: &ReadinessReport) {
         }
     }
 
-    let soft = report
+    let mut soft = report
         .needs_final_proof_or_decision
         .iter()
         .filter(|row| row.status != "Pending" && row.status != "Blocked")
-        .take(6)
         .collect::<Vec<_>>();
+
+    let hidden = if show_all {
+        0
+    } else {
+        let hidden = soft.len().saturating_sub(6);
+        soft.truncate(6);
+        hidden
+    };
+
     if !soft.is_empty() {
         println!();
         println!("Main proof work still open");
         for row in soft {
-            println!("- {} ({}) is {}", row.id, row.criterion, row.status);
+            if show_all {
+                println!(
+                    "- {} ({}) is {}. Next: {}",
+                    row.id, row.criterion, row.status, row.next_step
+                );
+            } else {
+                println!("- {} ({}) is {}", row.id, row.criterion, row.status);
+            }
+        }
+        if hidden > 0 {
+            println!("- plus {hidden} more open proof items; run with --all to list every gate");
         }
     }
 }
@@ -236,5 +262,13 @@ mod tests {
         assert_eq!(report.proof_path_exists, 3);
         assert_eq!(report.needs_final_proof_or_decision.len(), 4);
         assert_eq!(report.hard_blockers.len(), 2);
+    }
+
+    #[test]
+    fn config_accepts_full_open_gate_view() {
+        let config = Config::parse(["--all".to_string()]).expect("config");
+
+        assert!(config.show_all);
+        assert!(config.evidence_page.ends_with(EVIDENCE_PAGE));
     }
 }

@@ -55,6 +55,7 @@ flowchart LR
    can produce the same kind of proof file for clock, cat, and curl.
 7. Phase 2 now has a simple readiness command that reads the exit ledger and
    shows what is done, what has proof in progress, and what is still blocked.
+   The full mode lists every open proof item and next step for handoff.
 8. Hosted CI and Pages stability can now be recorded as a plain evidence file.
    The strict exit bundle fails if either hosted workflow does not show a
    completed green run in the selected review window.

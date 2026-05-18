@@ -10,6 +10,7 @@ green before a final exit review:
 - UAPI freeze decision packet
 - adapter boundary shape
 - exit ledger coverage
+- full exit readiness snapshot
 - closeout docs draft guard
 - docs build
 - dependency evidence
@@ -141,6 +142,7 @@ The report includes:
 - the self-hosted full-gate result when included
 - the fuzz result when included
 - the current `P2E-*` gate snapshot from the exit ledger
+- the full `scripts/phase2-exit-readiness.sh --all` output
 - the current working tree state
 - short log tails for each check
 

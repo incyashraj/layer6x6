@@ -78,6 +78,8 @@ scripts/phase2-exit-readiness.sh
 This does not replace the ledger. It reads this page and prints the current
 number of done, strong-draft, partial, pending, and blocked gates. It also
 prints the hard blockers so a returning session can start from the right place.
+Run it with `--all` when preparing a handoff or exit review packet; that mode
+prints every open proof item with its next step.
 
 ## Local Evidence Commands
 
