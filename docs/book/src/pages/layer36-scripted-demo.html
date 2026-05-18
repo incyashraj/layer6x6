@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Layer36 Scripted Demo Video Asset</title>
+<meta name="description" content="A timed, recordable browser demo asset for explaining Layer36 Phase 2 proof and Phase 3 direction." />
+<style>
+  :root {
+    --paper: #f5ecdc;
+    --ink: #181714;
+    --muted: #625b50;
+    --panel: #fff9ec;
+    --line: #d8c8af;
+    --terminal: #141414;
+    --cream: #f8edd8;
+    --blue: #2b5f91;
+    --green: #4f7d53;
+    --red: #b84739;
+    --yellow: #e3b93a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+    line-height: 1.55;
+  }
+  .stage {
+    width: min(1280px, 100vw);
+    min-height: min(720px, 100vh);
+    margin: 0 auto;
+    padding: 24px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 18px;
+  }
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0;
+  }
+  .badge {
+    color: var(--paper);
+    background: var(--ink);
+    padding: 6px 10px;
+    font-weight: 700;
+  }
+  .timer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+  }
+  .progress {
+    width: 220px;
+    height: 8px;
+    border: 1px solid var(--ink);
+    background: var(--cream);
+  }
+  .progress span {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: var(--red);
+  }
+  .scene {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 22px;
+    align-items: stretch;
+    opacity: 1;
+    transition: opacity 240ms ease;
+  }
+  .scene.is-changing { opacity: 0.12; }
+  .narration, .visual {
+    border: 1.5px solid var(--ink);
+    background: var(--panel);
+    min-height: 560px;
+  }
+  .narration {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .chapter {
+    display: inline-block;
+    width: fit-content;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--red);
+    padding: 4px 8px;
+    margin-bottom: 16px;
+  }
+  h1, h2, h3 {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.02;
+    letter-spacing: 0;
+    margin: 0;
+  }
+  h1 { font-size: clamp(44px, 6vw, 76px); max-width: 760px; }
+  h2 { font-size: clamp(34px, 4.5vw, 58px); margin-bottom: 18px; }
+  h3 { font-size: 21px; margin-bottom: 8px; }
+  .script {
+    color: var(--muted);
+    font-size: clamp(20px, 2vw, 28px);
+    line-height: 1.35;
+    margin-top: 20px;
+  }
+  .lower-note {
+    border-top: 1.5px solid var(--line);
+    padding-top: 16px;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .visual {
+    padding: 24px;
+    overflow: hidden;
+    position: relative;
+  }
+  .terminal {
+    background: var(--terminal);
+    color: #f7ecd7;
+    border: 1.5px solid var(--ink);
+    padding: 18px;
+    height: 100%;
+    min-height: 480px;
+    overflow: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 15px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+  .cmd { color: #f0d06c; }
+  .ok { color: #9bd094; }
+  .deny { color: #ff9a8a; }
+  .soft { color: #bdb09e; }
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .flow-card {
+    min-height: 128px;
+    border: 1.5px solid var(--ink);
+    background: #fffdf7;
+    padding: 14px;
+  }
+  .flow-card small {
+    display: inline-block;
+    color: #fff;
+    background: var(--blue);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    padding: 3px 6px;
+    margin-bottom: 9px;
+  }
+  .flow-card b { display: block; font-family: ui-sans-serif, system-ui, sans-serif; margin-bottom: 5px; }
+  .flow-card span { color: var(--muted); font-size: 15px; line-height: 1.38; }
+  .pdf-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 30px;
+  }
+  .paper-card {
+    border: 1.5px solid var(--ink);
+    background: #fffdf7;
+    padding: 22px;
+    min-height: 210px;
+  }
+  .paper-card .icon {
+    width: 72px;
+    height: 90px;
+    border: 2px solid var(--ink);
+    background: var(--cream);
+    margin-bottom: 18px;
+    position: relative;
+  }
+  .paper-card .icon::after {
+    content: "";
+    position: absolute;
+    right: -2px;
+    top: -2px;
+    width: 22px;
+    height: 22px;
+    border-left: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+    background: var(--yellow);
+  }
+  .desktop-mock {
+    border: 1.5px solid var(--ink);
+    background: #fbf8ef;
+    overflow: hidden;
+    margin-top: 22px;
+  }
+  .titlebar {
+    height: 36px;
+    border-bottom: 1.5px solid var(--ink);
+    background: #eadfce;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 999px; border: 1px solid var(--ink); }
+  .dot.red { background: var(--red); }
+  .dot.yellow { background: var(--yellow); }
+  .dot.green { background: var(--green); }
+  .window-body {
+    min-height: 310px;
+    display: grid;
+    grid-template-columns: 180px 1fr;
+  }
+  .sidebar {
+    border-right: 1.5px solid var(--line);
+    background: #f0e6d8;
+    padding: 18px;
+  }
+  .main-pane { padding: 20px; }
+  .line { height: 12px; background: var(--line); margin-bottom: 11px; }
+  .line.short { width: 62%; }
+  .window-card {
+    border: 1.5px solid var(--ink);
+    background: #fffdf7;
+    padding: 16px;
+    margin-top: 18px;
+  }
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 2px dashed rgba(24, 23, 20, 0.22);
+    padding-top: 16px;
+  }
+  button {
+    appearance: none;
+    border: 1.5px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 14px;
+    font: 700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    cursor: pointer;
+  }
+  button.secondary {
+    background: var(--panel);
+    color: var(--ink);
+  }
+  .scene-list {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .scene-dot {
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid var(--ink);
+    background: var(--panel);
+    font: 700 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--ink);
+    padding: 0;
+  }
+  .scene-dot.active {
+    background: var(--red);
+    color: #fff;
+  }
+  @media (max-width: 900px) {
+    .stage { min-height: 100vh; padding: 14px; }
+    .scene { grid-template-columns: 1fr; }
+    .narration, .visual { min-height: auto; }
+    .flow, .pdf-row, .window-body { grid-template-columns: 1fr; }
+    .sidebar { border-right: 0; border-bottom: 1.5px solid var(--line); }
+    .controls { align-items: stretch; flex-direction: column; }
+    .scene-list { justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="topbar">
+    <span class="badge">Layer36</span>
+    <span>scripted demo video asset</span>
+    <span class="timer"><span id="timeLabel">0:00 / 3:20</span><span class="progress"><span id="progressBar"></span></span></span>
+  </div>
+
+  <main class="scene" id="scene">
+    <section class="narration">
+      <div>
+        <span class="chapter" id="chapter">Scene 1</span>
+        <h1 id="title">Software should travel like files.</h1>
+        <p class="script" id="script">A PDF opens on every machine. You do not ship a Mac PDF and a Windows PDF. Layer36 asks: what if apps had a portability layer like that too?</p>
+      </div>
+      <div class="lower-note" id="note">Recording tip: use this page full-screen and record the browser window with QuickTime or OBS.</div>
+    </section>
+
+    <section class="visual" id="visual"></section>
+  </main>
+
+  <div class="controls">
+    <div>
+      <button id="playBtn">Play</button>
+      <button class="secondary" id="prevBtn">Prev</button>
+      <button class="secondary" id="nextBtn">Next</button>
+      <button class="secondary" id="restartBtn">Restart</button>
+    </div>
+    <div class="scene-list" id="sceneList"></div>
+  </div>
+</div>
+
+<script>
+const scenes = [
+  {
+    seconds: 18,
+    chapter: "Scene 1",
+    title: "Software should travel like files.",
+    script: "A PDF opens on every machine. You do not ship a Mac PDF and a Windows PDF. Layer36 asks: what if apps had a portability layer like that too?",
+    note: "Plain-English hook. Start here before showing any terminal output.",
+    visual: `
+      <div class="pdf-row">
+        <div class="paper-card">
+          <div class="icon"></div>
+          <h3>PDF</h3>
+          <p>One portable file. Different machines know how to open it.</p>
+        </div>
+        <div class="paper-card">
+          <div class="icon"></div>
+          <h3>Typical app</h3>
+          <p>Different builds, different APIs, different permission behavior.</p>
+        </div>
+      </div>
+      <div class="flow">
+        <div class="flow-card"><small>Goal</small><b>One app artifact</b><span>Run through a common runtime model.</span></div>
+        <div class="flow-card"><small>Safety</small><b>Explicit permissions</b><span>The app declares what it needs.</span></div>
+        <div class="flow-card"><small>Host</small><b>Native behavior</b><span>Adapters translate to the real OS.</span></div>
+      </div>`
+  },
+  {
+    seconds: 22,
+    chapter: "Scene 2",
+    title: "The app talks to Layer36, not the OS directly.",
+    script: "A Layer36 app becomes a WebAssembly component. It calls UAPI, Layer36 checks UCap permissions, and the host adapter translates approved calls to the local operating system.",
+    note: "This is the core architecture in one breath.",
+    visual: `
+      <div class="flow">
+        <div class="flow-card"><small>1</small><b>App source</b><span>Rust, TypeScript, Go, or another language.</span></div>
+        <div class="flow-card"><small>2</small><b>WASM component</b><span>A portable app artifact.</span></div>
+        <div class="flow-card"><small>3</small><b>Layer36 runtime</b><span>Loads the component.</span></div>
+        <div class="flow-card"><small>4</small><b>UAPI</b><span>Common APIs for app work.</span></div>
+        <div class="flow-card"><small>5</small><b>UCap</b><span>Permission checks before host access.</span></div>
+        <div class="flow-card"><small>6</small><b>Host adapter</b><span>macOS, Windows, Linux, and later mobile/web.</span></div>
+      </div>`
+  },
+  {
+    seconds: 24,
+    chapter: "Scene 3",
+    title: "The demo builds real app artifacts.",
+    script: "These commands compile three small apps into portable WebAssembly components: clock, cat, and curl. This is where the demo moves from idea to runnable proof.",
+    note: "Show this quickly; investors do not need to watch every build line.",
+    visual: `
+      <pre class="terminal"><span class="cmd">cargo build -p layer36-cli</span>
+<span class="cmd">scripts/build-layer36-clock-component.sh</span>
+<span class="cmd">scripts/build-layer36-cat-component.sh</span>
+<span class="cmd">scripts/build-layer36-curl-component.sh</span>
+
+<span class="ok">layer36_clock.wasm</span>
+<span class="ok">layer36_cat.wasm</span>
+<span class="ok">layer36_curl.wasm</span></pre>`
+  },
+  {
+    seconds: 26,
+    chapter: "Scene 4",
+    title: "Before an app runs, Layer36 can show what it wants.",
+    script: "This manifest explains the file-reading app. Normal app plumbing is default-granted. File access is not. It needs an explicit launch grant.",
+    note: "This makes the permission model visible to non-technical viewers.",
+    visual: `
+      <pre class="terminal"><span class="cmd">target/debug/layer36 manifest explain apps/layer36-cat/manifest.toml</span>
+
+Capabilities
+  - io.args
+    default grant        yes
+  - io.stdout
+    default grant        yes
+  - io.stderr
+    default grant        yes
+  - fs.read:fixtures/**
+    default grant        no
+    launch grant needed  yes</pre>`
+  },
+  {
+    seconds: 28,
+    chapter: "Scene 5",
+    title: "`layer36-clock` goes through the whole system.",
+    script: "Even the tiny clock app passes through the complete model: source, WebAssembly artifact, runtime, UAPI, capability shape, host adapter, and terminal output.",
+    note: "Use this scene to connect the diagram to the command output.",
+    visual: `
+      <div class="flow">
+        <div class="flow-card"><small>App</small><b>layer36-clock source</b><span>Asks for time, locale, timezone, stdout.</span></div>
+        <div class="flow-card"><small>Build</small><b>layer36_clock.wasm</b><span>A portable WebAssembly component.</span></div>
+        <div class="flow-card"><small>Runtime</small><b>layer36 run</b><span>Loads the app and links UAPI.</span></div>
+        <div class="flow-card"><small>UAPI</small><b>time + locale + stdout</b><span>The app calls Layer36, not the host OS directly.</span></div>
+        <div class="flow-card"><small>Host</small><b>UCap + adapter</b><span>Checks permission shape and translates host behavior.</span></div>
+        <div class="flow-card"><small>Output</small><b>terminal result</b><span>date=1970-01-15 06:56</span></div>
+      </div>`
+  },
+  {
+    seconds: 24,
+    chapter: "Scene 6",
+    title: "Missing permission is denied.",
+    script: "This is the key safety moment. The app asks to read a file, but this run did not grant file access. Layer36 refuses before native file access happens.",
+    note: "This is the strongest proof moment for the safety story.",
+    visual: `
+      <pre class="terminal"><span class="cmd">layer36 run --manifest manifest.toml layer36_cat.wasm -- ./fixtures/hello.txt</span>
+
+<span class="deny">permission denied: missing required capabilities
+  - fs.read:fixtures/**</span></pre>`
+  },
+  {
+    seconds: 22,
+    chapter: "Scene 7",
+    title: "With permission, the same app succeeds.",
+    script: "Now the host approves the declared file access. Same app, same artifact, different permission decision. The app succeeds and prints its file output.",
+    note: "Say 'same app' clearly. That is the point.",
+    visual: `
+      <pre class="terminal"><span class="cmd">layer36 run --manifest manifest.toml --auto-grant layer36_cat.wasm -- ./fixtures/hello.txt</span>
+
+<span class="ok">hello from Layer36</span></pre>`
+  },
+  {
+    seconds: 22,
+    chapter: "Scene 8",
+    title: "Network follows the same pattern.",
+    script: "The curl sample can connect only because this run grants the local endpoint. File and network are different host powers, but the Layer36 permission model is the same.",
+    note: "This avoids making the demo feel like a one-off file example.",
+    visual: `
+      <pre class="terminal"><span class="cmd">layer36 run --grant net.connect:127.0.0.1:8765 layer36_curl.wasm -- http://127.0.0.1:8765/demo.txt</span>
+
+<span class="ok">portable runtime response</span></pre>`
+  },
+  {
+    seconds: 30,
+    chapter: "Scene 9",
+    title: "Phase 3: from terminal proof to desktop app proof.",
+    script: "After Phase 2 closes, Phase 3 should prove the same model can open a native desktop window. The artifact stays portable. The app still uses UAPI. Host permissions stay explicit.",
+    note: "This is the roadmap scene. It shows ambition without overclaiming.",
+    visual: `
+      <div class="desktop-mock">
+        <div class="titlebar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+        <div class="window-body">
+          <div class="sidebar"><div class="line"></div><div class="line short"></div><div class="line"></div></div>
+          <div class="main-pane">
+            <div class="line"></div>
+            <div class="line short"></div>
+            <div class="window-card"><h3>Phase 3 preview</h3><p>One WebAssembly app, native host window, explicit permissions.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="flow">
+        <div class="flow-card"><small>Stays</small><b>Portable artifact</b><span>The app still ships as WebAssembly.</span></div>
+        <div class="flow-card"><small>Adds</small><b>Window + events</b><span>Desktop UI becomes part of UAPI.</span></div>
+        <div class="flow-card"><small>Result</small><b>Native window</b><span>Adapters translate one app to desktop hosts.</span></div>
+      </div>`
+  },
+  {
+    seconds: 24,
+    chapter: "Scene 10",
+    title: "The honest status is pre-alpha proof.",
+    script: "Layer36 is not claiming a finished universal platform yet. It has real runtime proof, visible permissions, sample apps, and evidence tracking. The next step is outside developer validation and Phase 3 desktop UI.",
+    note: "End with credibility: real proof, clear next work, no inflated claims.",
+    visual: `
+      <pre class="terminal"><span class="cmd">scripts/phase2-exit-readiness.sh</span>
+
+Layer36 Phase 2 exit readiness
+- gates tracked: 15
+- fully done: 3
+- strong draft: 1
+- partial, proof in progress: 10
+- pending: 1
+- blocked: 0
+
+<span class="soft">Next: outside developer walkthrough + cross-host evidence.</span></pre>`
+  }
+];
+
+const totalSeconds = scenes.reduce((sum, scene) => sum + scene.seconds, 0);
+let current = 0;
+let elapsedInScene = 0;
+let playing = false;
+let lastTick = null;
+
+const sceneEl = document.getElementById("scene");
+const chapterEl = document.getElementById("chapter");
+const titleEl = document.getElementById("title");
+const scriptEl = document.getElementById("script");
+const noteEl = document.getElementById("note");
+const visualEl = document.getElementById("visual");
+const timeLabel = document.getElementById("timeLabel");
+const progressBar = document.getElementById("progressBar");
+const playBtn = document.getElementById("playBtn");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const restartBtn = document.getElementById("restartBtn");
+const sceneList = document.getElementById("sceneList");
+
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
+  return `${mins}:${secs}`;
+}
+
+function elapsedTotal() {
+  return scenes.slice(0, current).reduce((sum, scene) => sum + scene.seconds, 0) + elapsedInScene;
+}
+
+function renderScene() {
+  const scene = scenes[current];
+  chapterEl.textContent = scene.chapter;
+  titleEl.textContent = scene.title;
+  scriptEl.textContent = scene.script;
+  noteEl.textContent = scene.note;
+  visualEl.innerHTML = scene.visual;
+  document.querySelectorAll(".scene-dot").forEach((dot, index) => {
+    dot.classList.toggle("active", index === current);
+  });
+  updateProgress();
+}
+
+function updateProgress() {
+  const elapsed = elapsedTotal();
+  timeLabel.textContent = `${formatTime(elapsed)} / ${formatTime(totalSeconds)}`;
+  progressBar.style.width = `${Math.min(100, (elapsed / totalSeconds) * 100)}%`;
+}
+
+function goTo(index) {
+  current = Math.max(0, Math.min(scenes.length - 1, index));
+  elapsedInScene = 0;
+  sceneEl.classList.add("is-changing");
+  setTimeout(() => {
+    renderScene();
+    sceneEl.classList.remove("is-changing");
+  }, 160);
+}
+
+function next() {
+  if (current < scenes.length - 1) {
+    goTo(current + 1);
+  } else {
+    playing = false;
+    playBtn.textContent = "Play";
+  }
+}
+
+function previous() {
+  goTo(current - 1);
+}
+
+function restart() {
+  current = 0;
+  elapsedInScene = 0;
+  playing = false;
+  playBtn.textContent = "Play";
+  renderScene();
+}
+
+function tick(timestamp) {
+  if (!lastTick) lastTick = timestamp;
+  const delta = (timestamp - lastTick) / 1000;
+  lastTick = timestamp;
+  if (playing) {
+    elapsedInScene += delta;
+    if (elapsedInScene >= scenes[current].seconds) {
+      next();
+    } else {
+      updateProgress();
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+scenes.forEach((_, index) => {
+  const button = document.createElement("button");
+  button.className = "scene-dot";
+  button.textContent = index + 1;
+  button.addEventListener("click", () => goTo(index));
+  sceneList.appendChild(button);
+});
+
+playBtn.addEventListener("click", () => {
+  playing = !playing;
+  playBtn.textContent = playing ? "Pause" : "Play";
+});
+prevBtn.addEventListener("click", previous);
+nextBtn.addEventListener("click", next);
+restartBtn.addEventListener("click", restart);
+
+renderScene();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
