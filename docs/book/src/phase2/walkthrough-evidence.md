@@ -6,6 +6,33 @@ run a small UAPI CLI app in 30 minutes or less.
 The code cannot prove this by itself. We need one outside reviewer to follow the
 Rust walkthrough and record what happened.
 
+## Rehearse The Walkthrough Locally
+
+Before asking an outside reviewer, run the local rehearsal:
+
+```bash
+scripts/check-phase2-rust-walkthrough-rehearsal.sh
+```
+
+It runs the same core path the reviewer will use:
+
+- `layer36 doctor`
+- CLI build
+- Rust cat component build
+- manifest generation
+- manifest explanation
+- granted file read
+- denied missing-grant path
+
+The rehearsal writes:
+
+```text
+target/phase2-walkthrough/rehearsal.md
+```
+
+This does not close the human gate. It only proves the current walkthrough is
+ready for a reviewer.
+
 ## Generate The Packet
 
 Run this from the repo root:

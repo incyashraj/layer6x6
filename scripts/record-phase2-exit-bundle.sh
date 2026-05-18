@@ -100,6 +100,8 @@ ADAPTER_LOG="$TMP_DIR/check-adapter-boundary.log"
 EXIT_LEDGER_LOG="$TMP_DIR/check-phase2-exit-evidence.log"
 READINESS_LOG="$TMP_DIR/phase2-exit-readiness.log"
 CLOSEOUT_DOCS_LOG="$TMP_DIR/check-phase2-closeout-docs.log"
+WALKTHROUGH_REHEARSAL_LOG="$TMP_DIR/walkthrough-rehearsal.log"
+WALKTHROUGH_REHEARSAL_REPORT="$TMP_DIR/walkthrough-rehearsal.md"
 DOCS_LOG="$TMP_DIR/mdbook.log"
 DEPENDENCY_LOG="$TMP_DIR/dependency-evidence.log"
 DEPENDENCY_REPORT="$TMP_DIR/dependency-evidence.md"
@@ -154,6 +156,12 @@ if scripts/check-phase2-closeout-docs.sh >"$CLOSEOUT_DOCS_LOG" 2>&1; then
   CLOSEOUT_DOCS_CODE=0
 else
   CLOSEOUT_DOCS_CODE=$?
+fi
+
+if scripts/check-phase2-rust-walkthrough-rehearsal.sh --output "$WALKTHROUGH_REHEARSAL_REPORT" >"$WALKTHROUGH_REHEARSAL_LOG" 2>&1; then
+  WALKTHROUGH_REHEARSAL_CODE=0
+else
+  WALKTHROUGH_REHEARSAL_CODE=$?
 fi
 
 if command -v mdbook >/dev/null 2>&1; then
@@ -284,6 +292,7 @@ included_of() {
   echo "| Exit ledger check (\`scripts/check-phase2-exit-evidence.sh\`) | $EXIT_LEDGER_CODE | $(result_of "$EXIT_LEDGER_CODE") |"
   echo "| Exit readiness snapshot (\`scripts/phase2-exit-readiness.sh --all\`) | $READINESS_CODE | $(result_of "$READINESS_CODE") |"
   echo "| Closeout docs check (\`scripts/check-phase2-closeout-docs.sh\`) | $CLOSEOUT_DOCS_CODE | $(result_of "$CLOSEOUT_DOCS_CODE") |"
+  echo "| Rust walkthrough rehearsal (\`scripts/check-phase2-rust-walkthrough-rehearsal.sh\`) | $WALKTHROUGH_REHEARSAL_CODE | $(result_of "$WALKTHROUGH_REHEARSAL_CODE") |"
   echo "| Docs build (\`mdbook build docs/book\`) | $DOCS_CODE | $(result_of "$DOCS_CODE") |"
   echo "| Dependency evidence (\`scripts/record-phase2-dependency-evidence.sh --strict\`) | $DEPENDENCY_CODE | $(result_of "$DEPENDENCY_CODE") |"
   echo "| Go readiness evidence (\`scripts/record-phase2-go-readiness-evidence.sh\`) | $GO_READINESS_CODE | $(result_of "$GO_READINESS_CODE") |"
@@ -376,6 +385,18 @@ included_of() {
   tail -n 120 "$CLOSEOUT_DOCS_LOG"
   echo '```'
   echo
+  echo "## Rust Walkthrough Rehearsal Log (tail)"
+  echo
+  echo '```text'
+  tail -n 120 "$WALKTHROUGH_REHEARSAL_LOG"
+  echo '```'
+  if [ -f "$WALKTHROUGH_REHEARSAL_REPORT" ]; then
+    echo
+    echo "## Rust Walkthrough Rehearsal Summary"
+    echo
+    sed -n '1,48p' "$WALKTHROUGH_REHEARSAL_REPORT"
+  fi
+  echo
   echo "## Docs Build Log (tail)"
   echo
   echo '```text'
@@ -465,6 +486,7 @@ if [ "$STRICT" = "1" ] && {
   [ "$EXIT_LEDGER_CODE" -ne 0 ] ||
   [ "$READINESS_CODE" -ne 0 ] ||
   [ "$CLOSEOUT_DOCS_CODE" -ne 0 ] ||
+  [ "$WALKTHROUGH_REHEARSAL_CODE" -ne 0 ] ||
   [ "$DOCS_CODE" -ne 0 ] ||
   [ "$DEPENDENCY_CODE" -ne 0 ] ||
   [ "$CI_STABILITY_CODE" -ne 0 ] ||

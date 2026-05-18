@@ -12,6 +12,7 @@ green before a final exit review:
 - exit ledger coverage
 - full exit readiness snapshot
 - closeout docs draft guard
+- Rust walkthrough rehearsal
 - docs build
 - dependency evidence
 - Go readiness evidence
@@ -136,6 +137,7 @@ The report includes:
 - the freeze candidate lock check result
 - the UAPI freeze decision packet result
 - the closeout docs draft guard result
+- the Rust walkthrough rehearsal result
 - the dependency audit evidence result
 - the Go readiness result and current import-purity status
 - the hosted CI stability result when included

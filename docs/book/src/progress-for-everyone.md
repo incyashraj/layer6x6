@@ -68,6 +68,8 @@ flowchart LR
     longer self-hosted soak runs can be reviewed in the same format.
 12. The outside developer walkthrough now has a checker, so a filled timing
    report must include the basics before we count it as Phase 2 evidence.
+   A local rehearsal script now checks that the Rust walkthrough path works
+   before we hand it to a reviewer.
 13. The Phase 2 retrospective and Phase 3 kickoff issue now exist as drafts, and
     CI checks that they stay in draft form until exit evidence is ready.
 14. The UAPI freeze decision now has its own packet and checker, so we cannot
@@ -114,7 +116,7 @@ This is a simple status view for non technical readers.
 | Self-hosted full-gate proof | Ready to record through GitHub run history |
 | Fuzz proof | Ready to record as smoke or longer soak evidence |
 | UAPI freeze decision path | Working, with a draft packet and CI checker |
-| Outside walkthrough proof | Ready to collect, with a timing packet and checker |
+| Outside walkthrough proof | Ready to collect, with a timing packet, checker, and local rehearsal |
 | Phase 3 handoff | Drafted and checked in CI, waiting for Phase 2 exit evidence |
 | Desktop GUI path | Not started in implementation |
 | Mobile host path | Not started in implementation |
