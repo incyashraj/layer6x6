@@ -36,9 +36,9 @@
     height: 100vh;
     min-height: 680px;
     margin: 0 auto;
-    padding: 16px 24px 14px;
+    padding: 16px 24px 18px;
     display: grid;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto 1fr;
     gap: 12px;
   }
   .topbar {
@@ -68,6 +68,7 @@
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
+  body.presentation-active .time-text { display: none; }
   .progress {
     width: 220px;
     height: 7px;
@@ -102,7 +103,7 @@
     padding: 28px 30px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
   }
   .chapter {
     display: inline-block;
@@ -139,12 +140,6 @@
     color: #164632;
     font-size: 15px;
     font-weight: 650;
-  }
-  .lower-note {
-    border-top: 1px solid var(--line);
-    padding-top: 16px;
-    color: var(--muted);
-    font-size: 14px;
   }
   .visual {
     border-radius: 18px;
@@ -253,6 +248,65 @@
     color: var(--muted);
     font-size: 13px;
     line-height: 1.35;
+  }
+  .architecture {
+    display: grid;
+    grid-template-columns: 1fr auto 1.35fr auto 1fr;
+    gap: 14px;
+    align-items: stretch;
+    min-height: 420px;
+    margin-top: 14px;
+  }
+  .arch-group {
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: #fbfcff;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .arch-group.runtime {
+    border-color: #b9c9e8;
+    background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+  }
+  .arch-label {
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 850;
+    text-transform: uppercase;
+  }
+  .arch-title {
+    font-size: 24px;
+    font-weight: 850;
+    line-height: 1.1;
+  }
+  .arch-copy {
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.4;
+    margin: 0;
+  }
+  .mini-card {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fff;
+    padding: 14px;
+  }
+  .mini-card b {
+    display: block;
+    margin-bottom: 5px;
+  }
+  .mini-card span {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.35;
+  }
+  .arch-arrow {
+    align-self: center;
+    color: var(--blue);
+    font-size: 34px;
+    font-weight: 900;
   }
   .pdf-row {
     display: grid;
@@ -379,12 +433,27 @@
     font-size: 13px;
   }
   .controls {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    border-top: 1px solid rgba(17, 24, 39, 0.12);
-    padding-top: 16px;
+    width: min(900px, calc(100vw - 48px));
+    padding: 10px;
+    border: 1px solid rgba(216, 222, 232, 0.9);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 18px 40px rgba(17, 24, 39, 0.12);
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+  body.presentation-active .controls {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(12px);
   }
   button {
     appearance: none;
@@ -428,6 +497,8 @@
     .narration, .visual { min-height: auto; }
     .flow, .pdf-row, .window-body, .decision, .metric-row { grid-template-columns: 1fr; }
     .sequence { grid-template-columns: 1fr 1fr; }
+    .architecture { grid-template-columns: 1fr; }
+    .arch-arrow { display: none; }
     .step::after { content: ""; }
     .decision-arrow { display: none; }
     .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
@@ -440,8 +511,8 @@
 <div class="stage">
   <div class="topbar">
     <span class="badge">Layer36</span>
-    <span class="asset-name">Scripted demo video asset</span>
-    <span class="timer"><span id="timeLabel">0:00 / 3:20</span><span class="progress"><span id="progressBar"></span></span></span>
+    <span class="asset-name">Portable runtime proof</span>
+    <span class="timer"><span class="time-text" id="timeLabel">0:00 / 3:20</span><span class="progress"><span id="progressBar"></span></span></span>
   </div>
 
   <main class="scene" id="scene">
@@ -452,7 +523,6 @@
         <p class="script" id="script">A PDF opens on every machine. You do not ship a Mac PDF and a Windows PDF. Layer36 asks: what if apps had a portability layer like that too?</p>
         <p class="takeaway" id="takeaway">Layer36 is a portable runtime layer for software that needs explicit host permissions.</p>
       </div>
-      <div class="lower-note" id="note">Recording tip: use this page full-screen and record the browser window with QuickTime or OBS.</div>
     </section>
 
     <section class="visual" id="visual"></section>
@@ -477,7 +547,6 @@ const scenes = [
     title: "Layer36 makes software portable by default.",
     script: "A PDF can move between machines because the reader understands one common file format. Layer36 brings that idea to apps: one portable artifact, one runtime model, and explicit host permissions.",
     takeaway: "Simple version: build the app once, run it through Layer36, and only grant the host powers it actually needs.",
-    note: "Recording cue: start with the PDF analogy before showing any technical output.",
     visual: `
       <div class="visual-title"><b>The plain-English model</b><span>From familiar file portability to app portability</span></div>
       <div class="pdf-row">
@@ -504,16 +573,30 @@ const scenes = [
     title: "The app talks to Layer36 before it touches the host.",
     script: "The app compiles to WebAssembly. It calls Layer36's universal API instead of calling macOS, Windows, or Linux directly. Layer36 checks the capability rules before any host access happens.",
     takeaway: "Technical version: WebAssembly gives the portable artifact; UAPI and UCap define what the app can ask for.",
-    note: "Keep this scene slow enough for viewers to follow the path left to right.",
     visual: `
       <div class="visual-title"><b>Layer36 system path</b><span>One app, explicit permission boundary, native host result</span></div>
-      <div class="sequence">
-        <div class="step"><small>1</small><b>App source</b><span>Rust, TypeScript, Go, or another language.</span></div>
-        <div class="step"><small>2</small><b>WASM app</b><span>A portable component that can be loaded by the runtime.</span></div>
-        <div class="step"><small>3</small><b>Layer36 runtime</b><span>The trusted layer that starts and supervises the app.</span></div>
-        <div class="step"><small>4</small><b>UAPI</b><span>The app asks for files, time, stdout, network, or UI.</span></div>
-        <div class="step"><small>5</small><b>UCap</b><span>Layer36 checks whether that host power is allowed.</span></div>
-        <div class="step"><small>6</small><b>Host adapter</b><span>Approved calls become native behavior on the machine.</span></div>
+      <div class="architecture">
+        <div class="arch-group">
+          <span class="arch-label">Build</span>
+          <div class="arch-title">App source</div>
+          <p class="arch-copy">Rust, TypeScript, Go, or another language.</p>
+          <div class="mini-card"><b>Output</b><span>Portable WebAssembly app artifact.</span></div>
+        </div>
+        <div class="arch-arrow">-></div>
+        <div class="arch-group runtime">
+          <span class="arch-label">Layer36 runtime</span>
+          <div class="arch-title">Common app layer</div>
+          <p class="arch-copy">The app asks Layer36 for host-backed powers instead of calling the operating system directly.</p>
+          <div class="mini-card"><b>UAPI</b><span>Files, time, stdout, network, and future UI APIs.</span></div>
+          <div class="mini-card"><b>UCap</b><span>Checks whether the requested host power is allowed.</span></div>
+        </div>
+        <div class="arch-arrow">-></div>
+        <div class="arch-group">
+          <span class="arch-label">Host</span>
+          <div class="arch-title">Native result</div>
+          <p class="arch-copy">The adapter translates approved calls to macOS, Windows, Linux, or another host.</p>
+          <div class="mini-card"><b>Boundary</b><span>No grant means no host access.</span></div>
+        </div>
       </div>`
   },
   {
@@ -522,7 +605,6 @@ const scenes = [
     title: "Phase 2 already builds runnable artifacts.",
     script: "The demo is not a mockup. These commands build the Layer36 CLI and three small apps into WebAssembly artifacts: clock, cat, and curl.",
     takeaway: "Proof point: there are real artifacts on disk, not just a diagram.",
-    note: "You can show only the final artifact lines if time is short.",
     visual: `
       <div class="visual-title"><b>Build proof</b><span>CLI + sample apps compile locally</span></div>
       <pre class="terminal compact"><span class="cmd">cargo build -p layer36-cli</span>
@@ -540,7 +622,6 @@ const scenes = [
     title: "The manifest makes app powers visible.",
     script: "Before running an app, Layer36 can explain what it wants. Standard plumbing like arguments and stdout can be default-granted. Reading files is different: it needs an explicit grant.",
     takeaway: "Simple version: Layer36 shows the permission request before the app gets the power.",
-    note: "Translate manifest as 'the app's permission label.'",
     visual: `
       <div class="visual-title"><b>Permission label</b><span>The app declares what host access it needs</span></div>
       <pre class="terminal compact"><span class="cmd">target/debug/layer36 manifest explain apps/layer36-cat/manifest.toml</span>
@@ -562,7 +643,6 @@ Capabilities
     title: "The clock demo exercises the complete path.",
     script: "Even a tiny clock app proves the full system path: portable app artifact, runtime loading, UAPI call, permission shape, host adapter, and deterministic output.",
     takeaway: "The clock is intentionally simple, but it travels through the same architecture a larger app would use.",
-    note: "Use this to connect the architecture diagram to the actual terminal demo.",
     visual: `
       <div class="visual-title"><b>layer36-clock execution path</b><span>A small app using the full runtime model</span></div>
       <div class="sequence">
@@ -586,7 +666,6 @@ date=1970-01-15 06:56</span></pre>`
     title: "When permission is missing, the app is blocked.",
     script: "This is the safety proof. The file-reading app is real, but this launch does not grant file access. Layer36 denies the run before the app can read from the host.",
     takeaway: "Important investor point: portability and safety are the same system, not two separate stories.",
-    note: "Pause here. This is the strongest proof moment.",
     visual: `
       <div class="visual-title"><b>Permission boundary</b><span>Access is denied unless the grant is present</span></div>
       <div class="decision">
@@ -605,7 +684,6 @@ date=1970-01-15 06:56</span></pre>`
     title: "With the grant, the same app succeeds.",
     script: "Now the launch includes the declared permission. Same app, same artifact, same file. The only change is the host permission decision.",
     takeaway: "Simple version: denied without the key, works with the key.",
-    note: "Say 'same app' clearly. That is the point.",
     visual: `
       <div class="visual-title"><b>Approved launch</b><span>Same artifact, explicit permission granted</span></div>
       <div class="decision">
@@ -623,7 +701,6 @@ date=1970-01-15 06:56</span></pre>`
     title: "Network access follows the same rule.",
     script: "File access and network access are different host powers, but Layer36 treats them the same way: declare what is needed, grant what is allowed, deny the rest.",
     takeaway: "The permission model generalizes beyond one file demo.",
-    note: "This avoids making the demo feel like a one-off example.",
     visual: `
       <div class="visual-title"><b>Network proof</b><span>Host powers are granted explicitly</span></div>
       <pre class="terminal compact"><span class="cmd">layer36 run --grant net.connect:127.0.0.1:8765 layer36_curl.wasm -- http://127.0.0.1:8765/demo.txt</span>
@@ -636,7 +713,6 @@ date=1970-01-15 06:56</span></pre>`
     title: "Phase 3 turns runtime proof into desktop proof.",
     script: "After Phase 2 closes, Phase 3 should prove that the same portable artifact model can open a native desktop window. The app still calls Layer36. The host adapter still translates. Permissions stay explicit.",
     takeaway: "This is the step from command-line proof to a developer-preview product surface.",
-    note: "This is the roadmap scene. It shows ambition without claiming the final platform is done.",
     visual: `
       <div class="visual-title"><b>Next phase target</b><span>From CLI proof to native window proof</span></div>
       <div class="desktop-mock">
@@ -662,7 +738,6 @@ date=1970-01-15 06:56</span></pre>`
     title: "The honest status: real proof, still pre-alpha.",
     script: "Layer36 is not claiming a finished universal platform yet. It has runtime proof, visible permissions, sample apps, and evidence tracking. The next step is outside developer validation and Phase 3 desktop UI.",
     takeaway: "Credibility comes from showing what works and naming what still needs proof.",
-    note: "End calm and factual. No inflated claims.",
     visual: `
       <div class="visual-title"><b>Current evidence posture</b><span>Strong enough to demo, honest about remaining proof</span></div>
       <div class="metric-row">
@@ -696,7 +771,6 @@ const chapterEl = document.getElementById("chapter");
 const titleEl = document.getElementById("title");
 const scriptEl = document.getElementById("script");
 const takeawayEl = document.getElementById("takeaway");
-const noteEl = document.getElementById("note");
 const visualEl = document.getElementById("visual");
 const timeLabel = document.getElementById("timeLabel");
 const progressBar = document.getElementById("progressBar");
@@ -722,7 +796,6 @@ function renderScene() {
   titleEl.textContent = scene.title;
   scriptEl.textContent = scene.script;
   takeawayEl.textContent = scene.takeaway;
-  noteEl.textContent = scene.note;
   visualEl.innerHTML = scene.visual;
   document.querySelectorAll(".scene-dot").forEach((dot, index) => {
     dot.classList.toggle("active", index === current);
@@ -751,6 +824,7 @@ function next() {
     goTo(current + 1);
   } else {
     playing = false;
+    document.body.classList.remove("presentation-active");
     playBtn.textContent = "Play";
   }
 }
@@ -763,6 +837,7 @@ function restart() {
   current = 0;
   elapsedInScene = 0;
   playing = false;
+  document.body.classList.remove("presentation-active");
   playBtn.textContent = "Play";
   renderScene();
 }
@@ -792,11 +867,22 @@ scenes.forEach((_, index) => {
 
 playBtn.addEventListener("click", () => {
   playing = !playing;
+  document.body.classList.toggle("presentation-active", playing);
   playBtn.textContent = playing ? "Pause" : "Play";
 });
 prevBtn.addEventListener("click", previous);
 nextBtn.addEventListener("click", next);
 restartBtn.addEventListener("click", restart);
+
+document.addEventListener("keydown", (event) => {
+  if (event.code === "Space") {
+    event.preventDefault();
+    playBtn.click();
+  }
+  if (event.code === "ArrowRight") next();
+  if (event.code === "ArrowLeft") previous();
+  if (event.key.toLowerCase() === "r") restart();
+});
 
 renderScene();
 requestAnimationFrame(tick);
