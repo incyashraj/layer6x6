@@ -12,10 +12,11 @@ INCLUDE_SELF_HOSTED="${LAYER36_EXIT_BUNDLE_INCLUDE_SELF_HOSTED:-0}"
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/record-phase2-exit-bundle.sh [--strict] [--include-rust-sdk] [--include-ci-stability] [--include-self-hosted] [--output <path>]
+Usage: scripts/record-phase2-exit-bundle.sh [--strict] [--final-review] [--include-rust-sdk] [--include-ci-stability] [--include-self-hosted] [--output <path>]
 
 Options:
   --strict                Exit non-zero when any included evidence step fails
+  --final-review          Enable strict mode plus Rust SDK, hosted CI, and self-hosted evidence
   --include-rust-sdk      Also run the Rust SDK package evidence recorder
   --include-ci-stability  Also record hosted CI and Pages stability evidence
   --include-self-hosted   Also record self-hosted full-gate evidence
@@ -33,6 +34,13 @@ while [ "$#" -gt 0 ]; do
   case "$1" in
     --strict)
       STRICT="1"
+      shift
+      ;;
+    --final-review)
+      STRICT="1"
+      INCLUDE_RUST_SDK="1"
+      INCLUDE_CI_STABILITY="1"
+      INCLUDE_SELF_HOSTED="1"
       shift
       ;;
     --include-rust-sdk)

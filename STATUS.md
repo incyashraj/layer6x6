@@ -3,23 +3,23 @@
 Last updated: 2026-05-18
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `f79f541`
-Working tree at this status update: strict hosted CI stability evidence check in progress
+Latest checked completed push before this slice: `80f2a0a`
+Working tree at this status update: final review bundle shortcut in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 298
+- Commits after this slice lands: about 299
 - Tracked files after this slice lands: about 300
-- Total tracked lines after this slice lands: about 83,930
+- Total tracked lines after this slice lands: about 83,955
 - Rust lines (`.rs`) after this slice lands: about 40,174
-- Docs lines (`.md`) after this slice lands: about 28,382
+- Docs lines (`.md`) after this slice lands: about 28,399
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`f79f541`) checks:
+Latest completed push (`80f2a0a`) checks:
 
-- CI: success (run `26037044115`)
-- Deploy docs to GitHub Pages: success (run `26037044197`)
+- CI: success (run `26038138250`)
+- Deploy docs to GitHub Pages: success (run `26038138236`)
 
 Recent pushes before that are also green.
 
@@ -109,6 +109,7 @@ Top pending items:
 - Added a self-hosted full-gate evidence recorder and optional exit-bundle inclusion path for local runner proof
 - Added strict self-hosted evidence checking so final bundles fail when no completed green self-hosted full gate is present in inspected history, with an optional date-window filter for final candidate proof
 - Added strict hosted CI stability checking so final bundles fail when hosted CI or Pages has no completed green run in the selected review window
+- Added a final-review exit bundle shortcut so the fuller Phase 2 review packet can be collected with one command
 - Expanded UCap evidence with a named dispatcher deny-before-adapter matrix that covers every non-default filesystem and network boundary
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`

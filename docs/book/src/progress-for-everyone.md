@@ -61,11 +61,13 @@ flowchart LR
 9. Self-hosted full-gate history can now be recorded the same way. The strict
    exit bundle fails if that history does not show a completed green run, and
    the report can be narrowed to the final review date window.
-10. The outside developer walkthrough now has a checker, so a filled timing
+10. The exit bundle now has a final review mode, so the fuller Phase 2 packet
+    can be collected with one command when the final candidate is ready.
+11. The outside developer walkthrough now has a checker, so a filled timing
    report must include the basics before we count it as Phase 2 evidence.
-11. The Phase 2 retrospective and Phase 3 kickoff issue now exist as drafts, and
+12. The Phase 2 retrospective and Phase 3 kickoff issue now exist as drafts, and
     CI checks that they stay in draft form until exit evidence is ready.
-12. The UAPI freeze decision now has its own packet and checker, so we cannot
+13. The UAPI freeze decision now has its own packet and checker, so we cannot
     accidentally call the API frozen before the final evidence is reviewed.
 
 ## Current Build Timeline

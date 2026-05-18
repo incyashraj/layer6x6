@@ -41,6 +41,19 @@ Choose a custom output path:
 scripts/record-phase2-exit-bundle.sh --strict --output /tmp/layer36-exit-bundle.md
 ```
 
+## Record A Final Review Bundle
+
+When the final candidate is ready, run the fuller review packet:
+
+```bash
+scripts/record-phase2-exit-bundle.sh --final-review
+```
+
+That is shorthand for strict mode plus Rust SDK proof, hosted CI stability
+proof, and self-hosted full-gate proof. Set `LAYER36_CI_STABILITY_CREATED` and
+`LAYER36_SELF_HOSTED_CREATED` first if you want the GitHub run history limited
+to a review window.
+
 ## Include Rust SDK Proof
 
 The Rust SDK package proof can touch the crates.io index, so it is optional in
