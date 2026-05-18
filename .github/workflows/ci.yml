@@ -297,15 +297,28 @@ jobs:
         with:
           name: phase-component-fixtures
           path: layer36-fixture
+      - name: Install fixtures at sample manifest entries
+        shell: bash
+        run: |
+          mkdir -p \
+            apps/layer36-clock/target/wasm32-wasip1/release \
+            apps/layer36-cat/target/wasm32-wasip1/release \
+            apps/layer36-curl/target/wasm32-wasip1/release
+          cp layer36-fixture/layer36_clock.wasm \
+            apps/layer36-clock/target/wasm32-wasip1/release/layer36_clock.wasm
+          cp layer36-fixture/layer36_cat.wasm \
+            apps/layer36-cat/target/wasm32-wasip1/release/layer36_cat.wasm
+          cp layer36-fixture/layer36_curl.wasm \
+            apps/layer36-curl/target/wasm32-wasip1/release/layer36_curl.wasm
       - name: Run Phase 1 tests
         shell: bash
         env:
           LAYER36_HELLO_WASM: layer36-fixture/hello_world.wasm
           LAYER36_HELLO_SHA256: ${{ needs.hello-fixture.outputs.sha256 }}
           LAYER36_PHASE2_SMOKE_WASM: layer36-fixture/phase2_smoke.wasm
-          LAYER36_CLOCK_WASM: layer36-fixture/layer36_clock.wasm
-          LAYER36_CAT_WASM: layer36-fixture/layer36_cat.wasm
-          LAYER36_CURL_WASM: layer36-fixture/layer36_curl.wasm
+          LAYER36_CLOCK_WASM: apps/layer36-clock/target/wasm32-wasip1/release/layer36_clock.wasm
+          LAYER36_CAT_WASM: apps/layer36-cat/target/wasm32-wasip1/release/layer36_cat.wasm
+          LAYER36_CURL_WASM: apps/layer36-curl/target/wasm32-wasip1/release/layer36_curl.wasm
         run: scripts/test-phase1.sh
       - name: Set up Node.js for TypeScript fixture lane
         uses: actions/setup-node@v5

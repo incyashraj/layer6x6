@@ -78,6 +78,24 @@ or include `[full-ci]` in a commit message.
 The manual workflow path is cleaner for final review because it does not require
 a documentation-only commit just to trigger the heavy matrix.
 
+## Shared Fixtures
+
+Hosted full CI builds the Rust component fixtures once on Linux, uploads them,
+then downloads the same files into each full-test lane.
+
+The full-test lanes also copy those downloaded files into the app target paths
+named by the sample manifests:
+
+```text
+apps/layer36-clock/target/wasm32-wasip1/release/layer36_clock.wasm
+apps/layer36-cat/target/wasm32-wasip1/release/layer36_cat.wasm
+apps/layer36-curl/target/wasm32-wasip1/release/layer36_curl.wasm
+```
+
+That keeps two checks true at the same time: each host runs the same shared
+fixture bytes, and the sample manifest tests still use the exact entry paths
+shown in the example apps.
+
 ## What This Does Not Prove
 
 This is hosted full CI proof only.
