@@ -63,11 +63,13 @@ flowchart LR
    the report can be narrowed to the final review date window.
 10. The exit bundle now has a final review mode, so the fuller Phase 2 packet
     can be collected with one command when the final candidate is ready.
-11. The outside developer walkthrough now has a checker, so a filled timing
+11. Fuzz runs now have a markdown evidence recorder too, so short smoke runs and
+    longer self-hosted soak runs can be reviewed in the same format.
+12. The outside developer walkthrough now has a checker, so a filled timing
    report must include the basics before we count it as Phase 2 evidence.
-12. The Phase 2 retrospective and Phase 3 kickoff issue now exist as drafts, and
+13. The Phase 2 retrospective and Phase 3 kickoff issue now exist as drafts, and
     CI checks that they stay in draft form until exit evidence is ready.
-13. The UAPI freeze decision now has its own packet and checker, so we cannot
+14. The UAPI freeze decision now has its own packet and checker, so we cannot
     accidentally call the API frozen before the final evidence is reviewed.
 
 ## Current Build Timeline
@@ -109,6 +111,7 @@ This is a simple status view for non technical readers.
 | Phase 2 proof tracking | Working, with a readiness command and evidence pages |
 | CI and docs stability proof | Working, with a GitHub run-history recorder |
 | Self-hosted full-gate proof | Ready to record through GitHub run history |
+| Fuzz proof | Ready to record as smoke or longer soak evidence |
 | UAPI freeze decision path | Working, with a draft packet and CI checker |
 | Outside walkthrough proof | Ready to collect, with a timing packet and checker |
 | Phase 3 handoff | Drafted and checked in CI, waiting for Phase 2 exit evidence |

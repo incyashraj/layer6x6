@@ -58,6 +58,7 @@
   - [Timed Walkthrough Evidence](phase2/walkthrough-evidence.md)
   - [CI Stability Evidence](phase2/ci-stability-evidence.md)
   - [Self-Hosted Evidence](phase2/self-hosted-evidence.md)
+  - [Fuzz Evidence](phase2/fuzz-evidence.md)
   - [Benchmark Evidence](phase2/benchmark-evidence.md)
   - [Dependency Evidence](phase2/dependency-evidence.md)
   - [UAPI Freeze Review](phase2/uapi-freeze-review.md)

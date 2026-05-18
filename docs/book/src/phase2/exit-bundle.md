@@ -16,6 +16,7 @@ green before a final exit review:
 - Go readiness evidence
 - optional hosted CI and Pages stability evidence
 - optional self-hosted full-gate evidence
+- optional fuzz evidence
 - optional Rust SDK package evidence
 
 This is useful because Phase 2 now has many separate proof files. The bundle
@@ -50,9 +51,11 @@ scripts/record-phase2-exit-bundle.sh --final-review
 ```
 
 That is shorthand for strict mode plus Rust SDK proof, hosted CI stability
-proof, and self-hosted full-gate proof. Set `LAYER36_CI_STABILITY_CREATED` and
-`LAYER36_SELF_HOSTED_CREATED` first if you want the GitHub run history limited
-to a review window.
+proof, self-hosted full-gate proof, and fuzz evidence. Set
+`LAYER36_CI_STABILITY_CREATED` and `LAYER36_SELF_HOSTED_CREATED` first if you
+want the GitHub run history limited to a review window. Set
+`LAYER36_FUZZ_MAX_TOTAL_TIME` first if the final packet should record a longer
+fuzz soak.
 
 ## Include Rust SDK Proof
 
@@ -101,6 +104,18 @@ For the final candidate, set `LAYER36_SELF_HOSTED_CREATED` to the review window
 you want, for example `>=2026-05-18`, before running the bundle. That keeps old
 green local runs from being mistaken for final proof.
 
+## Include Fuzz Proof
+
+Fuzz proof uses the same target list as `scripts/run-phase2-fuzz-smoke.sh`.
+Include it when you want the bundle to record a fuzz smoke or longer soak:
+
+```bash
+scripts/record-phase2-exit-bundle.sh --strict --include-fuzz
+```
+
+The default is a short smoke. For final review, set `LAYER36_FUZZ_MAX_TOTAL_TIME`
+to the per-target soak window first.
+
 Dependency evidence is included by default because it is one of the final Phase
 2 signoff checks. If local advisory lookup is blocked by a cache lock, the
 bundle records that warning and still shows whether licenses, bans, and sources
@@ -124,6 +139,7 @@ The report includes:
 - the Go readiness result and current import-purity status
 - the hosted CI stability result when included
 - the self-hosted full-gate result when included
+- the fuzz result when included
 - the current `P2E-*` gate snapshot from the exit ledger
 - the current working tree state
 - short log tails for each check

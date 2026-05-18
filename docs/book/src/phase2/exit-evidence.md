@@ -105,6 +105,7 @@ scripts/compare-phase2-ucap-evidence.sh
 scripts/record-phase2-benchmark-evidence.sh
 scripts/compare-phase2-benchmark-evidence.sh
 scripts/record-phase2-dependency-evidence.sh
+scripts/record-phase2-fuzz-evidence.sh
 scripts/record-phase2-walkthrough-template.sh
 scripts/check-phase2-walkthrough-evidence.sh <filled-walkthrough.md>
 scripts/record-phase2-ci-stability-evidence.sh
@@ -129,6 +130,7 @@ cargo bench -p layer36-runtime --bench startup
 cargo bench -p layer36-runtime --bench uapi_dispatch
 scripts/check-benchmark-regression.sh
 scripts/check-dependencies.sh
+scripts/record-phase2-fuzz-evidence.sh --strict
 scripts/run-phase2-fuzz-smoke.sh
 ```
 

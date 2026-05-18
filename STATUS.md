@@ -3,23 +3,23 @@
 Last updated: 2026-05-18
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `80f2a0a`
-Working tree at this status update: final review bundle shortcut in progress
+Latest checked completed push before this slice: `6e663fa`
+Working tree at this status update: fuzz evidence recorder in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 299
-- Tracked files after this slice lands: about 300
-- Total tracked lines after this slice lands: about 83,955
+- Commits after this slice lands: about 300
+- Tracked files after this slice lands: about 302
+- Total tracked lines after this slice lands: about 84,283
 - Rust lines (`.rs`) after this slice lands: about 40,174
-- Docs lines (`.md`) after this slice lands: about 28,399
+- Docs lines (`.md`) after this slice lands: about 28,489
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`80f2a0a`) checks:
+Latest completed push (`6e663fa`) checks:
 
-- CI: success (run `26038138250`)
-- Deploy docs to GitHub Pages: success (run `26038138236`)
+- CI: success (run `26038488793`)
+- Deploy docs to GitHub Pages: success (run `26038488829`)
 
 Recent pushes before that are also green.
 
@@ -110,6 +110,7 @@ Top pending items:
 - Added strict self-hosted evidence checking so final bundles fail when no completed green self-hosted full gate is present in inspected history, with an optional date-window filter for final candidate proof
 - Added strict hosted CI stability checking so final bundles fail when hosted CI or Pages has no completed green run in the selected review window
 - Added a final-review exit bundle shortcut so the fuller Phase 2 review packet can be collected with one command
+- Added a fuzz evidence recorder and exit-bundle inclusion path so smoke and longer soak runs can be reviewed as markdown proof
 - Expanded UCap evidence with a named dispatcher deny-before-adapter matrix that covers every non-default filesystem and network boundary
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`
