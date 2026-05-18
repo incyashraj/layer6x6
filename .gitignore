@@ -34,10 +34,12 @@ ehthumbs.db
 
 # Test artifacts
 /test/fixtures/generated/
+/apps/layer36-cat/fixtures/
 
 # Build scripts output
 /dist/
 /scripts/out/
+/outputs/
 
 # Fuzz artifacts
 /fuzz/Cargo.lock

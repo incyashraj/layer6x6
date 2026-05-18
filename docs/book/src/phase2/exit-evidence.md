@@ -116,8 +116,9 @@ scripts/phase2-exit-readiness.sh
 
 The [Exit Bundle](exit-bundle.md) command gives the quick local review report.
 The other commands are still useful when you need the detailed per-area reports.
-The exit bundle now includes the closeout docs check too, so the retrospective
-draft and Phase 3 kickoff draft stay reviewable alongside the other exit proof.
+The exit bundle now includes the closeout docs check and can optionally include
+hosted CI stability evidence, so the final review packet can carry current
+GitHub run history beside the local proof.
 
 For performance and soak checks:
 

@@ -1,25 +1,25 @@
 # Layer36 Status
 
-Last updated: 2026-05-17
+Last updated: 2026-05-18
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `7619645`
-Working tree at this status update: UAPI freeze decision packet wired into local proof checks
+Latest checked completed push before this slice: `f163a27`
+Working tree at this status update: optional CI stability evidence in the exit bundle locally validated
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 281
-- Tracked files after this slice lands: about 294
-- Total tracked lines after this slice lands: about 80,472
+- Commits after this slice lands: about 295
+- Tracked files after this slice lands: about 298
+- Total tracked lines after this slice lands: about 83,395
 - Rust lines (`.rs`) after this slice lands: about 40,174
-- Docs lines (`.md`) after this slice lands: about 28,114
+- Docs lines (`.md`) after this slice lands: about 28,242
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`7619645`) checks:
+Latest completed push (`f163a27`) checks:
 
-- CI: success (run `25992167669`)
-- Deploy docs to GitHub Pages: success (run `25992167690`)
+- CI: success (run `26024410280`)
+- Deploy docs to GitHub Pages: success (run `26024410193`)
 
 Recent pushes before that are also green.
 
@@ -104,6 +104,8 @@ Top pending items:
 - Added the Phase 2 retrospective draft, Phase 3 kickoff issue draft, and a closeout-docs checker so handoff material exists without claiming Phase 2 is complete early
 - Wired the closeout-docs checker into hosted CI, self-hosted CI, and the Phase 2 exit bundle
 - Added a UAPI freeze decision packet and checker so the final freeze decision stays explicit until the remaining proof is ready
+- Added an optional exit-bundle mode that records hosted CI and Pages stability evidence alongside the local Phase 2 proof
+- Added ignore rules for generated demo outputs and local quickstart fixture files so source-status checks stay clean after manual proof runs
 - Expanded UCap evidence with a named dispatcher deny-before-adapter matrix that covers every non-default filesystem and network boundary
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`

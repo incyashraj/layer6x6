@@ -7,19 +7,22 @@ cd "$ROOT"
 OUTPUT="target/phase2-exit-bundle/exit-bundle.md"
 STRICT="${LAYER36_EXIT_BUNDLE_STRICT:-0}"
 INCLUDE_RUST_SDK="${LAYER36_EXIT_BUNDLE_INCLUDE_RUST_SDK:-0}"
+INCLUDE_CI_STABILITY="${LAYER36_EXIT_BUNDLE_INCLUDE_CI_STABILITY:-0}"
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/record-phase2-exit-bundle.sh [--strict] [--include-rust-sdk] [--output <path>]
+Usage: scripts/record-phase2-exit-bundle.sh [--strict] [--include-rust-sdk] [--include-ci-stability] [--output <path>]
 
 Options:
-  --strict            Exit non-zero when any included evidence step fails
-  --include-rust-sdk  Also run the Rust SDK package evidence recorder
-  --output <path>     Output markdown file path
+  --strict                Exit non-zero when any included evidence step fails
+  --include-rust-sdk      Also run the Rust SDK package evidence recorder
+  --include-ci-stability  Also record hosted CI and Pages stability evidence
+  --output <path>         Output markdown file path
 
 Environment:
-  LAYER36_EXIT_BUNDLE_STRICT            1 to exit non-zero on failed included steps
-  LAYER36_EXIT_BUNDLE_INCLUDE_RUST_SDK  1 to include Rust SDK package evidence
+  LAYER36_EXIT_BUNDLE_STRICT                1 to exit non-zero on failed included steps
+  LAYER36_EXIT_BUNDLE_INCLUDE_RUST_SDK      1 to include Rust SDK package evidence
+  LAYER36_EXIT_BUNDLE_INCLUDE_CI_STABILITY  1 to include hosted CI stability evidence
 USAGE
 }
 
@@ -31,6 +34,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     --include-rust-sdk)
       INCLUDE_RUST_SDK="1"
+      shift
+      ;;
+    --include-ci-stability)
+      INCLUDE_CI_STABILITY="1"
       shift
       ;;
     --output)
@@ -60,7 +67,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 mkdir -p "$(dirname "$OUTPUT")"
-TMP_DIR="target/phase2-exit-bundle/.tmp"
+TMP_DIR="$(dirname "$OUTPUT")/.tmp-$(basename "$OUTPUT")"
 mkdir -p "$TMP_DIR"
 
 UAPI_LOG="$TMP_DIR/check-uapi.log"
@@ -74,6 +81,8 @@ DEPENDENCY_LOG="$TMP_DIR/dependency-evidence.log"
 DEPENDENCY_REPORT="$TMP_DIR/dependency-evidence.md"
 GO_READINESS_LOG="$TMP_DIR/go-readiness-evidence.log"
 GO_READINESS_REPORT="$TMP_DIR/go-readiness-evidence.md"
+CI_STABILITY_LOG="$TMP_DIR/ci-stability-evidence.log"
+CI_STABILITY_REPORT="$TMP_DIR/ci-stability-evidence.md"
 SDK_LOG="$TMP_DIR/rust-sdk-evidence.log"
 SDK_REPORT="$TMP_DIR/rust-sdk-evidence.md"
 
@@ -144,6 +153,17 @@ else
   GO_READINESS_CODE=$?
 fi
 
+if [ "$INCLUDE_CI_STABILITY" = "1" ]; then
+  if scripts/record-phase2-ci-stability-evidence.sh --output "$CI_STABILITY_REPORT" >"$CI_STABILITY_LOG" 2>&1; then
+    CI_STABILITY_CODE=0
+  else
+    CI_STABILITY_CODE=$?
+  fi
+else
+  CI_STABILITY_CODE=0
+  printf 'Hosted CI stability evidence skipped. Run with --include-ci-stability to include it.\n' >"$CI_STABILITY_LOG"
+fi
+
 if [ "$INCLUDE_RUST_SDK" = "1" ]; then
   if scripts/record-phase2-rust-sdk-evidence.sh --strict --output "$SDK_REPORT" >"$SDK_LOG" 2>&1; then
     SDK_CODE=0
@@ -193,6 +213,7 @@ included_of() {
   echo "- Host: \`$host_os\` / \`$host_arch\`"
   echo "- Generated at (UTC): \`$now_utc\`"
   echo "- Rust SDK package evidence included: \`$(included_of "$INCLUDE_RUST_SDK")\`"
+  echo "- Hosted CI stability evidence included: \`$(included_of "$INCLUDE_CI_STABILITY")\`"
   echo
   echo "## Command Results"
   echo
@@ -207,6 +228,11 @@ included_of() {
   echo "| Docs build (\`mdbook build docs/book\`) | $DOCS_CODE | $(result_of "$DOCS_CODE") |"
   echo "| Dependency evidence (\`scripts/record-phase2-dependency-evidence.sh --strict\`) | $DEPENDENCY_CODE | $(result_of "$DEPENDENCY_CODE") |"
   echo "| Go readiness evidence (\`scripts/record-phase2-go-readiness-evidence.sh\`) | $GO_READINESS_CODE | $(result_of "$GO_READINESS_CODE") |"
+  if [ "$INCLUDE_CI_STABILITY" = "1" ]; then
+    echo "| Hosted CI stability evidence (\`scripts/record-phase2-ci-stability-evidence.sh\`) | $CI_STABILITY_CODE | $(result_of "$CI_STABILITY_CODE") |"
+  else
+    echo "| Hosted CI stability evidence | 0 | skipped |"
+  fi
   if [ "$INCLUDE_RUST_SDK" = "1" ]; then
     echo "| Rust SDK evidence (\`scripts/record-phase2-rust-sdk-evidence.sh --strict\`) | $SDK_CODE | $(result_of "$SDK_CODE") |"
   else
@@ -305,6 +331,18 @@ included_of() {
     sed -n '1,54p' "$GO_READINESS_REPORT"
   fi
   echo
+  echo "## Hosted CI Stability Evidence Log (tail)"
+  echo
+  echo '```text'
+  tail -n 120 "$CI_STABILITY_LOG"
+  echo '```'
+  if [ "$INCLUDE_CI_STABILITY" = "1" ] && [ -f "$CI_STABILITY_REPORT" ]; then
+    echo
+    echo "## Hosted CI Stability Evidence Summary"
+    echo
+    sed -n '1,44p' "$CI_STABILITY_REPORT"
+  fi
+  echo
   echo "## Rust SDK Evidence Log (tail)"
   echo
   echo '```text'
@@ -329,6 +367,7 @@ if [ "$STRICT" = "1" ] && {
   [ "$CLOSEOUT_DOCS_CODE" -ne 0 ] ||
   [ "$DOCS_CODE" -ne 0 ] ||
   [ "$DEPENDENCY_CODE" -ne 0 ] ||
+  [ "$CI_STABILITY_CODE" -ne 0 ] ||
   [ "$SDK_CODE" -ne 0 ];
 }; then
   exit 1

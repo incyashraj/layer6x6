@@ -15,6 +15,12 @@ Default output:
 target/phase2-ci-stability-evidence/ci-stability-evidence.md
 ```
 
+You can also include this report in the Phase 2 exit bundle:
+
+```bash
+scripts/record-phase2-exit-bundle.sh --strict --include-ci-stability
+```
+
 ## What It Records
 
 The report includes:
