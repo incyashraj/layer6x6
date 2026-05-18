@@ -309,112 +309,113 @@
     font-size: 34px;
     font-weight: 900;
   }
-  .process-flow {
-    position: relative;
-    margin-top: 16px;
-    min-height: 430px;
-    padding: 74px 12px 12px;
-  }
-  .process-rail {
-    position: absolute;
-    left: 9%;
-    right: 9%;
-    top: 108px;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, #a9b9d4 8%, #a9b9d4 92%, transparent);
-  }
-  .moving-file {
-    position: absolute;
-    top: 30px;
-    left: 7%;
-    width: 70px;
-    text-align: center;
-    animation: file-travel 12s ease-in-out infinite;
-    z-index: 5;
-  }
-  .moving-file.clock-file { animation-duration: 13s; }
-  .file-icon {
-    width: 52px;
-    height: 64px;
-    margin: 0 auto 7px;
-    border: 2px solid var(--blue);
-    border-radius: 10px;
-    background: var(--blue-soft);
-    box-shadow: 0 12px 24px rgba(36, 87, 166, 0.18);
-    position: relative;
-  }
-  .file-icon::after {
-    content: "";
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 17px;
-    height: 17px;
-    background: #fff;
-    border-left: 2px solid var(--blue);
-    border-bottom: 2px solid var(--blue);
-    border-bottom-left-radius: 6px;
-  }
-  .moving-file span {
-    display: inline-block;
-    color: var(--blue);
-    background: #fff;
-    border: 1px solid #cad9f5;
-    border-radius: 999px;
-    padding: 4px 7px;
-    font-size: 11px;
-    font-weight: 850;
-    white-space: nowrap;
-  }
-  .process-grid {
+  .procedure {
+    margin-top: 14px;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .procedure-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) auto minmax(0, 1.25fr) auto minmax(0, 1.05fr);
     gap: 12px;
-    position: relative;
-    z-index: 2;
+    align-items: stretch;
   }
-  .process-grid.six {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+  .procedure-row.clock {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
   }
-  .process-node {
-    min-height: 248px;
+  .procedure-card {
     border: 1px solid var(--line);
     border-radius: 16px;
     background: #fbfcff;
-    padding: 18px 14px;
+    padding: 16px;
+    min-height: 166px;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
     gap: 10px;
-    animation: node-glow 12s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+    animation: procedure-focus 14s ease-in-out infinite;
   }
-  .process-node:nth-child(2) { animation-delay: 2.1s; }
-  .process-node:nth-child(3) { animation-delay: 4.3s; }
-  .process-node:nth-child(4) { animation-delay: 6.5s; }
-  .process-node:nth-child(5) { animation-delay: 8.7s; }
-  .process-grid.six .process-node { animation-duration: 13s; }
-  .process-grid.six .process-node:nth-child(2) { animation-delay: 1.9s; }
-  .process-grid.six .process-node:nth-child(3) { animation-delay: 3.8s; }
-  .process-grid.six .process-node:nth-child(4) { animation-delay: 5.7s; }
-  .process-grid.six .process-node:nth-child(5) { animation-delay: 7.6s; }
-  .process-grid.six .process-node:nth-child(6) { animation-delay: 9.5s; }
-  .process-node small {
+  .procedure-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 2px solid transparent;
+    pointer-events: none;
+  }
+  .procedure-card.compact { min-height: 148px; }
+  .procedure-card.runtime {
+    background: linear-gradient(180deg, #f9fbff 0%, #eef5ff 100%);
+    border-color: #b9c9e8;
+  }
+  .procedure-card.output {
+    background: linear-gradient(180deg, #fbfffd 0%, #ebf8f1 100%);
+    border-color: #abd9bf;
+  }
+  .procedure-card.delay-1 { animation-delay: 0s; }
+  .procedure-card.delay-2 { animation-delay: 2.2s; }
+  .procedure-card.delay-3 { animation-delay: 4.4s; }
+  .procedure-card.delay-4 { animation-delay: 6.6s; }
+  .procedure-card.delay-5 { animation-delay: 8.8s; }
+  .procedure-card.delay-6 { animation-delay: 11s; }
+  .procedure-label {
     color: var(--blue);
     font-size: 11px;
     font-weight: 850;
     text-transform: uppercase;
   }
-  .process-node b {
+  .procedure-card b {
     display: block;
-    font-size: 19px;
+    font-size: 20px;
     line-height: 1.12;
   }
-  .process-node span {
+  .procedure-card span,
+  .procedure-card p {
     color: var(--muted);
     font-size: 14px;
     line-height: 1.38;
+    margin: 0;
+  }
+  .procedure-arrow {
+    align-self: center;
+    color: var(--blue);
+    font-size: 24px;
+    font-weight: 900;
+  }
+  .code-lite {
+    margin: 0;
+    border: 1px solid #d7e1f2;
+    border-radius: 12px;
+    background: #0f172a;
+    color: #dbeafe;
+    padding: 10px;
+    font: 12px/1.42 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre-wrap;
+  }
+  .procedure-stack {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .platform-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .platform-chip {
+    border: 1px solid #b9c9e8;
+    border-radius: 12px;
+    background: #fff;
+    padding: 10px;
+    text-align: center;
+    color: var(--blue);
+    font-size: 13px;
+    font-weight: 850;
   }
   .output-chip {
+    display: inline-block;
+    width: fit-content;
     margin-top: auto;
     color: #164632;
     background: var(--green-soft);
@@ -424,16 +425,22 @@
     font-size: 12px;
     font-weight: 800;
   }
-  @keyframes file-travel {
-    0%, 8% { left: 7%; transform: translateY(0); }
-    20%, 28% { left: 27%; transform: translateY(8px); }
-    40%, 48% { left: 47%; transform: translateY(0); }
-    60%, 68% { left: 67%; transform: translateY(8px); }
-    82%, 100% { left: 87%; transform: translateY(0); }
+  .clock-demo {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 14px;
+    align-items: stretch;
   }
-  @keyframes node-glow {
+  .terminal.fit {
+    min-height: 0;
+    max-height: 254px;
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  @keyframes procedure-focus {
     0%, 100% { border-color: var(--line); box-shadow: none; transform: translateY(0); }
-    8%, 18% { border-color: #8fb0e7; box-shadow: 0 14px 28px rgba(36, 87, 166, 0.16); transform: translateY(-4px); }
+    6%, 17% { border-color: #7ea6e8; box-shadow: 0 14px 28px rgba(36, 87, 166, 0.16); transform: translateY(-3px); }
   }
   .pdf-row {
     display: grid;
@@ -622,12 +629,11 @@
     .stage { height: auto; min-height: 100vh; padding: 14px; }
     .scene { grid-template-columns: 1fr; }
     .narration, .visual { min-height: auto; }
-    .flow, .pdf-row, .window-body, .decision, .metric-row { grid-template-columns: 1fr; }
+    .flow, .pdf-row, .window-body, .decision, .metric-row, .clock-demo { grid-template-columns: 1fr; }
     .sequence { grid-template-columns: 1fr 1fr; }
     .architecture { grid-template-columns: 1fr; }
-    .process-grid, .process-grid.six { grid-template-columns: 1fr; }
-    .process-flow { min-height: auto; padding-top: 20px; }
-    .process-rail, .moving-file { display: none; }
+    .procedure-row, .procedure-row.clock, .procedure-stack, .platform-row { grid-template-columns: 1fr; }
+    .procedure-arrow { display: none; }
     .arch-arrow { display: none; }
     .step::after { content: ""; }
     .decision-arrow { display: none; }
@@ -705,18 +711,53 @@ const scenes = [
     takeaway: "Technical version: WebAssembly gives the portable artifact; UAPI and UCap define what the app can ask for.",
     visual: `
       <div class="visual-title"><b>Layer36 system path</b><span>One app, explicit permission boundary, native host result</span></div>
-      <div class="process-flow">
-        <div class="process-rail"></div>
-        <div class="moving-file">
-          <div class="file-icon"></div>
-          <span>app.wasm</span>
+      <div class="procedure">
+        <div class="procedure-row">
+          <div class="procedure-card delay-1">
+            <span class="procedure-label">1. App code</span>
+            <b>Developer imports UAPI</b>
+            <pre class="code-lite">use layer36::uapi;
+
+uapi::time.now();
+uapi::fs.read(path);</pre>
+          </div>
+          <div class="procedure-arrow">-></div>
+          <div class="procedure-card delay-2">
+            <span class="procedure-label">2. Build output</span>
+            <b>Portable component</b>
+            <span>The app becomes a WebAssembly component with declared host needs.</span>
+            <div class="output-chip">app.component.wasm</div>
+          </div>
+          <div class="procedure-arrow">-></div>
+          <div class="procedure-card runtime delay-3">
+            <span class="procedure-label">3. Layer36 runtime</span>
+            <b>UAPI routes through UCap</b>
+            <span>Layer36 receives the app request and checks whether that host capability is allowed.</span>
+          </div>
         </div>
-        <div class="process-grid">
-          <div class="process-node"><small>1. Source</small><b>Developer app</b><span>Written in Rust, TypeScript, Go, or another language.</span></div>
-          <div class="process-node"><small>2. Artifact</small><b>WebAssembly file</b><span>The app becomes a portable component that Layer36 can load.</span></div>
-          <div class="process-node"><small>3. Runtime</small><b>Layer36</b><span>The app asks Layer36 for files, time, network, output, or future UI.</span></div>
-          <div class="process-node"><small>4. Boundary</small><b>UCap check</b><span>Layer36 verifies whether this host power is allowed.</span></div>
-          <div class="process-node"><small>5. Host</small><b>Native result</b><span>Approved calls reach the host adapter and become real behavior.</span><div class="output-chip">Output only after approval</div></div>
+        <div class="procedure-row">
+          <div class="procedure-card delay-4">
+            <span class="procedure-label">4. Host adapter</span>
+            <b>Translate approved calls</b>
+            <span>The same component reaches native behavior through the local adapter.</span>
+          </div>
+          <div class="procedure-arrow">-></div>
+          <div class="procedure-card output delay-5">
+            <span class="procedure-label">5. Platforms</span>
+            <b>One app, platform behavior</b>
+            <div class="platform-row">
+              <div class="platform-chip">macOS</div>
+              <div class="platform-chip">Windows</div>
+              <div class="platform-chip">Linux</div>
+            </div>
+            <span>The app keeps one runtime contract while each host keeps control.</span>
+          </div>
+          <div class="procedure-arrow">-></div>
+          <div class="procedure-card output delay-6">
+            <span class="procedure-label">6. Working app</span>
+            <b>Output after approval</b>
+            <span>Files, time, network, stdout, and future UI only work through explicit permission.</span>
+          </div>
         </div>
       </div>`
   },
@@ -766,27 +807,28 @@ Capabilities
     takeaway: "The clock is intentionally simple, but it travels through the same architecture a larger app would use.",
     visual: `
       <div class="visual-title"><b>layer36-clock execution path</b><span>A small app using the full runtime model</span></div>
-      <div class="process-flow">
-        <div class="process-rail"></div>
-        <div class="moving-file clock-file">
-          <div class="file-icon"></div>
-          <span>clock.wasm</span>
+      <div class="clock-demo">
+        <div class="procedure">
+          <div class="procedure-row clock">
+            <div class="procedure-card compact delay-1"><span class="procedure-label">Code</span><b>clock source</b><span>Uses UAPI for time, locale, timezone, and stdout.</span></div>
+            <div class="procedure-arrow">-></div>
+            <div class="procedure-card compact delay-2"><span class="procedure-label">Build</span><b>clock.wasm</b><span>Compiled into one portable component artifact.</span></div>
+            <div class="procedure-arrow">-></div>
+            <div class="procedure-card runtime compact delay-3"><span class="procedure-label">Run</span><b>Layer36</b><span>Loads the component and links the UAPI surface.</span></div>
+            <div class="procedure-arrow">-></div>
+            <div class="procedure-card output compact delay-4"><span class="procedure-label">Output</span><b>terminal</b><span>The approved host-backed time call returns deterministic output.</span><div class="output-chip">date=1970-01-15</div></div>
+          </div>
         </div>
-        <div class="process-grid six">
-          <div class="process-node"><small>App</small><b>clock source</b><span>Small app asks for time, locale, timezone, and stdout.</span></div>
-          <div class="process-node"><small>Build</small><b>clock.wasm</b><span>A portable WebAssembly artifact is produced.</span></div>
-          <div class="process-node"><small>Run</small><b>layer36 run</b><span>The runtime loads the app and links the UAPI surface.</span></div>
-          <div class="process-node"><small>Ask</small><b>time API</b><span>The app asks Layer36 for host-backed time data.</span></div>
-          <div class="process-node"><small>Check</small><b>permission</b><span>The capability boundary is checked before host access.</span></div>
-          <div class="process-node"><small>Output</small><b>terminal</b><span>The approved path returns a deterministic clock result.</span><div class="output-chip">date=1970-01-15</div></div>
-        </div>
-      </div>
-      <pre class="terminal compact"><span class="cmd">layer36 run --auto-grant --manifest apps/layer36-clock/manifest.toml layer36_clock.wasm</span>
+        <pre class="terminal compact fit"><span class="cmd">layer36 run --auto-grant
+  --manifest apps/layer36-clock/manifest.toml
+  layer36_clock.wasm</span>
 
 <span class="ok">app=layer36-clock
 timezone=UTC
 locale=en-US
-date=1970-01-15 06:56</span></pre>`
+date=1970-01-15 06:56</span></pre>
+      </div>
+      `
   },
   {
     seconds: 24,
