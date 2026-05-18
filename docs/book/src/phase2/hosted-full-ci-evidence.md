@@ -101,6 +101,11 @@ That keeps two checks true at the same time: each host runs the same shared
 fixture bytes, and the sample manifest tests still use the exact entry paths
 shown in the example apps.
 
+The sample evidence recorder follows the same rule. In hosted full CI it reuses
+the downloaded fixture files already placed at those app target paths. On a
+local machine, if those files are missing, it can still build the fixtures with
+`cargo-component`.
+
 ## Windows Command-Line Limit
 
 One guard test sends more than 64 KiB of app arguments to prove that Layer36

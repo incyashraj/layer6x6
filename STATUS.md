@@ -3,12 +3,12 @@
 Last updated: 2026-05-18
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `48416e9`
-Working tree at this status update: Windows sandboxed logical-path fix validated locally and ready to push
+Latest checked completed push before this slice: `fd3f15d`
+Working tree at this status update: hosted sample-evidence shared-fixture reuse fix validated locally and ready to push
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 307
+- Commits after this slice lands: about 308
 - Tracked files after this slice lands: about 305
 - Total tracked lines after this slice lands: about 85,219
 - Rust lines (`.rs`) after this slice lands: about 40,241
@@ -16,18 +16,19 @@ Working tree at this status update: Windows sandboxed logical-path fix validated
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`48416e9`) checks:
+Latest completed push (`fd3f15d`) checks:
 
-- CI: success (run `26046654522`)
-- Deploy docs to GitHub Pages: success (run `26046654482`)
+- CI: success (run `26048239768`)
+- Deploy docs to GitHub Pages: success (run `26048239781`)
 
-Manual hosted full CI run `26046818564` confirmed the shared fixture-path fix,
-the Windows raw-args host-limit fix, and the localhost response-limit fixture
-fix. It then found a Windows-only sandbox path issue in
-`local_fs_adapter_treats_absolute_logical_paths_as_sandbox_relative`.
-The runtime now converts normalized Layer36 path strings like
-`/fixtures/public/note.txt` into relative sandbox segments before joining the
-host root, so Windows cannot treat the path as host-rooted before sandboxing.
+Manual hosted full CI run `26048419465` confirmed the shared fixture-path fix,
+the Windows raw-args host-limit fix, the localhost response-limit fixture fix,
+and the Windows sandboxed logical-path fix. It then reached macOS sample
+evidence and found that `scripts/record-phase2-sample-evidence.sh` tried to
+rebuild shared fixtures without `cargo-component` in that full-test lane. The
+fix makes the recorder reuse existing downloaded fixture files first, passes
+absolute paths into the evidence tool, and only builds locally when those files
+are absent.
 
 ## 3) What this version can do now
 
@@ -125,6 +126,7 @@ Top pending items:
 - Fixed the hosted full CI evidence recorder so cancelled or failed full runs are shown accurately in the selected-run summary
 - Hardened the local HTTP fixture used by curl response-limit tests so Windows early client close behavior does not hide the Layer36 assertion
 - Fixed Windows sandbox resolution for absolute Layer36 logical paths by converting normalized logical strings into relative sandbox segments before host path joining
+- Hardened sample evidence recording so hosted full CI reuses shared downloaded fixture bytes instead of rebuilding with lane-local `cargo-component`
 - Expanded UCap evidence with a named dispatcher deny-before-adapter matrix that covers every non-default filesystem and network boundary
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`
