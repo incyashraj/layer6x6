@@ -17,11 +17,29 @@ Default output:
 target/phase2-self-hosted-evidence/self-hosted-evidence.md
 ```
 
+For final exit review, require at least one completed green self-hosted run in
+the inspected history:
+
+```bash
+scripts/record-phase2-self-hosted-evidence.sh --require-success
+```
+
+When the final candidate commit is ready, narrow the report to the review window
+too:
+
+```bash
+scripts/record-phase2-self-hosted-evidence.sh --created '>=2026-05-18' --require-success
+```
+
 You can also include this report in the Phase 2 exit bundle:
 
 ```bash
 scripts/record-phase2-exit-bundle.sh --strict --include-self-hosted
 ```
+
+The exit bundle uses the stricter success check. If the latest completed
+self-hosted history does not show a green run, the strict bundle fails instead
+of hiding the problem in a report.
 
 ## What It Records
 
@@ -30,9 +48,11 @@ The report includes:
 - repository and branch
 - workflow file or workflow name
 - git commit at recording time
+- optional GitHub creation-date filter
 - latest completed self-hosted run
 - recent run history
 - completed success streak
+- required success streak when strict checking is enabled
 
 It uses GitHub CLI, so it needs a logged-in `gh` session with repository access.
 

@@ -74,7 +74,13 @@ scripts/record-phase2-exit-bundle.sh --strict --include-self-hosted
 ```
 
 This adds recent `Self-hosted CI` run history from
-`scripts/record-phase2-self-hosted-evidence.sh`.
+`scripts/record-phase2-self-hosted-evidence.sh`. The bundle calls that recorder
+with `--require-success`, so a strict review bundle fails if the inspected
+self-hosted history does not contain a completed green full-gate run.
+
+For the final candidate, set `LAYER36_SELF_HOSTED_CREATED` to the review window
+you want, for example `>=2026-05-18`, before running the bundle. That keeps old
+green local runs from being mistaken for final proof.
 
 Dependency evidence is included by default because it is one of the final Phase
 2 signoff checks. If local advisory lookup is blocked by a cache lock, the

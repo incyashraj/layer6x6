@@ -9,16 +9,24 @@ REPO="${LAYER36_SELF_HOSTED_REPO:-incyashraj/layer6x6}"
 BRANCH="${LAYER36_SELF_HOSTED_BRANCH:-main}"
 LIMIT="${LAYER36_SELF_HOSTED_LIMIT:-20}"
 WORKFLOW="${LAYER36_SELF_HOSTED_WORKFLOW:-self-hosted-ci.yml}"
+REQUIRE_SUCCESS="${LAYER36_SELF_HOSTED_REQUIRE_SUCCESS:-0}"
+MIN_SUCCESS_STREAK="${LAYER36_SELF_HOSTED_MIN_SUCCESS_STREAK:-1}"
+CREATED_FILTER="${LAYER36_SELF_HOSTED_CREATED:-}"
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/record-phase2-self-hosted-evidence.sh [--repo <owner/name>] [--branch <branch>] [--workflow <file-or-name>] [--limit <n>] [--output <path>]
+Usage: scripts/record-phase2-self-hosted-evidence.sh [--repo <owner/name>] [--branch <branch>] [--workflow <file-or-name>] [--limit <n>] [--created <date-filter>] [--require-success] [--min-success-streak <n>] [--output <path>]
 
 Options:
   --repo <owner/name>     GitHub repository to inspect (default: incyashraj/layer6x6)
   --branch <branch>      Branch to inspect (default: main)
   --workflow <file/name>  Self-hosted workflow to inspect (default: self-hosted-ci.yml)
   --limit <n>            Number of recent runs to inspect (default: 20)
+  --created <date-filter>
+                          GitHub run creation filter, such as >=2026-05-18
+  --require-success       Exit non-zero unless the completed success streak is high enough
+  --min-success-streak <n>
+                          Minimum completed success streak when --require-success is set (default: 1)
   --output <path>        Output markdown report path
 
 Environment:
@@ -26,6 +34,9 @@ Environment:
   LAYER36_SELF_HOSTED_BRANCH
   LAYER36_SELF_HOSTED_WORKFLOW
   LAYER36_SELF_HOSTED_LIMIT
+  LAYER36_SELF_HOSTED_CREATED
+  LAYER36_SELF_HOSTED_REQUIRE_SUCCESS
+  LAYER36_SELF_HOSTED_MIN_SUCCESS_STREAK
 USAGE
 }
 
@@ -67,6 +78,28 @@ while [ "$#" -gt 0 ]; do
       LIMIT="$2"
       shift 2
       ;;
+    --created)
+      if [ "$#" -lt 2 ]; then
+        echo "missing value for --created" >&2
+        usage
+        exit 2
+      fi
+      CREATED_FILTER="$2"
+      shift 2
+      ;;
+    --require-success)
+      REQUIRE_SUCCESS="1"
+      shift
+      ;;
+    --min-success-streak)
+      if [ "$#" -lt 2 ]; then
+        echo "missing value for --min-success-streak" >&2
+        usage
+        exit 2
+      fi
+      MIN_SUCCESS_STREAK="$2"
+      shift 2
+      ;;
     --output)
       if [ "$#" -lt 2 ]; then
         echo "missing value for --output" >&2
@@ -105,6 +138,18 @@ if [ "$LIMIT" -lt 1 ]; then
   exit 2
 fi
 
+case "$MIN_SUCCESS_STREAK" in
+  ''|*[!0-9]*)
+    echo "Self-hosted evidence error: --min-success-streak must be a positive integer" >&2
+    exit 2
+    ;;
+esac
+
+if [ "$MIN_SUCCESS_STREAK" -lt 1 ]; then
+  echo "Self-hosted evidence error: --min-success-streak must be at least 1" >&2
+  exit 2
+fi
+
 if ! command -v gh >/dev/null 2>&1; then
   echo "Self-hosted evidence error: gh is required" >&2
   exit 127
@@ -116,14 +161,26 @@ mkdir -p "$TMP_DIR"
 
 RUNS="$TMP_DIR/self-hosted-runs.tsv"
 
-gh run list \
-  --repo "$REPO" \
-  --workflow "$WORKFLOW" \
-  --branch "$BRANCH" \
-  --limit "$LIMIT" \
-  --json databaseId,createdAt,conclusion,status,displayTitle,url \
-  --jq '.[] | [.databaseId,.createdAt,.status,(.conclusion // ""),.displayTitle,.url] | @tsv' \
-  >"$RUNS"
+if [ -n "$CREATED_FILTER" ]; then
+  gh run list \
+    --repo "$REPO" \
+    --workflow "$WORKFLOW" \
+    --branch "$BRANCH" \
+    --limit "$LIMIT" \
+    --created "$CREATED_FILTER" \
+    --json databaseId,createdAt,conclusion,status,displayTitle,url \
+    --jq '.[] | [.databaseId,.createdAt,.status,(.conclusion // ""),.displayTitle,.url] | @tsv' \
+    >"$RUNS"
+else
+  gh run list \
+    --repo "$REPO" \
+    --workflow "$WORKFLOW" \
+    --branch "$BRANCH" \
+    --limit "$LIMIT" \
+    --json databaseId,createdAt,conclusion,status,displayTitle,url \
+    --jq '.[] | [.databaseId,.createdAt,.status,(.conclusion // ""),.displayTitle,.url] | @tsv' \
+    >"$RUNS"
+fi
 
 success_streak() {
   file="$1"
@@ -185,6 +242,13 @@ git_commit="$(git rev-parse --short HEAD 2>/dev/null || printf 'unknown')"
   echo "- Git commit at recording time: \`$git_commit\`"
   echo "- Generated at (UTC): \`$now_utc\`"
   echo "- Runs inspected: \`$LIMIT\`"
+  if [ -n "$CREATED_FILTER" ]; then
+    echo "- Created filter: \`$CREATED_FILTER\`"
+  fi
+  echo "- Require success: \`$REQUIRE_SUCCESS\`"
+  if [ "$REQUIRE_SUCCESS" = "1" ]; then
+    echo "- Required completed success streak: \`$MIN_SUCCESS_STREAK\`"
+  fi
   echo
   echo "## Summary"
   echo
@@ -211,3 +275,8 @@ EOF_RUN
 } >"$OUTPUT"
 
 echo "wrote $OUTPUT"
+
+if [ "$REQUIRE_SUCCESS" = "1" ] && [ "$streak" -lt "$MIN_SUCCESS_STREAK" ]; then
+  echo "Self-hosted evidence error: completed success streak $streak is below required $MIN_SUCCESS_STREAK" >&2
+  exit 1
+fi

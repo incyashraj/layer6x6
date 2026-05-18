@@ -58,8 +58,9 @@ flowchart LR
 8. Hosted CI and Pages stability can now be recorded as a plain evidence file
    and optionally included in the exit bundle instead of relying on screenshots
    or memory.
-9. Self-hosted full-gate history can now be recorded the same way, so local
-   runner proof has a clear review artifact.
+9. Self-hosted full-gate history can now be recorded the same way. The strict
+   exit bundle fails if that history does not show a completed green run, and
+   the report can be narrowed to the final review date window.
 10. The outside developer walkthrough now has a checker, so a filled timing
    report must include the basics before we count it as Phase 2 evidence.
 11. The Phase 2 retrospective and Phase 3 kickoff issue now exist as drafts, and

@@ -174,7 +174,7 @@ else
 fi
 
 if [ "$INCLUDE_SELF_HOSTED" = "1" ]; then
-  if scripts/record-phase2-self-hosted-evidence.sh --output "$SELF_HOSTED_REPORT" >"$SELF_HOSTED_LOG" 2>&1; then
+  if scripts/record-phase2-self-hosted-evidence.sh --require-success --output "$SELF_HOSTED_REPORT" >"$SELF_HOSTED_LOG" 2>&1; then
     SELF_HOSTED_CODE=0
   else
     SELF_HOSTED_CODE=$?
@@ -255,7 +255,7 @@ included_of() {
     echo "| Hosted CI stability evidence | 0 | skipped |"
   fi
   if [ "$INCLUDE_SELF_HOSTED" = "1" ]; then
-    echo "| Self-hosted full-gate evidence (\`scripts/record-phase2-self-hosted-evidence.sh\`) | $SELF_HOSTED_CODE | $(result_of "$SELF_HOSTED_CODE") |"
+    echo "| Self-hosted full-gate evidence (\`scripts/record-phase2-self-hosted-evidence.sh --require-success\`) | $SELF_HOSTED_CODE | $(result_of "$SELF_HOSTED_CODE") |"
   else
     echo "| Self-hosted full-gate evidence | 0 | skipped |"
   fi

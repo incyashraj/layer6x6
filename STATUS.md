@@ -3,23 +3,23 @@
 Last updated: 2026-05-18
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `515be18`
-Working tree at this status update: self-hosted full-gate evidence recorder in progress
+Latest checked completed push before this slice: `c3b77eb`
+Working tree at this status update: strict self-hosted evidence check in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 296
+- Commits after this slice lands: about 297
 - Tracked files after this slice lands: about 300
-- Total tracked lines after this slice lands: about 83,732
+- Total tracked lines after this slice lands: about 83,830
 - Rust lines (`.rs`) after this slice lands: about 40,174
-- Docs lines (`.md`) after this slice lands: about 28,327
+- Docs lines (`.md`) after this slice lands: about 28,356
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`515be18`) checks:
+Latest completed push (`c3b77eb`) checks:
 
-- CI: success (run `26035033700`)
-- Deploy docs to GitHub Pages: success (run `26035033801`)
+- CI: success (run `26036521094`)
+- Deploy docs to GitHub Pages: success (run `26036521127`)
 
 Recent pushes before that are also green.
 
@@ -107,6 +107,7 @@ Top pending items:
 - Added an optional exit-bundle mode that records hosted CI and Pages stability evidence alongside the local Phase 2 proof
 - Added ignore rules for generated demo outputs and local quickstart fixture files so source-status checks stay clean after manual proof runs
 - Added a self-hosted full-gate evidence recorder and optional exit-bundle inclusion path for local runner proof
+- Added strict self-hosted evidence checking so final bundles fail when no completed green self-hosted full gate is present in inspected history, with an optional date-window filter for final candidate proof
 - Expanded UCap evidence with a named dispatcher deny-before-adapter matrix that covers every non-default filesystem and network boundary
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`
