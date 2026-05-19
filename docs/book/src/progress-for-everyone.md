@@ -61,8 +61,8 @@ flowchart LR
    completed green run in the selected review window.
 9. Hosted full CI now has its own evidence recorder, so we can tell the
    difference between normal fast CI and the heavier Linux, macOS, Windows
-   proof run. The latest full run passed the three host lanes and narrowed the
-   remaining CI fix to one language evidence compare job.
+   proof run. The latest full run passed the three host lanes and the evidence
+   compare jobs for language variants, UCap, adapters, and samples.
 10. Self-hosted full-gate history can now be recorded the same way. The strict
    exit bundle fails if that history does not show a completed green run, and
    the report can be narrowed to the final review date window.
@@ -117,7 +117,7 @@ This is a simple status view for non technical readers.
 | CLI sample apps | Working |
 | Phase 2 proof tracking | Working, with a readiness command and evidence pages |
 | CI and docs stability proof | Working, with a GitHub run-history recorder |
-| Hosted full cross-host proof | Three host lanes are passing; one language evidence compare rerun is next |
+| Hosted full cross-host proof | Latest full Linux, macOS, Windows run is green |
 | Self-hosted full-gate proof | Ready to record through GitHub run history |
 | Fuzz proof | Ready to record as smoke or longer soak evidence |
 | UAPI freeze decision path | Working, with a draft packet and CI checker |
@@ -137,7 +137,7 @@ The remaining Phase 2 work is mostly proof, not a rewrite:
 
 - freeze the API contract after review
 - fill the UAPI freeze decision packet
-- collect one clean hosted full CI run with language evidence compare green
+- include the green hosted full CI run in the final evidence bundle
 - decide whether Go is promoted now or marked experimental
 - run longer fuzz and benchmark checks
 - have one outside developer follow the tutorial and pass the filled-packet check

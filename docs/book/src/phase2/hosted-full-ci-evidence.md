@@ -6,6 +6,13 @@ freshness, the Rust SDK package shape, formatting, and linting.
 Phase 2 exit also needs the heavier hosted full CI path. That path runs the
 Linux, macOS, and Windows lanes and records the cross-host evidence artifacts.
 
+Latest checked full run:
+
+- Run `26069665276`
+- Commit `3f1a219`
+- Result: passed
+- Passed compare jobs: language variants, UCap enforcement, adapters, samples
+
 Use this recorder to prove that a recent hosted CI run was a full run, not only
 the fast push run:
 

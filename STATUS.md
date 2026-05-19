@@ -3,8 +3,8 @@
 Last updated: 2026-05-19
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `67994f4`
-Working tree at this status update: language-variant evidence comparator and Windows hash recording fix in progress
+Latest checked completed push before this slice: `3f1a219`
+Working tree at this status update: hosted full CI success recorded in docs
 
 ## 1) Project size today
 
@@ -16,20 +16,15 @@ Working tree at this status update: language-variant evidence comparator and Win
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`67994f4`) checks:
+Latest completed push (`3f1a219`) checks:
 
-- CI: success (run `26064454208`)
-- Deploy docs to GitHub Pages: success (run `26064454242`)
+- CI: success (run `26069553957`)
+- Deploy docs to GitHub Pages: success (run `26069553960`)
 
-Manual hosted full CI run `26064573902` proved the Windows sample-evidence fix:
-Linux, macOS, and Windows full-test lanes passed, and sample, adapter, and UCap
-evidence compare jobs passed. The remaining hosted full CI failure was narrowed
-to language-variant evidence comparison. The root issue was in the proof layer,
-not the runtime lane: Windows recorded empty TypeScript fixture hashes, and the
-comparator required byte-identical jco TypeScript fixture output across hosts.
-The current fix records hashes with a portable SHA-256 path and checks the
-language evidence promise correctly: same commit, right hosts, passing build and
-test rows, aligned fixture presence, and non-empty hashes for present fixtures.
+Manual hosted full CI run `26069665276` passed on commit `3f1a219`.
+Linux, macOS, and Windows full-test lanes all passed. The language-variant,
+UCap, adapter, and sample evidence compare jobs all passed too. This closes the
+immediate hosted full CI blocker that was left after run `26064573902`.
 
 ## 3) What this version can do now
 
@@ -62,7 +57,7 @@ the remaining work is mostly evidence and gate closure, not missing base archite
 Top pending items:
 
 1. Final UAPI v0.1 freeze review for WIT contracts
-2. One clean hosted full CI rerun showing the language-variant evidence compare green
+2. Final evidence bundle using the now-green hosted full CI run
 3. Formal gate evidence:
    - multi day CI stability window
    - long fuzz soak pass
@@ -130,6 +125,7 @@ Top pending items:
 - Hardened sample evidence recording so hosted full CI reuses shared downloaded fixture bytes instead of rebuilding with lane-local `cargo-component`
 - Fixed Windows sample evidence recording so the hosted full-test lane can use `target/debug/layer36.exe` explicitly under Git Bash while Linux and macOS continue using `target/debug/layer36`
 - Fixed language-variant evidence comparison so it records Windows fixture hashes correctly and checks portable behavior without claiming byte-identical jco output across hosts
+- Recorded hosted full CI run `26069665276` as green for the full Linux, macOS, Windows Phase 2 evidence matrix
 - Expanded UCap evidence with a named dispatcher deny-before-adapter matrix that covers every non-default filesystem and network boundary
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`
