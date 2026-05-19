@@ -14,6 +14,9 @@ The current state is:
   slices for CLI-style apps, UCap manifests and launch grants, sample apps, and
   repeatable evidence scripts. Formal Phase 2 exit still needs final
   cross-host evidence, UAPI freeze review, and an outside developer walkthrough.
+- **Phase 3 has started at the contract layer.** The first `gui` world and the
+  `ui`, `gfx`, and `audio` WIT drafts now parse and have a CI checker. This does
+  not freeze the API and does not replace Phase 2's remaining outside review.
 
 ## System Timeline
 
@@ -40,7 +43,8 @@ flowchart LR
     class P0 done;
     class P1 done;
     class P2 current;
-    class P3,P4,P5,P6,P7 pending;
+    class P3 current;
+    class P4,P5,P6,P7 pending;
 ```
 
 ## Phase Table
@@ -50,7 +54,7 @@ flowchart LR
 | 0 | Foundation | Make the project real enough to work in public. | Done enough for development; external items pending | Mostly done |
 | 1 | Runtime proof | Run one WASM component on Linux, macOS, and Windows. | Done | Engineering done |
 | 2 | UAPI v0.1 | Build useful CLI APIs and sample apps. | in progress | Active; exit evidence in progress |
-| 3 | Desktop UI | Run one GUI app on Windows, macOS, and Linux. | est. 6 to 10 weeks | Planned |
+| 3 | Desktop UI | Run one GUI app on Windows, macOS, and Linux. | est. 6 to 10 weeks | Started with WIT draft |
 | 4 | Mobile hosts | Run the same app on iOS and Android. | est. 8 to 12 weeks | Planned |
 | 5 | Developer SDK | Make project creation, debug, and packaging smooth. | est. 6 to 10 weeks | Planned |
 | 6 | Distribution | Add bundles, signing, updates, and identity. | est. 8 to 12 weeks | Planned |
@@ -67,7 +71,8 @@ the evidence is crisp:
 - Keep benchmark, dependency, and fuzz evidence current for the final commit.
 - Complete one timed outside developer walkthrough.
 - Finalize the Phase 2 retrospective.
-- Open the Phase 3 kickoff issue only after the exit review passes.
+- Keep Phase 3 implementation limited to draft contracts and prototypes until
+  the Phase 2 outside review is complete.
 
 ## Phase 2 In One Sentence
 

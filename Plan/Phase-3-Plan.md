@@ -1,9 +1,9 @@
 # Layer36 — Phase 3 Detailed Plan: UI + Graphics
 
 > **Phase:** 3 of 8
-> **Duration:** Months 7–10 (120 calendar days, ~60–80 engineering days of work)
+> **Duration:** est. 6–10 weeks for the first desktop UI proof; later hardening depends on host findings.
 > **Phase sentence:** *First GUI app running natively on Windows, macOS, and Linux.*
-> **Prerequisite:** Phase 2 complete — UAPI v0.1 stable on three desktop hosts.
+> **Prerequisite:** Phase 2 engineering proof green; final outside review and formal freeze still tracked separately.
 > **Supersedes:** nothing.
 > **Superseded by:** nothing.
 
@@ -52,7 +52,8 @@ Phase 3 is the riskiest and most ambitious phase before v1.0. Every previous pha
 - The WIT in §8–§9 is this phase's most important artifact, in the same way Phase 2's WIT was its most important artifact.
 - Tasks are listed in §19 with IDs matching Build Plan §7.4.
 - If you find yourself asking "why not do it the Flutter way / Electron way / React Native way?" — §7.1 is where we answer that, in full.
-- Phase 3 is four months of calendar for good reason. Do not compress.
+- Phase 3 should not be rushed, but the estimate is now written as an estimate,
+  not a fixed calendar promise. We will keep the first proof narrow.
 
 ---
 
@@ -79,18 +80,21 @@ Phase 2 proved the UAPI abstraction works for batch-style programs. Phase 3 prov
 
 ## 2. Prerequisites from Phase 2
 
-Before touching a single line of Phase 3 code, verify:
+Before touching Phase 3 implementation code, verify:
 
 - [ ] All Phase 2 exit criteria met (Phase 2 Plan §20).
 - [ ] UAPI v0.1 frozen: `io`, `fs`, `net`, `time`, `locale` modules untouchable.
-- [ ] Three host adapters (Linux/macOS/Windows) production-green for CLI surface.
-- [ ] Three language bindings (Rust/Go/TS) in use by sample apps.
-- [ ] UCap v0.1 enforcing soft grants at UAPI boundary.
-- [ ] Cross-host stdout-identical testing harness green.
-- [ ] `layer36-curl`, `layer36-cat`, `layer36-clock` all runnable.
+- [x] Three host adapters (Linux/macOS/Windows) green for the current CLI surface in hosted full CI evidence.
+- [x] Three language tracks (Rust/Go/TS) tracked by sample or fixture evidence, with Go runtime parity still marked experimental where needed.
+- [x] UCap v0.1 enforcing grants at UAPI boundary for the current Phase 2 surface.
+- [x] Cross-host sample and evidence compare harness green in the hosted full CI proof.
+- [x] `layer36-curl`, `layer36-cat`, `layer36-clock` covered by sample evidence.
 - [ ] ADRs 0001 through 0012 merged.
 
-If any box is unchecked, finish Phase 2 first. A GUI platform built on an unstable CLI foundation is worse than no GUI platform at all — you'll spend months in Phase 3 rediscovering Phase 2 bugs.
+Phase 3 is starting under a narrow waiver: WIT drafts and prototypes may begin
+because the engineering proof is green, but Phase 2 is not formally closed until
+the final outside review and freeze packet are recorded. Phase 3 work must not
+change the Phase 2 UAPI.
 
 ---
 
@@ -2102,14 +2106,16 @@ Save as `docs/book/src/phase3/retro.md` at the end of Phase 3.
 
 ## Development Log
 
-> **Phase Status:** Not started  
-> **Started:** —  
-> **Completed:** —  
-> **Last Updated:** 2026-05-01
+> **Phase Status:** Started at contract layer
+> **Started:** 2026-05-19
+> **Completed:** —
+> **Last Updated:** 2026-05-19
 
 ### Progress Summary
 
-_Not started. Awaiting completion of all [Phase 2 exit criteria](#3-success-criteria)._
+Phase 3 has started with the first WIT draft and checker. This is not a frozen
+API and not a working desktop GUI yet. It is the contract foundation for the
+next runtime and host adapter work.
 
 ---
 
@@ -2119,7 +2125,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | # | Criterion | Status |
 |---|-----------|--------|
-| 1 | `ui`, `gfx`, `audio` WIT modules frozen at v0.1.0 | Not done |
+| 1 | `ui`, `gfx`, `audio` WIT modules frozen at v0.1.0 | Draft started; not frozen |
 | 2 | All three modules implemented in Linux, macOS, Windows adapters; CI green | Not done |
 | 3 | `layer36-notes` runs on all three desktop OSes | Not done |
 | 4 | `layer36-notes` UI feels native on each host (documented rubric passed) | Not done |
@@ -2141,7 +2147,10 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | Task ID | Task | Completed | Notes |
 |---------|------|-----------|-------|
-| — | — | — | — |
+| P3-UI-02 | First `layer36:ui@0.1.0` WIT draft | 2026-05-19 | Covers window, tree, events, dialog, clipboard, and menu shape. |
+| P3-GFX-01 | First `layer36:gfx@0.1.0` WIT draft | 2026-05-19 | Covers simple 2D canvas commands and a minimal future 3D surface. |
+| P3-AUDIO-01 | First `layer36:audio@0.1.0` WIT draft | 2026-05-19 | Covers playback and capture stream shape. |
+| P3-TEST-00 | Phase 3 WIT checker | 2026-05-19 | `scripts/check-phase3-uapi.sh` parses contracts and checks package, world, naming, docs, and permission error shape. |
 
 ---
 
@@ -2149,7 +2158,8 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
-| — | — | — | — |
+| P3-UI-01 | Widget protocol design RFC | 2026-05-19 | Needs ADR-0013 written and reviewed. |
+| P3-UI-04 | Window + event loop abstractions | 2026-05-19 | Needs small runtime prototype after WIT draft. |
 
 ---
 
@@ -2168,13 +2178,16 @@ _ADRs 0017–0020 to be determined during Phase 3 work._
 
 ### Blockers & Open Questions
 
-_None currently._
+- Phase 2 outside developer review and final freeze packet are still pending.
+- ADR-0013 must be written before the widget lowering strategy is treated as stable.
 
 ---
 
 ### Notes & Learnings
 
-_Nothing yet. Add time-stamped notes as work progresses: widget protocol design decisions, per-host adapter quirks (AppKit/Win32/GTK4), frame budget findings, IME complications, accessibility tree insights, things to carry into Phase 4._
+- 2026-05-19: Started Phase 3 with contracts first. The `gui` world imports the
+  Phase 2 CLI surface plus draft `ui`, `gfx`, and `audio` modules. The checker
+  keeps this draft parseable and documented while the host work begins.
 
 ---
 

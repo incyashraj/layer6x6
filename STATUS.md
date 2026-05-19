@@ -3,23 +3,23 @@
 Last updated: 2026-05-19
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `3f1a219`
-Working tree at this status update: hosted full CI success recorded in docs
+Latest checked completed push before this slice: `48ed43b`
+Working tree at this status update: Phase 3 contract slice in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 310
-- Tracked files after this slice lands: about 305
-- Total tracked lines after this slice lands: about 85,219
-- Rust lines (`.rs`) after this slice lands: about 40,241
-- Docs lines (`.md`) after this slice lands: about 28,735
+- Commits after this slice lands: about 311
+- Tracked files after this slice lands: about 320
+- Total tracked lines after this slice lands: about 86,000
+- Rust lines (`.rs`) after this slice lands: about 40,700
+- Docs lines (`.md`) after this slice lands: about 28,900
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`3f1a219`) checks:
+Latest completed push (`48ed43b`) checks:
 
-- CI: success (run `26069553957`)
-- Deploy docs to GitHub Pages: success (run `26069553960`)
+- CI: success (run `26070696545`)
+- Deploy docs to GitHub Pages: success (run `26070696540`)
 
 Manual hosted full CI run `26069665276` passed on commit `3f1a219`.
 Linux, macOS, and Windows full-test lanes all passed. The language-variant,
@@ -51,6 +51,22 @@ Practical engineering progress is strong and close to completion for the first u
 
 Main reason formal completion is lower than engineering completion:
 the remaining work is mostly evidence and gate closure, not missing base architecture.
+
+## 4A) Phase 3 start
+
+Phase 3 is now starting at the contract layer, while Phase 2 still waits for the
+outside developer review before formal closeout.
+
+Current Phase 3 slice:
+
+- `layer36:app@0.2.0` with a `gui` world
+- `layer36:ui@0.1.0` WIT draft for windows, widget trees, events, dialogs, clipboard, and menus
+- `layer36:gfx@0.1.0` WIT draft for 2D canvas and a small future 3D surface
+- `layer36:audio@0.1.0` WIT draft for playback and capture shape
+- `scripts/check-phase3-uapi.sh` to keep the draft parseable and documented
+
+This does not mean desktop UI is implemented yet. It means the first public
+contract for desktop UI work is now in the repo and checked locally.
 
 ## 5) What remains to close Phase 2 fully
 
@@ -128,6 +144,8 @@ Top pending items:
 - Recorded hosted full CI run `26069665276` as green for the full Linux, macOS, Windows Phase 2 evidence matrix
 - Expanded UCap evidence with a named dispatcher deny-before-adapter matrix that covers every non-default filesystem and network boundary
 - Hosted workflows moved to Node 24 ready action versions
+- Started Phase 3 at the contract layer with parseable WIT for the GUI world,
+  `ui`, `gfx`, and `audio`, plus a checker and docs page
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`
 - Generated UAPI reference now includes those WIT contract comments
 - Rust SDK package smoke now verifies packaged README, SDK root, and generated bindings files

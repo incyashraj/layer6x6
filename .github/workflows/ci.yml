@@ -166,6 +166,8 @@ jobs:
         run: cargo install wasm-tools --locked
       - name: Check Phase 2 UAPI contract
         run: sh scripts/check-uapi.sh
+      - name: Check Phase 3 UAPI draft
+        run: sh scripts/check-phase3-uapi.sh
       - name: Regenerate UAPI reference
         run: sh scripts/generate-uapi-reference.sh
       - name: Check generated UAPI reference is current

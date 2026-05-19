@@ -72,6 +72,7 @@
   - [Exit Evidence](phase2/exit-evidence.md)
   - [Retrospective Draft](phase2/retro.md)
 - [Phase 3: UI + Graphics](phases/phase-3.md)
+  - [Phase 3 UAPI Draft](phase3/uapi-draft.md)
 - [Phase 4: Mobile](phases/phase-4.md)
 - [Phase 5: Developer SDK](phases/phase-5.md)
 - [Phase 6: Distribution](phases/phase-6.md)

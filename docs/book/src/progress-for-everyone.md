@@ -78,6 +78,9 @@ flowchart LR
     CI checks that they stay in draft form until exit evidence is ready.
 15. The UAPI freeze decision now has its own packet and checker, so we cannot
     accidentally call the API frozen before the final evidence is reviewed.
+16. Phase 3 has started at the contract layer. The first desktop `gui` world
+    and the first `ui`, `gfx`, and `audio` API drafts now parse and have a
+    checker. This is not a finished GUI yet. It is the first map for the work.
 
 ## Current Build Timeline
 
@@ -93,7 +96,8 @@ flowchart LR
 
     class P0,P1 done;
     class P2 current;
-    class P3,P4,P5,P6,P7 pending;
+    class P3 current;
+    class P4,P5,P6,P7 pending;
 ```
 
 ## How Close We Are to the Big Goal
@@ -122,8 +126,8 @@ This is a simple status view for non technical readers.
 | Fuzz proof | Ready to record as smoke or longer soak evidence |
 | UAPI freeze decision path | Working, with a draft packet and CI checker |
 | Outside walkthrough proof | Ready to collect, with a timing packet, checker, and local rehearsal |
-| Phase 3 handoff | Drafted and checked in CI, waiting for Phase 2 exit evidence |
-| Desktop GUI path | Not started in implementation |
+| Phase 3 handoff | Started at contract level, still waiting on Phase 2 outside review for formal phase close |
+| Desktop GUI path | WIT draft started; runtime and host adapters not implemented yet |
 | Mobile host path | Not started in implementation |
 | Packaging and app store style distribution | Not started in implementation |
 
@@ -166,6 +170,7 @@ The main Phase 2 work still open is:
    importing host APIs directly.
 4. Longer fuzz, benchmark, and dependency signoff runs.
 5. One timed outside developer walkthrough using the packet checker.
-6. Finalize the retrospective and open the Phase 3 kickoff issue.
+6. Finalize the retrospective and external Phase 2 review packet.
 
-When those are done, we can exit Phase 2 and start Phase 3 desktop UI work.
+Phase 3 has started carefully with contracts. We should keep it narrow until
+the remaining Phase 2 review work is recorded.
