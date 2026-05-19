@@ -398,29 +398,21 @@ fn compare_fixtures(reports: &[HostReport]) -> Result<()> {
             continue;
         }
 
-        let Some(first_hash) = hashes[0].1.as_ref() else {
-            bail!(
-                "fixture `{fixture}` is present but hash is missing on {}",
-                hashes[0].0
-            );
-        };
-        for (host, hash) in hashes.iter().skip(1) {
+        for (host, hash) in &hashes {
             let Some(hash) = hash else {
                 bail!("fixture `{fixture}` is present but hash is missing on {host}");
             };
-            if hash != first_hash {
-                let detail = hashes
-                    .iter()
-                    .map(|(h, value)| {
-                        format!("{h}={}", value.clone().unwrap_or_else(|| "n/a".to_string()))
-                    })
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                bail!("fixture `{fixture}` hash mismatch across hosts: {detail}");
+            if hash.is_empty() {
+                bail!("fixture `{fixture}` is present but hash is empty on {host}");
             }
         }
 
-        println!("- fixture `{fixture}`: match ({first_hash})");
+        let detail = hashes
+            .iter()
+            .map(|(host, value)| format!("{host}={}", value.as_deref().unwrap_or("n/a")))
+            .collect::<Vec<_>>()
+            .join(", ");
+        println!("- fixture `{fixture}`: present on all hosts ({detail})");
     }
     Ok(())
 }
@@ -515,13 +507,13 @@ mod tests {
     }
 
     #[test]
-    fn compare_fails_when_fixture_hash_differs() {
+    fn compare_accepts_host_specific_fixture_hashes() {
         let reports = vec![
-            parsed("linux", "Linux", "abc123", "same", false),
-            parsed("macos", "Darwin", "abc123", "drift", false),
-            parsed("windows", "MINGW64_NT-10.0", "abc123", "same", false),
+            parsed("linux", "Linux", "abc123", "linux", false),
+            parsed("macos", "Darwin", "abc123", "macos", false),
+            parsed("windows", "MINGW64_NT-10.0", "abc123", "windows", false),
         ];
-        assert!(compare_reports(&reports).is_err());
+        compare_reports(&reports).expect("host-specific fixture hashes are allowed");
     }
 
     #[test]
@@ -531,6 +523,22 @@ mod tests {
             parsed("macos", "Darwin", "abc123", "same", true),
             parsed("windows", "MINGW64_NT-10.0", "abc123", "same", false),
         ];
+        assert!(compare_reports(&reports).is_err());
+    }
+
+    #[test]
+    fn compare_fails_when_present_fixture_hash_is_missing() {
+        let mut reports = vec![
+            parsed("linux", "Linux", "abc123", "same", false),
+            parsed("macos", "Darwin", "abc123", "same", false),
+            parsed("windows", "MINGW64_NT-10.0", "abc123", "same", false),
+        ];
+        reports[2]
+            .fixture_rows
+            .get_mut("layer36_ts_clock.wasm")
+            .expect("fixture row")
+            .sha256 = None;
+
         assert!(compare_reports(&reports).is_err());
     }
 }

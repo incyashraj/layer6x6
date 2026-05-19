@@ -94,7 +94,13 @@ git_commit="$(git rev-parse --short HEAD 2>/dev/null || printf 'unknown')"
 hash_of() {
   path="$1"
   if [ -f "$path" ]; then
-    shasum -a 256 "$path" | awk '{print $1}'
+    if command -v sha256sum >/dev/null 2>&1; then
+      sha256sum "$path" | awk '{print $1}'
+    elif command -v shasum >/dev/null 2>&1; then
+      shasum -a 256 "$path" | awk '{print $1}'
+    else
+      printf 'n/a'
+    fi
   else
     printf 'n/a'
   fi

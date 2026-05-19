@@ -1,14 +1,14 @@
 # Layer36 Status
 
-Last updated: 2026-05-18
+Last updated: 2026-05-19
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `f929aa4`
-Working tree at this status update: explicit Git Bash Windows sample-evidence CLI path fix validated locally and ready to push
+Latest checked completed push before this slice: `67994f4`
+Working tree at this status update: language-variant evidence comparator and Windows hash recording fix in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 309
+- Commits after this slice lands: about 310
 - Tracked files after this slice lands: about 305
 - Total tracked lines after this slice lands: about 85,219
 - Rust lines (`.rs`) after this slice lands: about 40,241
@@ -16,18 +16,20 @@ Working tree at this status update: explicit Git Bash Windows sample-evidence CL
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`f929aa4`) checks:
+Latest completed push (`67994f4`) checks:
 
-- CI: success (run `26050021203`)
-- Deploy docs to GitHub Pages: success (run `26050021185`)
+- CI: success (run `26064454208`)
+- Deploy docs to GitHub Pages: success (run `26064454242`)
 
-Manual hosted full CI runs `26050285568` and `26053206271` proved the Linux and
-macOS full-test lanes green on the current shared-fixture path. Windows reached
-sample evidence and then failed because the recorder looked for
-`target/debug/layer36` instead of Cargo's Windows binary
-`target/debug/layer36.exe`. The current fix makes the sample evidence recorder
-use the `.exe` path explicitly when running under Git Bash on Windows, while
-still allowing a caller-provided `LAYER36_BIN`.
+Manual hosted full CI run `26064573902` proved the Windows sample-evidence fix:
+Linux, macOS, and Windows full-test lanes passed, and sample, adapter, and UCap
+evidence compare jobs passed. The remaining hosted full CI failure was narrowed
+to language-variant evidence comparison. The root issue was in the proof layer,
+not the runtime lane: Windows recorded empty TypeScript fixture hashes, and the
+comparator required byte-identical jco TypeScript fixture output across hosts.
+The current fix records hashes with a portable SHA-256 path and checks the
+language evidence promise correctly: same commit, right hosts, passing build and
+test rows, aligned fixture presence, and non-empty hashes for present fixtures.
 
 ## 3) What this version can do now
 
@@ -60,7 +62,7 @@ the remaining work is mostly evidence and gate closure, not missing base archite
 Top pending items:
 
 1. Final UAPI v0.1 freeze review for WIT contracts
-2. Broader cross host evidence for language variant behavior
+2. One clean hosted full CI rerun showing the language-variant evidence compare green
 3. Formal gate evidence:
    - multi day CI stability window
    - long fuzz soak pass
@@ -127,6 +129,7 @@ Top pending items:
 - Fixed Windows sandbox resolution for absolute Layer36 logical paths by converting normalized logical strings into relative sandbox segments before host path joining
 - Hardened sample evidence recording so hosted full CI reuses shared downloaded fixture bytes instead of rebuilding with lane-local `cargo-component`
 - Fixed Windows sample evidence recording so the hosted full-test lane can use `target/debug/layer36.exe` explicitly under Git Bash while Linux and macOS continue using `target/debug/layer36`
+- Fixed language-variant evidence comparison so it records Windows fixture hashes correctly and checks portable behavior without claiming byte-identical jco output across hosts
 - Expanded UCap evidence with a named dispatcher deny-before-adapter matrix that covers every non-default filesystem and network boundary
 - Hosted workflows moved to Node 24 ready action versions
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`

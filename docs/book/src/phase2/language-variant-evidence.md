@@ -36,11 +36,12 @@ scripts/compare-phase2-language-variant-evidence.sh \
   target/phase2-language-variant-evidence/windows.md
 ```
 
-In hosted full CI, each OS lane now uploads one language-variant evidence
-artifact (`language-variant-evidence-<os>`). You can download those three files
-and run the comparator locally to check parity.
-Hosted full CI now also runs this comparator automatically after the full
-matrix, so drift is caught in CI as part of the same run.
+In hosted full CI, each OS lane uploads one language-variant evidence artifact
+(`language-variant-evidence-<os>`). You can download those three files and run
+the comparator locally to check the proof set.
+
+Hosted full CI also runs this comparator automatically after the full matrix, so
+drift is caught in CI as part of the same run.
 
 ## What It Records
 
@@ -59,6 +60,23 @@ The report includes:
   - `layer36_ts_cat.wasm`
   - `layer36_ts_curl.wasm`
 - tail logs for build and test steps
+
+## What The Comparator Checks
+
+The comparator checks that:
+
+- all three reports came from the same git commit
+- the Linux, macOS, and Windows files are labelled as the right host
+- the build and runtime test steps passed on every host
+- each fixture row is present in every report
+- a fixture is either present on all hosts or missing on all hosts
+- every present fixture has a SHA-256 hash recorded
+
+It does not require independently generated TypeScript fixtures to have the
+same hash on every operating system. The useful Phase 2 proof is that the same
+source fixtures build, pass import checks, and run through Layer36 on Linux,
+macOS, and Windows. Byte-for-byte reproducible jco output is a different
+promise and is not needed for this phase.
 
 ## Strict Mode
 
@@ -83,4 +101,5 @@ scripts/record-phase2-language-variant-evidence.sh --mode ts --strict
 This gives one repeatable artifact for language-variant progress.
 
 It does not replace cross-host sample evidence for Rust clock/cat/curl, but it
-makes language-variant status and drift easier to review before Phase 2 exit.
+makes language-variant status and cross-host behavior easier to review before
+Phase 2 exit.

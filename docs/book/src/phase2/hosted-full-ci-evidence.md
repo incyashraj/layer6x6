@@ -117,6 +117,21 @@ It also accepts `LAYER36_BIN` when a caller wants to point at a specific binary.
 This keeps the evidence command portable instead of making each workflow lane
 know the executable suffix by hand.
 
+## Language Variant Evidence Hashes
+
+The language-variant evidence lane builds TypeScript fixtures on each host with
+jco, runs the Layer36 import checks, and runs the TypeScript runtime tests.
+
+The comparator requires matching commit metadata, matching host labels, passing
+build/test rows, aligned fixture presence, and a recorded hash for every present
+fixture. It does not require the jco-built TypeScript component bytes to be
+identical across Linux, macOS, and Windows. That lane proves portable behavior,
+not reproducible compiler output.
+
+On Windows, the recorder uses `sha256sum` when available and falls back to
+`shasum` on hosts that provide it. This keeps the fixture hash column filled in
+Git Bash and still works on macOS.
+
 ## Windows Command-Line Limit
 
 One guard test sends more than 64 KiB of app arguments to prove that Layer36
