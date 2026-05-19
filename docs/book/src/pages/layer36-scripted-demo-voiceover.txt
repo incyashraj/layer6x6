@@ -57,8 +57,8 @@ Duration: 21 seconds
 Target finish: around 1:02, then pause
 
 Voiceover:
-This is not just a diagram.
-Phase 2 already builds real runnable artifacts.
+This is not just a design mockup.
+Layer36 already builds real runnable artifacts.
 Here we build the Layer36 CLI, then compile three sample apps: clock, cat, and curl.
 Each one becomes a WebAssembly artifact that Layer36 can run.
 
@@ -127,8 +127,8 @@ Duration: 29 seconds
 Target finish: around 3:27, then pause
 
 Voiceover:
-Phase 3 turns this runtime proof into desktop proof.
-The next goal is to show the same portable artifact model opening a native desktop window.
+The next visible product proof is a desktop developer preview.
+The goal is to show the same portable artifact model opening a native desktop window.
 The app still calls Layer36.
 The host adapter still translates approved behavior.
 And permissions stay explicit as the product moves from command-line proof toward a developer preview.
@@ -142,6 +142,6 @@ Target finish: around 3:51, then pause
 Voiceover:
 The honest status is this: Layer36 is real proof, but still pre-alpha.
 Today we have runtime execution, visible permissions, sample apps, and evidence tracking.
-The next step is outside developer validation, stronger cross-host evidence, and the Phase 3 desktop UI path.
+The investment case is to turn this speed into developer pull: ship the desktop preview, validate it with outside developers, and pull mobile feasibility, SDK packaging, and distribution groundwork forward as funding and proof allow.
 
 End.
