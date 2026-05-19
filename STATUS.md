@@ -3,8 +3,8 @@
 Last updated: 2026-05-19
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `48ed43b`
-Working tree at this status update: Phase 3 contract slice in progress
+Latest checked completed push before this slice: `f7adbb9`
+Working tree at this status update: Phase 3 UI adapter and capability slice in progress
 
 ## 1) Project size today
 
@@ -16,10 +16,10 @@ Working tree at this status update: Phase 3 contract slice in progress
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`48ed43b`) checks:
+Latest completed push (`f7adbb9`) checks:
 
-- CI: success (run `26070696545`)
-- Deploy docs to GitHub Pages: success (run `26070696540`)
+- CI: success (run `26073080427`)
+- Deploy docs to GitHub Pages: success (run `26073080422`)
 
 Manual hosted full CI run `26069665276` passed on commit `3f1a219`.
 Linux, macOS, and Windows full-test lanes all passed. The language-variant,
@@ -67,9 +67,15 @@ Current Phase 3 slice:
 - manifest tooling now accepts `layer36:app/gui@0.2.0`
 - `layer36 run` recognizes GUI manifests and exits clearly until the window
   runtime exists
+- first Phase 3 capability names now parse through the existing manifest and
+  policy layer: `ui`, `gfx`, and `audio`
+- `adapter-common::ui` now has an in-memory draft window registry for window
+  IDs, title and size validation, show, redraw, close, and event tracking
 
 This does not mean desktop UI is implemented yet. It means the first public
-contract for desktop UI work is now in the repo and checked locally.
+contract for desktop UI work is now in the repo and checked locally. The new UI
+registry is a shared model for host adapters to follow before we wire real
+AppKit, Win32, or GTK windows.
 
 ## 5) What remains to close Phase 2 fully
 
@@ -151,6 +157,11 @@ Top pending items:
   `ui`, `gfx`, and `audio`, plus a checker and docs page
 - Added Phase 3 GUI manifest recognition so tooling can validate the `gui`
   world before the window runtime exists
+- Added the first Phase 3 capability strings for window creation, dialogs,
+  clipboard, drop zones, GPU access, and audio. Safe basics are default grants;
+  clipboard, GPU compute, and audio capture stay explicit.
+- Added a shared draft UI adapter model in `adapter-common` so Phase 3 window
+  lifecycle behavior can be tested before native host adapters are wired.
 - WIT contract comments added across Phase 2 UAPI and enforced by `check-uapi`
 - Generated UAPI reference now includes those WIT contract comments
 - Rust SDK package smoke now verifies packaged README, SDK root, and generated bindings files
@@ -177,4 +188,4 @@ Top pending items:
 
 Use this exact prompt in a new session:
 
-`Continue Layer36 on main. Start with STATUS.md and Plan/Phase-2-Plan.md. Keep pushing Phase 2 closure, update plan/docs after each chunk, keep GitHub Pages in sync, and check CI after every push.`
+`Continue Layer36 on main. Start with STATUS.md, Plan/Phase-2-Plan.md, and Plan/Phase-3-Plan.md. Phase 3 has started with WIT, GUI manifest recognition, Phase 3 capability names, and an adapter-common draft window registry. Keep Phase 2 closeout evidence separate, keep Phase 3 narrow, update plan/docs after each chunk, keep GitHub Pages in sync, and check CI after every push.`

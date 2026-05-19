@@ -33,7 +33,9 @@ The first Phase 3 slice is now in the repo:
 - `layer36:gfx@0.1.0` for 2D canvas and a small future 3D surface
 - `layer36:audio@0.1.0` for playback and capture shape
 - `scripts/check-phase3-uapi.sh` so CI can reject broken WIT before runtime code depends on it
+- manifest and policy support for the first Phase 3 permission names
+- `adapter-common::ui`, an in-memory draft window registry for IDs, title and size validation, lifecycle state, redraw requests, and events
 
 This is a draft contract, not a frozen API. The next work is to add a tiny host
-side prototype that can open one window, receive events, and draw a simple
-surface.
+side prototype that connects this shared model to one real native window,
+receives events, and draws a simple surface.

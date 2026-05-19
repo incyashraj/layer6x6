@@ -19,23 +19,53 @@ pub const PHASE2_CLI_WORLD: &str = "layer36:app/cli@0.1.0";
 pub const PHASE3_GUI_WORLD: &str = "layer36:app/gui@0.2.0";
 const MAX_NET_CONNECT_HOST_BYTES: usize = 253;
 
-const PHASE2_CAPABILITY_SPECS: &[CapabilitySpec] = &[
-    CapabilitySpec::resource_free("io", "stdin", true),
-    CapabilitySpec::resource_free("io", "stdout", true),
-    CapabilitySpec::resource_free("io", "stderr", true),
-    CapabilitySpec::resource_free("io", "args", true),
-    CapabilitySpec::resource_free("io", "log", true),
-    CapabilitySpec::resource_scoped("fs", "read", "<path-glob>"),
-    CapabilitySpec::resource_scoped("fs", "write", "<path-glob>"),
-    CapabilitySpec::resource_scoped("fs", "list", "<path-glob>"),
-    CapabilitySpec::resource_scoped("fs", "remove", "<path-glob>"),
-    CapabilitySpec::resource_scoped("fs", "mkdir", "<path-glob>"),
-    CapabilitySpec::resource_scoped("net", "connect", "<host>:<port>"),
-    CapabilitySpec::resource_free("time", "clock", true),
-    CapabilitySpec::resource_free("time", "monotonic", true),
-    CapabilitySpec::resource_free("time", "sleep", true),
-    CapabilitySpec::resource_free("locale", "info", true),
-    CapabilitySpec::resource_free("locale", "format", true),
+const LAYER36_CAPABILITY_SPECS: &[CapabilitySpec] = &[
+    CapabilitySpec::resource_free(CapabilityPhase::Phase2, "io", "stdin", true),
+    CapabilitySpec::resource_free(CapabilityPhase::Phase2, "io", "stdout", true),
+    CapabilitySpec::resource_free(CapabilityPhase::Phase2, "io", "stderr", true),
+    CapabilitySpec::resource_free(CapabilityPhase::Phase2, "io", "args", true),
+    CapabilitySpec::resource_free(CapabilityPhase::Phase2, "io", "log", true),
+    CapabilitySpec::resource_scoped(CapabilityPhase::Phase2, "fs", "read", "<path-glob>", false),
+    CapabilitySpec::resource_scoped(CapabilityPhase::Phase2, "fs", "write", "<path-glob>", false),
+    CapabilitySpec::resource_scoped(CapabilityPhase::Phase2, "fs", "list", "<path-glob>", false),
+    CapabilitySpec::resource_scoped(
+        CapabilityPhase::Phase2,
+        "fs",
+        "remove",
+        "<path-glob>",
+        false,
+    ),
+    CapabilitySpec::resource_scoped(CapabilityPhase::Phase2, "fs", "mkdir", "<path-glob>", false),
+    CapabilitySpec::resource_scoped(
+        CapabilityPhase::Phase2,
+        "net",
+        "connect",
+        "<host>:<port>",
+        false,
+    ),
+    CapabilitySpec::resource_free(CapabilityPhase::Phase2, "time", "clock", true),
+    CapabilitySpec::resource_free(CapabilityPhase::Phase2, "time", "monotonic", true),
+    CapabilitySpec::resource_free(CapabilityPhase::Phase2, "time", "sleep", true),
+    CapabilitySpec::resource_free(CapabilityPhase::Phase2, "locale", "info", true),
+    CapabilitySpec::resource_free(CapabilityPhase::Phase2, "locale", "format", true),
+    CapabilitySpec::resource_scoped(CapabilityPhase::Phase3, "ui", "window", "create", true),
+    CapabilitySpec::resource_scoped(CapabilityPhase::Phase3, "ui", "clipboard", "read", false),
+    CapabilitySpec::resource_scoped(CapabilityPhase::Phase3, "ui", "clipboard", "write", false),
+    CapabilitySpec::resource_scoped(CapabilityPhase::Phase3, "ui", "menu", "system", false),
+    CapabilitySpec::resource_scoped(
+        CapabilityPhase::Phase3,
+        "ui",
+        "dropzone",
+        "<mime-type>",
+        false,
+    ),
+    CapabilitySpec::resource_scoped(CapabilityPhase::Phase3, "ui", "dialog", "*", true),
+    CapabilitySpec::resource_scoped(CapabilityPhase::Phase3, "ui", "dialog", "file-open", true),
+    CapabilitySpec::resource_scoped(CapabilityPhase::Phase3, "ui", "dialog", "file-save", true),
+    CapabilitySpec::resource_scoped(CapabilityPhase::Phase3, "gfx", "gpu", "basic", true),
+    CapabilitySpec::resource_scoped(CapabilityPhase::Phase3, "gfx", "gpu", "compute", false),
+    CapabilitySpec::resource_free(CapabilityPhase::Phase3, "audio", "playback", false),
+    CapabilitySpec::resource_free(CapabilityPhase::Phase3, "audio", "capture", false),
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
@@ -158,7 +188,14 @@ impl AppWorld {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CapabilityPhase {
+    Phase2,
+    Phase3,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CapabilitySpec {
+    phase: CapabilityPhase,
     module: &'static str,
     action: &'static str,
     resource: Option<&'static str>,
@@ -167,11 +204,13 @@ pub struct CapabilitySpec {
 
 impl CapabilitySpec {
     const fn resource_free(
+        phase: CapabilityPhase,
         module: &'static str,
         action: &'static str,
         default_granted: bool,
     ) -> Self {
         Self {
+            phase,
             module,
             action,
             resource: None,
@@ -180,16 +219,23 @@ impl CapabilitySpec {
     }
 
     const fn resource_scoped(
+        phase: CapabilityPhase,
         module: &'static str,
         action: &'static str,
         resource: &'static str,
+        default_granted: bool,
     ) -> Self {
         Self {
+            phase,
             module,
             action,
             resource: Some(resource),
-            default_granted: false,
+            default_granted,
         }
+    }
+
+    pub fn phase(&self) -> CapabilityPhase {
+        self.phase
     }
 
     pub fn module(&self) -> &'static str {
@@ -218,6 +264,10 @@ impl CapabilitySpec {
     pub fn default_granted(&self) -> bool {
         self.default_granted
     }
+
+    fn default_capability(&self) -> Result<Capability> {
+        Capability::new(self.module(), self.action(), self.resource())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -236,7 +286,7 @@ impl Capability {
         let resource_required = capability_resource_required(module, action).ok_or_else(|| {
             ManifestError::InvalidCapability {
                 cap: cap_name.clone(),
-                reason: "unknown Phase 2 capability".to_string(),
+                reason: "unknown Layer36 capability".to_string(),
             }
         })?;
         let resource_was_present = resource.is_some();
@@ -345,18 +395,24 @@ impl fmt::Display for Capability {
 }
 
 pub fn default_granted_capabilities() -> BTreeSet<Capability> {
-    PHASE2_CAPABILITY_SPECS
+    LAYER36_CAPABILITY_SPECS
         .iter()
         .filter(|spec| spec.default_granted())
         .map(|spec| {
-            Capability::new(spec.module(), spec.action(), None)
+            spec.default_capability()
                 .expect("default capability specs are valid")
         })
         .collect()
 }
 
 pub fn supported_capability_specs() -> &'static [CapabilitySpec] {
-    PHASE2_CAPABILITY_SPECS
+    LAYER36_CAPABILITY_SPECS
+}
+
+pub fn supported_phase2_capability_specs() -> impl Iterator<Item = &'static CapabilitySpec> {
+    LAYER36_CAPABILITY_SPECS
+        .iter()
+        .filter(|spec| spec.phase() == CapabilityPhase::Phase2)
 }
 
 #[derive(Debug, Error)]
@@ -470,6 +526,16 @@ fn validate_capability_resource(
 
     if module == "net" && action == "connect" {
         validate_connect_resource(resource)?;
+        return Ok(());
+    }
+
+    if module == "ui" {
+        validate_ui_resource(action, resource)?;
+        return Ok(());
+    }
+
+    if module == "gfx" && action == "gpu" {
+        validate_one_of(resource, &["basic", "compute"], "GPU resource")?;
     }
 
     Ok(())
@@ -484,7 +550,57 @@ fn canonicalize_capability_resource(module: &str, action: &str, resource: &str) 
     if module == "net" && action == "connect" {
         return canonicalize_connect_resource(resource);
     }
+    if module == "ui" || module == "gfx" {
+        return Some(resource.to_ascii_lowercase());
+    }
     Some(resource.to_string())
+}
+
+fn validate_ui_resource(action: &str, resource: &str) -> std::result::Result<(), String> {
+    match action {
+        "window" => validate_one_of(resource, &["create"], "window resource"),
+        "clipboard" => validate_one_of(resource, &["read", "write", "*"], "clipboard resource"),
+        "menu" => validate_one_of(resource, &["system"], "menu resource"),
+        "dialog" => validate_one_of(
+            resource,
+            &["file-open", "file-save", "*"],
+            "dialog resource",
+        ),
+        "dropzone" => validate_mime_resource(resource),
+        _ => Ok(()),
+    }
+}
+
+fn validate_one_of(
+    resource: &str,
+    accepted: &[&str],
+    label: &str,
+) -> std::result::Result<(), String> {
+    let normalized = resource.to_ascii_lowercase();
+    if accepted.contains(&normalized.as_str()) {
+        Ok(())
+    } else {
+        Err(format!("{label} must be one of {}", accepted.join(", ")))
+    }
+}
+
+fn validate_mime_resource(resource: &str) -> std::result::Result<(), String> {
+    if resource == "*" || resource == "*/*" {
+        return Ok(());
+    }
+    let Some((top, sub)) = resource.split_once('/') else {
+        return Err("MIME resource must use <type>/<subtype>".to_string());
+    };
+    for part in [top, sub] {
+        if part.is_empty()
+            || !part
+                .chars()
+                .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '-' | '+' | '.' | '*'))
+        {
+            return Err("MIME resource contains unsupported characters".to_string());
+        }
+    }
+    Ok(())
 }
 
 fn canonicalize_connect_resource(resource: &str) -> Option<String> {
@@ -701,6 +817,42 @@ mod tests {
     }
 
     #[test]
+    fn parses_phase3_gui_capability_names() {
+        let window: Capability = "ui.window:create".parse().expect("window cap");
+        let dialog: Capability = "ui.dialog:*".parse().expect("dialog wildcard cap");
+        let gfx: Capability = "gfx.gpu:basic".parse().expect("gfx cap");
+        let playback: Capability = "audio.playback".parse().expect("audio cap");
+
+        assert_eq!(window.to_string(), "ui.window:create");
+        assert!(window.is_default_granted());
+        assert_eq!(dialog.resource(), Some("*"));
+        assert!(dialog.is_default_granted());
+        assert_eq!(gfx.to_string(), "gfx.gpu:basic");
+        assert!(gfx.is_default_granted());
+        assert_eq!(playback.to_string(), "audio.playback");
+        assert!(!playback.is_default_granted());
+    }
+
+    #[test]
+    fn rejects_invalid_phase3_gui_capability_resources() {
+        for input in [
+            "ui.window:read",
+            "ui.clipboard:delete",
+            "ui.dialog:camera",
+            "gfx.gpu:admin",
+            "ui.dropzone:not-a-mime",
+        ] {
+            let err = input
+                .parse::<Capability>()
+                .expect_err("invalid Phase 3 resource should fail");
+            assert!(
+                matches!(err, ManifestError::InvalidCapability { .. }),
+                "unexpected error type for `{input}`: {err:?}"
+            );
+        }
+    }
+
+    #[test]
     fn rejects_missing_required_resource() {
         let err = "fs.read"
             .parse::<Capability>()
@@ -834,7 +986,7 @@ mod tests {
 
     #[test]
     fn exposes_canonical_phase_2_capability_specs() {
-        let specs = supported_capability_specs();
+        let specs = supported_phase2_capability_specs().collect::<Vec<_>>();
 
         assert!(specs
             .iter()
@@ -845,6 +997,30 @@ mod tests {
         assert!(specs.iter().any(|spec| {
             spec.display_pattern() == "net.connect:<host>:<port>" && !spec.default_granted()
         }));
+    }
+
+    #[test]
+    fn exposes_phase3_capability_specs_without_hiding_phase2_specs() {
+        let specs = supported_capability_specs();
+
+        assert!(specs.iter().any(|spec| {
+            spec.display_pattern() == "ui.window:create"
+                && spec.phase() == CapabilityPhase::Phase3
+                && spec.default_granted()
+        }));
+        assert!(specs.iter().any(|spec| {
+            spec.display_pattern() == "ui.clipboard:read"
+                && spec.phase() == CapabilityPhase::Phase3
+                && !spec.default_granted()
+        }));
+        assert!(specs.iter().any(|spec| {
+            spec.display_pattern() == "audio.capture"
+                && spec.phase() == CapabilityPhase::Phase3
+                && !spec.default_granted()
+        }));
+        assert!(
+            supported_phase2_capability_specs().all(|spec| spec.phase() == CapabilityPhase::Phase2)
+        );
     }
 
     #[test]

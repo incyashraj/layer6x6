@@ -66,6 +66,28 @@ draft. `layer36 run` does not launch it yet. It exits early with a clear message
 that the GUI runtime is not implemented. This is intentional. We want the
 manifest and tooling path to be real before we add windows.
 
+The first Phase 3 capability names are also wired into the manifest and policy
+layer:
+
+| Capability | Meaning today |
+|---|---|
+| `ui.window:create` | A GUI app may ask for a window. This is a default grant. |
+| `ui.dialog:*` | File dialogs are allowed by default for the draft GUI shape. |
+| `ui.clipboard:read` and `ui.clipboard:write` | Clipboard access is sensitive and must be granted explicitly. |
+| `ui.dropzone:<mime-type>` | Drag and drop can be scoped by MIME type. |
+| `gfx.gpu:basic` | Basic GPU-backed drawing is a default grant. |
+| `gfx.gpu:compute` | Compute access is explicit. |
+| `audio.playback` | Playback is defined, but not default yet. |
+| `audio.capture` | Microphone capture is explicit. |
+
+This does not grant real desktop access yet. It means Phase 3 manifests can
+name the same permissions the future runtime will enforce.
+
+The repo also has a small shared UI model now: `adapter-common::ui`. It can
+create draft window records, validate titles and sizes, track show or close
+state, and collect window events. This is an in-memory model for tests and
+adapter design. It is not AppKit, Win32, GTK, or a real event loop yet.
+
 ## What It Does Not Mean Yet
 
 This is not a finished desktop UI layer.
@@ -82,8 +104,8 @@ the app, runtime, SDKs, and host adapters.
 
 The next proof should be small:
 
-1. A host adapter prototype that can create one window.
-2. A simple event loop.
-3. A tiny draw call that paints something visible.
-4. A small notes app skeleton that uses the same path.
-5. A first pass at GUI capability names.
+1. Connect the draft UI model to a runtime-facing dispatcher path.
+2. Add a host adapter prototype that can create one real window.
+3. Add a simple event loop.
+4. Add a tiny draw call that paints something visible.
+5. Add a small notes app skeleton that uses the same path.

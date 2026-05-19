@@ -263,12 +263,26 @@ mod tests {
     fn default_policy_allows_default_grants() {
         let policy = SessionPolicy::default();
         let stdout = "io.stdout".parse().expect("parse capability");
+        let ui_window = "ui.window:create".parse().expect("parse capability");
+        let gfx_basic = "gfx.gpu:basic".parse().expect("parse capability");
         let fs_read = "fs.read:./notes/today.txt"
             .parse()
             .expect("parse capability");
 
         assert!(policy.allows(&stdout));
+        assert!(policy.allows(&ui_window));
+        assert!(policy.allows(&gfx_basic));
         assert!(!policy.allows(&fs_read));
+    }
+
+    #[test]
+    fn phase3_sensitive_caps_are_not_default_granted() {
+        let policy = SessionPolicy::default();
+        let clipboard_read = "ui.clipboard:read".parse().expect("parse capability");
+        let audio_capture = "audio.capture".parse().expect("parse capability");
+
+        assert!(!policy.allows(&clipboard_read));
+        assert!(!policy.allows(&audio_capture));
     }
 
     #[test]

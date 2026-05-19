@@ -343,6 +343,10 @@ fn manifest_capabilities_lists_phase_2_cap_table() {
     assert!(stdout.contains("fs.read:<path-glob>"));
     assert!(stdout.contains("net.connect:<host>:<port>"));
     assert!(stdout.contains("locale.format"));
+    assert!(stdout.contains("ui.window:create"));
+    assert!(stdout.contains("ui.clipboard:read"));
+    assert!(stdout.contains("gfx.gpu:basic"));
+    assert!(stdout.contains("audio.capture"));
 }
 
 #[test]
@@ -392,6 +396,9 @@ fn manifest_capabilities_json_lists_phase_2_cap_table() {
     assert!(stdout.contains(r#""action": "read""#));
     assert!(stdout.contains(r#""resource": "<path-glob>""#));
     assert!(stdout.contains(r#""capability": "net.connect:<host>:<port>""#));
+    assert!(stdout.contains(r#""capability": "ui.window:create""#));
+    assert!(stdout.contains(r#""capability": "gfx.gpu:basic""#));
+    assert!(stdout.contains(r#""capability": "audio.capture""#));
     assert!(stdout.contains(r#""default_grant": true"#));
 }
 

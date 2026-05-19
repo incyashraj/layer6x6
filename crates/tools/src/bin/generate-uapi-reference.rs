@@ -3,7 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
-use layer36_manifest::supported_capability_specs;
+use layer36_manifest::supported_phase2_capability_specs;
 use wit_parser::{
     Function, FunctionKind, Interface, Resolve, Type, TypeDefKind, TypeId, WorldItem,
 };
@@ -479,8 +479,7 @@ fn capability_patterns_for_interface(interface: &str) -> Vec<CapabilityPattern> 
         return Vec::new();
     };
 
-    supported_capability_specs()
-        .iter()
+    supported_phase2_capability_specs()
         .filter(|spec| spec.module() == module)
         .map(|spec| {
             let grant_kind = if spec.default_granted() {

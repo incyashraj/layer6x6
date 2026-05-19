@@ -2113,9 +2113,20 @@ Save as `docs/book/src/phase3/retro.md` at the end of Phase 3.
 
 ### Progress Summary
 
-Phase 3 has started with the first WIT draft and checker. This is not a frozen
-API and not a working desktop GUI yet. It is the contract foundation for the
-next runtime and host adapter work.
+Phase 3 has started with the first WIT draft, checker, GUI manifest path,
+capability names, and shared in-memory UI adapter scaffold. This is not a
+frozen API and not a working desktop GUI yet. It is the contract foundation for
+the next runtime and host adapter work.
+
+### Completed Tasks
+
+| Task ID | Task | Completed | Notes |
+|---|---|---|---|
+| P3-UAPI-00 | Draft `gui` world for Phase 3 | 2026-05-19 | `layer36:app@0.2.0` parses with `ui`, `gfx`, and `audio` imports. |
+| P3-TOOL-00 | Add Phase 3 UAPI checker | 2026-05-19 | `scripts/check-phase3-uapi.sh` keeps the draft WIT parseable and shaped. |
+| P3-MANIFEST-00 | Recognize GUI manifests | 2026-05-19 | `manifest check` accepts `layer36:app/gui@0.2.0`; `run` exits clearly until GUI runtime exists. |
+| P3-UCAP-00 | Add first Phase 3 capability names | 2026-05-19 | `ui`, `gfx`, and `audio` capability strings now parse through the manifest and policy layer. |
+| P3-UI-00 | Add shared draft UI adapter model | 2026-05-19 | `adapter-common::ui` tracks draft window IDs, lifecycle, title, size, visibility, redraw events, and validation. |
 
 ---
 

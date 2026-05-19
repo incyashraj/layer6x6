@@ -81,6 +81,9 @@ flowchart LR
 16. Phase 3 has started at the contract layer. The first desktop `gui` world
     and the first `ui`, `gfx`, and `audio` API drafts now parse and have a
     checker. This is not a finished GUI yet. It is the first map for the work.
+17. Phase 3 now has the first permission names for desktop UI, graphics, and
+    audio. It also has a small in-memory window model that lets us test window
+    IDs, sizes, titles, and events before we connect real native windows.
 
 ## Current Build Timeline
 
@@ -127,7 +130,7 @@ This is a simple status view for non technical readers.
 | UAPI freeze decision path | Working, with a draft packet and CI checker |
 | Outside walkthrough proof | Ready to collect, with a timing packet, checker, and local rehearsal |
 | Phase 3 handoff | Started at contract level, still waiting on Phase 2 outside review for formal phase close |
-| Desktop GUI path | WIT draft started; runtime and host adapters not implemented yet |
+| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, and draft window model are in place. Real windows are not implemented yet |
 | Mobile host path | Not started in implementation |
 | Packaging and app store style distribution | Not started in implementation |
 
@@ -172,5 +175,6 @@ The main Phase 2 work still open is:
 5. One timed outside developer walkthrough using the packet checker.
 6. Finalize the retrospective and external Phase 2 review packet.
 
-Phase 3 has started carefully with contracts. We should keep it narrow until
-the remaining Phase 2 review work is recorded.
+Phase 3 has started carefully with contracts and a shared draft window model.
+The next useful step is to connect that model to the runtime path, then create
+one real native window on one desktop host before expanding sideways.

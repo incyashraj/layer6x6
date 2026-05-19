@@ -137,6 +137,10 @@ cargo run -p layer36-cli -- manifest capabilities --format json
 
 That JSON includes the app identity, capability counts, each requested
 capability, whether it is a default grant, and whether a launch grant is needed.
+The capability table now includes the first Phase 3 draft names too, such as
+`ui.window:create`, `ui.dialog:*`, `gfx.gpu:basic`, and `audio.capture`.
+The generated Phase 2 UAPI reference stays Phase 2 only, so the CLI reference
+does not pretend GUI calls are implemented before they are.
 
 Phase 3 GUI manifests are also recognized as a draft target:
 

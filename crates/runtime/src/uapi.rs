@@ -155,7 +155,7 @@ pub type Result<T> = std::result::Result<T, UapiError>;
 mod tests {
     use std::collections::BTreeSet;
 
-    use layer36_manifest::supported_capability_specs;
+    use layer36_manifest::supported_phase2_capability_specs;
 
     use super::*;
 
@@ -231,8 +231,7 @@ mod tests {
 
     #[test]
     fn every_supported_capability_has_uapi_call_coverage() {
-        let expected = supported_capability_specs()
-            .iter()
+        let expected = supported_phase2_capability_specs()
             .map(|spec| spec.name())
             .collect::<BTreeSet<_>>();
         let actual = uapi_call_examples()
