@@ -2114,9 +2114,10 @@ Save as `docs/book/src/phase3/retro.md` at the end of Phase 3.
 ### Progress Summary
 
 Phase 3 has started with the first WIT draft, checker, GUI manifest path,
-capability names, shared in-memory UI adapter scaffold, and a runtime-facing UI
-dispatcher. This is not a frozen API and not a working desktop GUI yet. It is
-the contract and runtime boundary foundation for the next host adapter work.
+capability names, shared in-memory UI adapter scaffold, a shared `UiAdapter`
+trait, and a runtime-facing UI dispatcher. This is not a frozen API and not a
+working desktop GUI yet. It is the contract and runtime boundary foundation for
+the next host adapter work.
 
 ### Current Slice Checklist
 
@@ -2128,6 +2129,7 @@ the contract and runtime boundary foundation for the next host adapter work.
 | P3-UCAP-00 | Add first Phase 3 capability names | 2026-05-19 | `ui`, `gfx`, and `audio` capability strings now parse through the manifest and policy layer. |
 | P3-UI-00 | Add shared draft UI adapter model | 2026-05-19 | `adapter-common::ui` tracks draft window IDs, lifecycle, title, size, visibility, redraw events, and validation. |
 | P3-RUNTIME-00 | Add runtime UI dispatcher scaffold | 2026-05-21 | `runtime::phase3_ui` checks UCap before draft window operations and proves clipboard grants fail before unsupported host code. |
+| P3-UI-04A | Add shared `UiAdapter` trait | 2026-05-21 | `adapter-common::ui::UiAdapter` is now the runtime boundary for window lifecycle, redraw, event drain, and draft clipboard behavior. |
 
 ---
 
@@ -2167,6 +2169,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P3-UCAP-00 | Phase 3 capability names | 2026-05-19 | Manifest and policy now understand the first `ui`, `gfx`, and `audio` capability strings. |
 | P3-UI-00 | Shared draft UI adapter model | 2026-05-19 | `adapter-common::ui` tracks draft windows and events without native OS windows yet. |
 | P3-RUNTIME-00 | Runtime UI dispatcher scaffold | 2026-05-21 | `runtime::phase3_ui` gates draft window work through UCap and keeps unsupported clipboard paths permission-checked. |
+| P3-UI-04A | Shared UI adapter trait | 2026-05-21 | `runtime::phase3_ui` now talks to `UiAdapter`, with `DraftUiAdapter` as the current in-memory implementation. |
 
 ---
 

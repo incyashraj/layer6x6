@@ -4,7 +4,10 @@
 //! windows yet. It gives the Linux, macOS, and Windows adapter work a shared
 //! shape for ids, size validation, lifecycle state, and early event routing.
 
-use std::collections::BTreeMap;
+use std::{
+    collections::BTreeMap,
+    sync::{Mutex, MutexGuard},
+};
 
 use thiserror::Error;
 
@@ -99,6 +102,104 @@ pub enum UiEvent {
     RedrawRequested(WindowId),
     Resized { id: WindowId, size: WindowSize },
     TitleChanged { id: WindowId, title: String },
+}
+
+/// Shared host UI adapter contract.
+///
+/// Native adapters on macOS, Windows, and Linux will implement this trait. The
+/// draft adapter below implements the same contract with in-memory state, so
+/// runtime code can be tested before OS windows exist.
+pub trait UiAdapter: Send + Sync {
+    /// Create a host window and return its stable session id.
+    fn create_window(&self, options: WindowOptions) -> Result<WindowId, UiAdapterError>;
+
+    /// Show an existing window.
+    fn show_window(&self, id: WindowId) -> Result<(), UiAdapterError>;
+
+    /// Close an existing window.
+    fn close_window(&self, id: WindowId) -> Result<(), UiAdapterError>;
+
+    /// Change an existing window title.
+    fn set_title(&self, id: WindowId, title: String) -> Result<(), UiAdapterError>;
+
+    /// Change an existing window size.
+    fn set_size(&self, id: WindowId, size: WindowSize) -> Result<(), UiAdapterError>;
+
+    /// Ask the host to redraw a window.
+    fn request_redraw(&self, id: WindowId) -> Result<(), UiAdapterError>;
+
+    /// Return a snapshot of a tracked window.
+    fn window(&self, id: WindowId) -> Result<Option<WindowRecord>, UiAdapterError>;
+
+    /// Drain queued adapter events.
+    fn drain_events(&self) -> Result<Vec<UiEvent>, UiAdapterError>;
+
+    /// Read host clipboard text.
+    fn read_clipboard_text(&self) -> Result<String, UiAdapterError> {
+        Err(UiAdapterError::Unsupported(
+            "clipboard read is not implemented by this UI adapter".to_string(),
+        ))
+    }
+
+    /// Write host clipboard text.
+    fn write_clipboard_text(&self, _text: &str) -> Result<(), UiAdapterError> {
+        Err(UiAdapterError::Unsupported(
+            "clipboard write is not implemented by this UI adapter".to_string(),
+        ))
+    }
+}
+
+/// In-memory implementation of [`UiAdapter`] used while native backends land.
+#[derive(Debug, Default)]
+pub struct DraftUiAdapter {
+    registry: Mutex<DraftWindowRegistry>,
+}
+
+impl DraftUiAdapter {
+    /// Create an empty draft UI adapter.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    fn registry(&self) -> Result<MutexGuard<'_, DraftWindowRegistry>, UiAdapterError> {
+        self.registry
+            .lock()
+            .map_err(|_| UiAdapterError::Internal("draft UI adapter lock is poisoned".to_string()))
+    }
+}
+
+impl UiAdapter for DraftUiAdapter {
+    fn create_window(&self, options: WindowOptions) -> Result<WindowId, UiAdapterError> {
+        Ok(self.registry()?.create_window(options))
+    }
+
+    fn show_window(&self, id: WindowId) -> Result<(), UiAdapterError> {
+        self.registry()?.show_window(id)
+    }
+
+    fn close_window(&self, id: WindowId) -> Result<(), UiAdapterError> {
+        self.registry()?.close_window(id)
+    }
+
+    fn set_title(&self, id: WindowId, title: String) -> Result<(), UiAdapterError> {
+        self.registry()?.set_title(id, title)
+    }
+
+    fn set_size(&self, id: WindowId, size: WindowSize) -> Result<(), UiAdapterError> {
+        self.registry()?.set_size(id, size)
+    }
+
+    fn request_redraw(&self, id: WindowId) -> Result<(), UiAdapterError> {
+        self.registry()?.request_redraw(id)
+    }
+
+    fn window(&self, id: WindowId) -> Result<Option<WindowRecord>, UiAdapterError> {
+        Ok(self.registry()?.window(id).cloned())
+    }
+
+    fn drain_events(&self) -> Result<Vec<UiEvent>, UiAdapterError> {
+        Ok(self.registry()?.drain_events())
+    }
 }
 
 /// Draft in-memory window registry used until OS-backed adapters land.
@@ -221,6 +322,8 @@ pub enum UiAdapterError {
     TitleTooLong,
     #[error("unsupported UI feature: {0}")]
     Unsupported(String),
+    #[error("internal UI adapter error: {0}")]
+    Internal(String),
 }
 
 const MAX_WINDOW_EDGE: u32 = 16_384;
@@ -316,5 +419,50 @@ mod tests {
             WindowOptions::new(" ", WindowSize::new(100, 100).expect("size")),
             Err(UiAdapterError::EmptyTitle)
         );
+    }
+
+    #[test]
+    fn draft_adapter_implements_shared_ui_contract() {
+        let adapter = DraftUiAdapter::new();
+        let size = WindowSize::new(700, 500).expect("size");
+        let id = adapter
+            .create_window(WindowOptions::new("Layer36", size).expect("options"))
+            .expect("create");
+
+        adapter.show_window(id).expect("show");
+        adapter
+            .set_title(id, "Layer36 Preview".to_string())
+            .expect("title");
+        adapter.request_redraw(id).expect("redraw");
+
+        let window = adapter.window(id).expect("window lookup").expect("window");
+        assert_eq!(window.title, "Layer36 Preview");
+        assert!(window.visible);
+        assert_eq!(
+            adapter.drain_events().expect("events"),
+            vec![
+                UiEvent::WindowCreated(id),
+                UiEvent::WindowShown(id),
+                UiEvent::TitleChanged {
+                    id,
+                    title: "Layer36 Preview".to_string(),
+                },
+                UiEvent::RedrawRequested(id),
+            ]
+        );
+    }
+
+    #[test]
+    fn draft_adapter_reports_clipboard_as_unsupported() {
+        let adapter = DraftUiAdapter::new();
+
+        assert!(matches!(
+            adapter.read_clipboard_text(),
+            Err(UiAdapterError::Unsupported(_))
+        ));
+        assert!(matches!(
+            adapter.write_clipboard_text("copied text"),
+            Err(UiAdapterError::Unsupported(_))
+        ));
     }
 }

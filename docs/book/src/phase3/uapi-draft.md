@@ -12,7 +12,8 @@ those requests.
 flowchart LR
     APP["Portable app component"] --> GUI["layer36:app gui world"]
     GUI --> UDISP["Runtime UI dispatcher"]
-    UDISP --> UI["UI<br/>window, tree, events"]
+    UDISP --> ADAPTER["Shared UiAdapter trait"]
+    ADAPTER --> UI["UI<br/>window, tree, events"]
     GUI --> GFX["Graphics<br/>2D canvas, GPU surface"]
     GUI --> AUD["Audio<br/>playback, capture"]
     UI --> HOST["Host adapter"]
@@ -24,7 +25,7 @@ flowchart LR
     classDef draft fill:#fff3bf,stroke:#b7791f,color:#2d2100,stroke-width:2px;
     classDef pending fill:#eeeeee,stroke:#999999,color:#777777,stroke-width:1px;
 
-    class APP,GUI,UDISP draft;
+    class APP,GUI,UDISP,ADAPTER draft;
     class UI,GFX,AUD draft;
     class HOST,OS pending;
 ```
@@ -84,17 +85,19 @@ layer:
 This does not grant real desktop access yet. It means Phase 3 manifests can
 name the same permissions the future runtime will enforce.
 
-The repo also has a small shared UI model now: `adapter-common::ui`. It can
-create draft window records, validate titles and sizes, track show or close
-state, and collect window events. This is an in-memory model for tests and
-adapter design. It is not AppKit, Win32, GTK, or a real event loop yet.
+The repo also has a small shared UI model now: `adapter-common::ui`. It has a
+`UiAdapter` trait and an in-memory `DraftUiAdapter`. The draft adapter can
+create window records, validate titles and sizes, track show or close state,
+and collect window events. This gives the runtime one stable shape to call
+while native adapters are still being built. It is not AppKit, Win32, GTK, or a
+real event loop yet.
 
 The runtime now has a first UI dispatcher scaffold too: `runtime::phase3_ui`.
-It checks the same capability policy before it touches the draft window model.
+It checks the same capability policy before it calls the shared UI adapter.
 Window create, show, resize, redraw, and close all pass through that boundary.
-Clipboard read and write are shaped, but still return unsupported after the
-permission check. That lets us test the security path before native clipboard
-integration exists.
+Clipboard read and write are shaped through the adapter too, but the draft
+implementation still returns unsupported after the permission check. That lets
+us test the security path before native clipboard integration exists.
 
 ## What It Does Not Mean Yet
 

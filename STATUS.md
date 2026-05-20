@@ -3,12 +3,12 @@
 Last updated: 2026-05-21
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `41d9829`
-Working tree at this status update: Phase 3 runtime UI dispatcher slice in progress
+Latest checked completed push before this slice: `07b6f5f`
+Working tree at this status update: Phase 3 shared UI adapter trait slice in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 318
+- Commits after this slice lands: about 319
 - Tracked files after this slice lands: about 320
 - Total tracked lines after this slice lands: about 88,000
 - Rust lines (`.rs`) after this slice lands: about 41,700
@@ -16,10 +16,10 @@ Working tree at this status update: Phase 3 runtime UI dispatcher slice in progr
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`41d9829`) checks:
+Latest completed push (`07b6f5f`) checks:
 
-- CI: success (run `26089710726`)
-- Deploy docs to GitHub Pages: success (run `26089710759`)
+- CI: success (run `26175516096`)
+- Deploy docs to GitHub Pages: success for latest docs commit `3ce18f8` (run `26175411919`)
 
 Manual hosted full CI run `26069665276` passed on commit `3f1a219`.
 Linux, macOS, and Windows full-test lanes all passed. The language-variant,
@@ -69,17 +69,18 @@ Current Phase 3 slice:
   runtime exists
 - first Phase 3 capability names now parse through the existing manifest and
   policy layer: `ui`, `gfx`, and `audio`
-- `adapter-common::ui` now has an in-memory draft window registry for window
-  IDs, title and size validation, show, redraw, close, and event tracking
+- `adapter-common::ui` now has an in-memory draft window registry and a shared
+  `UiAdapter` trait for window IDs, title and size validation, show, redraw,
+  close, events, and draft clipboard behavior
 - `runtime::phase3_ui` now exposes the first runtime-facing UI dispatcher path:
   window create/show/resize/redraw/close goes through UCap before touching the
-  draft registry, and clipboard checks fail at the permission boundary before
-  unsupported host code is reached
+  shared adapter trait, and clipboard checks fail at the permission boundary
+  before unsupported host code is reached
 
 This does not mean desktop UI is implemented yet. It means the first public
 contract for desktop UI work is now in the repo and checked locally. The new UI
-registry and dispatcher are shared models for host adapters to follow before we
-wire real AppKit, Win32, or GTK windows.
+adapter trait, registry, and dispatcher are shared models for host adapters to
+follow before we wire real AppKit, Win32, or GTK windows.
 
 ## 5) What remains to close Phase 2 fully
 
@@ -109,6 +110,7 @@ Top pending items:
 - Wired hosted full CI to publish per-OS language-variant evidence artifacts for easier cross-host comparison
 - Added a hosted full CI compare gate that downloads Linux/macOS/Windows language-variant evidence artifacts and enforces cross-host parity
 - Added a runtime deny-matrix test for non-default capabilities and an explicit net-connect deny test under default grants
+- Added a shared Phase 3 `UiAdapter` trait and a draft in-memory implementation so the runtime no longer depends directly on draft window storage
 - Added a UCap enforcement evidence recorder and cross-host comparator (`record-phase2-ucap-evidence` + `compare-phase2-ucap-evidence`)
 - Wired hosted full CI to upload per-OS UCap evidence artifacts and run a dedicated cross-host compare gate
 - Added a benchmark evidence recorder and comparator (`record-phase2-benchmark-evidence` + `compare-phase2-benchmark-evidence`) to track startup and dispatch performance evidence in one per-host report

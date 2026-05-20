@@ -1,11 +1,11 @@
 //! Phase 3 UI dispatcher scaffold.
 //!
 //! This module is the first runtime-facing Phase 3 UI boundary. It still uses
-//! the shared in-memory draft registry from `adapter-common`; native AppKit,
-//! Win32, and GTK windows come later.
+//! the shared UI adapter trait from `adapter-common`; native AppKit, Win32, and
+//! GTK windows come later.
 
 use layer36_adapter_common::ui::{
-    DraftWindowRegistry, UiAdapterError, UiEvent, WindowId, WindowOptions, WindowRecord, WindowSize,
+    UiAdapter, UiAdapterError, UiEvent, WindowId, WindowOptions, WindowRecord, WindowSize,
 };
 use thiserror::Error;
 
@@ -27,65 +27,65 @@ pub enum UiDispatchError {
 
 pub struct Phase3UiDispatcher<'a> {
     guard: &'a UapiGuard,
-    windows: &'a mut DraftWindowRegistry,
+    adapter: &'a dyn UiAdapter,
 }
 
 impl<'a> Phase3UiDispatcher<'a> {
-    pub fn new(guard: &'a UapiGuard, windows: &'a mut DraftWindowRegistry) -> Self {
-        Self { guard, windows }
+    pub fn new(guard: &'a UapiGuard, adapter: &'a dyn UiAdapter) -> Self {
+        Self { guard, adapter }
     }
 
-    pub fn create_window(&mut self, options: WindowOptions) -> UiDispatchResult<WindowId> {
+    pub fn create_window(&self, options: WindowOptions) -> UiDispatchResult<WindowId> {
         self.check_window_access()?;
-        Ok(self.windows.create_window(options))
+        Ok(self.adapter.create_window(options)?)
     }
 
-    pub fn show_window(&mut self, id: WindowId) -> UiDispatchResult<()> {
+    pub fn show_window(&self, id: WindowId) -> UiDispatchResult<()> {
         self.check_window_access()?;
-        self.windows.show_window(id)?;
+        self.adapter.show_window(id)?;
         Ok(())
     }
 
-    pub fn close_window(&mut self, id: WindowId) -> UiDispatchResult<()> {
+    pub fn close_window(&self, id: WindowId) -> UiDispatchResult<()> {
         self.check_window_access()?;
-        self.windows.close_window(id)?;
+        self.adapter.close_window(id)?;
         Ok(())
     }
 
-    pub fn set_title(&mut self, id: WindowId, title: impl Into<String>) -> UiDispatchResult<()> {
+    pub fn set_title(&self, id: WindowId, title: impl Into<String>) -> UiDispatchResult<()> {
         self.check_window_access()?;
-        self.windows.set_title(id, title)?;
+        self.adapter.set_title(id, title.into())?;
         Ok(())
     }
 
-    pub fn set_size(&mut self, id: WindowId, size: WindowSize) -> UiDispatchResult<()> {
+    pub fn set_size(&self, id: WindowId, size: WindowSize) -> UiDispatchResult<()> {
         self.check_window_access()?;
-        self.windows.set_size(id, size)?;
+        self.adapter.set_size(id, size)?;
         Ok(())
     }
 
-    pub fn request_redraw(&mut self, id: WindowId) -> UiDispatchResult<()> {
+    pub fn request_redraw(&self, id: WindowId) -> UiDispatchResult<()> {
         self.check_window_access()?;
-        self.windows.request_redraw(id)?;
+        self.adapter.request_redraw(id)?;
         Ok(())
     }
 
     pub fn read_clipboard_text(&self) -> UiDispatchResult<String> {
         self.check(&UapiCall::Ui(UiCall::ClipboardRead))?;
-        Err(UiDispatchError::Unsupported)
+        self.adapter.read_clipboard_text().map_err(Into::into)
     }
 
-    pub fn write_clipboard_text(&self, _text: &str) -> UiDispatchResult<()> {
+    pub fn write_clipboard_text(&self, text: &str) -> UiDispatchResult<()> {
         self.check(&UapiCall::Ui(UiCall::ClipboardWrite))?;
-        Err(UiDispatchError::Unsupported)
+        self.adapter.write_clipboard_text(text).map_err(Into::into)
     }
 
-    pub fn window(&self, id: WindowId) -> Option<&WindowRecord> {
-        self.windows.window(id)
+    pub fn window(&self, id: WindowId) -> UiDispatchResult<Option<WindowRecord>> {
+        Ok(self.adapter.window(id)?)
     }
 
-    pub fn drain_events(&mut self) -> Vec<UiEvent> {
-        self.windows.drain_events()
+    pub fn drain_events(&self) -> UiDispatchResult<Vec<UiEvent>> {
+        Ok(self.adapter.drain_events()?)
     }
 
     fn check_window_access(&self) -> UiDispatchResult<()> {
@@ -110,7 +110,7 @@ fn map_ui_policy(err: UapiError) -> UiDispatchError {
 
 #[cfg(test)]
 mod tests {
-    use layer36_adapter_common::ui::{DraftWindowRegistry, UiEvent, WindowOptions, WindowSize};
+    use layer36_adapter_common::ui::{DraftUiAdapter, UiEvent, WindowOptions, WindowSize};
     use layer36_policy::SessionPolicy;
 
     use super::*;
@@ -118,9 +118,9 @@ mod tests {
     #[test]
     fn default_window_grant_creates_and_tracks_draft_window() {
         let guard = UapiGuard::new(SessionPolicy::default());
-        let mut registry = DraftWindowRegistry::default();
+        let adapter = DraftUiAdapter::default();
         let size = WindowSize::new(800, 600).expect("size");
-        let mut dispatcher = Phase3UiDispatcher::new(&guard, &mut registry);
+        let dispatcher = Phase3UiDispatcher::new(&guard, &adapter);
 
         let id = dispatcher
             .create_window(WindowOptions::new("Layer36 Notes", size).expect("options"))
@@ -131,13 +131,13 @@ mod tests {
         dispatcher.request_redraw(id).expect("redraw");
         dispatcher.close_window(id).expect("close window");
 
-        let window = dispatcher.window(id).expect("window");
+        let window = dispatcher.window(id).expect("adapter").expect("window");
         assert_eq!(window.title, "Layer36 Notes");
         assert_eq!(window.size, resized);
         assert!(!window.visible);
         assert!(window.closed);
         assert_eq!(
-            dispatcher.drain_events(),
+            dispatcher.drain_events().expect("events"),
             vec![
                 UiEvent::WindowCreated(id),
                 UiEvent::WindowShown(id),
@@ -151,9 +151,9 @@ mod tests {
     #[test]
     fn window_operations_reuse_adapter_validation() {
         let guard = UapiGuard::new(SessionPolicy::default());
-        let mut registry = DraftWindowRegistry::default();
+        let adapter = DraftUiAdapter::default();
         let size = WindowSize::new(640, 480).expect("size");
-        let mut dispatcher = Phase3UiDispatcher::new(&guard, &mut registry);
+        let dispatcher = Phase3UiDispatcher::new(&guard, &adapter);
 
         let id = dispatcher
             .create_window(WindowOptions::new("Notes", size).expect("options"))
@@ -171,8 +171,8 @@ mod tests {
     #[test]
     fn clipboard_read_denies_before_unsupported_draft_path() {
         let guard = UapiGuard::new(SessionPolicy::default());
-        let mut registry = DraftWindowRegistry::default();
-        let dispatcher = Phase3UiDispatcher::new(&guard, &mut registry);
+        let adapter = DraftUiAdapter::default();
+        let dispatcher = Phase3UiDispatcher::new(&guard, &adapter);
 
         let err = dispatcher
             .read_clipboard_text()
@@ -186,13 +186,16 @@ mod tests {
         let policy =
             SessionPolicy::from_cli_grants(&["ui.clipboard:read".to_string()]).expect("policy");
         let guard = UapiGuard::new(policy);
-        let mut registry = DraftWindowRegistry::default();
-        let dispatcher = Phase3UiDispatcher::new(&guard, &mut registry);
+        let adapter = DraftUiAdapter::default();
+        let dispatcher = Phase3UiDispatcher::new(&guard, &adapter);
 
         let err = dispatcher
             .read_clipboard_text()
             .expect_err("clipboard host adapter is not implemented yet");
 
-        assert!(matches!(err, UiDispatchError::Unsupported));
+        assert!(matches!(
+            err,
+            UiDispatchError::Adapter(UiAdapterError::Unsupported(_))
+        ));
     }
 }

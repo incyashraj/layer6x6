@@ -6,8 +6,8 @@
 > **Name:** Layer36
 > **Development repo:** `incyashraj/layer6x6` while the 6x6 portability matrix is being built.
 > **Tagline:** Write once. Run on everything. Natively.
-> **Current focus:** Phase 2 closeout proof. The UAPI is a freeze candidate,
-> not a final promise, until the decision packet is filled.
+> **Current focus:** Phase 3 desktop UI adapter foundation, while Phase 2 waits
+> for outside review before formal closeout.
 
 ---
 

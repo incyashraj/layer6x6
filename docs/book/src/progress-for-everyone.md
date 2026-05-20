@@ -87,6 +87,9 @@ flowchart LR
 18. The runtime now has a first UI dispatcher scaffold. In simple terms, a
     future window request now has a checked path inside the runtime before any
     native window code is called.
+19. The runtime now talks to a shared UI adapter trait instead of direct draft
+    storage. In simple terms, the plug point for real macOS, Windows, and Linux
+    window adapters is now in place.
 
 ## Current Build Timeline
 
@@ -133,7 +136,7 @@ This is a simple status view for non technical readers.
 | UAPI freeze decision path | Working, with a draft packet and CI checker |
 | Outside walkthrough proof | Ready to collect, with a timing packet, checker, and local rehearsal |
 | Phase 3 handoff | Started at contract level, still waiting on Phase 2 outside review for formal phase close |
-| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, draft window model, and runtime UI dispatcher are in place. Real windows are not implemented yet |
+| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, draft window model, shared UI adapter trait, and runtime UI dispatcher are in place. Real windows are not implemented yet |
 | Mobile host path | Not started in implementation |
 | Packaging and app store style distribution | Not started in implementation |
 

@@ -156,8 +156,9 @@ world = "layer36:app/gui@0.2.0"
 Manifest tools can check and explain this world today. `layer36 run` still exits
 early for it because the window runtime has not been implemented yet.
 Internally, Phase 3 now has a small runtime UI dispatcher scaffold that checks
-window and clipboard permissions before draft UI work. It is not connected to
-real native windows yet.
+window and clipboard permissions before calling a shared UI adapter trait. The
+current adapter is still an in-memory draft adapter, not a real native window
+backend yet.
 
 `layer36 run` also reads `manifest.toml` when it sits next to the `.wasm` file:
 
@@ -242,6 +243,12 @@ The runtime now has the first dispatcher layer too:
 WIT import -> UapiDispatcher -> UapiGuard -> HostAdapter trait -> native OS
 ```
 
+For the Phase 3 UI draft, the shape is:
+
+```text
+GUI app world -> Phase3UiDispatcher -> UapiGuard -> UiAdapter trait -> native OS
+```
+
 The value of this step is that the boundary is testable:
 
 - a denied `fs.open` does not call the file adapter
@@ -255,6 +262,8 @@ The value of this step is that the boundary is testable:
 - policy coverage tests check that every supported capability name has a UAPI
   call mapping and that the current dispatcher adapter surface is reached
   through the policy gate
+- Phase 3 window calls now reach a shared `UiAdapter` trait after UCap checks,
+  while draft clipboard calls still return unsupported after permission checks
 
 The bridge between generated WIT types and dispatcher types now exists too.
 It converts things like `open-mode`, HTTP requests, file stats, locale IDs, and
