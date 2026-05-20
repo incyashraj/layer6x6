@@ -90,6 +90,9 @@ flowchart LR
 19. The runtime now talks to a shared UI adapter trait instead of direct draft
     storage. In simple terms, the plug point for real macOS, Windows, and Linux
     window adapters is now in place.
+20. The macOS, Linux, and Windows adapter crates now each expose that UI plug
+    point. Today it is still headless, but each host crate can run the same
+    blank-window smoke path.
 
 ## Current Build Timeline
 
@@ -136,7 +139,7 @@ This is a simple status view for non technical readers.
 | UAPI freeze decision path | Working, with a draft packet and CI checker |
 | Outside walkthrough proof | Ready to collect, with a timing packet, checker, and local rehearsal |
 | Phase 3 handoff | Started at contract level, still waiting on Phase 2 outside review for formal phase close |
-| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, draft window model, shared UI adapter trait, and runtime UI dispatcher are in place. Real windows are not implemented yet |
+| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, draft window model, shared UI adapter trait, runtime UI dispatcher, and host adapter entry points are in place. Real windows are not implemented yet |
 | Mobile host path | Not started in implementation |
 | Packaging and app store style distribution | Not started in implementation |
 

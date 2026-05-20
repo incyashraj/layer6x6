@@ -157,8 +157,8 @@ Manifest tools can check and explain this world today. `layer36 run` still exits
 early for it because the window runtime has not been implemented yet.
 Internally, Phase 3 now has a small runtime UI dispatcher scaffold that checks
 window and clipboard permissions before calling a shared UI adapter trait. The
-current adapter is still an in-memory draft adapter, not a real native window
-backend yet.
+current macOS, Linux, and Windows adapter entry points still use a headless
+draft backend, not a real native window backend yet.
 
 `layer36 run` also reads `manifest.toml` when it sits next to the `.wasm` file:
 
@@ -264,6 +264,8 @@ The value of this step is that the boundary is testable:
   through the policy gate
 - Phase 3 window calls now reach a shared `UiAdapter` trait after UCap checks,
   while draft clipboard calls still return unsupported after permission checks
+- macOS, Linux, and Windows adapter crates expose headless UI adapter entry
+  points, each with a blank-window smoke test
 
 The bridge between generated WIT types and dispatcher types now exists too.
 It converts things like `open-mode`, HTTP requests, file stats, locale IDs, and

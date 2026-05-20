@@ -37,6 +37,7 @@ The first Phase 3 slice is now in the repo:
 - `adapter-common::ui`, an in-memory draft window registry for IDs, title and size validation, lifecycle state, redraw requests, and events
 - `adapter-common::ui::UiAdapter`, the shared trait that native UI adapters will implement
 - `runtime::phase3_ui`, a runtime dispatcher scaffold that checks UCap before calling the shared UI adapter
+- headless draft UI adapter entry points in the macOS, Linux, and Windows adapter crates, each with a blank-window smoke test
 
 This is a draft contract, not a frozen API. The next work is to add a tiny host
 side prototype that connects this shared model to one real native window,

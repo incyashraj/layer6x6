@@ -7,6 +7,10 @@
 use layer36_adapter_common::{
     locale::{DateStyle, HostLocale, LocaleId, NumberStyle},
     time::HostClock,
+    ui::{
+        DraftUiAdapter, UiAdapter, UiAdapterError, UiEvent, WindowId, WindowOptions, WindowRecord,
+        WindowSize,
+    },
 };
 use std::fs::OpenOptions;
 use std::net::ToSocketAddrs;
@@ -16,6 +20,71 @@ use std::time::Duration;
 
 /// Host family handled by this adapter crate.
 pub const HOST_FAMILY: &str = "windows";
+
+/// Windows Phase 3 UI adapter entry point.
+///
+/// This is still a headless draft adapter. It proves the Windows crate exposes
+/// the same UI contract as macOS and Linux before the winit or Win32 bridge lands.
+#[derive(Debug, Default)]
+pub struct WindowsUiAdapter {
+    draft: DraftUiAdapter,
+}
+
+impl WindowsUiAdapter {
+    /// Create the current Windows UI adapter.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Name the backend used by this adapter build.
+    pub fn backend_name(&self) -> &'static str {
+        "windows-headless-draft"
+    }
+
+    /// Return whether this build creates real native windows.
+    pub fn native_windows_enabled(&self) -> bool {
+        false
+    }
+}
+
+impl UiAdapter for WindowsUiAdapter {
+    fn create_window(&self, options: WindowOptions) -> Result<WindowId, UiAdapterError> {
+        self.draft.create_window(options)
+    }
+
+    fn show_window(&self, id: WindowId) -> Result<(), UiAdapterError> {
+        self.draft.show_window(id)
+    }
+
+    fn close_window(&self, id: WindowId) -> Result<(), UiAdapterError> {
+        self.draft.close_window(id)
+    }
+
+    fn set_title(&self, id: WindowId, title: String) -> Result<(), UiAdapterError> {
+        self.draft.set_title(id, title)
+    }
+
+    fn set_size(&self, id: WindowId, size: WindowSize) -> Result<(), UiAdapterError> {
+        self.draft.set_size(id, size)
+    }
+
+    fn request_redraw(&self, id: WindowId) -> Result<(), UiAdapterError> {
+        self.draft.request_redraw(id)
+    }
+
+    fn window(&self, id: WindowId) -> Result<Option<WindowRecord>, UiAdapterError> {
+        self.draft.window(id)
+    }
+
+    fn drain_events(&self) -> Result<Vec<UiEvent>, UiAdapterError> {
+        self.draft.drain_events()
+    }
+}
+
+/// Build the current Windows UI adapter.
+pub fn discover_ui_adapter() -> WindowsUiAdapter {
+    WindowsUiAdapter::new()
+}
 
 /// Resolve locale and timezone for Windows host runs.
 pub fn discover_locale(
@@ -253,6 +322,33 @@ mod tests {
     #[test]
     fn sleep_hook_accepts_zero_millis() {
         sleep_millis(0);
+    }
+
+    #[test]
+    fn ui_adapter_smoke_creates_blank_draft_window() {
+        let adapter = discover_ui_adapter();
+        let size = WindowSize::new(640, 480).expect("size");
+        let id = adapter
+            .create_window(WindowOptions::new("Layer36 blank window", size).expect("options"))
+            .expect("create window");
+
+        adapter.show_window(id).expect("show");
+        adapter.request_redraw(id).expect("redraw");
+
+        let window = adapter.window(id).expect("lookup").expect("window");
+        assert_eq!(adapter.backend_name(), "windows-headless-draft");
+        assert!(!adapter.native_windows_enabled());
+        assert_eq!(window.title, "Layer36 blank window");
+        assert_eq!(window.size, size);
+        assert!(window.visible);
+        assert_eq!(
+            adapter.drain_events().expect("events"),
+            vec![
+                UiEvent::WindowCreated(id),
+                UiEvent::WindowShown(id),
+                UiEvent::RedrawRequested(id),
+            ]
+        );
     }
 
     #[test]

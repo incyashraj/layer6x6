@@ -9,6 +9,24 @@ const HOST_ADAPTER_CRATES: &[&str] = &[
     "crates/adapter-windows/src/lib.rs",
 ];
 
+const PHASE3_UI_ADAPTERS: &[HostUiAdapter] = &[
+    HostUiAdapter::new(
+        "crates/adapter-linux/src/lib.rs",
+        "LinuxUiAdapter",
+        "linux-headless-draft",
+    ),
+    HostUiAdapter::new(
+        "crates/adapter-macos/src/lib.rs",
+        "MacosUiAdapter",
+        "macos-headless-draft",
+    ),
+    HostUiAdapter::new(
+        "crates/adapter-windows/src/lib.rs",
+        "WindowsUiAdapter",
+        "windows-headless-draft",
+    ),
+];
+
 const RUNTIME_BOUNDARY_CALLS: &[BoundaryCall] = &[
     BoundaryCall::new(
         "discover_host_locale",
@@ -109,7 +127,7 @@ const RUNTIME_BOUNDARY_CALLS: &[BoundaryCall] = &[
 fn main() -> Result<()> {
     let report = check_adapter_boundary()?;
 
-    println!("Layer36 Phase 2 adapter boundary check passed");
+    println!("Layer36 adapter boundary check passed");
     println!("- runtime wrappers: {}", report.runtime_wrappers);
     println!("- adapter crates: {}", report.adapter_crates);
     println!("- filesystem wrappers: {}", report.filesystem_wrappers);
@@ -117,6 +135,7 @@ fn main() -> Result<()> {
     println!("- io wrappers: {}", report.io_wrappers);
     println!("- time wrappers: {}", report.time_wrappers);
     println!("- locale wrappers: {}", report.locale_wrappers);
+    println!("- phase 3 UI adapter crates: {}", report.ui_adapter_crates);
 
     Ok(())
 }
@@ -126,6 +145,27 @@ struct BoundaryCall {
     wrapper_fn: &'static str,
     adapter_fn: &'static str,
     area: BoundaryArea,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct HostUiAdapter {
+    crate_path: &'static str,
+    adapter_type: &'static str,
+    backend_name: &'static str,
+}
+
+impl HostUiAdapter {
+    const fn new(
+        crate_path: &'static str,
+        adapter_type: &'static str,
+        backend_name: &'static str,
+    ) -> Self {
+        Self {
+            crate_path,
+            adapter_type,
+            backend_name,
+        }
+    }
 }
 
 impl BoundaryCall {
@@ -156,6 +196,7 @@ struct BoundaryReport {
     io_wrappers: usize,
     time_wrappers: usize,
     locale_wrappers: usize,
+    ui_adapter_crates: usize,
 }
 
 fn check_adapter_boundary() -> Result<BoundaryReport> {
@@ -193,6 +234,40 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
         }
     }
 
+    for adapter in PHASE3_UI_ADAPTERS {
+        let path = root.join(adapter.crate_path);
+        let source =
+            fs::read_to_string(&path).with_context(|| format!("read {}", path.display()))?;
+        ensure(
+            source.contains(&format!("pub struct {}", adapter.adapter_type)),
+            format!(
+                "{} must expose Phase 3 UI adapter `{}`",
+                adapter.crate_path, adapter.adapter_type
+            ),
+        )?;
+        ensure(
+            source.contains(&format!("impl UiAdapter for {}", adapter.adapter_type)),
+            format!(
+                "{} must implement UiAdapter for `{}`",
+                adapter.crate_path, adapter.adapter_type
+            ),
+        )?;
+        ensure(
+            source.contains("pub fn discover_ui_adapter()"),
+            format!(
+                "{} must expose `discover_ui_adapter` for Phase 3 UI startup",
+                adapter.crate_path
+            ),
+        )?;
+        ensure(
+            source.contains(adapter.backend_name),
+            format!(
+                "{} must name current backend `{}`",
+                adapter.crate_path, adapter.backend_name
+            ),
+        )?;
+    }
+
     Ok(BoundaryReport {
         runtime_wrappers: RUNTIME_BOUNDARY_CALLS.len(),
         adapter_crates: HOST_ADAPTER_CRATES.len(),
@@ -201,6 +276,7 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
         io_wrappers: count_area(BoundaryArea::Io),
         time_wrappers: count_area(BoundaryArea::Time),
         locale_wrappers: count_area(BoundaryArea::Locale),
+        ui_adapter_crates: PHASE3_UI_ADAPTERS.len(),
     })
 }
 

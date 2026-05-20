@@ -99,6 +99,11 @@ Clipboard read and write are shaped through the adapter too, but the draft
 implementation still returns unsupported after the permission check. That lets
 us test the security path before native clipboard integration exists.
 
+The macOS, Linux, and Windows adapter crates also expose Phase 3 UI adapter
+entry points now. Each one currently uses the same headless draft backend and
+has a blank-window smoke test. That means the host crates are wired into the UI
+contract, but they still do not open real OS windows.
+
 ## What It Does Not Mean Yet
 
 This is not a finished desktop UI layer.
@@ -113,7 +118,7 @@ For Layer36, the contract is the platform boundary. If the contract is vague,
 each host adapter will drift. Starting with WIT gives us one shared language for
 the app, runtime, SDKs, and host adapters.
 
-The next proof should be small:
+The next proof should be small and visible:
 
 1. Add a host adapter prototype that can create one real window.
 2. Add a simple event loop.
