@@ -113,6 +113,9 @@ Done now:
   tree and return them by stable widget ID.
 - The runtime dispatcher can ask for a layout snapshot for the widget tree
   stored on a draft window.
+- The layout crate has a first hit-test helper. It can use the layout snapshot
+  to find the deepest widget under a point. Real input events are not wired to
+  it yet.
 - The runtime has a UI dispatcher scaffold.
 - macOS, Linux, and Windows adapters expose headless draft UI entry points.
 - The runtime can choose the current host adapter.
@@ -122,7 +125,7 @@ Pending:
 
 - real native window backend
 - widget tree lowering
-- larger layout style coverage and a large-tree layout benchmark
+- larger layout style coverage and recorded large-tree benchmark results
 - text input and IME
 - accessibility tree
 - `layer36-notes`

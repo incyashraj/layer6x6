@@ -27,6 +27,22 @@ impl LayoutViewport {
     }
 }
 
+/// Logical point used for hit testing.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct LayoutPoint {
+    pub x: f32,
+    pub y: f32,
+}
+
+impl LayoutPoint {
+    /// Create a validated logical point.
+    pub fn new(x: f32, y: f32) -> Result<Self, LayoutError> {
+        validate_finite("point x", x)?;
+        validate_finite("point y", y)?;
+        Ok(Self { x, y })
+    }
+}
+
 /// Computed rectangle in logical pixels.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ComputedRect {
@@ -34,6 +50,16 @@ pub struct ComputedRect {
     pub y: f32,
     pub width: f32,
     pub height: f32,
+}
+
+impl ComputedRect {
+    /// Return whether a point is inside this rectangle.
+    pub fn contains(self, point: LayoutPoint) -> bool {
+        point.x >= self.x
+            && point.y >= self.y
+            && point.x < self.x + self.width
+            && point.y < self.y + self.height
+    }
 }
 
 /// Stable layout result keyed by widget id.
@@ -60,6 +86,14 @@ impl LayoutSnapshot {
     }
 }
 
+/// Hit-test result for a computed layout snapshot.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct HitTestResult {
+    pub widget: WidgetId,
+    pub rect: ComputedRect,
+    pub depth: usize,
+}
+
 /// Errors from the Phase 3 layout wrapper.
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
 pub enum LayoutError {
@@ -79,7 +113,15 @@ pub fn compute_layout(
     let mut taffy = TaffyTree::<()>::new();
     let root = tree.root();
     let mut node_map = BTreeMap::new();
-    let root_node = build_taffy_node(tree, root, viewport, &mut taffy, &mut node_map)?;
+    let child_index = child_index(tree);
+    let root_node = build_taffy_node(
+        tree,
+        root,
+        viewport,
+        &child_index,
+        &mut taffy,
+        &mut node_map,
+    )?;
 
     taffy
         .compute_layout(
@@ -108,21 +150,77 @@ pub fn compute_layout(
     Ok(LayoutSnapshot { root, rects })
 }
 
+/// Return a widget rectangle in root-window coordinates.
+pub fn absolute_rect(
+    tree: &WidgetTree,
+    snapshot: &LayoutSnapshot,
+    widget: WidgetId,
+) -> Option<ComputedRect> {
+    let mut rect = snapshot.rect(widget)?;
+    let mut cursor = tree.node(widget)?.parent;
+    while let Some(parent) = cursor {
+        let parent_rect = snapshot.rect(parent)?;
+        rect.x += parent_rect.x;
+        rect.y += parent_rect.y;
+        cursor = tree.node(parent)?.parent;
+    }
+    Some(rect)
+}
+
+/// Find the deepest widget that contains the point.
+pub fn hit_test(
+    tree: &WidgetTree,
+    snapshot: &LayoutSnapshot,
+    point: LayoutPoint,
+) -> Option<HitTestResult> {
+    let mut best = None;
+    for &widget in snapshot.rects().keys() {
+        let rect = absolute_rect(tree, snapshot, widget)?;
+        if !rect.contains(point) {
+            continue;
+        }
+        let depth = widget_depth(tree, widget)?;
+        let candidate = HitTestResult {
+            widget,
+            rect,
+            depth,
+        };
+        if best.is_none_or(|current: HitTestResult| {
+            candidate.depth > current.depth
+                || (candidate.depth == current.depth && candidate.widget > current.widget)
+        }) {
+            best = Some(candidate);
+        }
+    }
+    best
+}
+
+fn child_index(tree: &WidgetTree) -> BTreeMap<WidgetId, Vec<WidgetId>> {
+    let mut children: BTreeMap<WidgetId, Vec<WidgetId>> = BTreeMap::new();
+    for node in tree.nodes().values() {
+        if let Some(parent) = node.parent {
+            children.entry(parent).or_default().push(node.id);
+        }
+    }
+    children
+}
+
 fn build_taffy_node(
     tree: &WidgetTree,
     widget: WidgetId,
     viewport: LayoutViewport,
+    child_index: &BTreeMap<WidgetId, Vec<WidgetId>>,
     taffy: &mut TaffyTree<()>,
     node_map: &mut BTreeMap<WidgetId, NodeId>,
 ) -> Result<NodeId, LayoutError> {
     let node = tree
         .node(widget)
         .ok_or(LayoutError::MissingWidget { id: widget.get() })?;
-    let children = tree
-        .nodes()
-        .values()
-        .filter(|candidate| candidate.parent == Some(widget))
-        .map(|child| build_taffy_node(tree, child.id, viewport, taffy, node_map))
+    let children = child_index
+        .get(&widget)
+        .into_iter()
+        .flatten()
+        .map(|&child| build_taffy_node(tree, child, viewport, child_index, taffy, node_map))
         .collect::<Result<Vec<_>, _>>()?;
     let style = taffy_style_for(node, widget == tree.root(), viewport);
     let taffy_node = if children.is_empty() {
@@ -178,7 +276,8 @@ fn dimension_from_option(value: Option<f32>) -> Dimension {
 }
 
 fn validate_dimension(field: &'static str, value: f32) -> Result<(), LayoutError> {
-    if !value.is_finite() || value <= 0.0 {
+    validate_finite(field, value)?;
+    if value <= 0.0 {
         return Err(LayoutError::InvalidDimension {
             field,
             value: value.to_string(),
@@ -186,6 +285,27 @@ fn validate_dimension(field: &'static str, value: f32) -> Result<(), LayoutError
     }
 
     Ok(())
+}
+
+fn validate_finite(field: &'static str, value: f32) -> Result<(), LayoutError> {
+    if !value.is_finite() {
+        return Err(LayoutError::InvalidDimension {
+            field,
+            value: value.to_string(),
+        });
+    }
+
+    Ok(())
+}
+
+fn widget_depth(tree: &WidgetTree, widget: WidgetId) -> Option<usize> {
+    let mut depth = 0;
+    let mut cursor = tree.node(widget)?.parent;
+    while let Some(parent) = cursor {
+        depth += 1;
+        cursor = tree.node(parent)?.parent;
+    }
+    Some(depth)
 }
 
 fn map_taffy(err: TaffyError) -> LayoutError {
@@ -327,6 +447,108 @@ mod tests {
         );
     }
 
+    #[test]
+    fn returns_absolute_rects_for_nested_children() {
+        let root = WidgetNode::new(WidgetId::new(1).expect("root"), WidgetKind::Stack);
+        let mut tree = WidgetTree::new(root).expect("tree");
+        let container = WidgetNode::new(WidgetId::new(2).expect("container"), WidgetKind::Stack)
+            .with_parent(tree.root())
+            .with_style(WidgetStyle {
+                width: Some(160.0),
+                height: Some(80.0),
+                padding: 8.0,
+                ..WidgetStyle::default()
+            })
+            .expect("style");
+        tree.upsert(container).expect("container");
+        tree.upsert(fixed_child(
+            3,
+            WidgetId::new(2).expect("container"),
+            100.0,
+            24.0,
+        ))
+        .expect("child");
+
+        let layout = compute_layout(&tree, LayoutViewport::new(300.0, 200.0).expect("viewport"))
+            .expect("layout");
+
+        assert_eq!(
+            absolute_rect(&tree, &layout, WidgetId::new(3).expect("child")),
+            Some(ComputedRect {
+                x: 8.0,
+                y: 8.0,
+                width: 100.0,
+                height: 24.0,
+            })
+        );
+    }
+
+    #[test]
+    fn hit_test_returns_deepest_widget_containing_point() {
+        let root = WidgetNode::new(WidgetId::new(1).expect("root"), WidgetKind::Stack);
+        let mut tree = WidgetTree::new(root).expect("tree");
+        let container = WidgetNode::new(WidgetId::new(2).expect("container"), WidgetKind::Stack)
+            .with_parent(tree.root())
+            .with_style(WidgetStyle {
+                width: Some(160.0),
+                height: Some(80.0),
+                padding: 8.0,
+                ..WidgetStyle::default()
+            })
+            .expect("style");
+        tree.upsert(container).expect("container");
+        tree.upsert(fixed_child(
+            3,
+            WidgetId::new(2).expect("container"),
+            100.0,
+            24.0,
+        ))
+        .expect("child");
+
+        let layout = compute_layout(&tree, LayoutViewport::new(300.0, 200.0).expect("viewport"))
+            .expect("layout");
+        let hit =
+            hit_test(&tree, &layout, LayoutPoint::new(16.0, 16.0).expect("point")).expect("hit");
+
+        assert_eq!(hit.widget, WidgetId::new(3).expect("child"));
+        assert_eq!(hit.depth, 2);
+    }
+
+    #[test]
+    fn hit_test_returns_none_outside_root() {
+        let root = WidgetNode::new(WidgetId::new(1).expect("root"), WidgetKind::Stack);
+        let tree = WidgetTree::new(root).expect("tree");
+        let layout = compute_layout(&tree, LayoutViewport::new(100.0, 100.0).expect("viewport"))
+            .expect("layout");
+
+        assert_eq!(
+            hit_test(
+                &tree,
+                &layout,
+                LayoutPoint::new(120.0, 40.0).expect("point")
+            ),
+            None
+        );
+    }
+
+    #[test]
+    fn computes_100_generated_layout_shapes() {
+        for shape in 0..100 {
+            let tree = generated_tree(shape);
+            let viewport = LayoutViewport::new(
+                240.0 + f32::from(shape % 9) * 13.0,
+                180.0 + f32::from(shape % 7) * 17.0,
+            )
+            .expect("viewport");
+            let layout = compute_layout(&tree, viewport).expect("layout");
+            let root_rect = layout.rect(tree.root()).expect("root rect");
+
+            assert_eq!(layout.rects().len(), tree.nodes().len(), "shape {shape}");
+            assert_eq!(root_rect.width, viewport.width, "shape {shape}");
+            assert_eq!(root_rect.height, viewport.height, "shape {shape}");
+        }
+    }
+
     fn fixed_child(id: u64, parent: WidgetId, width: f32, height: f32) -> WidgetNode {
         WidgetNode::new(WidgetId::new(id).expect("id"), WidgetKind::Text)
             .with_parent(parent)
@@ -346,5 +568,42 @@ mod tests {
                 ..WidgetStyle::default()
             })
             .expect("style")
+    }
+
+    fn generated_tree(shape: u8) -> WidgetTree {
+        let root = WidgetNode::new(WidgetId::new(1).expect("root"), WidgetKind::Stack);
+        let mut tree = WidgetTree::new(root).expect("tree");
+        let node_count = 8 + usize::from(shape % 17);
+        let branch = 2 + u64::from(shape % 4);
+
+        for id in 2..=node_count as u64 {
+            let parent = WidgetId::new(((id - 2) / branch) + 1).expect("parent");
+            let kind = match (id + u64::from(shape)) % 9 {
+                0 => WidgetKind::Stack,
+                1 => WidgetKind::Scroll,
+                2 => WidgetKind::ListView,
+                3 => WidgetKind::Button,
+                4 => WidgetKind::TextField,
+                5 => WidgetKind::TextArea,
+                6 => WidgetKind::Checkbox,
+                7 => WidgetKind::Canvas,
+                _ => WidgetKind::Text,
+            };
+            let style = WidgetStyle {
+                width: ((id + u64::from(shape)) % 3 == 0)
+                    .then_some(40.0 + f32::from((id % 7) as u8) * 11.0),
+                height: ((id + u64::from(shape)) % 4 == 0)
+                    .then_some(20.0 + f32::from((id % 5) as u8) * 7.0),
+                grow: if id % 5 == 0 { 1.0 } else { 0.0 },
+                padding: f32::from(((id + u64::from(shape)) % 3) as u8),
+            };
+            let node = WidgetNode::new(WidgetId::new(id).expect("id"), kind)
+                .with_parent(parent)
+                .with_style(style)
+                .expect("style");
+            tree.upsert(node).expect("node");
+        }
+
+        tree
     }
 }

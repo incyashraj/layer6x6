@@ -274,6 +274,8 @@ The value of this step is that the boundary is testable:
   boundary for set root, upsert node, remove node, and focus node
 - draft layout calls can now turn the stored widget tree into a
   `LayoutSnapshot`, with one logical rectangle per stable widget ID
+- the layout crate can also convert those local rectangles into root-window
+  coordinates and hit-test a point against them, ready for future input routing
 
 The bridge between generated WIT types and dispatcher types now exists too.
 It converts things like `open-mode`, HTTP requests, file stats, locale IDs, and

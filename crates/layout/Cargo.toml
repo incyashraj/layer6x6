@@ -11,3 +11,10 @@ publish = false
 layer36-adapter-common = { path = "../adapter-common", version = "0.1.0-dev" }
 taffy.workspace = true
 thiserror.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "layout"
+harness = false

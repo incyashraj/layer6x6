@@ -39,12 +39,15 @@ The first layout crate exists:
 crates/layout/
 ```
 
-It does four things today:
+It does these things today:
 
 - takes a validated `WidgetTree`
 - maps it into Taffy
 - computes logical rectangles for each `WidgetId`
 - returns a `LayoutSnapshot` keyed by stable widget IDs
+- returns absolute rectangles when code needs root-window coordinates
+- can hit-test a point and return the deepest widget under that point
+- has generated tests for 100 different layout shapes
 
 The runtime can now ask for a layout snapshot for a stored draft widget tree.
 That means the path is already connected to the Phase 3 dispatcher, not only a
@@ -73,10 +76,33 @@ The first style block is intentionally small:
 The first layout pass treats stack-like widgets as vertical flex containers.
 That is enough for early notes app screens and for testing the runtime boundary.
 
+## Hit Testing
+
+Layout rectangles are also the base for input routing. The first helper can take
+a point, walk the computed layout, and return the deepest widget that contains
+that point.
+
+That is still a headless helper. It is not connected to mouse, touch, or pointer
+events yet. The important part is that future input routing will use the same
+rectangles as native widgets and drawn fallback rendering.
+
+## Benchmark Shape
+
+The repo now has a Criterion benchmark target for layout:
+
+```bash
+cargo bench -p layer36-layout --bench layout
+```
+
+It includes 1,000-node and 10,000-node stack-like trees. The benchmark is a
+measurement tool today, not a Phase 3 exit proof yet. Before exit, we still need
+recorded numbers on the target hosts and a pass or fail decision against the
+Phase 3 budget. The first local run shows optimization is still needed before
+the 10,000-node target can be treated as ready.
+
 ## Next Steps
 
 - add more style fields only when the notes app needs them
-- add a benchmark for large widget trees
-- connect layout rectangles to hit testing
+- connect hit testing to real input events
 - connect layout rectangles to accessibility bounds
 - use the same rectangles when native window work starts

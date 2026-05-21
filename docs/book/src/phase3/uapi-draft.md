@@ -133,6 +133,11 @@ after the same UI capability check. This does not draw anything yet. It gives
 native widgets, drawn fallback, hit testing, and accessibility one geometry
 answer to share.
 
+Layout has its first input-facing helper too. The layout crate can hit-test a
+point against the computed rectangles and return the deepest widget under that
+point. That is not connected to native mouse or touch events yet, but it proves
+the geometry path that event routing will use.
+
 ## What It Does Not Mean Yet
 
 This is not a finished desktop UI layer.
@@ -149,9 +154,10 @@ the app, runtime, SDKs, and host adapters.
 
 The next proof should be small and visible:
 
-1. Add more layout coverage and a large-tree benchmark.
+1. Record layout benchmark numbers on the target hosts.
 2. Add a host adapter prototype that can create one real window.
 3. Add a simple event loop.
-4. Add a tiny draw call that paints something visible.
-5. Add a small notes app skeleton that uses the same path.
-6. Keep capability checks at the dispatcher boundary as native code is added.
+4. Connect real input events to layout hit testing.
+5. Add a tiny draw call that paints something visible.
+6. Add a small notes app skeleton that uses the same path.
+7. Keep capability checks at the dispatcher boundary as native code is added.
