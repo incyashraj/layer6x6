@@ -110,6 +110,62 @@ pub struct PointerEvent {
     pub modifiers: Modifiers,
 }
 
+/// Keyboard input event after runtime focus routing.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct KeyEvent {
+    pub window: WindowId,
+    pub widget: Option<WidgetId>,
+    pub key: String,
+    pub pressed: bool,
+    pub modifiers: Modifiers,
+}
+
+impl KeyEvent {
+    /// Create a validated key event.
+    pub fn new(
+        window: WindowId,
+        widget: Option<WidgetId>,
+        key: impl Into<String>,
+        pressed: bool,
+        modifiers: Modifiers,
+    ) -> Result<Self, UiAdapterError> {
+        let key = key.into();
+        validate_key_name(&key)?;
+        Ok(Self {
+            window,
+            widget,
+            key,
+            pressed,
+            modifiers,
+        })
+    }
+}
+
+/// Text input after keyboard layout or IME commit processing.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TextInputEvent {
+    pub window: WindowId,
+    pub widget: Option<WidgetId>,
+    pub text: String,
+}
+
+impl TextInputEvent {
+    /// Create a validated text input event.
+    pub fn new(
+        window: WindowId,
+        widget: Option<WidgetId>,
+        text: impl Into<String>,
+    ) -> Result<Self, UiAdapterError> {
+        let text = text.into();
+        validate_text_input(&text)?;
+        Ok(Self {
+            window,
+            widget,
+            text,
+        })
+    }
+}
+
 /// Options used when creating a window.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WindowOptions {
@@ -364,6 +420,8 @@ pub enum UiEvent {
     WidgetRemoved { window: WindowId, widget: WidgetId },
     FocusChanged { window: WindowId, widget: WidgetId },
     Pointer(PointerEvent),
+    Key(KeyEvent),
+    TextInput(TextInputEvent),
 }
 
 /// Static capability summary for one UI adapter build.
@@ -445,6 +503,12 @@ pub trait UiAdapter: Send + Sync {
 
     /// Queue a routed pointer event.
     fn queue_pointer_event(&self, event: PointerEvent) -> Result<(), UiAdapterError>;
+
+    /// Queue a routed key event.
+    fn queue_key_event(&self, event: KeyEvent) -> Result<(), UiAdapterError>;
+
+    /// Queue committed text input.
+    fn queue_text_input(&self, event: TextInputEvent) -> Result<(), UiAdapterError>;
 
     /// Read host clipboard text.
     fn read_clipboard_text(&self) -> Result<String, UiAdapterError> {
@@ -543,6 +607,14 @@ impl UiAdapter for DraftUiAdapter {
 
     fn queue_pointer_event(&self, event: PointerEvent) -> Result<(), UiAdapterError> {
         self.registry()?.queue_pointer_event(event)
+    }
+
+    fn queue_key_event(&self, event: KeyEvent) -> Result<(), UiAdapterError> {
+        self.registry()?.queue_key_event(event)
+    }
+
+    fn queue_text_input(&self, event: TextInputEvent) -> Result<(), UiAdapterError> {
+        self.registry()?.queue_text_input(event)
     }
 }
 
@@ -718,20 +790,45 @@ impl DraftWindowRegistry {
 
     /// Queue a pointer event after runtime hit testing has assigned a target.
     pub fn queue_pointer_event(&mut self, event: PointerEvent) -> Result<(), UiAdapterError> {
-        self.open_window(event.window)?;
-        if let Some(widget) = event.widget {
-            let tree =
-                self.widget_trees
-                    .get(&event.window)
-                    .ok_or(UiAdapterError::MissingWidgetTree {
-                        window: event.window.get(),
-                    })?;
+        self.validate_event_target(event.window, event.widget)?;
+        self.events.push(UiEvent::Pointer(event));
+        Ok(())
+    }
+
+    /// Queue a key event after runtime focus routing has assigned a target.
+    pub fn queue_key_event(&mut self, event: KeyEvent) -> Result<(), UiAdapterError> {
+        validate_key_name(&event.key)?;
+        self.validate_event_target(event.window, event.widget)?;
+        self.events.push(UiEvent::Key(event));
+        Ok(())
+    }
+
+    /// Queue committed text input after runtime focus routing has assigned a target.
+    pub fn queue_text_input(&mut self, event: TextInputEvent) -> Result<(), UiAdapterError> {
+        validate_text_input(&event.text)?;
+        self.validate_event_target(event.window, event.widget)?;
+        self.events.push(UiEvent::TextInput(event));
+        Ok(())
+    }
+
+    fn validate_event_target(
+        &self,
+        window: WindowId,
+        widget: Option<WidgetId>,
+    ) -> Result<(), UiAdapterError> {
+        self.open_window(window)?;
+        if let Some(widget) = widget {
+            let tree = self
+                .widget_trees
+                .get(&window)
+                .ok_or(UiAdapterError::MissingWidgetTree {
+                    window: window.get(),
+                })?;
             if !tree.nodes.contains_key(&widget) {
                 return Err(UiAdapterError::InvalidWidgetId { id: widget.get() });
             }
         }
 
-        self.events.push(UiEvent::Pointer(event));
         Ok(())
     }
 
@@ -777,6 +874,8 @@ pub enum UiAdapterError {
     CannotRemoveRootWidget { id: u64 },
     #[error("invalid widget style: {0}")]
     InvalidWidgetStyle(String),
+    #[error("invalid input event: {0}")]
+    InvalidInputEvent(String),
     #[error("window {id} is closed")]
     WindowClosed { id: u64 },
     #[error("invalid window size {width}x{height}")]
@@ -794,6 +893,8 @@ pub enum UiAdapterError {
 const MAX_WINDOW_EDGE: u32 = 16_384;
 const MAX_TITLE_CHARS: usize = 512;
 const MAX_WIDGET_TEXT_CHARS: usize = 1_024;
+const MAX_KEY_NAME_CHARS: usize = 128;
+const MAX_TEXT_INPUT_CHARS: usize = 4_096;
 
 fn validate_title(title: &str) -> Result<(), UiAdapterError> {
     if title.trim().is_empty() {
@@ -810,6 +911,41 @@ fn validate_short_text(field: &str, value: &str) -> Result<(), UiAdapterError> {
         return Err(UiAdapterError::InvalidWidgetStyle(format!(
             "{field} is too long"
         )));
+    }
+
+    Ok(())
+}
+
+fn validate_key_name(value: &str) -> Result<(), UiAdapterError> {
+    if value.trim().is_empty() {
+        return Err(UiAdapterError::InvalidInputEvent(
+            "key name is empty".to_string(),
+        ));
+    }
+    if value.chars().count() > MAX_KEY_NAME_CHARS {
+        return Err(UiAdapterError::InvalidInputEvent(
+            "key name is too long".to_string(),
+        ));
+    }
+    if value.chars().any(char::is_control) {
+        return Err(UiAdapterError::InvalidInputEvent(
+            "key name contains control characters".to_string(),
+        ));
+    }
+
+    Ok(())
+}
+
+fn validate_text_input(value: &str) -> Result<(), UiAdapterError> {
+    if value.is_empty() {
+        return Err(UiAdapterError::InvalidInputEvent(
+            "text input is empty".to_string(),
+        ));
+    }
+    if value.chars().count() > MAX_TEXT_INPUT_CHARS {
+        return Err(UiAdapterError::InvalidInputEvent(
+            "text input is too long".to_string(),
+        ));
     }
 
     Ok(())
@@ -1111,6 +1247,86 @@ mod tests {
             }),
             Err(UiAdapterError::InvalidWidgetId { id: 99 })
         );
+    }
+
+    #[test]
+    fn draft_registry_queues_key_and_text_events_for_focused_widget() {
+        let mut registry = DraftWindowRegistry::default();
+        let size = WindowSize::new(800, 600).expect("size");
+        let window = registry.create_window(WindowOptions::new("Notes", size).expect("options"));
+        let root = WidgetNode::new(WidgetId::new(1).expect("root"), WidgetKind::Stack);
+        let input = WidgetNode::new(WidgetId::new(2).expect("input"), WidgetKind::TextField)
+            .with_parent(root.id)
+            .with_label("Title")
+            .expect("label");
+
+        registry.set_root(window, root).expect("root");
+        registry.upsert_node(window, input).expect("input");
+        registry
+            .focus_node(window, WidgetId::new(2).expect("input"))
+            .expect("focus");
+        registry
+            .queue_key_event(
+                KeyEvent::new(
+                    window,
+                    Some(WidgetId::new(2).expect("input")),
+                    "Enter",
+                    true,
+                    Modifiers {
+                        meta: true,
+                        ..Modifiers::default()
+                    },
+                )
+                .expect("key"),
+            )
+            .expect("queue key");
+        registry
+            .queue_text_input(
+                TextInputEvent::new(window, Some(WidgetId::new(2).expect("input")), "hello")
+                    .expect("text"),
+            )
+            .expect("queue text");
+
+        assert_eq!(
+            registry.drain_events().last_chunk::<2>(),
+            Some(&[
+                UiEvent::Key(
+                    KeyEvent::new(
+                        window,
+                        Some(WidgetId::new(2).expect("input")),
+                        "Enter",
+                        true,
+                        Modifiers {
+                            meta: true,
+                            ..Modifiers::default()
+                        },
+                    )
+                    .expect("key")
+                ),
+                UiEvent::TextInput(
+                    TextInputEvent::new(window, Some(WidgetId::new(2).expect("input")), "hello")
+                        .expect("text"),
+                ),
+            ])
+        );
+    }
+
+    #[test]
+    fn input_event_constructors_reject_bad_shapes() {
+        let window = WindowId(1);
+
+        assert!(matches!(
+            KeyEvent::new(window, None, "", true, Modifiers::default()),
+            Err(UiAdapterError::InvalidInputEvent(_))
+        ));
+        assert!(matches!(
+            KeyEvent::new(window, None, "A\nB", true, Modifiers::default()),
+            Err(UiAdapterError::InvalidInputEvent(_))
+        ));
+        assert!(matches!(
+            TextInputEvent::new(window, None, ""),
+            Err(UiAdapterError::InvalidInputEvent(_))
+        ));
     }
 
     #[test]

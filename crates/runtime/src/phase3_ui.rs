@@ -5,8 +5,9 @@
 //! GTK windows come later.
 
 use layer36_adapter_common::ui::{
-    Modifiers, PointerButton, PointerEvent, UiAdapter, UiAdapterError, UiAdapterInfo, UiEvent,
-    WidgetId, WidgetNode, WidgetTree, WindowId, WindowOptions, WindowRecord, WindowSize,
+    KeyEvent, Modifiers, PointerButton, PointerEvent, TextInputEvent, UiAdapter, UiAdapterError,
+    UiAdapterInfo, UiEvent, WidgetId, WidgetNode, WidgetTree, WindowId, WindowOptions,
+    WindowRecord, WindowSize,
 };
 use layer36_layout::{
     compute_layout, hit_test, LayoutPoint, LayoutSnapshot, LayoutViewport, PreparedLayoutTree,
@@ -45,6 +46,20 @@ pub struct PointerRouteRequest {
     pub button: Option<PointerButton>,
     pub pressed: bool,
     pub modifiers: Modifiers,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct KeyRouteRequest {
+    pub window: WindowId,
+    pub key: String,
+    pub pressed: bool,
+    pub modifiers: Modifiers,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TextInputRouteRequest {
+    pub window: WindowId,
+    pub text: String,
 }
 
 /// Owns the Phase 3 UI guard and host adapter for one runtime session.
@@ -220,6 +235,31 @@ impl<'a> Phase3UiDispatcher<'a> {
             modifiers: request.modifiers,
         })?;
 
+        Ok(widget)
+    }
+
+    pub fn route_key_event(&self, request: KeyRouteRequest) -> UiDispatchResult<Option<WidgetId>> {
+        self.check_window_access()?;
+        let widget = self.adapter.focused_widget(request.window)?;
+        let event = KeyEvent::new(
+            request.window,
+            widget,
+            request.key,
+            request.pressed,
+            request.modifiers,
+        )?;
+        self.adapter.queue_key_event(event)?;
+        Ok(widget)
+    }
+
+    pub fn route_text_input(
+        &self,
+        request: TextInputRouteRequest,
+    ) -> UiDispatchResult<Option<WidgetId>> {
+        self.check_window_access()?;
+        let widget = self.adapter.focused_widget(request.window)?;
+        let event = TextInputEvent::new(request.window, widget, request.text)?;
+        self.adapter.queue_text_input(event)?;
         Ok(widget)
     }
 
@@ -646,6 +686,140 @@ mod tests {
                 },
             }))
         );
+    }
+
+    #[test]
+    fn routes_key_and_text_input_to_focused_widget() {
+        let guard = UapiGuard::new(SessionPolicy::default());
+        let adapter = DraftUiAdapter::default();
+        let dispatcher = Phase3UiDispatcher::new(&guard, &adapter);
+        let window = dispatcher
+            .create_window(
+                WindowOptions::new("Notes", WindowSize::new(300, 200).expect("window size"))
+                    .expect("options"),
+            )
+            .expect("create window");
+        let root = WidgetNode::new(WidgetId::new(1).expect("root"), WidgetKind::Stack);
+        let title = WidgetNode::new(WidgetId::new(2).expect("title"), WidgetKind::TextField)
+            .with_parent(root.id)
+            .with_label("Title")
+            .expect("label");
+
+        dispatcher.set_root(window, root).expect("root");
+        dispatcher.upsert_node(window, title).expect("title");
+        dispatcher
+            .focus_node(window, WidgetId::new(2).expect("title"))
+            .expect("focus");
+
+        let key_target = dispatcher
+            .route_key_event(KeyRouteRequest {
+                window,
+                key: "Enter".to_string(),
+                pressed: true,
+                modifiers: Modifiers {
+                    meta: true,
+                    ..Modifiers::default()
+                },
+            })
+            .expect("key route");
+        let text_target = dispatcher
+            .route_text_input(TextInputRouteRequest {
+                window,
+                text: "hello".to_string(),
+            })
+            .expect("text route");
+
+        assert_eq!(key_target, Some(WidgetId::new(2).expect("title")));
+        assert_eq!(text_target, Some(WidgetId::new(2).expect("title")));
+        assert_eq!(
+            dispatcher.drain_events().expect("events").last_chunk::<2>(),
+            Some(&[
+                UiEvent::Key(
+                    KeyEvent::new(
+                        window,
+                        Some(WidgetId::new(2).expect("title")),
+                        "Enter",
+                        true,
+                        Modifiers {
+                            meta: true,
+                            ..Modifiers::default()
+                        },
+                    )
+                    .expect("key")
+                ),
+                UiEvent::TextInput(
+                    TextInputEvent::new(window, Some(WidgetId::new(2).expect("title")), "hello")
+                        .expect("text"),
+                ),
+            ])
+        );
+    }
+
+    #[test]
+    fn routes_key_event_without_widget_when_no_focus_exists() {
+        let guard = UapiGuard::new(SessionPolicy::default());
+        let adapter = DraftUiAdapter::default();
+        let dispatcher = Phase3UiDispatcher::new(&guard, &adapter);
+        let window = dispatcher
+            .create_window(
+                WindowOptions::new("Notes", WindowSize::new(300, 200).expect("window size"))
+                    .expect("options"),
+            )
+            .expect("create window");
+
+        let target = dispatcher
+            .route_key_event(KeyRouteRequest {
+                window,
+                key: "Escape".to_string(),
+                pressed: true,
+                modifiers: Modifiers::default(),
+            })
+            .expect("key route");
+
+        assert_eq!(target, None);
+        assert_eq!(
+            dispatcher.drain_events().expect("events").last(),
+            Some(&UiEvent::Key(
+                KeyEvent::new(window, None, "Escape", true, Modifiers::default()).expect("key")
+            ))
+        );
+    }
+
+    #[test]
+    fn key_and_text_routes_reuse_adapter_validation() {
+        let guard = UapiGuard::new(SessionPolicy::default());
+        let adapter = DraftUiAdapter::default();
+        let dispatcher = Phase3UiDispatcher::new(&guard, &adapter);
+        let window = dispatcher
+            .create_window(
+                WindowOptions::new("Notes", WindowSize::new(300, 200).expect("window size"))
+                    .expect("options"),
+            )
+            .expect("create window");
+
+        let key_err = dispatcher
+            .route_key_event(KeyRouteRequest {
+                window,
+                key: "\n".to_string(),
+                pressed: true,
+                modifiers: Modifiers::default(),
+            })
+            .expect_err("bad key");
+        let text_err = dispatcher
+            .route_text_input(TextInputRouteRequest {
+                window,
+                text: String::new(),
+            })
+            .expect_err("bad text");
+
+        assert!(matches!(
+            key_err,
+            UiDispatchError::Adapter(UiAdapterError::InvalidInputEvent(_))
+        ));
+        assert!(matches!(
+            text_err,
+            UiDispatchError::Adapter(UiAdapterError::InvalidInputEvent(_))
+        ));
     }
 
     #[test]

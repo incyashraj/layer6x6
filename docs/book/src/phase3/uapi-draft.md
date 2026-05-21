@@ -145,6 +145,12 @@ takes a window, viewport, logical x and y, button state, and modifiers, then
 queues a pointer event with the widget ID if a hit was found. This is still not
 a native mouse or touch event loop, but the routing shape is now in code.
 
+Keyboard and text input have a draft route too. The runtime can take a key name,
+button state, and modifiers, look up the window's focused widget, and queue a
+portable key event. It can also queue committed text input for that same focused
+widget. This is not IME support yet. It is the route that native keyboard and
+IME commit events will use.
+
 ## What It Does Not Mean Yet
 
 This is not a finished desktop UI layer.
@@ -164,7 +170,7 @@ The next proof should be small and visible:
 1. Record prepared and cold layout benchmark numbers on the target hosts.
 2. Add a host adapter prototype that can create one real window.
 3. Add a simple event loop.
-4. Connect real host input events to the draft pointer route.
+4. Connect real host input events to the draft pointer, key, and text routes.
 5. Add a tiny draw call that paints something visible.
 6. Add a small notes app skeleton that uses the same path.
 7. Keep capability checks at the dispatcher boundary as native code is added.

@@ -263,6 +263,8 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
             "fn focus_node(&self, window: WindowId, widget: WidgetId)",
             "fn widget_tree(&self, window: WindowId)",
             "fn queue_pointer_event(&self, event: PointerEvent)",
+            "fn queue_key_event(&self, event: KeyEvent)",
+            "fn queue_text_input(&self, event: TextInputEvent)",
         ] {
             ensure(
                 source.contains(method),

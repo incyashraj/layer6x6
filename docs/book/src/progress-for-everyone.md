@@ -123,6 +123,10 @@ flowchart LR
     pointer position, ask layout which widget is under it, and queue an event
     with that widget ID. Real native mouse and touch events are still pending,
     but the runtime route they will use now exists.
+29. Keyboard and text routing have started too. In simple terms, Layer36 can
+    now send a key press or committed typed text to the focused widget. Full
+    native keyboard handling and IME composition are still pending, but the
+    runtime route is in place.
 
 ## Current Build Timeline
 

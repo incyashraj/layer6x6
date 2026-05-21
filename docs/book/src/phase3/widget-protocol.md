@@ -97,8 +97,9 @@ sequenceDiagram
 The first code path already handles draft window lifecycle events. It also has
 a routed pointer event path now: the runtime can take a logical pointer
 position, run layout hit testing, and queue an event with the target widget ID.
-The next steps are a real native window, a host event loop, then a tiny widget
-tree with text and a button.
+It also has key and text input routing through the focused widget. The next
+steps are a real native window, a host event loop, then a tiny widget tree with
+text and a button.
 
 ## Current Status
 
@@ -122,6 +123,9 @@ Done now:
 - The runtime can queue a routed pointer event after hit testing, so a future
   native mouse or touch event can already become a stable Layer36 event with a
   window ID and optional widget ID.
+- The runtime can queue routed key events and committed text input for the
+  focused widget, which gives native keyboard and IME commit events a stable
+  place to land later.
 - The runtime has a UI dispatcher scaffold.
 - macOS, Linux, and Windows adapters expose headless draft UI entry points.
 - The runtime can choose the current host adapter.
@@ -130,10 +134,10 @@ Done now:
 Pending:
 
 - real native window backend
-- host event loop that feeds real pointer events into the route
+- host event loop that feeds real pointer, key, and text events into the routes
 - widget tree lowering
 - larger layout style coverage and recorded large-tree benchmark results on all target hosts
-- text input and IME
+- IME composition events
 - accessibility tree
 - `layer36-notes`
 

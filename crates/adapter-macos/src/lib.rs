@@ -7,8 +7,9 @@ use layer36_adapter_common::{
     locale::{DateStyle, HostLocale, LocaleId, NumberStyle},
     time::HostClock,
     ui::{
-        DraftUiAdapter, PointerEvent, UiAdapter, UiAdapterError, UiAdapterInfo, UiEvent, WidgetId,
-        WidgetNode, WidgetTree, WindowId, WindowOptions, WindowRecord, WindowSize,
+        DraftUiAdapter, KeyEvent, PointerEvent, TextInputEvent, UiAdapter, UiAdapterError,
+        UiAdapterInfo, UiEvent, WidgetId, WidgetNode, WidgetTree, WindowId, WindowOptions,
+        WindowRecord, WindowSize,
     },
 };
 use std::fs::OpenOptions;
@@ -114,6 +115,14 @@ impl UiAdapter for MacosUiAdapter {
 
     fn queue_pointer_event(&self, event: PointerEvent) -> Result<(), UiAdapterError> {
         self.draft.queue_pointer_event(event)
+    }
+
+    fn queue_key_event(&self, event: KeyEvent) -> Result<(), UiAdapterError> {
+        self.draft.queue_key_event(event)
+    }
+
+    fn queue_text_input(&self, event: TextInputEvent) -> Result<(), UiAdapterError> {
+        self.draft.queue_text_input(event)
     }
 }
 

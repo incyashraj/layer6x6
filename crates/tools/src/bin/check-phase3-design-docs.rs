@@ -36,6 +36,7 @@ fn main() -> Result<()> {
             "Drawn fallback",
             "Current Status",
             "routed pointer event",
+            "routed key events",
             "real native window backend",
             "layer36-notes",
         ],
