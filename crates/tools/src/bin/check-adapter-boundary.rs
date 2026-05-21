@@ -256,6 +256,21 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
             source.contains("fn info(&self) -> UiAdapterInfo"),
             format!("{} must report Phase 3 UI adapter info", adapter.crate_path),
         )?;
+        for method in [
+            "fn set_root(&self, window: WindowId, root: WidgetNode)",
+            "fn upsert_node(&self, window: WindowId, node: WidgetNode)",
+            "fn remove_node(&self, window: WindowId, widget: WidgetId)",
+            "fn focus_node(&self, window: WindowId, widget: WidgetId)",
+            "fn widget_tree(&self, window: WindowId)",
+        ] {
+            ensure(
+                source.contains(method),
+                format!(
+                    "{} must expose Phase 3 widget-tree adapter method `{method}`",
+                    adapter.crate_path
+                ),
+            )?;
+        }
         ensure(
             source.contains("pub fn discover_ui_adapter()"),
             format!(

@@ -2116,9 +2116,10 @@ Save as `docs/book/src/phase3/retro.md` at the end of Phase 3.
 Phase 3 has started with the first WIT draft, checker, GUI manifest path,
 capability names, shared in-memory UI adapter scaffold, a shared `UiAdapter`
 trait, host-crate UI adapter entry points, runtime host-adapter discovery, a
-runtime-facing UI dispatcher, and the first shared widget tree model. ADR-0013
-and RFC-0003 now record the widget lowering rule before native widget work
-depends on it. This is not a frozen API and not a working
+runtime-facing UI dispatcher, the first shared widget tree model, and draft
+runtime/widget-tree dispatch. ADR-0013 and RFC-0003 now record the widget
+lowering rule before native widget work depends on it. This is not a frozen API
+and not a working
 desktop GUI yet. It is the contract and runtime boundary foundation for the
 next host adapter work.
 
@@ -2137,6 +2138,7 @@ next host adapter work.
 | P3-RUNTIME-01 | Discover host UI adapter from runtime | 2026-05-21 | `Phase3UiRuntime` owns the UCap guard and selected host UI adapter so the dispatcher can run through the current OS entry point. |
 | P3-UI-01A | Draft widget protocol decision docs | 2026-05-21 | ADR-0013, RFC-0003, and the mdBook widget protocol page record native widget lowering plus drawn fallback rules. |
 | P3-UI-01B | Add shared widget tree model | 2026-05-21 | `adapter-common::ui` now has `WidgetId`, `WidgetKind`, `WidgetNode`, `WidgetStyle`, and `WidgetTree` with parent-link and style validation. |
+| P3-RUNTIME-02 | Add draft widget-tree dispatcher path | 2026-05-21 | `UiAdapter` and `Phase3UiDispatcher` now support set root, upsert, remove, focus, tree lookup, and focused-widget lookup through the same UCap boundary. |
 
 ---
 
@@ -2181,6 +2183,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P3-RUNTIME-01 | Runtime host UI adapter discovery | 2026-05-21 | `Phase3UiRuntime::with_host_adapter` selects the current host adapter and exposes adapter capability info. |
 | P3-UI-01A | Widget protocol decision docs | 2026-05-21 | Added ADR-0013, RFC-0003, an mdBook widget protocol page, and a design-doc checker. |
 | P3-UI-01B | Shared widget tree model | 2026-05-21 | Added stable widget IDs, first widget kind enum, style hints, labels, role hints, and parent validation in `adapter-common::ui`. |
+| P3-RUNTIME-02 | Draft widget-tree dispatch path | 2026-05-21 | Added draft widget-tree operations to `UiAdapter`, the headless host adapters, and `Phase3UiDispatcher`, with adapter-boundary checks. |
 
 ---
 
@@ -2189,7 +2192,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
 | P3-UI-01 | Widget protocol design RFC | 2026-05-19 | Draft written; needs review before the rule is treated as accepted. |
-| P3-UI-04 | Window + event loop abstractions | 2026-05-19 | Shared trait, host entry points, and runtime discovery exist; next step is one real native window backend. |
+| P3-UI-04 | Window + event loop abstractions | 2026-05-19 | Shared trait, widget-tree dispatch, host entry points, and runtime discovery exist; next step is one real native window backend. |
 
 ---
 
@@ -2227,6 +2230,9 @@ _ADRs 0017–0020 to be determined during Phase 3 work._
 - 2026-05-21: Added the first shared widget tree model in `adapter-common`.
   This gives layout and native lowering a local Rust type path before real host
   widgets are wired.
+- 2026-05-21: Extended the runtime and headless host adapters with draft
+  widget-tree operations. The UI path can now set a root node, update child
+  nodes, remove nodes, and move focus before native widgets exist.
 
 ---
 

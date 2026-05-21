@@ -7,8 +7,8 @@ use layer36_adapter_common::{
     locale::{DateStyle, HostLocale, LocaleId, NumberStyle},
     time::HostClock,
     ui::{
-        DraftUiAdapter, UiAdapter, UiAdapterError, UiAdapterInfo, UiEvent, WindowId, WindowOptions,
-        WindowRecord, WindowSize,
+        DraftUiAdapter, UiAdapter, UiAdapterError, UiAdapterInfo, UiEvent, WidgetId, WidgetNode,
+        WidgetTree, WindowId, WindowOptions, WindowRecord, WindowSize,
     },
 };
 use std::fs::OpenOptions;
@@ -80,8 +80,32 @@ impl UiAdapter for MacosUiAdapter {
         self.draft.request_redraw(id)
     }
 
+    fn set_root(&self, window: WindowId, root: WidgetNode) -> Result<(), UiAdapterError> {
+        self.draft.set_root(window, root)
+    }
+
+    fn upsert_node(&self, window: WindowId, node: WidgetNode) -> Result<(), UiAdapterError> {
+        self.draft.upsert_node(window, node)
+    }
+
+    fn remove_node(&self, window: WindowId, widget: WidgetId) -> Result<(), UiAdapterError> {
+        self.draft.remove_node(window, widget)
+    }
+
+    fn focus_node(&self, window: WindowId, widget: WidgetId) -> Result<(), UiAdapterError> {
+        self.draft.focus_node(window, widget)
+    }
+
     fn window(&self, id: WindowId) -> Result<Option<WindowRecord>, UiAdapterError> {
         self.draft.window(id)
+    }
+
+    fn widget_tree(&self, window: WindowId) -> Result<Option<WidgetTree>, UiAdapterError> {
+        self.draft.widget_tree(window)
+    }
+
+    fn focused_widget(&self, window: WindowId) -> Result<Option<WidgetId>, UiAdapterError> {
+        self.draft.focused_widget(window)
     }
 
     fn drain_events(&self) -> Result<Vec<UiEvent>, UiAdapterError> {

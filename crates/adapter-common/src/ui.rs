@@ -257,6 +257,9 @@ impl WidgetTree {
             id: node.id.get(),
             parent: 0,
         })?;
+        if parent == node.id {
+            return Err(UiAdapterError::WidgetParentCycle { id: node.id.get() });
+        }
         if !self.nodes.contains_key(&parent) {
             return Err(UiAdapterError::MissingWidgetParent {
                 id: node.id.get(),
@@ -268,6 +271,35 @@ impl WidgetTree {
         node.style = node.style.validate()?;
         self.nodes.insert(node.id, node);
         Ok(())
+    }
+
+    /// Remove a widget and all descendants from the tree.
+    pub fn remove(&mut self, id: WidgetId) -> Result<Vec<WidgetId>, UiAdapterError> {
+        if id == self.root {
+            return Err(UiAdapterError::CannotRemoveRootWidget { id: id.get() });
+        }
+        if !self.nodes.contains_key(&id) {
+            return Err(UiAdapterError::InvalidWidgetId { id: id.get() });
+        }
+
+        let mut removed = vec![id];
+        let mut cursor = 0;
+        while let Some(parent) = removed.get(cursor).copied() {
+            let children = self
+                .nodes
+                .values()
+                .filter(|node| node.parent == Some(parent))
+                .map(|node| node.id)
+                .collect::<Vec<_>>();
+            removed.extend(children);
+            cursor += 1;
+        }
+
+        for id in &removed {
+            self.nodes.remove(id);
+        }
+
+        Ok(removed)
     }
 
     /// Return one widget node.
@@ -290,6 +322,10 @@ pub enum UiEvent {
     RedrawRequested(WindowId),
     Resized { id: WindowId, size: WindowSize },
     TitleChanged { id: WindowId, title: String },
+    WidgetRootSet { window: WindowId, root: WidgetId },
+    WidgetUpdated { window: WindowId, widget: WidgetId },
+    WidgetRemoved { window: WindowId, widget: WidgetId },
+    FocusChanged { window: WindowId, widget: WidgetId },
 }
 
 /// Static capability summary for one UI adapter build.
@@ -345,8 +381,26 @@ pub trait UiAdapter: Send + Sync {
     /// Ask the host to redraw a window.
     fn request_redraw(&self, id: WindowId) -> Result<(), UiAdapterError>;
 
+    /// Set or replace the root widget tree for a window.
+    fn set_root(&self, window: WindowId, root: WidgetNode) -> Result<(), UiAdapterError>;
+
+    /// Insert or update a widget node for a window.
+    fn upsert_node(&self, window: WindowId, node: WidgetNode) -> Result<(), UiAdapterError>;
+
+    /// Remove a widget node and its descendants.
+    fn remove_node(&self, window: WindowId, widget: WidgetId) -> Result<(), UiAdapterError>;
+
+    /// Move focus to a widget node.
+    fn focus_node(&self, window: WindowId, widget: WidgetId) -> Result<(), UiAdapterError>;
+
     /// Return a snapshot of a tracked window.
     fn window(&self, id: WindowId) -> Result<Option<WindowRecord>, UiAdapterError>;
+
+    /// Return a snapshot of a window's widget tree.
+    fn widget_tree(&self, window: WindowId) -> Result<Option<WidgetTree>, UiAdapterError>;
+
+    /// Return the focused widget for a window.
+    fn focused_widget(&self, window: WindowId) -> Result<Option<WidgetId>, UiAdapterError>;
 
     /// Drain queued adapter events.
     fn drain_events(&self) -> Result<Vec<UiEvent>, UiAdapterError>;
@@ -414,8 +468,32 @@ impl UiAdapter for DraftUiAdapter {
         self.registry()?.request_redraw(id)
     }
 
+    fn set_root(&self, window: WindowId, root: WidgetNode) -> Result<(), UiAdapterError> {
+        self.registry()?.set_root(window, root)
+    }
+
+    fn upsert_node(&self, window: WindowId, node: WidgetNode) -> Result<(), UiAdapterError> {
+        self.registry()?.upsert_node(window, node)
+    }
+
+    fn remove_node(&self, window: WindowId, widget: WidgetId) -> Result<(), UiAdapterError> {
+        self.registry()?.remove_node(window, widget)
+    }
+
+    fn focus_node(&self, window: WindowId, widget: WidgetId) -> Result<(), UiAdapterError> {
+        self.registry()?.focus_node(window, widget)
+    }
+
     fn window(&self, id: WindowId) -> Result<Option<WindowRecord>, UiAdapterError> {
         Ok(self.registry()?.window(id).cloned())
+    }
+
+    fn widget_tree(&self, window: WindowId) -> Result<Option<WidgetTree>, UiAdapterError> {
+        Ok(self.registry()?.widget_tree(window).cloned())
+    }
+
+    fn focused_widget(&self, window: WindowId) -> Result<Option<WidgetId>, UiAdapterError> {
+        self.registry()?.focused_widget(window)
     }
 
     fn drain_events(&self) -> Result<Vec<UiEvent>, UiAdapterError> {
@@ -428,6 +506,8 @@ impl UiAdapter for DraftUiAdapter {
 pub struct DraftWindowRegistry {
     next_id: u64,
     windows: BTreeMap<WindowId, WindowRecord>,
+    widget_trees: BTreeMap<WindowId, WidgetTree>,
+    focused_widgets: BTreeMap<WindowId, WidgetId>,
     events: Vec<UiEvent>,
 }
 
@@ -462,6 +542,8 @@ impl DraftWindowRegistry {
         let window = self.open_window_mut(id)?;
         window.closed = true;
         window.visible = false;
+        self.widget_trees.remove(&id);
+        self.focused_widgets.remove(&id);
         self.events.push(UiEvent::WindowClosed(id));
         Ok(())
     }
@@ -495,9 +577,93 @@ impl DraftWindowRegistry {
         Ok(())
     }
 
+    /// Set or replace a window's root widget tree.
+    pub fn set_root(&mut self, window: WindowId, root: WidgetNode) -> Result<(), UiAdapterError> {
+        self.open_window(window)?;
+        let tree = WidgetTree::new(root)?;
+        let root = tree.root();
+        self.widget_trees.insert(window, tree);
+        self.focused_widgets.remove(&window);
+        self.events.push(UiEvent::WidgetRootSet { window, root });
+        Ok(())
+    }
+
+    /// Insert or update one node in a window's widget tree.
+    pub fn upsert_node(
+        &mut self,
+        window: WindowId,
+        node: WidgetNode,
+    ) -> Result<(), UiAdapterError> {
+        self.open_window(window)?;
+        let widget = node.id;
+        let tree = self
+            .widget_trees
+            .get_mut(&window)
+            .ok_or(UiAdapterError::MissingWidgetTree {
+                window: window.get(),
+            })?;
+        tree.upsert(node)?;
+        self.events.push(UiEvent::WidgetUpdated { window, widget });
+        Ok(())
+    }
+
+    /// Remove one node and its descendants from a window's widget tree.
+    pub fn remove_node(
+        &mut self,
+        window: WindowId,
+        widget: WidgetId,
+    ) -> Result<(), UiAdapterError> {
+        self.open_window(window)?;
+        let tree = self
+            .widget_trees
+            .get_mut(&window)
+            .ok_or(UiAdapterError::MissingWidgetTree {
+                window: window.get(),
+            })?;
+        let removed = tree.remove(widget)?;
+        if self
+            .focused_widgets
+            .get(&window)
+            .is_some_and(|focused| removed.contains(focused))
+        {
+            self.focused_widgets.remove(&window);
+        }
+        self.events.push(UiEvent::WidgetRemoved { window, widget });
+        Ok(())
+    }
+
+    /// Move focus to a widget in a window's widget tree.
+    pub fn focus_node(&mut self, window: WindowId, widget: WidgetId) -> Result<(), UiAdapterError> {
+        self.open_window(window)?;
+        let tree = self
+            .widget_trees
+            .get(&window)
+            .ok_or(UiAdapterError::MissingWidgetTree {
+                window: window.get(),
+            })?;
+        if !tree.nodes.contains_key(&widget) {
+            return Err(UiAdapterError::InvalidWidgetId { id: widget.get() });
+        }
+
+        self.focused_widgets.insert(window, widget);
+        self.events.push(UiEvent::FocusChanged { window, widget });
+        Ok(())
+    }
+
     /// Read one window record.
     pub fn window(&self, id: WindowId) -> Option<&WindowRecord> {
         self.windows.get(&id)
+    }
+
+    /// Read a window's widget tree.
+    pub fn widget_tree(&self, window: WindowId) -> Option<&WidgetTree> {
+        self.widget_trees.get(&window)
+    }
+
+    /// Read a window's focused widget.
+    pub fn focused_widget(&self, window: WindowId) -> Result<Option<WidgetId>, UiAdapterError> {
+        self.open_window(window)?;
+        Ok(self.focused_widgets.get(&window).copied())
     }
 
     /// Drain queued draft events.
@@ -539,6 +705,12 @@ pub enum UiAdapterError {
     DuplicateWidget { id: u64 },
     #[error("widget {id} references missing parent {parent}")]
     MissingWidgetParent { id: u64, parent: u64 },
+    #[error("widget {id} cannot be its own parent")]
+    WidgetParentCycle { id: u64 },
+    #[error("window {window} has no widget tree")]
+    MissingWidgetTree { window: u64 },
+    #[error("cannot remove root widget {id}")]
+    CannotRemoveRootWidget { id: u64 },
     #[error("invalid widget style: {0}")]
     InvalidWidgetStyle(String),
     #[error("window {id} is closed")]
@@ -728,6 +900,62 @@ mod tests {
             .with_style(bad_style);
 
         assert!(matches!(styled, Err(UiAdapterError::InvalidWidgetStyle(_))));
+    }
+
+    #[test]
+    fn draft_registry_tracks_widget_tree_focus_and_removal() {
+        let mut registry = DraftWindowRegistry::default();
+        let size = WindowSize::new(800, 600).expect("size");
+        let window = registry.create_window(WindowOptions::new("Notes", size).expect("options"));
+        let root = WidgetNode::new(WidgetId::new(1).expect("root"), WidgetKind::Stack);
+        let button = WidgetNode::new(WidgetId::new(2).expect("button"), WidgetKind::Button)
+            .with_parent(root.id)
+            .with_label("Save")
+            .expect("label");
+        let nested = WidgetNode::new(WidgetId::new(3).expect("nested"), WidgetKind::Text)
+            .with_parent(button.id)
+            .with_label("Saved")
+            .expect("label");
+
+        registry.set_root(window, root).expect("root");
+        registry.upsert_node(window, button).expect("button");
+        registry.upsert_node(window, nested).expect("nested");
+        registry
+            .focus_node(window, WidgetId::new(3).expect("nested"))
+            .expect("focus");
+        registry
+            .remove_node(window, WidgetId::new(2).expect("button"))
+            .expect("remove subtree");
+
+        let tree = registry.widget_tree(window).expect("tree");
+        assert_eq!(tree.nodes().len(), 1);
+        assert_eq!(registry.focused_widget(window).expect("focus"), None);
+        assert_eq!(
+            registry.drain_events(),
+            vec![
+                UiEvent::WindowCreated(window),
+                UiEvent::WidgetRootSet {
+                    window,
+                    root: WidgetId::new(1).expect("root"),
+                },
+                UiEvent::WidgetUpdated {
+                    window,
+                    widget: WidgetId::new(2).expect("button"),
+                },
+                UiEvent::WidgetUpdated {
+                    window,
+                    widget: WidgetId::new(3).expect("nested"),
+                },
+                UiEvent::FocusChanged {
+                    window,
+                    widget: WidgetId::new(3).expect("nested"),
+                },
+                UiEvent::WidgetRemoved {
+                    window,
+                    widget: WidgetId::new(2).expect("button"),
+                },
+            ]
+        );
     }
 
     #[test]

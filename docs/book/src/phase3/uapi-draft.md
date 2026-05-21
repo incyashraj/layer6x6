@@ -120,6 +120,12 @@ widget IDs, widget kinds, labels, role hints, small style hints, and parent-link
 validation. That is the local model the next layout and native-lowering code
 can use before the WIT bindings are wired end to end.
 
+The runtime can now move draft widget trees through the adapter boundary. The
+dispatcher checks the current GUI grant, then calls the selected adapter to set
+a root widget, upsert child nodes, remove nodes, move focus, and inspect draft
+widget state. This is still headless, but it proves the runtime path that later
+native widgets will use.
+
 ## What It Does Not Mean Yet
 
 This is not a finished desktop UI layer.

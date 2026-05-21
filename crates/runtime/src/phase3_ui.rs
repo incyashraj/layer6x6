@@ -5,8 +5,8 @@
 //! GTK windows come later.
 
 use layer36_adapter_common::ui::{
-    UiAdapter, UiAdapterError, UiAdapterInfo, UiEvent, WindowId, WindowOptions, WindowRecord,
-    WindowSize,
+    UiAdapter, UiAdapterError, UiAdapterInfo, UiEvent, WidgetId, WidgetNode, WidgetTree, WindowId,
+    WindowOptions, WindowRecord, WindowSize,
 };
 use thiserror::Error;
 
@@ -103,6 +103,30 @@ impl<'a> Phase3UiDispatcher<'a> {
         Ok(())
     }
 
+    pub fn set_root(&self, window: WindowId, root: WidgetNode) -> UiDispatchResult<()> {
+        self.check_window_access()?;
+        self.adapter.set_root(window, root)?;
+        Ok(())
+    }
+
+    pub fn upsert_node(&self, window: WindowId, node: WidgetNode) -> UiDispatchResult<()> {
+        self.check_window_access()?;
+        self.adapter.upsert_node(window, node)?;
+        Ok(())
+    }
+
+    pub fn remove_node(&self, window: WindowId, widget: WidgetId) -> UiDispatchResult<()> {
+        self.check_window_access()?;
+        self.adapter.remove_node(window, widget)?;
+        Ok(())
+    }
+
+    pub fn focus_node(&self, window: WindowId, widget: WidgetId) -> UiDispatchResult<()> {
+        self.check_window_access()?;
+        self.adapter.focus_node(window, widget)?;
+        Ok(())
+    }
+
     pub fn read_clipboard_text(&self) -> UiDispatchResult<String> {
         self.check(&UapiCall::Ui(UiCall::ClipboardRead))?;
         self.adapter.read_clipboard_text().map_err(Into::into)
@@ -115,6 +139,14 @@ impl<'a> Phase3UiDispatcher<'a> {
 
     pub fn window(&self, id: WindowId) -> UiDispatchResult<Option<WindowRecord>> {
         Ok(self.adapter.window(id)?)
+    }
+
+    pub fn widget_tree(&self, window: WindowId) -> UiDispatchResult<Option<WidgetTree>> {
+        Ok(self.adapter.widget_tree(window)?)
+    }
+
+    pub fn focused_widget(&self, window: WindowId) -> UiDispatchResult<Option<WidgetId>> {
+        Ok(self.adapter.focused_widget(window)?)
     }
 
     pub fn drain_events(&self) -> UiDispatchResult<Vec<UiEvent>> {
@@ -165,7 +197,9 @@ fn map_ui_policy(err: UapiError) -> UiDispatchError {
 
 #[cfg(test)]
 mod tests {
-    use layer36_adapter_common::ui::{DraftUiAdapter, UiEvent, WindowOptions, WindowSize};
+    use layer36_adapter_common::ui::{
+        DraftUiAdapter, UiEvent, WidgetId, WidgetKind, WidgetNode, WindowOptions, WindowSize,
+    };
     use layer36_policy::SessionPolicy;
 
     use super::*;
@@ -245,6 +279,79 @@ mod tests {
         assert!(matches!(
             err,
             UiDispatchError::Adapter(UiAdapterError::EmptyTitle)
+        ));
+    }
+
+    #[test]
+    fn widget_tree_operations_pass_through_window_policy() {
+        let guard = UapiGuard::new(SessionPolicy::default());
+        let adapter = DraftUiAdapter::default();
+        let size = WindowSize::new(640, 480).expect("size");
+        let dispatcher = Phase3UiDispatcher::new(&guard, &adapter);
+        let window = dispatcher
+            .create_window(WindowOptions::new("Notes", size).expect("options"))
+            .expect("create window");
+        let root = WidgetNode::new(WidgetId::new(1).expect("root"), WidgetKind::Stack);
+        let button = WidgetNode::new(WidgetId::new(2).expect("button"), WidgetKind::Button)
+            .with_parent(root.id)
+            .with_label("Save")
+            .expect("label");
+
+        dispatcher.set_root(window, root).expect("set root");
+        dispatcher
+            .upsert_node(window, button)
+            .expect("upsert button");
+        dispatcher
+            .focus_node(window, WidgetId::new(2).expect("button"))
+            .expect("focus button");
+
+        let tree = dispatcher
+            .widget_tree(window)
+            .expect("tree lookup")
+            .expect("tree");
+        assert_eq!(tree.nodes().len(), 2);
+        assert_eq!(
+            dispatcher.focused_widget(window).expect("focus"),
+            Some(WidgetId::new(2).expect("button"))
+        );
+        assert_eq!(
+            dispatcher.drain_events().expect("events"),
+            vec![
+                UiEvent::WindowCreated(window),
+                UiEvent::WidgetRootSet {
+                    window,
+                    root: WidgetId::new(1).expect("root"),
+                },
+                UiEvent::WidgetUpdated {
+                    window,
+                    widget: WidgetId::new(2).expect("button"),
+                },
+                UiEvent::FocusChanged {
+                    window,
+                    widget: WidgetId::new(2).expect("button"),
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn widget_tree_operations_reuse_adapter_validation() {
+        let guard = UapiGuard::new(SessionPolicy::default());
+        let adapter = DraftUiAdapter::default();
+        let size = WindowSize::new(640, 480).expect("size");
+        let dispatcher = Phase3UiDispatcher::new(&guard, &adapter);
+        let window = dispatcher
+            .create_window(WindowOptions::new("Notes", size).expect("options"))
+            .expect("create window");
+        let orphan = WidgetNode::new(WidgetId::new(3).expect("orphan"), WidgetKind::Text);
+
+        let err = dispatcher
+            .upsert_node(window, orphan)
+            .expect_err("missing widget tree should fail");
+
+        assert!(matches!(
+            err,
+            UiDispatchError::Adapter(UiAdapterError::MissingWidgetTree { .. })
         ));
     }
 

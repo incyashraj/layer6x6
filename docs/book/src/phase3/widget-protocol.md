@@ -106,6 +106,8 @@ Done now:
 - Phase 3 permission names exist.
 - `adapter-common::ui` has the first host-neutral widget tree types:
   `WidgetId`, `WidgetKind`, `WidgetNode`, `WidgetStyle`, and `WidgetTree`.
+- The shared UI adapter and runtime dispatcher can now set a root widget,
+  update child nodes, remove nodes, move focus, and inspect draft widget state.
 - The runtime has a UI dispatcher scaffold.
 - macOS, Linux, and Windows adapters expose headless draft UI entry points.
 - The runtime can choose the current host adapter.

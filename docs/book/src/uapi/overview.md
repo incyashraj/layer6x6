@@ -270,6 +270,8 @@ The value of this step is that the boundary is testable:
   points, each with a blank-window smoke test
 - `Phase3UiRuntime::with_host_adapter` selects the current host UI adapter and
   exposes capability info for that backend
+- draft widget-tree calls now pass through the same dispatcher and adapter
+  boundary for set root, upsert node, remove node, and focus node
 
 The bridge between generated WIT types and dispatcher types now exists too.
 It converts things like `open-mode`, HTTP requests, file stats, locale IDs, and

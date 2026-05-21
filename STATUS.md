@@ -3,12 +3,12 @@
 Last updated: 2026-05-21
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `52889dc`
-Working tree at this status update: Phase 3 widget protocol docs and checker slice in progress
+Latest checked completed push before this slice: `bf2b177`
+Working tree at this status update: Phase 3 draft widget-tree dispatcher slice in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 322
+- Commits after this slice lands: about 323
 - Tracked files after this slice lands: about 326
 - Total tracked lines after this slice lands: about 88,000
 - Rust lines (`.rs`) after this slice lands: about 41,700
@@ -16,10 +16,10 @@ Working tree at this status update: Phase 3 widget protocol docs and checker sli
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`52889dc`) checks:
+Latest completed push (`bf2b177`) checks:
 
-- CI: success (run `26178388167`)
-- Deploy docs to GitHub Pages: success (run `26178388166`)
+- CI: success (run `26201791616`)
+- Deploy docs to GitHub Pages: success (run `26201791618`)
 
 Manual hosted full CI run `26069665276` passed on commit `3f1a219`.
 Linux, macOS, and Windows full-test lanes all passed. The language-variant,
@@ -89,6 +89,9 @@ Current Phase 3 slice:
 - `adapter-common::ui` now has the first host-neutral widget tree model:
   stable widget IDs, the first widget kind set, labels, role hints, small style
   hints, and parent-link validation.
+- the shared `UiAdapter`, headless host adapters, and `Phase3UiDispatcher` now
+  support draft widget-tree calls: set root, upsert child nodes, remove nodes,
+  focus nodes, inspect the tree, and inspect focused widget state.
 
 This does not mean desktop UI is implemented yet. It means the first public
 contract for desktop UI work is now in the repo and checked locally. The new UI
@@ -129,6 +132,7 @@ Top pending items:
 - Added runtime host UI adapter discovery so Phase 3 dispatch can use the current OS adapter entry point and report backend capability info
 - Added ADR-0013, RFC-0003, a mdBook widget protocol page, and a Phase 3 design-doc checker so the native widget plus drawn fallback rule is recorded before host UI backend work grows
 - Added the first shared widget tree model in `adapter-common::ui` so layout and native lowering can use stable widget IDs, kinds, labels, roles, style hints, and parent validation.
+- Added a draft widget-tree dispatch path so runtime UI calls can set, update, remove, focus, and inspect widgets through the same UCap and adapter boundary before native widgets exist.
 - Added a UCap enforcement evidence recorder and cross-host comparator (`record-phase2-ucap-evidence` + `compare-phase2-ucap-evidence`)
 - Wired hosted full CI to upload per-OS UCap evidence artifacts and run a dedicated cross-host compare gate
 - Added a benchmark evidence recorder and comparator (`record-phase2-benchmark-evidence` + `compare-phase2-benchmark-evidence`) to track startup and dispatch performance evidence in one per-host report
@@ -218,4 +222,4 @@ Top pending items:
 
 Use this exact prompt in a new session:
 
-`Continue Layer36 on main. Start with STATUS.md, Plan/Phase-2-Plan.md, and Plan/Phase-3-Plan.md. Phase 3 has started with WIT, GUI manifest recognition, Phase 3 capability names, an adapter-common draft window registry, a shared widget tree model, a shared UiAdapter trait, runtime::phase3_ui dispatcher scaffolding, headless UI adapter entry points in the macOS, Linux, and Windows crates, runtime host UI adapter discovery, and ADR/RFC docs for the native-widget plus drawn-fallback widget lowering rule. Keep Phase 2 closeout evidence separate, keep Phase 3 narrow, update plan/docs after each chunk, keep GitHub Pages in sync, and check CI after every push.`
+`Continue Layer36 on main. Start with STATUS.md, Plan/Phase-2-Plan.md, and Plan/Phase-3-Plan.md. Phase 3 has started with WIT, GUI manifest recognition, Phase 3 capability names, an adapter-common draft window registry, a shared widget tree model, a shared UiAdapter trait, runtime::phase3_ui dispatcher scaffolding, draft widget-tree dispatch, headless UI adapter entry points in the macOS, Linux, and Windows crates, runtime host UI adapter discovery, and ADR/RFC docs for the native-widget plus drawn-fallback widget lowering rule. Keep Phase 2 closeout evidence separate, keep Phase 3 narrow, update plan/docs after each chunk, keep GitHub Pages in sync, and check CI after every push.`

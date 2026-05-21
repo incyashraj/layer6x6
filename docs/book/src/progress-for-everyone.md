@@ -102,6 +102,10 @@ flowchart LR
 23. The shared adapter code now has the first widget tree model. In simple
     terms, Layer36 can represent stable widget IDs, widget types, labels, roles,
     and parent links before it connects them to real OS controls.
+24. The runtime can now move that draft widget tree through the UI adapter
+    boundary. In simple terms, Layer36 can set a root widget, add or update
+    child widgets, remove widgets, and track focus before real native controls
+    exist.
 
 ## Current Build Timeline
 
@@ -148,7 +152,7 @@ This is a simple status view for non technical readers.
 | UAPI freeze decision path | Working, with a draft packet and CI checker |
 | Outside walkthrough proof | Ready to collect, with a timing packet, checker, and local rehearsal |
 | Phase 3 handoff | Started at contract level, still waiting on Phase 2 outside review for formal phase close |
-| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, draft window model, shared widget tree model, shared UI adapter trait, runtime UI dispatcher, host adapter entry points, runtime host adapter discovery, and the widget lowering rule are in place. Real windows are not implemented yet |
+| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, draft window model, shared widget tree model, draft widget-tree dispatch, shared UI adapter trait, runtime UI dispatcher, host adapter entry points, runtime host adapter discovery, and the widget lowering rule are in place. Real windows are not implemented yet |
 | Mobile host path | Not started in implementation |
 | Packaging and app store style distribution | Not started in implementation |
 
