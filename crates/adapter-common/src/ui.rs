@@ -5,7 +5,7 @@
 //! shape for ids, size validation, lifecycle state, and early event routing.
 
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, VecDeque},
     sync::{Mutex, MutexGuard},
 };
 
@@ -501,6 +501,9 @@ pub trait UiAdapter: Send + Sync {
     /// Drain queued adapter events.
     fn drain_events(&self) -> Result<Vec<UiEvent>, UiAdapterError>;
 
+    /// Poll one queued adapter event in FIFO order.
+    fn poll_event(&self) -> Result<Option<UiEvent>, UiAdapterError>;
+
     /// Queue a routed pointer event.
     fn queue_pointer_event(&self, event: PointerEvent) -> Result<(), UiAdapterError>;
 
@@ -605,6 +608,10 @@ impl UiAdapter for DraftUiAdapter {
         Ok(self.registry()?.drain_events())
     }
 
+    fn poll_event(&self) -> Result<Option<UiEvent>, UiAdapterError> {
+        Ok(self.registry()?.poll_event())
+    }
+
     fn queue_pointer_event(&self, event: PointerEvent) -> Result<(), UiAdapterError> {
         self.registry()?.queue_pointer_event(event)
     }
@@ -625,7 +632,7 @@ pub struct DraftWindowRegistry {
     windows: BTreeMap<WindowId, WindowRecord>,
     widget_trees: BTreeMap<WindowId, WidgetTree>,
     focused_widgets: BTreeMap<WindowId, WidgetId>,
-    events: Vec<UiEvent>,
+    events: VecDeque<UiEvent>,
 }
 
 impl DraftWindowRegistry {
@@ -642,7 +649,7 @@ impl DraftWindowRegistry {
             closed: false,
         };
         self.windows.insert(id, record);
-        self.events.push(UiEvent::WindowCreated(id));
+        self.events.push_back(UiEvent::WindowCreated(id));
         id
     }
 
@@ -650,7 +657,7 @@ impl DraftWindowRegistry {
     pub fn show_window(&mut self, id: WindowId) -> Result<(), UiAdapterError> {
         let window = self.open_window_mut(id)?;
         window.visible = true;
-        self.events.push(UiEvent::WindowShown(id));
+        self.events.push_back(UiEvent::WindowShown(id));
         Ok(())
     }
 
@@ -661,7 +668,7 @@ impl DraftWindowRegistry {
         window.visible = false;
         self.widget_trees.remove(&id);
         self.focused_widgets.remove(&id);
-        self.events.push(UiEvent::WindowClosed(id));
+        self.events.push_back(UiEvent::WindowClosed(id));
         Ok(())
     }
 
@@ -675,7 +682,7 @@ impl DraftWindowRegistry {
         validate_title(&title)?;
         let window = self.open_window_mut(id)?;
         window.title = title.clone();
-        self.events.push(UiEvent::TitleChanged { id, title });
+        self.events.push_back(UiEvent::TitleChanged { id, title });
         Ok(())
     }
 
@@ -683,14 +690,14 @@ impl DraftWindowRegistry {
     pub fn set_size(&mut self, id: WindowId, size: WindowSize) -> Result<(), UiAdapterError> {
         let window = self.open_window_mut(id)?;
         window.size = size;
-        self.events.push(UiEvent::Resized { id, size });
+        self.events.push_back(UiEvent::Resized { id, size });
         Ok(())
     }
 
     /// Queue a redraw request for a window.
     pub fn request_redraw(&mut self, id: WindowId) -> Result<(), UiAdapterError> {
         self.open_window(id)?;
-        self.events.push(UiEvent::RedrawRequested(id));
+        self.events.push_back(UiEvent::RedrawRequested(id));
         Ok(())
     }
 
@@ -701,7 +708,8 @@ impl DraftWindowRegistry {
         let root = tree.root();
         self.widget_trees.insert(window, tree);
         self.focused_widgets.remove(&window);
-        self.events.push(UiEvent::WidgetRootSet { window, root });
+        self.events
+            .push_back(UiEvent::WidgetRootSet { window, root });
         Ok(())
     }
 
@@ -720,7 +728,8 @@ impl DraftWindowRegistry {
                 window: window.get(),
             })?;
         tree.upsert(node)?;
-        self.events.push(UiEvent::WidgetUpdated { window, widget });
+        self.events
+            .push_back(UiEvent::WidgetUpdated { window, widget });
         Ok(())
     }
 
@@ -745,7 +754,8 @@ impl DraftWindowRegistry {
         {
             self.focused_widgets.remove(&window);
         }
-        self.events.push(UiEvent::WidgetRemoved { window, widget });
+        self.events
+            .push_back(UiEvent::WidgetRemoved { window, widget });
         Ok(())
     }
 
@@ -763,7 +773,8 @@ impl DraftWindowRegistry {
         }
 
         self.focused_widgets.insert(window, widget);
-        self.events.push(UiEvent::FocusChanged { window, widget });
+        self.events
+            .push_back(UiEvent::FocusChanged { window, widget });
         Ok(())
     }
 
@@ -785,13 +796,18 @@ impl DraftWindowRegistry {
 
     /// Drain queued draft events.
     pub fn drain_events(&mut self) -> Vec<UiEvent> {
-        std::mem::take(&mut self.events)
+        self.events.drain(..).collect()
+    }
+
+    /// Poll one queued draft event in FIFO order.
+    pub fn poll_event(&mut self) -> Option<UiEvent> {
+        self.events.pop_front()
     }
 
     /// Queue a pointer event after runtime hit testing has assigned a target.
     pub fn queue_pointer_event(&mut self, event: PointerEvent) -> Result<(), UiAdapterError> {
         self.validate_event_target(event.window, event.widget)?;
-        self.events.push(UiEvent::Pointer(event));
+        self.events.push_back(UiEvent::Pointer(event));
         Ok(())
     }
 
@@ -799,7 +815,7 @@ impl DraftWindowRegistry {
     pub fn queue_key_event(&mut self, event: KeyEvent) -> Result<(), UiAdapterError> {
         validate_key_name(&event.key)?;
         self.validate_event_target(event.window, event.widget)?;
-        self.events.push(UiEvent::Key(event));
+        self.events.push_back(UiEvent::Key(event));
         Ok(())
     }
 
@@ -807,7 +823,7 @@ impl DraftWindowRegistry {
     pub fn queue_text_input(&mut self, event: TextInputEvent) -> Result<(), UiAdapterError> {
         validate_text_input(&event.text)?;
         self.validate_event_target(event.window, event.widget)?;
-        self.events.push(UiEvent::TextInput(event));
+        self.events.push_back(UiEvent::TextInput(event));
         Ok(())
     }
 
@@ -1014,6 +1030,18 @@ mod tests {
                 UiEvent::WindowClosed(id),
             ]
         );
+    }
+
+    #[test]
+    fn draft_registry_polls_events_in_fifo_order() {
+        let mut registry = DraftWindowRegistry::default();
+        let size = WindowSize::new(800, 600).expect("size");
+        let id = registry.create_window(WindowOptions::new("Notes", size).expect("options"));
+        registry.show_window(id).expect("show");
+
+        assert_eq!(registry.poll_event(), Some(UiEvent::WindowCreated(id)));
+        assert_eq!(registry.poll_event(), Some(UiEvent::WindowShown(id)));
+        assert_eq!(registry.poll_event(), None);
     }
 
     #[test]
@@ -1358,6 +1386,26 @@ mod tests {
                 UiEvent::RedrawRequested(id),
             ]
         );
+    }
+
+    #[test]
+    fn draft_adapter_polls_before_drain() {
+        let adapter = DraftUiAdapter::new();
+        let size = WindowSize::new(700, 500).expect("size");
+        let id = adapter
+            .create_window(WindowOptions::new("Layer36", size).expect("options"))
+            .expect("create");
+        adapter.show_window(id).expect("show");
+
+        assert_eq!(
+            adapter.poll_event().expect("poll"),
+            Some(UiEvent::WindowCreated(id))
+        );
+        assert_eq!(
+            adapter.drain_events().expect("events"),
+            vec![UiEvent::WindowShown(id)]
+        );
+        assert_eq!(adapter.poll_event().expect("poll"), None);
     }
 
     #[test]

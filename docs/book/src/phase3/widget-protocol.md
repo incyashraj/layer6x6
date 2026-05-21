@@ -126,6 +126,8 @@ Done now:
 - The runtime can queue routed key events and committed text input for the
   focused widget, which gives native keyboard and IME commit events a stable
   place to land later.
+- The adapter and runtime can poll one queued UI event at a time in FIFO order,
+  which matches the planned `events.poll()` app-facing shape.
 - The runtime has a UI dispatcher scaffold.
 - macOS, Linux, and Windows adapters expose headless draft UI entry points.
 - The runtime can choose the current host adapter.
@@ -134,7 +136,7 @@ Done now:
 Pending:
 
 - real native window backend
-- host event loop that feeds real pointer, key, and text events into the routes
+- host event loop that feeds real pointer, key, and text events into the queue
 - widget tree lowering
 - larger layout style coverage and recorded large-tree benchmark results on all target hosts
 - IME composition events

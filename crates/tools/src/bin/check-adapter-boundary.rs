@@ -262,6 +262,7 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
             "fn remove_node(&self, window: WindowId, widget: WidgetId)",
             "fn focus_node(&self, window: WindowId, widget: WidgetId)",
             "fn widget_tree(&self, window: WindowId)",
+            "fn poll_event(&self)",
             "fn queue_pointer_event(&self, event: PointerEvent)",
             "fn queue_key_event(&self, event: KeyEvent)",
             "fn queue_text_input(&self, event: TextInputEvent)",

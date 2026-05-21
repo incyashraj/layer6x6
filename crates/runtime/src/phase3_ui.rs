@@ -267,6 +267,10 @@ impl<'a> Phase3UiDispatcher<'a> {
         Ok(self.adapter.drain_events()?)
     }
 
+    pub fn poll_event(&self) -> UiDispatchResult<Option<UiEvent>> {
+        Ok(self.adapter.poll_event()?)
+    }
+
     fn check_window_access(&self) -> UiDispatchResult<()> {
         self.check(&UapiCall::Ui(UiCall::WindowCreate))
     }
@@ -350,6 +354,29 @@ mod tests {
                 UiEvent::WindowClosed(id),
             ]
         );
+    }
+
+    #[test]
+    fn poll_event_returns_fifo_runtime_events() {
+        let guard = UapiGuard::new(SessionPolicy::default());
+        let adapter = DraftUiAdapter::default();
+        let size = WindowSize::new(800, 600).expect("size");
+        let dispatcher = Phase3UiDispatcher::new(&guard, &adapter);
+
+        let id = dispatcher
+            .create_window(WindowOptions::new("Layer36 Notes", size).expect("options"))
+            .expect("create window");
+        dispatcher.show_window(id).expect("show window");
+
+        assert_eq!(
+            dispatcher.poll_event().expect("poll"),
+            Some(UiEvent::WindowCreated(id))
+        );
+        assert_eq!(
+            dispatcher.poll_event().expect("poll"),
+            Some(UiEvent::WindowShown(id))
+        );
+        assert_eq!(dispatcher.poll_event().expect("poll"), None);
     }
 
     #[test]

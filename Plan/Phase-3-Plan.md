@@ -2122,7 +2122,8 @@ layout-shape coverage, a 1k/10k-node layout benchmark target, a prepared layout
 path for repeated passes, a first layout hit-test helper, and a draft pointer
 event route that turns logical pointer coordinates into queued events with a
 hit widget ID. It now also has draft key and committed-text routes that target
-the focused widget. ADR-0013 and RFC-0003 record the widget lowering rule
+the focused widget, plus FIFO event polling for the first app-facing event-loop
+primitive. ADR-0013 and RFC-0003 record the widget lowering rule
 before native widget work depends on it. ADR-0014 records the layout engine
 choice. This is not a frozen API and not a working desktop GUI yet. It is the
 contract, runtime boundary, widget model, geometry foundation, and first
@@ -2149,6 +2150,7 @@ input-routing proof for the next host adapter work.
 | P3-UI-03C | Add prepared repeated-layout path | 2026-05-21 | `PreparedLayoutTree` builds the Taffy tree once, recomputes layout for new viewports, and is reachable through `Phase3UiDispatcher::prepare_layout`. |
 | P3-INPUT-01A | Add draft pointer event routing | 2026-05-21 | `Phase3UiDispatcher::route_pointer_event` computes layout, hit-tests the logical point, and queues a `UiEvent::Pointer` with the target widget ID when one is found. |
 | P3-INPUT-01B | Add draft key and text input routing | 2026-05-21 | `Phase3UiDispatcher::route_key_event` and `route_text_input` look up the focused widget and queue portable key/text events through the shared adapter boundary. |
+| P3-UI-04C | Add FIFO event polling | 2026-05-21 | `UiAdapter::poll_event` and `Phase3UiDispatcher::poll_event` return one queued event at a time in insertion order, matching the planned `events.poll()` shape. |
 
 ---
 
@@ -2199,6 +2201,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P3-UI-03C | Prepared repeated-layout path | 2026-05-21 | Added `PreparedLayoutTree`, prepared 1k/10k benchmark lanes, runtime dispatcher access, and repeated-viewport tests. |
 | P3-INPUT-01A | Draft pointer event routing | 2026-05-21 | Added shared pointer event types, adapter queue support, host adapter forwarding, and runtime hit-test routing from logical coordinates to optional widget IDs. |
 | P3-INPUT-01B | Draft key and text input routing | 2026-05-21 | Added shared key/text event types, validation, adapter queue support, host adapter forwarding, and runtime focused-widget routing. |
+| P3-UI-04C | FIFO event polling | 2026-05-21 | Added shared adapter, headless host adapter, and runtime dispatcher polling so future `events.poll()` calls can consume one queued event at a time. |
 
 ---
 
@@ -2208,7 +2211,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 |---------|------|---------|----------|
 | P3-UI-01 | Widget protocol design RFC | 2026-05-19 | Draft written; needs review before the rule is treated as accepted. |
 | P3-UI-03 | Layout engine (Taffy integration) | 2026-05-21 | First wrapper, 100-shape tests, benchmark target, and prepared repeated-layout path exist; local prepared 10k layout is below the exit budget, but cold rebuild is not, so recorded cross-host benchmark results and wider style coverage are pending. |
-| P3-UI-04 | Window + event loop abstractions | 2026-05-19 | Shared trait, widget-tree dispatch, host entry points, runtime discovery, and draft routed input events exist; next step is one real native window backend with host events feeding these routes. |
+| P3-UI-04 | Window + event loop abstractions | 2026-05-19 | Shared trait, widget-tree dispatch, host entry points, runtime discovery, routed input events, and FIFO event polling exist; next step is one real native window backend with host events feeding these routes. |
 | P3-INPUT-01 | Keyboard + mouse input | 2026-05-21 | First runtime-side pointer, key, and committed-text routes exist; real host pointer, hover, wheel, keyboard, shortcut, IME composition, and cross-host normalization are pending. |
 
 ---
@@ -2271,6 +2274,9 @@ _ADRs 0017–0020 to be determined during Phase 3 work._
 - 2026-05-21: Added draft key and committed-text routing. The runtime can now
   look up focused widget state and queue portable key/text events before real
   native keyboard and IME event sources are wired.
+- 2026-05-21: Added FIFO event polling beside event draining. Future
+  `events.poll()` wiring can now consume one queued event at a time without
+  depending on batch-only adapter internals.
 
 ---
 

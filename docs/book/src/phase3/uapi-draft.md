@@ -151,6 +151,11 @@ portable key event. It can also queue committed text input for that same focused
 widget. This is not IME support yet. It is the route that native keyboard and
 IME commit events will use.
 
+The event queue now has a single-event poll path as well as a batch drain path.
+That matters because the planned UI API exposes `events.poll()`. Native host
+event loops can feed the queue first, then app code can consume events one by
+one in stable FIFO order.
+
 ## What It Does Not Mean Yet
 
 This is not a finished desktop UI layer.
@@ -169,7 +174,7 @@ The next proof should be small and visible:
 
 1. Record prepared and cold layout benchmark numbers on the target hosts.
 2. Add a host adapter prototype that can create one real window.
-3. Add a simple event loop.
+3. Add a simple native event loop that feeds host events into the queue.
 4. Connect real host input events to the draft pointer, key, and text routes.
 5. Add a tiny draw call that paints something visible.
 6. Add a small notes app skeleton that uses the same path.

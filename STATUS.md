@@ -3,23 +3,23 @@
 Last updated: 2026-05-21
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `339eb25`
-Working tree at this status update: Phase 3 draft key and text input routing slice in progress
+Latest checked completed push before this slice: `6b9b63b`
+Working tree at this status update: Phase 3 FIFO event polling slice in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 328
+- Commits after this slice lands: about 329
 - Tracked files after this slice lands: about 331
-- Total tracked lines after this slice lands: about 92,180
-- Rust lines (`.rs`) after this slice lands: about 44,880
-- Docs lines (`.md`) after this slice lands: about 30,030
+- Total tracked lines after this slice lands: about 92,290
+- Rust lines (`.rs`) after this slice lands: about 44,970
+- Docs lines (`.md`) after this slice lands: about 30,050
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`339eb25`) checks:
+Latest completed push (`6b9b63b`) checks:
 
-- CI: success (run `26214499899`)
-- Deploy docs to GitHub Pages: success (run `26214499901`)
+- CI: success (run `26215848701`)
+- Deploy docs to GitHub Pages: success (run `26215848694`)
 
 Manual hosted full CI run `26069665276` passed on commit `3f1a219`.
 Linux, macOS, and Windows full-test lanes all passed. The language-variant,
@@ -117,6 +117,9 @@ Current Phase 3 slice:
   queues `UiEvent::Key` or `UiEvent::TextInput` through the shared adapter
   boundary. Full native keyboard capture, shortcut normalization, and IME
   composition events are still pending.
+- The adapter and runtime now have FIFO event polling beside batch draining.
+  This matches the planned `events.poll()` shape, so the future app-facing
+  event loop can consume one queued UI event at a time.
 
 This does not mean desktop UI is implemented yet. It means the first public
 contract for desktop UI work is now in the repo and checked locally. The new UI
@@ -164,6 +167,7 @@ Top pending items:
 - Added `PreparedLayoutTree`, prepared 1k/10k benchmark lanes, and `Phase3UiDispatcher::prepare_layout` so future event loops can reuse the layout tree between widget mutations.
 - Added the first runtime-side pointer event route so logical pointer coordinates can be hit-tested against layout and queued as portable UI events before real native event loops land.
 - Added draft key and text input routing so focused widgets can receive portable key events and committed typed text before real native keyboard and IME event loops land.
+- Added FIFO UI event polling through the shared adapter and runtime dispatcher so future app-facing `events.poll()` calls can consume one event at a time.
 - Added a UCap enforcement evidence recorder and cross-host comparator (`record-phase2-ucap-evidence` + `compare-phase2-ucap-evidence`)
 - Wired hosted full CI to upload per-OS UCap evidence artifacts and run a dedicated cross-host compare gate
 - Added a benchmark evidence recorder and comparator (`record-phase2-benchmark-evidence` + `compare-phase2-benchmark-evidence`) to track startup and dispatch performance evidence in one per-host report

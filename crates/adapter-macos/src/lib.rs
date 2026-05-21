@@ -113,6 +113,10 @@ impl UiAdapter for MacosUiAdapter {
         self.draft.drain_events()
     }
 
+    fn poll_event(&self) -> Result<Option<UiEvent>, UiAdapterError> {
+        self.draft.poll_event()
+    }
+
     fn queue_pointer_event(&self, event: PointerEvent) -> Result<(), UiAdapterError> {
         self.draft.queue_pointer_event(event)
     }
