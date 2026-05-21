@@ -43,6 +43,26 @@ impl WindowSize {
     }
 }
 
+/// Stable app-owned id for one widget node.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct WidgetId(u64);
+
+impl WidgetId {
+    /// Create a validated widget id.
+    pub fn new(id: u64) -> Result<Self, UiAdapterError> {
+        if id == 0 {
+            return Err(UiAdapterError::InvalidWidgetId { id });
+        }
+
+        Ok(Self(id))
+    }
+
+    /// Return the raw id value used by WIT and logs.
+    pub fn get(self) -> u64 {
+        self.0
+    }
+}
+
 /// Host window state requested by an app or reported by an adapter.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WindowState {
@@ -91,6 +111,174 @@ pub struct WindowRecord {
     pub state: WindowState,
     pub visible: bool,
     pub closed: bool,
+}
+
+/// First host-neutral widget set for Phase 3.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WidgetKind {
+    Stack,
+    Grid,
+    Scroll,
+    Tabs,
+    Button,
+    Checkbox,
+    Radio,
+    Switch,
+    Slider,
+    Progress,
+    Text,
+    TextField,
+    TextArea,
+    ListView,
+    TreeView,
+    Image,
+    Canvas,
+}
+
+/// Minimal layout hints attached to a widget node.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct WidgetStyle {
+    pub width: Option<f32>,
+    pub height: Option<f32>,
+    pub grow: f32,
+    pub padding: f32,
+}
+
+impl Default for WidgetStyle {
+    fn default() -> Self {
+        Self {
+            width: None,
+            height: None,
+            grow: 0.0,
+            padding: 0.0,
+        }
+    }
+}
+
+impl WidgetStyle {
+    /// Validate a small style block before it enters the host adapter path.
+    pub fn validate(self) -> Result<Self, UiAdapterError> {
+        validate_optional_f32("width", self.width)?;
+        validate_optional_f32("height", self.height)?;
+        validate_f32("grow", self.grow)?;
+        validate_f32("padding", self.padding)?;
+        Ok(self)
+    }
+}
+
+/// One node in the portable widget tree.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WidgetNode {
+    pub id: WidgetId,
+    pub parent: Option<WidgetId>,
+    pub kind: WidgetKind,
+    pub label: Option<String>,
+    pub role: Option<String>,
+    pub style: WidgetStyle,
+}
+
+impl WidgetNode {
+    /// Create one validated widget node with default style.
+    pub fn new(id: WidgetId, kind: WidgetKind) -> Self {
+        Self {
+            id,
+            parent: None,
+            kind,
+            label: None,
+            role: None,
+            style: WidgetStyle::default(),
+        }
+    }
+
+    /// Attach a parent id.
+    pub fn with_parent(mut self, parent: WidgetId) -> Self {
+        self.parent = Some(parent);
+        self
+    }
+
+    /// Attach visible text.
+    pub fn with_label(mut self, label: impl Into<String>) -> Result<Self, UiAdapterError> {
+        let label = label.into();
+        validate_short_text("widget label", &label)?;
+        self.label = Some(label);
+        Ok(self)
+    }
+
+    /// Attach an accessibility role hint.
+    pub fn with_role(mut self, role: impl Into<String>) -> Result<Self, UiAdapterError> {
+        let role = role.into();
+        validate_short_text("widget role", &role)?;
+        self.role = Some(role);
+        Ok(self)
+    }
+
+    /// Attach validated style.
+    pub fn with_style(mut self, style: WidgetStyle) -> Result<Self, UiAdapterError> {
+        self.style = style.validate()?;
+        Ok(self)
+    }
+}
+
+/// Flat validated widget tree for one window.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WidgetTree {
+    root: WidgetId,
+    nodes: BTreeMap<WidgetId, WidgetNode>,
+}
+
+impl WidgetTree {
+    /// Create a tree with one root node.
+    pub fn new(mut root: WidgetNode) -> Result<Self, UiAdapterError> {
+        root.parent = None;
+        root.style = root.style.validate()?;
+
+        let root_id = root.id;
+        let mut nodes = BTreeMap::new();
+        nodes.insert(root_id, root);
+
+        Ok(Self {
+            root: root_id,
+            nodes,
+        })
+    }
+
+    /// Return the root widget id.
+    pub fn root(&self) -> WidgetId {
+        self.root
+    }
+
+    /// Insert or replace a non-root widget.
+    pub fn upsert(&mut self, node: WidgetNode) -> Result<(), UiAdapterError> {
+        if node.id == self.root {
+            return Err(UiAdapterError::DuplicateWidget { id: node.id.get() });
+        }
+
+        let parent = node.parent.ok_or(UiAdapterError::MissingWidgetParent {
+            id: node.id.get(),
+            parent: 0,
+        })?;
+        if !self.nodes.contains_key(&parent) {
+            return Err(UiAdapterError::MissingWidgetParent {
+                id: node.id.get(),
+                parent: parent.get(),
+            });
+        }
+
+        let mut node = node;
+        node.style = node.style.validate()?;
+        self.nodes.insert(node.id, node);
+        Ok(())
+    }
+
+    /// Return one widget node.
+    pub fn node(&self, id: WidgetId) -> Option<&WidgetNode> {
+        self.nodes.get(&id)
+    }
+
+    /// Return all nodes keyed by stable widget id.
+    pub fn nodes(&self) -> &BTreeMap<WidgetId, WidgetNode> {
+        &self.nodes
+    }
 }
 
 /// Small host-neutral event shape for the first Phase 3 prototype.
@@ -345,6 +533,14 @@ impl DraftWindowRegistry {
 pub enum UiAdapterError {
     #[error("invalid window id {id}")]
     InvalidWindow { id: u64 },
+    #[error("invalid widget id {id}")]
+    InvalidWidgetId { id: u64 },
+    #[error("duplicate widget id {id}")]
+    DuplicateWidget { id: u64 },
+    #[error("widget {id} references missing parent {parent}")]
+    MissingWidgetParent { id: u64, parent: u64 },
+    #[error("invalid widget style: {0}")]
+    InvalidWidgetStyle(String),
     #[error("window {id} is closed")]
     WindowClosed { id: u64 },
     #[error("invalid window size {width}x{height}")]
@@ -361,6 +557,7 @@ pub enum UiAdapterError {
 
 const MAX_WINDOW_EDGE: u32 = 16_384;
 const MAX_TITLE_CHARS: usize = 512;
+const MAX_WIDGET_TEXT_CHARS: usize = 1_024;
 
 fn validate_title(title: &str) -> Result<(), UiAdapterError> {
     if title.trim().is_empty() {
@@ -369,6 +566,34 @@ fn validate_title(title: &str) -> Result<(), UiAdapterError> {
     if title.chars().count() > MAX_TITLE_CHARS {
         return Err(UiAdapterError::TitleTooLong);
     }
+    Ok(())
+}
+
+fn validate_short_text(field: &str, value: &str) -> Result<(), UiAdapterError> {
+    if value.chars().count() > MAX_WIDGET_TEXT_CHARS {
+        return Err(UiAdapterError::InvalidWidgetStyle(format!(
+            "{field} is too long"
+        )));
+    }
+
+    Ok(())
+}
+
+fn validate_optional_f32(field: &str, value: Option<f32>) -> Result<(), UiAdapterError> {
+    if let Some(value) = value {
+        validate_f32(field, value)?;
+    }
+
+    Ok(())
+}
+
+fn validate_f32(field: &str, value: f32) -> Result<(), UiAdapterError> {
+    if !value.is_finite() || value < 0.0 {
+        return Err(UiAdapterError::InvalidWidgetStyle(format!(
+            "{field} must be a finite non-negative number"
+        )));
+    }
+
     Ok(())
 }
 
@@ -452,6 +677,57 @@ mod tests {
             WindowOptions::new(" ", WindowSize::new(100, 100).expect("size")),
             Err(UiAdapterError::EmptyTitle)
         );
+    }
+
+    #[test]
+    fn widget_tree_tracks_stable_ids_and_parent_links() {
+        let root = WidgetNode::new(WidgetId::new(1).expect("root"), WidgetKind::Stack)
+            .with_role("group")
+            .expect("role");
+        let mut tree = WidgetTree::new(root).expect("tree");
+
+        let button = WidgetNode::new(WidgetId::new(2).expect("button"), WidgetKind::Button)
+            .with_parent(tree.root())
+            .with_label("Save")
+            .expect("label");
+        tree.upsert(button).expect("insert button");
+
+        assert_eq!(tree.nodes().len(), 2);
+        assert_eq!(
+            tree.node(WidgetId::new(2).expect("button lookup"))
+                .expect("button")
+                .label
+                .as_deref(),
+            Some("Save")
+        );
+    }
+
+    #[test]
+    fn widget_tree_rejects_bad_ids_missing_parents_and_bad_style() {
+        assert_eq!(
+            WidgetId::new(0),
+            Err(UiAdapterError::InvalidWidgetId { id: 0 })
+        );
+
+        let root = WidgetNode::new(WidgetId::new(1).expect("root"), WidgetKind::Stack);
+        let mut tree = WidgetTree::new(root).expect("tree");
+        let orphan = WidgetNode::new(WidgetId::new(2).expect("orphan"), WidgetKind::Text)
+            .with_parent(WidgetId::new(99).expect("parent"));
+
+        assert_eq!(
+            tree.upsert(orphan),
+            Err(UiAdapterError::MissingWidgetParent { id: 2, parent: 99 })
+        );
+
+        let bad_style = WidgetStyle {
+            width: Some(f32::NAN),
+            ..WidgetStyle::default()
+        };
+        let styled = WidgetNode::new(WidgetId::new(3).expect("styled"), WidgetKind::Text)
+            .with_parent(tree.root())
+            .with_style(bad_style);
+
+        assert!(matches!(styled, Err(UiAdapterError::InvalidWidgetStyle(_))));
     }
 
     #[test]

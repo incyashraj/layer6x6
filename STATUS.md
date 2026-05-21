@@ -3,23 +3,23 @@
 Last updated: 2026-05-21
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `9cd3e55`
-Working tree at this status update: Phase 3 runtime host UI adapter discovery slice in progress
+Latest checked completed push before this slice: `52889dc`
+Working tree at this status update: Phase 3 widget protocol docs and checker slice in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 321
-- Tracked files after this slice lands: about 320
+- Commits after this slice lands: about 322
+- Tracked files after this slice lands: about 326
 - Total tracked lines after this slice lands: about 88,000
 - Rust lines (`.rs`) after this slice lands: about 41,700
 - Docs lines (`.md`) after this slice lands: about 29,100
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`9cd3e55`) checks:
+Latest completed push (`52889dc`) checks:
 
-- CI: success (run `26177194810`)
-- Deploy docs to GitHub Pages: success (run `26177194868`)
+- CI: success (run `26178388167`)
+- Deploy docs to GitHub Pages: success (run `26178388166`)
 
 Manual hosted full CI run `26069665276` passed on commit `3f1a219`.
 Linux, macOS, and Windows full-test lanes all passed. The language-variant,
@@ -82,6 +82,13 @@ Current Phase 3 slice:
 - `runtime::phase3_ui` now has `Phase3UiRuntime::with_host_adapter`, which
   selects the current OS adapter entry point and reports adapter capability info
   such as host family, backend name, and whether native windows are enabled.
+- `docs/adr/0013-widget-lowering-strategy.md`,
+  `docs/rfc/0003-widget-protocol.md`, and the mdBook widget protocol page now
+  record the native widget plus drawn fallback rule before native backend work
+  depends on it.
+- `adapter-common::ui` now has the first host-neutral widget tree model:
+  stable widget IDs, the first widget kind set, labels, role hints, small style
+  hints, and parent-link validation.
 
 This does not mean desktop UI is implemented yet. It means the first public
 contract for desktop UI work is now in the repo and checked locally. The new UI
@@ -120,6 +127,8 @@ Top pending items:
 - Added a shared Phase 3 `UiAdapter` trait and a draft in-memory implementation so the runtime no longer depends directly on draft window storage
 - Added headless Phase 3 UI adapter entry points and blank-window smoke tests to the macOS, Linux, and Windows adapter crates
 - Added runtime host UI adapter discovery so Phase 3 dispatch can use the current OS adapter entry point and report backend capability info
+- Added ADR-0013, RFC-0003, a mdBook widget protocol page, and a Phase 3 design-doc checker so the native widget plus drawn fallback rule is recorded before host UI backend work grows
+- Added the first shared widget tree model in `adapter-common::ui` so layout and native lowering can use stable widget IDs, kinds, labels, roles, style hints, and parent validation.
 - Added a UCap enforcement evidence recorder and cross-host comparator (`record-phase2-ucap-evidence` + `compare-phase2-ucap-evidence`)
 - Wired hosted full CI to upload per-OS UCap evidence artifacts and run a dedicated cross-host compare gate
 - Added a benchmark evidence recorder and comparator (`record-phase2-benchmark-evidence` + `compare-phase2-benchmark-evidence`) to track startup and dispatch performance evidence in one per-host report
@@ -202,10 +211,11 @@ Top pending items:
 - Current phase plan: `Plan/Phase-3-Plan.md`
 - Phase docs page: `docs/book/src/phases/phase-2.md`
 - Phase 3 docs page: `docs/book/src/phases/phase-3.md`
+- Phase 3 widget protocol page: `docs/book/src/phase3/widget-protocol.md`
 - Progress page for non technical readers: `docs/book/src/progress-for-everyone.md`
 
 ## 8) Resume prompt for a new GPT session
 
 Use this exact prompt in a new session:
 
-`Continue Layer36 on main. Start with STATUS.md, Plan/Phase-2-Plan.md, and Plan/Phase-3-Plan.md. Phase 3 has started with WIT, GUI manifest recognition, Phase 3 capability names, an adapter-common draft window registry, a shared UiAdapter trait, runtime::phase3_ui dispatcher scaffolding, headless UI adapter entry points in the macOS, Linux, and Windows crates, and runtime host UI adapter discovery. Keep Phase 2 closeout evidence separate, keep Phase 3 narrow, update plan/docs after each chunk, keep GitHub Pages in sync, and check CI after every push.`
+`Continue Layer36 on main. Start with STATUS.md, Plan/Phase-2-Plan.md, and Plan/Phase-3-Plan.md. Phase 3 has started with WIT, GUI manifest recognition, Phase 3 capability names, an adapter-common draft window registry, a shared widget tree model, a shared UiAdapter trait, runtime::phase3_ui dispatcher scaffolding, headless UI adapter entry points in the macOS, Linux, and Windows crates, runtime host UI adapter discovery, and ADR/RFC docs for the native-widget plus drawn-fallback widget lowering rule. Keep Phase 2 closeout evidence separate, keep Phase 3 narrow, update plan/docs after each chunk, keep GitHub Pages in sync, and check CI after every push.`

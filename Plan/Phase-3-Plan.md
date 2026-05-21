@@ -2115,8 +2115,10 @@ Save as `docs/book/src/phase3/retro.md` at the end of Phase 3.
 
 Phase 3 has started with the first WIT draft, checker, GUI manifest path,
 capability names, shared in-memory UI adapter scaffold, a shared `UiAdapter`
-trait, host-crate UI adapter entry points, runtime host-adapter discovery, and
-a runtime-facing UI dispatcher. This is not a frozen API and not a working
+trait, host-crate UI adapter entry points, runtime host-adapter discovery, a
+runtime-facing UI dispatcher, and the first shared widget tree model. ADR-0013
+and RFC-0003 now record the widget lowering rule before native widget work
+depends on it. This is not a frozen API and not a working
 desktop GUI yet. It is the contract and runtime boundary foundation for the
 next host adapter work.
 
@@ -2133,6 +2135,8 @@ next host adapter work.
 | P3-UI-04A | Add shared `UiAdapter` trait | 2026-05-21 | `adapter-common::ui::UiAdapter` is now the runtime boundary for window lifecycle, redraw, event drain, and draft clipboard behavior. |
 | P3-UI-04B | Start host UI adapter entry points | 2026-05-21 | macOS, Linux, and Windows adapter crates expose headless draft UI adapters with blank-window smoke tests. |
 | P3-RUNTIME-01 | Discover host UI adapter from runtime | 2026-05-21 | `Phase3UiRuntime` owns the UCap guard and selected host UI adapter so the dispatcher can run through the current OS entry point. |
+| P3-UI-01A | Draft widget protocol decision docs | 2026-05-21 | ADR-0013, RFC-0003, and the mdBook widget protocol page record native widget lowering plus drawn fallback rules. |
+| P3-UI-01B | Add shared widget tree model | 2026-05-21 | `adapter-common::ui` now has `WidgetId`, `WidgetKind`, `WidgetNode`, `WidgetStyle`, and `WidgetTree` with parent-link and style validation. |
 
 ---
 
@@ -2175,6 +2179,8 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P3-UI-04A | Shared UI adapter trait | 2026-05-21 | `runtime::phase3_ui` now talks to `UiAdapter`, with `DraftUiAdapter` as the current in-memory implementation. |
 | P3-UI-04B | Host UI adapter entry points | 2026-05-21 | `adapter-{macos,linux,windows}` each expose a headless draft UI adapter and a blank-window smoke test. |
 | P3-RUNTIME-01 | Runtime host UI adapter discovery | 2026-05-21 | `Phase3UiRuntime::with_host_adapter` selects the current host adapter and exposes adapter capability info. |
+| P3-UI-01A | Widget protocol decision docs | 2026-05-21 | Added ADR-0013, RFC-0003, an mdBook widget protocol page, and a design-doc checker. |
+| P3-UI-01B | Shared widget tree model | 2026-05-21 | Added stable widget IDs, first widget kind enum, style hints, labels, role hints, and parent validation in `adapter-common::ui`. |
 
 ---
 
@@ -2182,7 +2188,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | Task ID | Task | Started | Blockers |
 |---------|------|---------|----------|
-| P3-UI-01 | Widget protocol design RFC | 2026-05-19 | Needs ADR-0013 written and reviewed. |
+| P3-UI-01 | Widget protocol design RFC | 2026-05-19 | Draft written; needs review before the rule is treated as accepted. |
 | P3-UI-04 | Window + event loop abstractions | 2026-05-19 | Shared trait, host entry points, and runtime discovery exist; next step is one real native window backend. |
 
 ---
@@ -2191,7 +2197,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 
 | ADR | Title | Status | Merged |
 |-----|-------|--------|--------|
-| ADR-0013 | Widget lowering strategy — “native three of five” rule (Answer D) | Pending | — |
+| ADR-0013 | Widget lowering strategy — “native three of five” rule (Answer D) | Proposed | — |
 | ADR-0014 | Layout engine: Taffy (flexbox subset) | Pending | — |
 | ADR-0015 | 2D canvas: vello on wgpu | Pending | — |
 | ADR-0016 | GPU API: WebGPU-compatible subset via wgpu | Pending | — |
@@ -2203,7 +2209,7 @@ _ADRs 0017–0020 to be determined during Phase 3 work._
 ### Blockers & Open Questions
 
 - Phase 2 outside developer review and final freeze packet are still pending.
-- ADR-0013 must be written before the widget lowering strategy is treated as stable.
+- ADR-0013 is now drafted. It still needs review before it becomes accepted.
 
 ---
 
@@ -2215,6 +2221,12 @@ _ADRs 0017–0020 to be determined during Phase 3 work._
 - 2026-05-19: Added the first runtime-facing guardrail. Phase 3 GUI manifests
   are valid metadata now, but `layer36 run` stops before execution until the
   window runtime exists.
+- 2026-05-21: Drafted ADR-0013 and RFC-0003 for the widget protocol. The rule
+  is native controls where the host has a semantic match, with drawn fallback
+  where it does not.
+- 2026-05-21: Added the first shared widget tree model in `adapter-common`.
+  This gives layout and native lowering a local Rust type path before real host
+  widgets are wired.
 
 ---
 

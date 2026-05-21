@@ -42,3 +42,8 @@ Examples that do **not** need an ADR:
 | [ADR-0006](../../../adr/0006-wit-versioning-strategy.md) | WIT versioning strategy | Accepted |
 | [ADR-0007](../../../adr/0007-ucap-soft-enforcement.md) | UCap v0.1 soft enforcement | Accepted |
 | [ADR-0008](../../../adr/0008-host-async-runtime.md) | Host async runtime | Accepted |
+| [ADR-0009](../../../adr/0009-sandbox-link-semantics.md) | Sandbox link-semantics guardrails | Accepted |
+| [ADR-0010](../../../adr/0010-locale-timezone-discovery-fallbacks.md) | Locale and timezone discovery fallbacks | Accepted |
+| [ADR-0011](../../../adr/0011-phase2-benchmark-regression-policy.md) | Phase 2 benchmark regression policy | Accepted |
+| [ADR-0012](../../../adr/0012-adapter-crate-split-per-os.md) | Adapter crate split per host OS | Accepted |
+| [ADR-0013](../../../adr/0013-widget-lowering-strategy.md) | Widget lowering strategy | Proposed |

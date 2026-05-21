@@ -110,6 +110,16 @@ that checks permissions before calling that adapter. It also reports adapter
 capability info such as host family, backend name, and whether native windows
 or a native event loop are enabled. Today those values still say headless draft.
 
+ADR-0013 and RFC-0003 now define how widgets lower once a native backend exists.
+A widget should become a native control when the host has a semantic match. If
+it does not, Layer36 uses a drawn fallback with the same layout, input,
+accessibility, and permission rules.
+
+The shared Rust model has started too. `adapter-common::ui` now has stable
+widget IDs, widget kinds, labels, role hints, small style hints, and parent-link
+validation. That is the local model the next layout and native-lowering code
+can use before the WIT bindings are wired end to end.
+
 ## What It Does Not Mean Yet
 
 This is not a finished desktop UI layer.

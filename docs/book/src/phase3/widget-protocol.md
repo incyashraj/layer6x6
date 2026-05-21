@@ -1,0 +1,125 @@
+# Widget Protocol
+
+Layer36 does not want every desktop app to look like the same painted surface.
+It also does not want every app developer to write three different UIs for
+Windows, macOS, and Linux.
+
+The Phase 3 answer is a small widget tree. The app says what it wants. The host
+adapter decides how to make it feel right on that machine.
+
+## The Basic Idea
+
+For common controls, Layer36 should use real host widgets. A button should be a
+real button. A text field should use the host text system where possible. A menu
+should follow host menu rules.
+
+For surfaces that do not have a good native match, Layer36 draws them itself.
+That gives apps room for canvas, custom lists, charts, and later richer
+graphics.
+
+```mermaid
+flowchart LR
+    A["App asks for widgets"] --> B["Layer36 runtime"]
+    B --> C["Layout and permission checks"]
+    C --> D{"Host has a real match?"}
+    D -->|yes| E["Native widget"]
+    D -->|no| F["Drawn fallback"]
+    E --> G["User sees the app"]
+    F --> G
+```
+
+## Why This Direction
+
+There are three common ways to build cross platform desktop UI:
+
+| Approach | What it means | Why Layer36 is not using it as the main path |
+|---|---|---|
+| Draw everything | The framework paints every control itself | Easier to match pixels, but often feels less native |
+| Use only native controls | Every widget is a host widget | Good feel, but too rigid for custom app surfaces |
+| Embed a browser | The app is a web UI in a desktop shell | Useful elsewhere, but not the Layer36 desktop goal |
+
+Layer36 uses a mixed path. Native where the host has the right control. Drawn
+where the app needs its own surface.
+
+## The Native Three Of Five Rule
+
+A widget belongs in the core protocol only when at least three of these hosts
+have a native control with the same meaning:
+
+- Windows
+- macOS
+- Linux
+- iOS
+- Android
+
+This keeps the core set small. It also keeps the API close to what real
+platforms already know how to do.
+
+## First Widget Set
+
+The first set is intentionally small:
+
+| Widget | First use |
+|---|---|
+| Window root | Put the app in a host window |
+| Stack | Arrange controls vertically or horizontally |
+| Text | Show labels and short text |
+| Button | Trigger actions |
+| Text field | Edit one line |
+| Text area | Edit note content |
+| List | Show notes |
+| Scroll | Move through long content |
+| Checkbox | Basic on or off state |
+| Menu | App and window commands |
+| Canvas | Custom drawing later |
+
+That is enough to build the first `layer36-notes` app without turning Phase 3
+into a full design system.
+
+## How Events Move
+
+The host creates raw events. Layer36 turns those into stable events that the app
+can understand.
+
+```mermaid
+sequenceDiagram
+    participant Host
+    participant Adapter
+    participant Runtime
+    participant App
+
+    Host->>Adapter: click, key, text, pointer, close
+    Adapter->>Runtime: Layer36 UI event
+    Runtime->>App: event with widget or window id
+    App->>Runtime: next widget tree
+```
+
+The first code path already handles draft window lifecycle events. The next
+steps are a real native window, then a tiny widget tree with text and a button.
+
+## Current Status
+
+Done now:
+
+- Phase 3 UI, graphics, and audio WIT drafts exist.
+- GUI manifests are recognized.
+- Phase 3 permission names exist.
+- `adapter-common::ui` has the first host-neutral widget tree types:
+  `WidgetId`, `WidgetKind`, `WidgetNode`, `WidgetStyle`, and `WidgetTree`.
+- The runtime has a UI dispatcher scaffold.
+- macOS, Linux, and Windows adapters expose headless draft UI entry points.
+- The runtime can choose the current host adapter.
+- ADR-0013 and RFC-0003 now describe the widget lowering rule.
+
+Pending:
+
+- real native window backend
+- widget tree lowering
+- layout engine
+- text input and IME
+- accessibility tree
+- `layer36-notes`
+
+This is the right direction for the universal platform goal. We are building the
+contract first, then the runtime boundary, then the host adapters. That keeps
+the platform from becoming one app demo with no reusable core.

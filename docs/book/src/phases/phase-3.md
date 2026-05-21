@@ -35,11 +35,16 @@ The first Phase 3 slice is now in the repo:
 - `scripts/check-phase3-uapi.sh` so CI can reject broken WIT before runtime code depends on it
 - manifest and policy support for the first Phase 3 permission names
 - `adapter-common::ui`, an in-memory draft window registry for IDs, title and size validation, lifecycle state, redraw requests, and events
+- `adapter-common::ui`, the first host-neutral widget tree model for stable widget IDs, widget kinds, labels, roles, style hints, and parent links
 - `adapter-common::ui::UiAdapter`, the shared trait that native UI adapters will implement
 - `runtime::phase3_ui`, a runtime dispatcher scaffold that checks UCap before calling the shared UI adapter
 - headless draft UI adapter entry points in the macOS, Linux, and Windows adapter crates, each with a blank-window smoke test
 - `Phase3UiRuntime::with_host_adapter`, which selects the current host UI adapter and reports whether it is still headless or native
+- ADR-0013 and RFC-0003 now record the widget lowering strategy: native controls where the host has a semantic match, drawn fallback where it does not
 
 This is a draft contract, not a frozen API. The next work is to add a tiny host
 side prototype that connects this shared model to one real native window,
 receives events, and draws a simple surface.
+
+See [Widget Protocol](../phase3/widget-protocol.md) for the plain-language
+version of this Phase 3 direction.
