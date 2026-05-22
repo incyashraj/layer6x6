@@ -350,10 +350,18 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
     for needle in [
         "pub struct AppKitWindowBackend",
         "pub struct AppKitWindowPrototype",
+        "pub struct AppKitWindowSnapshot",
         "pub fn create_window(",
         "pub fn show_window(",
+        "pub fn snapshot(&self)",
+        "pub fn sync_window_state(",
+        "pub fn report_close_requested_for_id(",
+        "pub fn report_resized_for_id(",
+        "pub fn report_focused_for_id(",
+        "pub fn report_scale_changed_for_id(",
         "MainThreadMarker",
         "NSWindow::initWithContentRect_styleMask_backing_defer",
+        "backingScaleFactor",
         "attach_appkit_window_handle",
     ] {
         ensure(

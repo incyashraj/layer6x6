@@ -141,6 +141,9 @@ Done now:
   `NSWindow`, binds it to the Layer36 window id, and can show it through the
   shared window path. This starts the real native window backend work. Native
   events and drawing are still pending.
+- The AppKit prototype now has bridge targets for close requests, resize,
+  focus, and display-scale changes. It also has a snapshot helper that reads
+  native size, focus, visibility, and scale from the real window.
 - The runtime has a UI dispatcher scaffold.
 - macOS, Linux, and Windows adapters expose headless draft window and UI entry
   points, plus the planned native backend for each host. macOS also exposes the
@@ -150,7 +153,8 @@ Done now:
 
 Pending:
 
-- native AppKit event capture and a simple drawn surface
+- real AppKit delegate and callback wiring into the new bridge targets
+- a simple drawn surface
 - Linux and Windows native window prototypes
 - host event loop that feeds real close, resize, focus, theme, scale, pointer, key, and text events into the queue
 - widget tree lowering

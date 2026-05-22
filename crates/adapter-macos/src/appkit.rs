@@ -6,7 +6,8 @@
 //! stable Layer36 `WindowId`.
 
 use layer36_adapter_common::ui::{
-    NativeWindowHandle, UiAdapterError, WindowBackendKind, WindowId, WindowOptions,
+    NativeWindowHandle, UiAdapterError, WindowAdapter, WindowBackendKind, WindowId, WindowOptions,
+    WindowSize,
 };
 
 use crate::MacosUiAdapter;
@@ -14,6 +15,15 @@ use crate::MacosUiAdapter;
 /// Small native AppKit backend used by the first Phase 3 macOS prototype.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct AppKitWindowBackend;
+
+/// Current state read from an owned AppKit window.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct AppKitWindowSnapshot {
+    pub visible: bool,
+    pub focused: bool,
+    pub size: WindowSize,
+    pub scale: f32,
+}
 
 impl AppKitWindowBackend {
     /// Return the native backend kind created by this prototype.
@@ -25,12 +35,111 @@ impl AppKitWindowBackend {
     pub fn is_available(&self) -> bool {
         cfg!(target_os = "macos")
     }
+
+    /// Queue a native close request for a Layer36 window id.
+    pub fn report_close_requested_for_id(
+        &self,
+        adapter: &MacosUiAdapter,
+        id: WindowId,
+    ) -> Result<(), UiAdapterError> {
+        WindowAdapter::queue_close_requested(adapter, id)
+    }
+
+    /// Queue a native resize for a Layer36 window id.
+    pub fn report_resized_for_id(
+        &self,
+        adapter: &MacosUiAdapter,
+        id: WindowId,
+        size: WindowSize,
+    ) -> Result<(), UiAdapterError> {
+        WindowAdapter::queue_host_resize(adapter, id, size)
+    }
+
+    /// Queue a native focus change for a Layer36 window id.
+    pub fn report_focused_for_id(
+        &self,
+        adapter: &MacosUiAdapter,
+        id: WindowId,
+        focused: bool,
+    ) -> Result<(), UiAdapterError> {
+        WindowAdapter::queue_window_focused(adapter, id, focused)
+    }
+
+    /// Queue a native display scale change for a Layer36 window id.
+    pub fn report_scale_changed_for_id(
+        &self,
+        adapter: &MacosUiAdapter,
+        id: WindowId,
+        scale: f32,
+    ) -> Result<(), UiAdapterError> {
+        WindowAdapter::queue_scale_changed(adapter, id, scale)
+    }
+
+    /// Queue a native close request for an owned AppKit window.
+    pub fn report_close_requested(
+        &self,
+        adapter: &MacosUiAdapter,
+        window: &AppKitWindowPrototype,
+    ) -> Result<(), UiAdapterError> {
+        self.report_close_requested_for_id(adapter, window.id())
+    }
+
+    /// Queue a native resize for an owned AppKit window.
+    pub fn report_resized(
+        &self,
+        adapter: &MacosUiAdapter,
+        window: &AppKitWindowPrototype,
+        size: WindowSize,
+    ) -> Result<(), UiAdapterError> {
+        self.report_resized_for_id(adapter, window.id(), size)
+    }
+
+    /// Queue a native focus change for an owned AppKit window.
+    pub fn report_focused(
+        &self,
+        adapter: &MacosUiAdapter,
+        window: &AppKitWindowPrototype,
+        focused: bool,
+    ) -> Result<(), UiAdapterError> {
+        self.report_focused_for_id(adapter, window.id(), focused)
+    }
+
+    /// Queue a native display scale change for an owned AppKit window.
+    pub fn report_scale_changed(
+        &self,
+        adapter: &MacosUiAdapter,
+        window: &AppKitWindowPrototype,
+        scale: f32,
+    ) -> Result<(), UiAdapterError> {
+        self.report_scale_changed_for_id(adapter, window.id(), scale)
+    }
+
+    /// Read an AppKit snapshot and queue changed state into the shared event stream.
+    pub fn sync_window_state(
+        &self,
+        adapter: &MacosUiAdapter,
+        window: &AppKitWindowPrototype,
+        previous: Option<AppKitWindowSnapshot>,
+    ) -> Result<AppKitWindowSnapshot, UiAdapterError> {
+        let snapshot = window.snapshot()?;
+
+        if previous.is_none_or(|previous| previous.size != snapshot.size) {
+            self.report_resized(adapter, window, snapshot.size)?;
+        }
+        if previous.is_none_or(|previous| previous.focused != snapshot.focused) {
+            self.report_focused(adapter, window, snapshot.focused)?;
+        }
+        if previous.is_none_or(|previous| previous.scale != snapshot.scale) {
+            self.report_scale_changed(adapter, window, snapshot.scale)?;
+        }
+
+        Ok(snapshot)
+    }
 }
 
 #[cfg(target_os = "macos")]
 mod platform {
     use super::*;
-    use layer36_adapter_common::ui::WindowAdapter;
     use objc2::rc::Retained;
     use objc2::{MainThreadMarker, MainThreadOnly};
     use objc2_app_kit::{NSApplication, NSBackingStoreType, NSWindow, NSWindowStyleMask};
@@ -52,6 +161,18 @@ mod platform {
         /// Return the opaque AppKit handle attached to the shared window registry.
         pub fn native_handle(&self) -> NativeWindowHandle {
             self.native_handle
+        }
+
+        /// Read current AppKit window state without draining the Layer36 queue.
+        pub fn snapshot(&self) -> Result<AppKitWindowSnapshot, UiAdapterError> {
+            let _mtm = main_thread_marker()?;
+            let content_rect = self.window.contentLayoutRect();
+            Ok(AppKitWindowSnapshot {
+                visible: self.window.isVisible(),
+                focused: self.window.isKeyWindow(),
+                size: size_from_rect(content_rect)?,
+                scale: self.window.backingScaleFactor() as f32,
+            })
         }
     }
 
@@ -126,6 +247,20 @@ mod platform {
         window
     }
 
+    fn size_from_rect(rect: NSRect) -> Result<WindowSize, UiAdapterError> {
+        let width = logical_edge_to_u32(rect.size.width);
+        let height = logical_edge_to_u32(rect.size.height);
+        WindowSize::new(width, height)
+    }
+
+    fn logical_edge_to_u32(value: f64) -> u32 {
+        if !value.is_finite() || value < 1.0 || value > u32::MAX as f64 {
+            return 0;
+        }
+
+        value.round() as u32
+    }
+
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -168,6 +303,27 @@ mod platform {
                 .expect("show appkit window");
             assert_eq!(window.native_handle().backend, WindowBackendKind::AppKit);
         }
+
+        #[test]
+        #[ignore = "opens a real AppKit window on the local macOS desktop"]
+        fn ignored_smoke_can_snapshot_and_sync_appkit_window_state() {
+            let adapter = MacosUiAdapter::new();
+            let backend = AppKitWindowBackend;
+            let options = WindowOptions::new(
+                "Layer36 AppKit event bridge",
+                WindowSize::new(640, 480).unwrap(),
+            )
+            .unwrap();
+            let window = backend
+                .create_window(&adapter, options)
+                .expect("create appkit window");
+            let snapshot = backend
+                .sync_window_state(&adapter, &window, None)
+                .expect("sync appkit state");
+
+            assert_eq!(snapshot.size, WindowSize::new(640, 480).unwrap());
+            assert!(snapshot.scale > 0.0);
+        }
     }
 }
 
@@ -191,6 +347,13 @@ mod platform {
         /// Return the opaque AppKit handle attached to the shared window registry.
         pub fn native_handle(&self) -> NativeWindowHandle {
             self.native_handle
+        }
+
+        /// AppKit snapshots are only available in macOS builds.
+        pub fn snapshot(&self) -> Result<AppKitWindowSnapshot, UiAdapterError> {
+            Err(UiAdapterError::Unsupported(
+                "AppKit window snapshots are only available on macOS".to_string(),
+            ))
         }
     }
 
@@ -220,3 +383,62 @@ mod platform {
 }
 
 pub use platform::AppKitWindowPrototype;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use layer36_adapter_common::ui::UiEvent;
+
+    #[test]
+    fn appkit_event_bridge_queues_shared_window_events_by_id() {
+        let adapter = MacosUiAdapter::new();
+        let backend = AppKitWindowBackend;
+        let id = WindowAdapter::create_window(
+            &adapter,
+            WindowOptions::new("Layer36 AppKit events", WindowSize::new(640, 480).unwrap())
+                .unwrap(),
+        )
+        .expect("create window");
+        let resized = WindowSize::new(800, 600).unwrap();
+
+        backend
+            .report_resized_for_id(&adapter, id, resized)
+            .expect("resize");
+        backend
+            .report_focused_for_id(&adapter, id, true)
+            .expect("focus");
+        backend
+            .report_scale_changed_for_id(&adapter, id, 2.0)
+            .expect("scale");
+        backend
+            .report_close_requested_for_id(&adapter, id)
+            .expect("close request");
+
+        assert_eq!(
+            WindowAdapter::drain_events(&adapter).expect("events"),
+            vec![
+                UiEvent::WindowCreated(id),
+                UiEvent::Resized { id, size: resized },
+                UiEvent::WindowFocused { id, focused: true },
+                UiEvent::ScaleChanged { id, scale: 2.0 },
+                UiEvent::WindowCloseRequested(id),
+            ]
+        );
+    }
+
+    #[test]
+    fn appkit_event_bridge_reuses_shared_scale_validation() {
+        let adapter = MacosUiAdapter::new();
+        let backend = AppKitWindowBackend;
+        let id = WindowAdapter::create_window(
+            &adapter,
+            WindowOptions::new("Layer36 AppKit scale", WindowSize::new(640, 480).unwrap()).unwrap(),
+        )
+        .expect("create window");
+
+        assert!(matches!(
+            backend.report_scale_changed_for_id(&adapter, id, 0.0),
+            Err(UiAdapterError::InvalidScaleFactor(_))
+        ));
+    }
+}

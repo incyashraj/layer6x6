@@ -132,6 +132,13 @@ attach its raw handle to the Layer36 window id, and show it through the shared
 window path. The normal adapter still reports headless draft because native
 event capture, drawing, and app-facing loop wiring are not finished yet.
 
+The same prototype now has a small event bridge. It can queue close requests,
+resize events, focus changes, and display-scale changes through the shared
+`WindowAdapter` path. It can also read a native snapshot from AppKit: content
+size, focus, visibility, and backing scale. That snapshot is not a full event
+loop yet. It is the checked handoff point that real AppKit delegates can call
+next.
+
 ADR-0013 and RFC-0003 now define how widgets lower once a native backend exists.
 A widget should become a native control when the host has a semantic match. If
 it does not, Layer36 uses a drawn fallback with the same layout, input,
