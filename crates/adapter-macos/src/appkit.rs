@@ -6,7 +6,7 @@
 //! stable Layer36 `WindowId`.
 
 use layer36_adapter_common::ui::{
-    NativeWindowHandle, UiAdapterError, WindowAdapter, WindowBackendKind, WindowId, WindowOptions,
+    NativeWindowHandle, UiAdapterError, WindowBackendKind, WindowId, WindowOptions,
 };
 
 use crate::MacosUiAdapter;
@@ -30,6 +30,7 @@ impl AppKitWindowBackend {
 #[cfg(target_os = "macos")]
 mod platform {
     use super::*;
+    use layer36_adapter_common::ui::WindowAdapter;
     use objc2::rc::Retained;
     use objc2::{MainThreadMarker, MainThreadOnly};
     use objc2_app_kit::{NSApplication, NSBackingStoreType, NSWindow, NSWindowStyleMask};
