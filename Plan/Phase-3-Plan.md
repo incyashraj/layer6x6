@@ -2163,6 +2163,7 @@ input-routing proof, plus the handle mapping needed by the next host adapter wor
 | P3-UI-04E | Add draft theme and scale event routes | 2026-05-22 | System theme changes and per-window scale-factor changes now queue through the shared adapter and runtime dispatcher, with scale validation before native DPI work starts. |
 | P3-UI-04F | Split explicit `WindowAdapter` boundary | 2026-05-22 | Window lifecycle and host-window events now live under `WindowAdapter`; `UiAdapter` builds on it for widgets, input, and clipboard. Host adapters report the active headless backend plus planned native backend. |
 | P3-UI-04G | Add native window handle handoff | 2026-05-22 | `WindowAdapter` can now attach, inspect, and detach an opaque native handle for a Layer36 window id. macOS exposes the first AppKit handoff method while the default backend remains headless draft. |
+| P3-UI-04H | Add opt-in AppKit window prototype | 2026-05-22 | macOS now has an `AppKitWindowBackend` that can create an owned `NSWindow` on the main thread, attach its handle to a Layer36 window id, and show it through the shared window path. The default adapter still stays headless draft. |
 
 ---
 
@@ -2218,6 +2219,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P3-UI-04E | Draft theme and scale event routes | 2026-05-22 | Added theme-change and scale-factor queue paths through the shared adapter, host adapter shims, and runtime dispatcher. |
 | P3-UI-04F | Explicit `WindowAdapter` boundary | 2026-05-22 | Added a named window trait under `adapter-common`, split window lifecycle from widget/input operations, and recorded planned native backends in adapter info. |
 | P3-UI-04G | Native window handle handoff | 2026-05-22 | Added `NativeWindowHandle`, native attach/lookup/detach methods, shared events for attach/detach, and a macOS `attach_appkit_window_handle` entry point. |
+| P3-UI-04H | Opt-in AppKit window prototype | 2026-05-22 | Added target-specific `objc2` and AppKit wiring, an owned `AppKitWindowPrototype`, a safe main-thread gate, and ignored local smoke coverage for opening a real macOS window without disturbing normal CI. |
 
 ---
 
@@ -2227,7 +2229,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 |---------|------|---------|----------|
 | P3-UI-01 | Widget protocol design RFC | 2026-05-19 | Draft written; needs review before the rule is treated as accepted. |
 | P3-UI-03 | Layout engine (Taffy integration) | 2026-05-21 | First wrapper, 100-shape tests, benchmark target, and prepared repeated-layout path exist; local prepared 10k layout is below the exit budget, but cold rebuild is not, so recorded cross-host benchmark results and wider style coverage are pending. |
-| P3-UI-04 | Window + event loop abstractions | 2026-05-19 | Explicit `WindowAdapter`, native handle handoff, shared `UiAdapter`, widget-tree dispatch, host entry points, runtime discovery, routed input events, FIFO event polling, host window events, and theme/scale events exist; next step is one real native window backend creating and showing a real OS window through this handle path. |
+| P3-UI-04 | Window + event loop abstractions | 2026-05-19 | Explicit `WindowAdapter`, native handle handoff, shared `UiAdapter`, widget-tree dispatch, host entry points, runtime discovery, routed input events, FIFO event polling, host window events, theme/scale events, and an opt-in macOS AppKit window prototype exist. Next step is feeding real native AppKit events into the shared queue and moving toward Linux and Windows native windows. |
 | P3-INPUT-01 | Keyboard + mouse input | 2026-05-21 | First runtime-side pointer, key, and committed-text routes exist; real host pointer, hover, wheel, keyboard, shortcut, IME composition, and cross-host normalization are pending. |
 
 ---
@@ -2310,6 +2312,11 @@ _ADRs 0017–0020 to be determined during Phase 3 work._
   `WindowId`, look it up later, and detach it. macOS has the first AppKit
   handoff method. This is still not a visible native window, but it removes the
   awkward part before the real AppKit window code lands.
+- 2026-05-22: Added the first opt-in AppKit window prototype. The macOS adapter
+  can now create an owned `NSWindow` on the main thread, bind its raw handle to
+  the Layer36 window id, and show it through the same shared window path. This
+  is not the default runtime yet, because native event capture and drawing are
+  still next.
 
 ---
 

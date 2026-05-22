@@ -343,6 +343,28 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
             .contains("pub fn attach_appkit_window_handle("),
         "macOS adapter must expose the first AppKit native-handle handoff point".to_string(),
     )?;
+    let macos_appkit_path = root.join("crates/adapter-macos/src/appkit.rs");
+    let macos_appkit = fs::read_to_string(&macos_appkit_path)
+        .with_context(|| format!("read {}", macos_appkit_path.display()))?;
+    let macos_cargo = fs::read_to_string(root.join("crates/adapter-macos/Cargo.toml"))?;
+    for needle in [
+        "pub struct AppKitWindowBackend",
+        "pub struct AppKitWindowPrototype",
+        "pub fn create_window(",
+        "pub fn show_window(",
+        "MainThreadMarker",
+        "NSWindow::initWithContentRect_styleMask_backing_defer",
+        "attach_appkit_window_handle",
+    ] {
+        ensure(
+            macos_appkit.contains(needle),
+            format!("macOS AppKit prototype must include `{needle}`"),
+        )?;
+    }
+    ensure(
+        macos_cargo.contains("objc2-app-kit"),
+        "macOS adapter must depend on objc2-app-kit for the AppKit prototype".to_string(),
+    )?;
 
     Ok(BoundaryReport {
         runtime_wrappers: RUNTIME_BOUNDARY_CALLS.len(),

@@ -3,23 +3,23 @@
 Last updated: 2026-05-22
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `5ba76de`
-Working tree at this status update: Phase 3 native window handle handoff slice in progress
+Latest checked completed push before this slice: `51902d2`
+Working tree at this status update: Phase 3 opt-in AppKit window prototype slice in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 333
-- Tracked files after this slice lands: about 331
-- Total tracked lines after this slice lands: about 92,950
-- Rust lines (`.rs`) after this slice lands: about 45,535
-- Docs lines (`.md`) after this slice lands: about 30,175
+- Commits after this slice lands: about 334
+- Tracked files after this slice lands: about 332
+- Total tracked lines after this slice lands: about 93,578
+- Rust lines (`.rs`) after this slice lands: about 46,044
+- Docs lines (`.md`) after this slice lands: about 30,200
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`5ba76de`) checks:
+Latest completed push (`51902d2`) checks:
 
-- CI: success (run `26267627416`)
-- Deploy docs to GitHub Pages: success (run `26267627399`)
+- CI: success (run `26276798240`)
+- Deploy docs to GitHub Pages: success (run `26276798208`)
 
 Manual hosted full CI run `26069665276` passed on commit `3f1a219`.
 Linux, macOS, and Windows full-test lanes all passed. The language-variant,
@@ -136,6 +136,10 @@ Current Phase 3 slice:
   can attach, inspect, and detach an opaque AppKit, winit, or Win32 host handle
   for a stable Layer36 `WindowId`. macOS has the first AppKit handoff method,
   while the default backend still stays headless draft.
+- macOS now has an opt-in AppKit window prototype. It can create an owned
+  `NSWindow` on the main thread, attach the native pointer to a Layer36 window
+  id, and show it through the shared window path. This is not the default UI
+  runtime yet because native event capture and drawing still need to land.
 
 This does not mean desktop UI is implemented yet. It means the first public
 contract for desktop UI work is now in the repo and checked locally. The window
@@ -189,6 +193,7 @@ Top pending items:
 - Added draft theme and scale event routes so dark mode and DPI changes have stable queue targets before real native windows land.
 - Added an explicit `WindowAdapter` trait below `UiAdapter`, plus active/planned window backend reporting for macOS, Linux, and Windows.
 - Added native window handle attach, lookup, and detach support, plus the first macOS AppKit handle handoff method.
+- Added the first opt-in AppKit window prototype for macOS, with target-specific `objc2` dependencies, owned `NSWindow` lifetime, main-thread gating, shared handle attachment, and ignored local smoke coverage for opening the real native window.
 - Added a UCap enforcement evidence recorder and cross-host comparator (`record-phase2-ucap-evidence` + `compare-phase2-ucap-evidence`)
 - Wired hosted full CI to upload per-OS UCap evidence artifacts and run a dedicated cross-host compare gate
 - Added a benchmark evidence recorder and comparator (`record-phase2-benchmark-evidence` + `compare-phase2-benchmark-evidence`) to track startup and dispatch performance evidence in one per-host report

@@ -137,6 +137,10 @@ Done now:
 - Native window handles now have a shared handoff point. A host backend can
   attach an AppKit, winit, or Win32 handle to a stable Layer36 window id, then
   look it up or detach it later.
+- macOS has the first opt-in AppKit window prototype. It creates an owned
+  `NSWindow`, binds it to the Layer36 window id, and can show it through the
+  shared window path. This starts the real native window backend work. Native
+  events and drawing are still pending.
 - The runtime has a UI dispatcher scaffold.
 - macOS, Linux, and Windows adapters expose headless draft window and UI entry
   points, plus the planned native backend for each host. macOS also exposes the
@@ -146,7 +150,8 @@ Done now:
 
 Pending:
 
-- real native window backend that creates and shows one OS window through the handle handoff
+- native AppKit event capture and a simple drawn surface
+- Linux and Windows native window prototypes
 - host event loop that feeds real close, resize, focus, theme, scale, pointer, key, and text events into the queue
 - widget tree lowering
 - larger layout style coverage and recorded large-tree benchmark results on all target hosts

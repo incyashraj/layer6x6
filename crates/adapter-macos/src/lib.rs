@@ -3,6 +3,8 @@
 //! This crate is the macOS ownership boundary. Shared behavior still comes from
 //! `layer36-adapter-common`, while macOS-specific host wiring will land here.
 
+mod appkit;
+
 use layer36_adapter_common::{
     locale::{DateStyle, HostLocale, LocaleId, NumberStyle},
     time::HostClock,
@@ -17,6 +19,8 @@ use std::net::ToSocketAddrs;
 use std::net::{SocketAddr, TcpStream};
 use std::path::Path;
 use std::time::Duration;
+
+pub use appkit::{AppKitWindowBackend, AppKitWindowPrototype};
 
 /// Host family handled by this adapter crate.
 pub const HOST_FAMILY: &str = "macos";
@@ -479,6 +483,19 @@ mod tests {
                 },
             ]
         );
+    }
+
+    #[test]
+    fn appkit_backend_is_exposed_but_not_default_yet() {
+        let adapter = discover_ui_adapter();
+        let backend = AppKitWindowBackend;
+        assert_eq!(backend.backend_kind(), WindowBackendKind::AppKit);
+        assert_eq!(
+            adapter.planned_native_window_backend(),
+            backend.backend_kind()
+        );
+        assert_eq!(backend.is_available(), cfg!(target_os = "macos"));
+        assert!(!adapter.native_windows_enabled());
     }
 
     #[test]

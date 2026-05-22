@@ -126,6 +126,12 @@ Layer36 id, look it up later, and detach it. macOS has the first AppKit handoff
 method. The default backend is still headless draft, so this does not open a
 real window yet.
 
+macOS now has the first opt-in native window prototype behind that handoff. The
+`AppKitWindowBackend` can create an owned AppKit `NSWindow` on the main thread,
+attach its raw handle to the Layer36 window id, and show it through the shared
+window path. The normal adapter still reports headless draft because native
+event capture, drawing, and app-facing loop wiring are not finished yet.
+
 ADR-0013 and RFC-0003 now define how widgets lower once a native backend exists.
 A widget should become a native control when the host has a semantic match. If
 it does not, Layer36 uses a drawn fallback with the same layout, input,

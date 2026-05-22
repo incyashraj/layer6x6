@@ -54,14 +54,15 @@ The first Phase 3 slice is now in the repo:
 - active and planned window backend info for each host, with AppKit planned for macOS and winit planned for Linux and Windows
 - native window handle handoff in `WindowAdapter`, so a real host window can be bound to a stable Layer36 `WindowId`
 - the first macOS AppKit handoff method, ready for the native AppKit window prototype while the default adapter remains headless draft
+- an opt-in macOS `AppKitWindowBackend` that creates an owned `NSWindow` on the main thread, attaches its native handle to a Layer36 window id, and shows it through the shared window path
 - `Phase3UiRuntime::with_host_adapter`, which selects the current host UI adapter and reports whether it is still headless or native
 - ADR-0013 and RFC-0003 now record the widget lowering strategy: native controls where the host has a semantic match, drawn fallback where it does not
 - ADR-0014 records the layout engine choice: Taffy, with a small flexbox-style subset first
 
-This is a draft contract, not a frozen API. The next work is to make the macOS
-side create and show one real AppKit window, attach that native handle to the
-Layer36 window id, feed real host window and input events into the draft event
-queue, and draw a simple surface.
+This is a draft contract, not a frozen API. The macOS side can now create and
+show one AppKit window through an opt-in prototype. The next work is to feed
+real host window and input events into the draft event queue, then draw a
+simple surface.
 
 See [Widget Protocol](../phase3/widget-protocol.md) for the plain-language
 version of this Phase 3 direction. See [Layout](../phase3/layout.md) for the
