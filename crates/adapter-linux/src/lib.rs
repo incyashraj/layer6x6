@@ -7,9 +7,9 @@ use layer36_adapter_common::{
     locale::{DateStyle, HostLocale, LocaleId, NumberStyle},
     time::HostClock,
     ui::{
-        DraftUiAdapter, KeyEvent, PointerEvent, TextInputEvent, Theme, UiAdapter, UiAdapterError,
-        UiAdapterInfo, UiEvent, WidgetId, WidgetNode, WidgetTree, WindowAdapter, WindowBackendKind,
-        WindowId, WindowOptions, WindowRecord, WindowSize,
+        DraftUiAdapter, KeyEvent, NativeWindowHandle, PointerEvent, TextInputEvent, Theme,
+        UiAdapter, UiAdapterError, UiAdapterInfo, UiEvent, WidgetId, WidgetNode, WidgetTree,
+        WindowAdapter, WindowBackendKind, WindowId, WindowOptions, WindowRecord, WindowSize,
     },
 };
 use std::fs::OpenOptions;
@@ -87,6 +87,25 @@ impl WindowAdapter for LinuxUiAdapter {
 
     fn window(&self, id: WindowId) -> Result<Option<WindowRecord>, UiAdapterError> {
         WindowAdapter::window(&self.draft, id)
+    }
+
+    fn attach_native_window(
+        &self,
+        id: WindowId,
+        handle: NativeWindowHandle,
+    ) -> Result<(), UiAdapterError> {
+        WindowAdapter::attach_native_window(&self.draft, id, handle)
+    }
+
+    fn native_window(&self, id: WindowId) -> Result<Option<NativeWindowHandle>, UiAdapterError> {
+        WindowAdapter::native_window(&self.draft, id)
+    }
+
+    fn detach_native_window(
+        &self,
+        id: WindowId,
+    ) -> Result<Option<NativeWindowHandle>, UiAdapterError> {
+        WindowAdapter::detach_native_window(&self.draft, id)
     }
 
     fn drain_events(&self) -> Result<Vec<UiEvent>, UiAdapterError> {

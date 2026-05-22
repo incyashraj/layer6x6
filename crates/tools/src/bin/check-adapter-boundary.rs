@@ -220,6 +220,16 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
         adapter_common.contains("planned_window_backend: WindowBackendKind"),
         "UI adapter info must record the planned native window backend".to_string(),
     )?;
+    ensure(
+        adapter_common.contains("pub struct NativeWindowHandle"),
+        "adapter-common must expose an opaque native window handle token".to_string(),
+    )?;
+    ensure(
+        adapter_common.contains("fn attach_native_window(")
+            && adapter_common.contains("fn native_window(&self, id: WindowId)")
+            && adapter_common.contains("fn detach_native_window("),
+        "WindowAdapter must expose native handle attach, lookup, and detach methods".to_string(),
+    )?;
 
     for call in RUNTIME_BOUNDARY_CALLS {
         let body = function_body(&runtime, call.wrapper_fn)
@@ -292,6 +302,9 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
             "fn remove_node(&self, window: WindowId, widget: WidgetId)",
             "fn focus_node(&self, window: WindowId, widget: WidgetId)",
             "fn widget_tree(&self, window: WindowId)",
+            "fn attach_native_window(",
+            "fn native_window(&self, id: WindowId)",
+            "fn detach_native_window(",
             "fn poll_event(&self)",
             "fn queue_close_requested(&self, id: WindowId)",
             "fn queue_host_resize(&self, id: WindowId, size: WindowSize)",
@@ -325,6 +338,11 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
             ),
         )?;
     }
+    ensure(
+        fs::read_to_string(root.join("crates/adapter-macos/src/lib.rs"))?
+            .contains("pub fn attach_appkit_window_handle("),
+        "macOS adapter must expose the first AppKit native-handle handoff point".to_string(),
+    )?;
 
     Ok(BoundaryReport {
         runtime_wrappers: RUNTIME_BOUNDARY_CALLS.len(),

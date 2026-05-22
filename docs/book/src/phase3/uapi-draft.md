@@ -118,6 +118,14 @@ sit in that lower layer. `UiAdapter` builds on it with widget trees, input, and
 clipboard. This keeps the first native window backend smaller than the full
 widget bridge.
 
+That window boundary now has the first native handle handoff. In plain terms,
+Layer36 has a stable `WindowId`, while the host has a real object such as an
+AppKit `NSWindow`, a winit window, or a Win32 window. The new
+`NativeWindowHandle` token lets a host adapter attach that native object to the
+Layer36 id, look it up later, and detach it. macOS has the first AppKit handoff
+method. The default backend is still headless draft, so this does not open a
+real window yet.
+
 ADR-0013 and RFC-0003 now define how widgets lower once a native backend exists.
 A widget should become a native control when the host has a semantic match. If
 it does not, Layer36 uses a drawn fallback with the same layout, input,

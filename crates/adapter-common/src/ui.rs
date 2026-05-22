@@ -90,6 +90,41 @@ pub enum WindowBackendKind {
     Unknown,
 }
 
+/// Opaque host window handle associated with a Layer36 window id.
+///
+/// The raw value is owned by the host adapter. Layer36 only stores it so a
+/// native backend can keep the stable `WindowId` and the OS-level window object
+/// connected while events move through the shared queue.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct NativeWindowHandle {
+    pub backend: WindowBackendKind,
+    pub raw_handle: u64,
+}
+
+impl NativeWindowHandle {
+    /// Create a validated native window handle token.
+    pub fn new(backend: WindowBackendKind, raw_handle: u64) -> Result<Self, UiAdapterError> {
+        if raw_handle == 0 || !backend.accepts_native_window_handles() {
+            return Err(UiAdapterError::InvalidNativeWindowHandle {
+                backend: format!("{backend:?}"),
+                raw_handle,
+            });
+        }
+
+        Ok(Self {
+            backend,
+            raw_handle,
+        })
+    }
+}
+
+impl WindowBackendKind {
+    /// Return whether this backend kind can own native host window handles.
+    pub fn accepts_native_window_handles(self) -> bool {
+        matches!(self, Self::AppKit | Self::Winit | Self::Win32)
+    }
+}
+
 /// Mouse or touch button in the portable UI event stream.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PointerButton {
@@ -423,17 +458,51 @@ pub enum UiEvent {
     WindowCreated(WindowId),
     WindowShown(WindowId),
     WindowClosed(WindowId),
+    NativeWindowAttached {
+        id: WindowId,
+        backend: WindowBackendKind,
+    },
+    NativeWindowDetached {
+        id: WindowId,
+        backend: WindowBackendKind,
+    },
     WindowCloseRequested(WindowId),
-    WindowFocused { id: WindowId, focused: bool },
-    ThemeChanged { theme: Theme },
-    ScaleChanged { id: WindowId, scale: f32 },
+    WindowFocused {
+        id: WindowId,
+        focused: bool,
+    },
+    ThemeChanged {
+        theme: Theme,
+    },
+    ScaleChanged {
+        id: WindowId,
+        scale: f32,
+    },
     RedrawRequested(WindowId),
-    Resized { id: WindowId, size: WindowSize },
-    TitleChanged { id: WindowId, title: String },
-    WidgetRootSet { window: WindowId, root: WidgetId },
-    WidgetUpdated { window: WindowId, widget: WidgetId },
-    WidgetRemoved { window: WindowId, widget: WidgetId },
-    FocusChanged { window: WindowId, widget: WidgetId },
+    Resized {
+        id: WindowId,
+        size: WindowSize,
+    },
+    TitleChanged {
+        id: WindowId,
+        title: String,
+    },
+    WidgetRootSet {
+        window: WindowId,
+        root: WidgetId,
+    },
+    WidgetUpdated {
+        window: WindowId,
+        widget: WidgetId,
+    },
+    WidgetRemoved {
+        window: WindowId,
+        widget: WidgetId,
+    },
+    FocusChanged {
+        window: WindowId,
+        widget: WidgetId,
+    },
     Pointer(PointerEvent),
     Key(KeyEvent),
     TextInput(TextInputEvent),
@@ -516,6 +585,22 @@ pub trait WindowAdapter: Send + Sync {
 
     /// Return a snapshot of a tracked window.
     fn window(&self, id: WindowId) -> Result<Option<WindowRecord>, UiAdapterError>;
+
+    /// Attach an opaque host-native window handle to a tracked window.
+    fn attach_native_window(
+        &self,
+        id: WindowId,
+        handle: NativeWindowHandle,
+    ) -> Result<(), UiAdapterError>;
+
+    /// Return the native handle currently attached to a tracked window.
+    fn native_window(&self, id: WindowId) -> Result<Option<NativeWindowHandle>, UiAdapterError>;
+
+    /// Remove the native handle currently attached to a tracked window.
+    fn detach_native_window(
+        &self,
+        id: WindowId,
+    ) -> Result<Option<NativeWindowHandle>, UiAdapterError>;
 
     /// Drain queued window and UI events.
     fn drain_events(&self) -> Result<Vec<UiEvent>, UiAdapterError>;
@@ -643,6 +728,25 @@ impl WindowAdapter for DraftUiAdapter {
         Ok(self.registry()?.window(id).cloned())
     }
 
+    fn attach_native_window(
+        &self,
+        id: WindowId,
+        handle: NativeWindowHandle,
+    ) -> Result<(), UiAdapterError> {
+        self.registry()?.attach_native_window(id, handle)
+    }
+
+    fn native_window(&self, id: WindowId) -> Result<Option<NativeWindowHandle>, UiAdapterError> {
+        self.registry()?.native_window(id)
+    }
+
+    fn detach_native_window(
+        &self,
+        id: WindowId,
+    ) -> Result<Option<NativeWindowHandle>, UiAdapterError> {
+        self.registry()?.detach_native_window(id)
+    }
+
     fn drain_events(&self) -> Result<Vec<UiEvent>, UiAdapterError> {
         Ok(self.registry()?.drain_events())
     }
@@ -715,6 +819,7 @@ impl UiAdapter for DraftUiAdapter {
 pub struct DraftWindowRegistry {
     next_id: u64,
     windows: BTreeMap<WindowId, WindowRecord>,
+    native_windows: BTreeMap<WindowId, NativeWindowHandle>,
     widget_trees: BTreeMap<WindowId, WidgetTree>,
     focused_widgets: BTreeMap<WindowId, WidgetId>,
     events: VecDeque<UiEvent>,
@@ -752,6 +857,7 @@ impl DraftWindowRegistry {
         let window = self.open_window_mut(id)?;
         window.closed = true;
         window.visible = false;
+        self.native_windows.remove(&id);
         self.widget_trees.remove(&id);
         self.focused_widgets.remove(&id);
         self.events.push_back(UiEvent::WindowClosed(id));
@@ -867,6 +973,50 @@ impl DraftWindowRegistry {
     /// Read one window record.
     pub fn window(&self, id: WindowId) -> Option<&WindowRecord> {
         self.windows.get(&id)
+    }
+
+    /// Attach an opaque native host handle to a tracked window.
+    pub fn attach_native_window(
+        &mut self,
+        id: WindowId,
+        handle: NativeWindowHandle,
+    ) -> Result<(), UiAdapterError> {
+        self.open_window(id)?;
+        if self.native_windows.contains_key(&id) {
+            return Err(UiAdapterError::NativeWindowAlreadyAttached { id: id.get() });
+        }
+
+        self.native_windows.insert(id, handle);
+        self.events.push_back(UiEvent::NativeWindowAttached {
+            id,
+            backend: handle.backend,
+        });
+        Ok(())
+    }
+
+    /// Return the native handle for a tracked window.
+    pub fn native_window(
+        &self,
+        id: WindowId,
+    ) -> Result<Option<NativeWindowHandle>, UiAdapterError> {
+        self.open_window(id)?;
+        Ok(self.native_windows.get(&id).copied())
+    }
+
+    /// Detach the native handle for a tracked window.
+    pub fn detach_native_window(
+        &mut self,
+        id: WindowId,
+    ) -> Result<Option<NativeWindowHandle>, UiAdapterError> {
+        self.open_window(id)?;
+        let handle = self.native_windows.remove(&id);
+        if let Some(handle) = handle {
+            self.events.push_back(UiEvent::NativeWindowDetached {
+                id,
+                backend: handle.backend,
+            });
+        }
+        Ok(handle)
     }
 
     /// Read a window's widget tree.
@@ -1034,6 +1184,10 @@ pub enum UiAdapterError {
     EmptyTitle,
     #[error("window title is too long")]
     TitleTooLong,
+    #[error("invalid native window handle {raw_handle} for backend {backend}")]
+    InvalidNativeWindowHandle { backend: String, raw_handle: u64 },
+    #[error("window {id} already has a native handle attached")]
+    NativeWindowAlreadyAttached { id: u64 },
     #[error("unsupported UI feature: {0}")]
     Unsupported(String),
     #[error("internal UI adapter error: {0}")]
@@ -1237,6 +1391,75 @@ mod tests {
                 UiEvent::ScaleChanged { id, scale: 2.0 },
             ]
         );
+    }
+
+    #[test]
+    fn draft_registry_tracks_native_window_handles() {
+        let mut registry = DraftWindowRegistry::default();
+        let size = WindowSize::new(800, 600).expect("size");
+        let id = registry.create_window(WindowOptions::new("Notes", size).expect("options"));
+        let handle = NativeWindowHandle::new(WindowBackendKind::AppKit, 0xCAFE).expect("handle");
+
+        registry
+            .attach_native_window(id, handle)
+            .expect("attach native handle");
+
+        assert_eq!(registry.native_window(id).expect("lookup"), Some(handle));
+        assert!(matches!(
+            registry.attach_native_window(id, handle),
+            Err(UiAdapterError::NativeWindowAlreadyAttached { id: 1 })
+        ));
+        assert_eq!(
+            registry.detach_native_window(id).expect("detach"),
+            Some(handle)
+        );
+        assert_eq!(registry.native_window(id).expect("lookup"), None);
+        assert_eq!(
+            registry.drain_events(),
+            vec![
+                UiEvent::WindowCreated(id),
+                UiEvent::NativeWindowAttached {
+                    id,
+                    backend: WindowBackendKind::AppKit,
+                },
+                UiEvent::NativeWindowDetached {
+                    id,
+                    backend: WindowBackendKind::AppKit,
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn draft_registry_removes_native_window_handle_on_close() {
+        let mut registry = DraftWindowRegistry::default();
+        let size = WindowSize::new(800, 600).expect("size");
+        let id = registry.create_window(WindowOptions::new("Notes", size).expect("options"));
+        let handle = NativeWindowHandle::new(WindowBackendKind::Winit, 0xBEEF).expect("handle");
+
+        registry.attach_native_window(id, handle).expect("attach");
+        registry.close_window(id).expect("close");
+
+        assert!(matches!(
+            registry.native_window(id),
+            Err(UiAdapterError::WindowClosed { id: 1 })
+        ));
+    }
+
+    #[test]
+    fn native_window_handle_rejects_non_native_backends() {
+        assert!(matches!(
+            NativeWindowHandle::new(WindowBackendKind::HeadlessDraft, 0xCAFE),
+            Err(UiAdapterError::InvalidNativeWindowHandle { .. })
+        ));
+        assert!(matches!(
+            NativeWindowHandle::new(WindowBackendKind::Unknown, 0xCAFE),
+            Err(UiAdapterError::InvalidNativeWindowHandle { .. })
+        ));
+        assert!(matches!(
+            NativeWindowHandle::new(WindowBackendKind::AppKit, 0),
+            Err(UiAdapterError::InvalidNativeWindowHandle { .. })
+        ));
     }
 
     #[test]
@@ -1636,6 +1859,26 @@ mod tests {
         assert!(!info.native_windows);
         assert!(!info.native_event_loop);
         assert_eq!(window_info, info);
+    }
+
+    #[test]
+    fn draft_adapter_exposes_native_window_handle_boundary() {
+        let adapter = DraftUiAdapter::new();
+        let size = WindowSize::new(640, 480).expect("size");
+        let id = adapter
+            .create_window(WindowOptions::new("Layer36", size).expect("options"))
+            .expect("window");
+        let handle = NativeWindowHandle::new(WindowBackendKind::Winit, 0x1234).expect("handle");
+
+        adapter
+            .attach_native_window(id, handle)
+            .expect("attach native handle");
+
+        assert_eq!(adapter.native_window(id).expect("lookup"), Some(handle));
+        assert_eq!(
+            adapter.detach_native_window(id).expect("detach"),
+            Some(handle)
+        );
     }
 
     #[test]

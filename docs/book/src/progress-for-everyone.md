@@ -142,6 +142,10 @@ flowchart LR
     `UiAdapter` sits above it for widgets, input, and clipboard. The host
     adapters also say which real backend they are aiming at next: AppKit on
     macOS, winit on Linux and Windows.
+34. The native window handoff has started. In simple terms, Layer36 has its own
+    stable window id, and the operating system has its own real window object.
+    We now have a checked place to connect those two. macOS has the first AppKit
+    handoff method. It still does not show a real window yet.
 
 ## Current Build Timeline
 
@@ -188,7 +192,7 @@ This is a simple status view for non technical readers.
 | UAPI freeze decision path | Working, with a draft packet and CI checker |
 | Outside walkthrough proof | Ready to collect, with a timing packet, checker, and local rehearsal |
 | Phase 3 handoff | Started at contract level, still waiting on Phase 2 outside review for formal phase close |
-| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, draft window model, explicit `WindowAdapter`, shared widget tree model, draft widget-tree dispatch, first Taffy-backed layout wrapper, 100 generated layout-shape tests, 1k/10k layout benchmark target, prepared repeated-layout path, first layout hit-test helper, draft window, pointer, key, text, FIFO polling, host window, theme, and scale event routes, shared UI adapter trait, runtime UI dispatcher, host adapter entry points, runtime host adapter discovery, planned native backend reporting, and the widget lowering rule are in place. Real windows are not implemented yet |
+| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, draft window model, explicit `WindowAdapter`, native window handle handoff, shared widget tree model, draft widget-tree dispatch, first Taffy-backed layout wrapper, 100 generated layout-shape tests, 1k/10k layout benchmark target, prepared repeated-layout path, first layout hit-test helper, draft window, pointer, key, text, FIFO polling, host window, theme, and scale event routes, shared UI adapter trait, runtime UI dispatcher, host adapter entry points, runtime host adapter discovery, planned native backend reporting, and the widget lowering rule are in place. Real windows are not implemented yet |
 | Mobile host path | Not started in implementation |
 | Packaging and app store style distribution | Not started in implementation |
 
@@ -233,6 +237,7 @@ The main Phase 2 work still open is:
 5. One timed outside developer walkthrough using the packet checker.
 6. Finalize the retrospective and external Phase 2 review packet.
 
-Phase 3 has started carefully with contracts, a shared draft window model, and a
-runtime dispatcher path. The next useful step is one real native window on one
-desktop host before expanding sideways.
+Phase 3 has started carefully with contracts, a shared draft window model, a
+runtime dispatcher path, and the native handle handoff needed by real OS
+windows. The next useful step is one real AppKit window on macOS before
+expanding sideways.

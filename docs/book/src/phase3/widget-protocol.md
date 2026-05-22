@@ -134,15 +134,19 @@ Done now:
   changes can use the same queue once real native windows exist.
 - `WindowAdapter` now names the lower window/event-loop boundary. `UiAdapter`
   builds on it for widget trees, input, and clipboard.
+- Native window handles now have a shared handoff point. A host backend can
+  attach an AppKit, winit, or Win32 handle to a stable Layer36 window id, then
+  look it up or detach it later.
 - The runtime has a UI dispatcher scaffold.
 - macOS, Linux, and Windows adapters expose headless draft window and UI entry
-  points, plus the planned native backend for each host.
+  points, plus the planned native backend for each host. macOS also exposes the
+  first AppKit handle handoff method.
 - The runtime can choose the current host adapter.
 - ADR-0013 and RFC-0003 now describe the widget lowering rule.
 
 Pending:
 
-- real native window backend
+- real native window backend that creates and shows one OS window through the handle handoff
 - host event loop that feeds real close, resize, focus, theme, scale, pointer, key, and text events into the queue
 - widget tree lowering
 - larger layout style coverage and recorded large-tree benchmark results on all target hosts

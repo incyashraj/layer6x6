@@ -7,9 +7,9 @@ use layer36_adapter_common::{
     locale::{DateStyle, HostLocale, LocaleId, NumberStyle},
     time::HostClock,
     ui::{
-        DraftUiAdapter, KeyEvent, PointerEvent, TextInputEvent, Theme, UiAdapter, UiAdapterError,
-        UiAdapterInfo, UiEvent, WidgetId, WidgetNode, WidgetTree, WindowAdapter, WindowBackendKind,
-        WindowId, WindowOptions, WindowRecord, WindowSize,
+        DraftUiAdapter, KeyEvent, NativeWindowHandle, PointerEvent, TextInputEvent, Theme,
+        UiAdapter, UiAdapterError, UiAdapterInfo, UiEvent, WidgetId, WidgetNode, WidgetTree,
+        WindowAdapter, WindowBackendKind, WindowId, WindowOptions, WindowRecord, WindowSize,
     },
 };
 use std::fs::OpenOptions;
@@ -50,6 +50,21 @@ impl MacosUiAdapter {
     pub fn planned_native_window_backend(&self) -> WindowBackendKind {
         WindowBackendKind::AppKit
     }
+
+    /// Attach a real AppKit `NSWindow` pointer to a Layer36 window id.
+    ///
+    /// This is the handoff point for the first native macOS backend. The
+    /// current default adapter still creates headless draft windows, but the
+    /// AppKit bridge can now bind its native handle to the same event stream.
+    pub fn attach_appkit_window_handle(
+        &self,
+        id: WindowId,
+        raw_handle: u64,
+    ) -> Result<NativeWindowHandle, UiAdapterError> {
+        let handle = NativeWindowHandle::new(WindowBackendKind::AppKit, raw_handle)?;
+        WindowAdapter::attach_native_window(self, id, handle)?;
+        Ok(handle)
+    }
 }
 
 impl WindowAdapter for MacosUiAdapter {
@@ -87,6 +102,25 @@ impl WindowAdapter for MacosUiAdapter {
 
     fn window(&self, id: WindowId) -> Result<Option<WindowRecord>, UiAdapterError> {
         WindowAdapter::window(&self.draft, id)
+    }
+
+    fn attach_native_window(
+        &self,
+        id: WindowId,
+        handle: NativeWindowHandle,
+    ) -> Result<(), UiAdapterError> {
+        WindowAdapter::attach_native_window(&self.draft, id, handle)
+    }
+
+    fn native_window(&self, id: WindowId) -> Result<Option<NativeWindowHandle>, UiAdapterError> {
+        WindowAdapter::native_window(&self.draft, id)
+    }
+
+    fn detach_native_window(
+        &self,
+        id: WindowId,
+    ) -> Result<Option<NativeWindowHandle>, UiAdapterError> {
+        WindowAdapter::detach_native_window(&self.draft, id)
     }
 
     fn drain_events(&self) -> Result<Vec<UiEvent>, UiAdapterError> {
@@ -417,6 +451,32 @@ mod tests {
                 UiEvent::WindowCreated(id),
                 UiEvent::WindowShown(id),
                 UiEvent::RedrawRequested(id),
+            ]
+        );
+    }
+
+    #[test]
+    fn ui_adapter_can_bind_future_appkit_handle_to_window_id() {
+        let adapter = discover_ui_adapter();
+        let size = WindowSize::new(640, 480).expect("size");
+        let id = adapter
+            .create_window(WindowOptions::new("Layer36 native host", size).expect("options"))
+            .expect("create window");
+        let handle = adapter
+            .attach_appkit_window_handle(id, 0xA11CE)
+            .expect("attach appkit handle");
+
+        assert_eq!(handle.backend, WindowBackendKind::AppKit);
+        assert_eq!(handle.raw_handle, 0xA11CE);
+        assert_eq!(adapter.native_window(id).expect("lookup"), Some(handle));
+        assert_eq!(
+            adapter.drain_events().expect("events"),
+            vec![
+                UiEvent::WindowCreated(id),
+                UiEvent::NativeWindowAttached {
+                    id,
+                    backend: WindowBackendKind::AppKit,
+                },
             ]
         );
     }

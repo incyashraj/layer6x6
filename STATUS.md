@@ -3,23 +3,23 @@
 Last updated: 2026-05-22
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `c1bbac7`
-Working tree at this status update: Phase 3 explicit WindowAdapter boundary slice in progress
+Latest checked completed push before this slice: `5ba76de`
+Working tree at this status update: Phase 3 native window handle handoff slice in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 332
+- Commits after this slice lands: about 333
 - Tracked files after this slice lands: about 331
-- Total tracked lines after this slice lands: about 92,850
-- Rust lines (`.rs`) after this slice lands: about 45,450
-- Docs lines (`.md`) after this slice lands: about 30,150
+- Total tracked lines after this slice lands: about 92,950
+- Rust lines (`.rs`) after this slice lands: about 45,535
+- Docs lines (`.md`) after this slice lands: about 30,175
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`c1bbac7`) checks:
+Latest completed push (`5ba76de`) checks:
 
-- CI: success (run `26266918511`)
-- Deploy docs to GitHub Pages: success (run `26266918479`)
+- CI: success (run `26267627416`)
+- Deploy docs to GitHub Pages: success (run `26267627399`)
 
 Manual hosted full CI run `26069665276` passed on commit `3f1a219`.
 Linux, macOS, and Windows full-test lanes all passed. The language-variant,
@@ -132,12 +132,17 @@ Current Phase 3 slice:
   planned native window backend. Today the active backend is still headless
   draft. The planned targets are AppKit for macOS and winit for Linux and
   Windows.
+- `WindowAdapter` now has a native handle handoff path. A future native backend
+  can attach, inspect, and detach an opaque AppKit, winit, or Win32 host handle
+  for a stable Layer36 `WindowId`. macOS has the first AppKit handoff method,
+  while the default backend still stays headless draft.
 
 This does not mean desktop UI is implemented yet. It means the first public
 contract for desktop UI work is now in the repo and checked locally. The window
 adapter trait, UI adapter trait, registry, dispatcher, host entry points, and
 runtime discovery path are shared models for host adapters to follow before we
-wire real AppKit, winit, Win32 widgets, or GTK widgets.
+wire real AppKit, winit, Win32 widgets, or GTK widgets. The native handle
+handoff is now the checked bridge those real windows can use.
 
 ## 5) What remains to close Phase 2 fully
 
@@ -183,6 +188,7 @@ Top pending items:
 - Added draft host window event routes for close requests, resize, and focus changes so the first native event loop has stable queue targets.
 - Added draft theme and scale event routes so dark mode and DPI changes have stable queue targets before real native windows land.
 - Added an explicit `WindowAdapter` trait below `UiAdapter`, plus active/planned window backend reporting for macOS, Linux, and Windows.
+- Added native window handle attach, lookup, and detach support, plus the first macOS AppKit handle handoff method.
 - Added a UCap enforcement evidence recorder and cross-host comparator (`record-phase2-ucap-evidence` + `compare-phase2-ucap-evidence`)
 - Wired hosted full CI to upload per-OS UCap evidence artifacts and run a dedicated cross-host compare gate
 - Added a benchmark evidence recorder and comparator (`record-phase2-benchmark-evidence` + `compare-phase2-benchmark-evidence`) to track startup and dispatch performance evidence in one per-host report
@@ -273,4 +279,4 @@ Top pending items:
 
 Use this exact prompt in a new session:
 
-`Continue Layer36 on main. Start with STATUS.md, Plan/Phase-2-Plan.md, and Plan/Phase-3-Plan.md. Phase 3 has started with WIT, GUI manifest recognition, Phase 3 capability names, an adapter-common draft window registry, explicit WindowAdapter boundary, shared widget tree model, shared UiAdapter trait, runtime::phase3_ui dispatcher scaffolding, draft widget-tree dispatch, a first Taffy-backed layer36-layout crate, runtime layout snapshots, generated 100-shape layout tests, a 1k/10k-node layout benchmark target, PreparedLayoutTree for repeated layout passes, layout absolute-rectangle helpers, a first layout hit-test helper, headless UI adapter entry points in the macOS, Linux, and Windows crates, runtime host UI adapter discovery, active/planned window backend reporting, draft pointer, key, text, FIFO polling, host window, theme, and scale event routes, and ADR/RFC/docs for the native-widget plus drawn-fallback widget lowering rule. Prepared 10k layout is locally under budget, but cold rebuild and formal cross-host evidence remain pending. Keep Phase 2 closeout evidence separate, keep Phase 3 narrow, update plan/docs after each chunk, keep GitHub Pages in sync, and check CI after every push.`
+`Continue Layer36 on main. Start with STATUS.md, Plan/Phase-2-Plan.md, and Plan/Phase-3-Plan.md. Phase 3 has started with WIT, GUI manifest recognition, Phase 3 capability names, an adapter-common draft window registry, explicit WindowAdapter boundary, native window handle handoff, shared widget tree model, shared UiAdapter trait, runtime::phase3_ui dispatcher scaffolding, draft widget-tree dispatch, a first Taffy-backed layer36-layout crate, runtime layout snapshots, generated 100-shape layout tests, a 1k/10k-node layout benchmark target, PreparedLayoutTree for repeated layout passes, layout absolute-rectangle helpers, a first layout hit-test helper, headless UI adapter entry points in the macOS, Linux, and Windows crates, runtime host UI adapter discovery, active/planned window backend reporting, draft pointer, key, text, FIFO polling, host window, theme, and scale event routes, and ADR/RFC/docs for the native-widget plus drawn-fallback widget lowering rule. Prepared 10k layout is locally under budget, but cold rebuild and formal cross-host evidence remain pending. Keep Phase 2 closeout evidence separate, keep Phase 3 narrow, update plan/docs after each chunk, keep GitHub Pages in sync, and check CI after every push.`
