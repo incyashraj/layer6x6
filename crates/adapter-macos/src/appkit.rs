@@ -25,6 +25,63 @@ pub struct AppKitWindowSnapshot {
     pub scale: f32,
 }
 
+/// Owned AppKit window plus the last native state seen by Layer36.
+pub struct AppKitWindowSession {
+    window: AppKitWindowPrototype,
+    last_snapshot: Option<AppKitWindowSnapshot>,
+}
+
+impl AppKitWindowSession {
+    /// Return the stable Layer36 window id for this native window session.
+    pub fn id(&self) -> WindowId {
+        self.window.id()
+    }
+
+    /// Return the opaque native AppKit handle attached to this session.
+    pub fn native_handle(&self) -> NativeWindowHandle {
+        self.window.native_handle()
+    }
+
+    /// Return the most recent native state snapshot observed by this session.
+    pub fn last_snapshot(&self) -> Option<AppKitWindowSnapshot> {
+        self.last_snapshot
+    }
+
+    /// Return the owned AppKit window prototype.
+    pub fn window(&self) -> &AppKitWindowPrototype {
+        &self.window
+    }
+
+    /// Show the native window through AppKit and the shared Layer36 adapter.
+    pub fn show(
+        &self,
+        backend: &AppKitWindowBackend,
+        adapter: &MacosUiAdapter,
+    ) -> Result<(), UiAdapterError> {
+        backend.show_window(adapter, &self.window)
+    }
+
+    /// Refresh native window state into the shared event queue.
+    pub fn refresh(
+        &mut self,
+        backend: &AppKitWindowBackend,
+        adapter: &MacosUiAdapter,
+    ) -> Result<AppKitWindowSnapshot, UiAdapterError> {
+        let snapshot = backend.sync_window_state(adapter, &self.window, self.last_snapshot)?;
+        self.last_snapshot = Some(snapshot);
+        Ok(snapshot)
+    }
+
+    /// Report a close request from native AppKit into the shared queue.
+    pub fn report_close_requested(
+        &self,
+        backend: &AppKitWindowBackend,
+        adapter: &MacosUiAdapter,
+    ) -> Result<(), UiAdapterError> {
+        backend.report_close_requested(adapter, &self.window)
+    }
+}
+
 impl AppKitWindowBackend {
     /// Return the native backend kind created by this prototype.
     pub fn backend_kind(&self) -> WindowBackendKind {
@@ -34,6 +91,18 @@ impl AppKitWindowBackend {
     /// Return whether this crate build can create AppKit windows.
     pub fn is_available(&self) -> bool {
         cfg!(target_os = "macos")
+    }
+
+    /// Create an owned native window session for the first AppKit event-loop work.
+    pub fn create_session(
+        &self,
+        adapter: &MacosUiAdapter,
+        options: WindowOptions,
+    ) -> Result<AppKitWindowSession, UiAdapterError> {
+        Ok(AppKitWindowSession {
+            window: self.create_window(adapter, options)?,
+            last_snapshot: None,
+        })
     }
 
     /// Queue a native close request for a Layer36 window id.
@@ -73,6 +142,27 @@ impl AppKitWindowBackend {
         scale: f32,
     ) -> Result<(), UiAdapterError> {
         WindowAdapter::queue_scale_changed(adapter, id, scale)
+    }
+
+    /// Queue changed native state for a Layer36 window id.
+    pub fn sync_snapshot_for_id(
+        &self,
+        adapter: &MacosUiAdapter,
+        id: WindowId,
+        snapshot: AppKitWindowSnapshot,
+        previous: Option<AppKitWindowSnapshot>,
+    ) -> Result<AppKitWindowSnapshot, UiAdapterError> {
+        if previous.is_none_or(|previous| previous.size != snapshot.size) {
+            self.report_resized_for_id(adapter, id, snapshot.size)?;
+        }
+        if previous.is_none_or(|previous| previous.focused != snapshot.focused) {
+            self.report_focused_for_id(adapter, id, snapshot.focused)?;
+        }
+        if previous.is_none_or(|previous| previous.scale != snapshot.scale) {
+            self.report_scale_changed_for_id(adapter, id, snapshot.scale)?;
+        }
+
+        Ok(snapshot)
     }
 
     /// Queue a native close request for an owned AppKit window.
@@ -122,18 +212,7 @@ impl AppKitWindowBackend {
         previous: Option<AppKitWindowSnapshot>,
     ) -> Result<AppKitWindowSnapshot, UiAdapterError> {
         let snapshot = window.snapshot()?;
-
-        if previous.is_none_or(|previous| previous.size != snapshot.size) {
-            self.report_resized(adapter, window, snapshot.size)?;
-        }
-        if previous.is_none_or(|previous| previous.focused != snapshot.focused) {
-            self.report_focused(adapter, window, snapshot.focused)?;
-        }
-        if previous.is_none_or(|previous| previous.scale != snapshot.scale) {
-            self.report_scale_changed(adapter, window, snapshot.scale)?;
-        }
-
-        Ok(snapshot)
+        self.sync_snapshot_for_id(adapter, window.id(), snapshot, previous)
     }
 }
 
@@ -324,6 +403,31 @@ mod platform {
             assert_eq!(snapshot.size, WindowSize::new(640, 480).unwrap());
             assert!(snapshot.scale > 0.0);
         }
+
+        #[test]
+        #[ignore = "opens a real AppKit window on the local macOS desktop"]
+        fn ignored_smoke_can_refresh_appkit_window_session() {
+            let adapter = MacosUiAdapter::new();
+            let backend = AppKitWindowBackend;
+            let options =
+                WindowOptions::new("Layer36 AppKit session", WindowSize::new(640, 480).unwrap())
+                    .unwrap();
+            let mut session = backend
+                .create_session(&adapter, options)
+                .expect("create appkit session");
+
+            session
+                .show(&backend, &adapter)
+                .expect("show appkit session");
+            let snapshot = session
+                .refresh(&backend, &adapter)
+                .expect("refresh appkit session");
+
+            assert_eq!(session.id(), session.window().id());
+            assert_eq!(session.native_handle().backend, WindowBackendKind::AppKit);
+            assert_eq!(session.last_snapshot(), Some(snapshot));
+            assert!(snapshot.scale > 0.0);
+        }
     }
 }
 
@@ -440,5 +544,74 @@ mod tests {
             backend.report_scale_changed_for_id(&adapter, id, 0.0),
             Err(UiAdapterError::InvalidScaleFactor(_))
         ));
+    }
+
+    #[test]
+    fn appkit_snapshot_sync_queues_only_changed_window_state() {
+        let adapter = MacosUiAdapter::new();
+        let backend = AppKitWindowBackend;
+        let id = WindowAdapter::create_window(
+            &adapter,
+            WindowOptions::new(
+                "Layer36 AppKit snapshot",
+                WindowSize::new(640, 480).unwrap(),
+            )
+            .unwrap(),
+        )
+        .expect("create window");
+        let first = AppKitWindowSnapshot {
+            visible: true,
+            focused: false,
+            size: WindowSize::new(640, 480).unwrap(),
+            scale: 1.0,
+        };
+
+        backend
+            .sync_snapshot_for_id(&adapter, id, first, None)
+            .expect("sync first snapshot");
+
+        assert_eq!(
+            WindowAdapter::drain_events(&adapter).expect("events"),
+            vec![
+                UiEvent::WindowCreated(id),
+                UiEvent::Resized {
+                    id,
+                    size: first.size
+                },
+                UiEvent::WindowFocused { id, focused: false },
+                UiEvent::ScaleChanged { id, scale: 1.0 },
+            ]
+        );
+
+        backend
+            .sync_snapshot_for_id(&adapter, id, first, Some(first))
+            .expect("sync unchanged snapshot");
+        assert_eq!(
+            WindowAdapter::drain_events(&adapter).expect("events"),
+            vec![]
+        );
+
+        let changed = AppKitWindowSnapshot {
+            visible: true,
+            focused: true,
+            size: WindowSize::new(800, 600).unwrap(),
+            scale: 2.0,
+        };
+
+        backend
+            .sync_snapshot_for_id(&adapter, id, changed, Some(first))
+            .expect("sync changed snapshot");
+
+        assert_eq!(
+            WindowAdapter::drain_events(&adapter).expect("events"),
+            vec![
+                UiEvent::Resized {
+                    id,
+                    size: changed.size
+                },
+                UiEvent::WindowFocused { id, focused: true },
+                UiEvent::ScaleChanged { id, scale: 2.0 },
+            ]
+        );
     }
 }

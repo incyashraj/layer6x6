@@ -3,23 +3,23 @@
 Last updated: 2026-05-22
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `c0d8814`
-Working tree at this status update: Phase 3 AppKit event bridge slice in progress
+Latest checked completed push before this slice: `27035f5`
+Working tree at this status update: Phase 3 AppKit window session slice in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 336
+- Commits after this slice lands: about 337
 - Tracked files after this slice lands: about 332
-- Total tracked lines after this slice lands: about 93,814
-- Rust lines (`.rs`) after this slice lands: about 46,275
-- Docs lines (`.md`) after this slice lands: about 30,204
+- Total tracked lines after this slice lands: about 94,039
+- Rust lines (`.rs`) after this slice lands: about 46,452
+- Docs lines (`.md`) after this slice lands: about 30,252
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`c0d8814`) checks:
+Latest completed push (`27035f5`) checks:
 
-- CI: success (run `26278614557`)
-- Deploy docs to GitHub Pages: success (latest Phase 3 AppKit docs run `26277983702`)
+- CI: success (run `26287911692`)
+- Deploy docs to GitHub Pages: success (run `26287911832`)
 
 Manual hosted full CI run `26069665276` passed on commit `3f1a219`.
 Linux, macOS, and Windows full-test lanes all passed. The language-variant,
@@ -145,6 +145,10 @@ Current Phase 3 slice:
   reads content size, focus, visibility, and backing scale from the real
   `NSWindow`. This gives the coming AppKit delegate code a small, checked place
   to feed native state into the shared event queue.
+- `AppKitWindowSession` now owns the native window prototype and remembers the
+  last native snapshot. Its refresh path queues only changed native state into
+  the shared event queue. That gives the coming AppKit delegate and event-loop
+  code one clear state object to call into.
 
 This does not mean desktop UI is implemented yet. It means the first public
 contract for desktop UI work is now in the repo and checked locally. The window
@@ -200,6 +204,7 @@ Top pending items:
 - Added native window handle attach, lookup, and detach support, plus the first macOS AppKit handle handoff method.
 - Added the first opt-in AppKit window prototype for macOS, with target-specific `objc2` dependencies, owned `NSWindow` lifetime, main-thread gating, shared handle attachment, and ignored local smoke coverage for opening the real native window.
 - Added AppKit event bridge targets and a native snapshot helper so close, resize, focus, and scale changes can flow from the real macOS window into the shared Layer36 event queue.
+- Added AppKit window session state so the native macOS prototype owns the window, caches the last snapshot, refreshes changed state, and has a clear place for real delegates to report close requests.
 - Added a UCap enforcement evidence recorder and cross-host comparator (`record-phase2-ucap-evidence` + `compare-phase2-ucap-evidence`)
 - Wired hosted full CI to upload per-OS UCap evidence artifacts and run a dedicated cross-host compare gate
 - Added a benchmark evidence recorder and comparator (`record-phase2-benchmark-evidence` + `compare-phase2-benchmark-evidence`) to track startup and dispatch performance evidence in one per-host report
@@ -290,4 +295,4 @@ Top pending items:
 
 Use this exact prompt in a new session:
 
-`Continue Layer36 on main. Start with STATUS.md, Plan/Phase-2-Plan.md, and Plan/Phase-3-Plan.md. Phase 3 has started with WIT, GUI manifest recognition, Phase 3 capability names, an adapter-common draft window registry, explicit WindowAdapter boundary, native window handle handoff, shared widget tree model, shared UiAdapter trait, runtime::phase3_ui dispatcher scaffolding, draft widget-tree dispatch, a first Taffy-backed layer36-layout crate, runtime layout snapshots, generated 100-shape layout tests, a 1k/10k-node layout benchmark target, PreparedLayoutTree for repeated layout passes, layout absolute-rectangle helpers, a first layout hit-test helper, headless UI adapter entry points in the macOS, Linux, and Windows crates, runtime host UI adapter discovery, active/planned window backend reporting, draft pointer, key, text, FIFO polling, host window, theme, and scale event routes, an opt-in macOS AppKit window prototype, AppKit event bridge targets, and ADR/RFC/docs for the native-widget plus drawn-fallback widget lowering rule. Prepared 10k layout is locally under budget, but cold rebuild and formal cross-host evidence remain pending. Keep Phase 2 closeout evidence separate, keep Phase 3 narrow, update plan/docs after each chunk, keep GitHub Pages in sync, and check CI after every push.`
+`Continue Layer36 on main. Start with STATUS.md, Plan/Phase-2-Plan.md, and Plan/Phase-3-Plan.md. Phase 3 has started with WIT, GUI manifest recognition, Phase 3 capability names, an adapter-common draft window registry, explicit WindowAdapter boundary, native window handle handoff, shared widget tree model, shared UiAdapter trait, runtime::phase3_ui dispatcher scaffolding, draft widget-tree dispatch, a first Taffy-backed layer36-layout crate, runtime layout snapshots, generated 100-shape layout tests, a 1k/10k-node layout benchmark target, PreparedLayoutTree for repeated layout passes, layout absolute-rectangle helpers, a first layout hit-test helper, headless UI adapter entry points in the macOS, Linux, and Windows crates, runtime host UI adapter discovery, active/planned window backend reporting, draft pointer, key, text, FIFO polling, host window, theme, and scale event routes, an opt-in macOS AppKit window prototype, AppKit event bridge targets, AppKit window session state, and ADR/RFC/docs for the native-widget plus drawn-fallback widget lowering rule. Prepared 10k layout is locally under budget, but cold rebuild and formal cross-host evidence remain pending. Keep Phase 2 closeout evidence separate, keep Phase 3 narrow, update plan/docs after each chunk, keep GitHub Pages in sync, and check CI after every push.`

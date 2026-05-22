@@ -2131,7 +2131,9 @@ opaque native host handle to a stable Layer36 `WindowId`, and the macOS adapter
 exposes the first AppKit handle handoff point. The opt-in AppKit prototype can
 create and show a real `NSWindow`; it now also has explicit bridge targets for
 native close, resize, focus, and display-scale events, plus a snapshot helper
-that reads native window state for the coming delegate wiring.
+that reads native window state. An `AppKitWindowSession` now owns the native
+window and remembers the last snapshot so the next AppKit delegate work has a
+small event-loop state object instead of loose helper calls.
 ADR-0013 and RFC-0003 record the widget lowering rule
 before native widget work depends on it. ADR-0014 records the layout engine
 choice. This is not a frozen API and not a working desktop GUI yet. It is the
@@ -2166,6 +2168,7 @@ input-routing proof, plus the handle mapping needed by the next host adapter wor
 | P3-UI-04G | Add native window handle handoff | 2026-05-22 | `WindowAdapter` can now attach, inspect, and detach an opaque native handle for a Layer36 window id. macOS exposes the first AppKit handoff method while the default backend remains headless draft. |
 | P3-UI-04H | Add opt-in AppKit window prototype | 2026-05-22 | macOS now has an `AppKitWindowBackend` that can create an owned `NSWindow` on the main thread, attach its handle to a Layer36 window id, and show it through the shared window path. The default adapter still stays headless draft. |
 | P3-UI-04I | Add AppKit event bridge targets | 2026-05-22 | The AppKit prototype now has explicit bridge methods for close, resize, focus, and display-scale events, plus a snapshot helper that reads content size, focus, visibility, and backing scale from the native window. |
+| P3-UI-04J | Add AppKit window session state | 2026-05-22 | `AppKitWindowSession` now owns the prototype window, remembers the last native snapshot, refreshes changed state into the shared queue, and gives future delegates one place to report close requests. |
 
 ---
 
@@ -2223,6 +2226,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P3-UI-04G | Native window handle handoff | 2026-05-22 | Added `NativeWindowHandle`, native attach/lookup/detach methods, shared events for attach/detach, and a macOS `attach_appkit_window_handle` entry point. |
 | P3-UI-04H | Opt-in AppKit window prototype | 2026-05-22 | Added target-specific `objc2` and AppKit wiring, an owned `AppKitWindowPrototype`, a safe main-thread gate, and ignored local smoke coverage for opening a real macOS window without disturbing normal CI. |
 | P3-UI-04I | AppKit event bridge targets | 2026-05-22 | Added AppKit bridge methods that queue shared close, resize, focus, and scale events, plus a native snapshot helper for future delegate and event-loop wiring. |
+| P3-UI-04J | AppKit window session state | 2026-05-22 | Added an `AppKitWindowSession` wrapper that owns the AppKit prototype, caches the last snapshot, refreshes changed state, and includes ignored local smoke coverage for the session path. |
 
 ---
 
@@ -2232,7 +2236,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 |---------|------|---------|----------|
 | P3-UI-01 | Widget protocol design RFC | 2026-05-19 | Draft written; needs review before the rule is treated as accepted. |
 | P3-UI-03 | Layout engine (Taffy integration) | 2026-05-21 | First wrapper, 100-shape tests, benchmark target, and prepared repeated-layout path exist; local prepared 10k layout is below the exit budget, but cold rebuild is not, so recorded cross-host benchmark results and wider style coverage are pending. |
-| P3-UI-04 | Window + event loop abstractions | 2026-05-19 | Explicit `WindowAdapter`, native handle handoff, shared `UiAdapter`, widget-tree dispatch, host entry points, runtime discovery, routed input events, FIFO event polling, host window events, theme/scale events, and an opt-in macOS AppKit window prototype exist. AppKit now has event bridge targets and a snapshot helper. Next step is real AppKit delegate/callback wiring, a simple drawn surface, and Linux and Windows native windows. |
+| P3-UI-04 | Window + event loop abstractions | 2026-05-19 | Explicit `WindowAdapter`, native handle handoff, shared `UiAdapter`, widget-tree dispatch, host entry points, runtime discovery, routed input events, FIFO event polling, host window events, theme/scale events, and an opt-in macOS AppKit window prototype exist. AppKit now has event bridge targets, a snapshot helper, and session state. Next step is real AppKit delegate/callback wiring, a simple drawn surface, and Linux and Windows native windows. |
 | P3-INPUT-01 | Keyboard + mouse input | 2026-05-21 | First runtime-side pointer, key, and committed-text routes exist; real host pointer, hover, wheel, keyboard, shortcut, IME composition, and cross-host normalization are pending. |
 
 ---

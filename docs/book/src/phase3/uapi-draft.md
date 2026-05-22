@@ -139,6 +139,12 @@ size, focus, visibility, and backing scale. That snapshot is not a full event
 loop yet. It is the checked handoff point that real AppKit delegates can call
 next.
 
+The prototype also has `AppKitWindowSession` now. This is the first event-loop
+state object for macOS. It owns the native window, remembers the last snapshot,
+and refreshes only changed state into the shared event queue. That keeps the
+next delegate work small: callbacks can update the session instead of reaching
+into loose helper methods.
+
 ADR-0013 and RFC-0003 now define how widgets lower once a native backend exists.
 A widget should become a native control when the host has a semantic match. If
 it does not, Layer36 uses a drawn fallback with the same layout, input,

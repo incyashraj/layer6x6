@@ -144,6 +144,9 @@ Done now:
 - The AppKit prototype now has bridge targets for close requests, resize,
   focus, and display-scale changes. It also has a snapshot helper that reads
   native size, focus, visibility, and scale from the real window.
+- AppKit now has a window session object. It owns the native window, remembers
+  the last snapshot, refreshes changed state into the queue, and gives future
+  delegates a clear object to call.
 - The runtime has a UI dispatcher scaffold.
 - macOS, Linux, and Windows adapters expose headless draft window and UI entry
   points, plus the planned native backend for each host. macOS also exposes the
@@ -153,7 +156,7 @@ Done now:
 
 Pending:
 
-- real AppKit delegate and callback wiring into the new bridge targets
+- real AppKit delegate and callback wiring into the window session
 - a simple drawn surface
 - Linux and Windows native window prototypes
 - host event loop that feeds real close, resize, focus, theme, scale, pointer, key, and text events into the queue
