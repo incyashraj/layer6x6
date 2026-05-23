@@ -338,20 +338,35 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
             ),
         )?;
     }
+    let macos_lib = fs::read_to_string(root.join("crates/adapter-macos/src/lib.rs"))?;
     ensure(
-        fs::read_to_string(root.join("crates/adapter-macos/src/lib.rs"))?
-            .contains("pub fn attach_appkit_window_handle("),
+        macos_lib.contains("pub fn attach_appkit_window_handle("),
         "macOS adapter must expose the first AppKit native-handle handoff point".to_string(),
     )?;
+    for needle in [
+        "AppKitWindowBackend",
+        "AppKitWindowEventState",
+        "AppKitWindowNativeEvent",
+        "AppKitWindowSession",
+        "AppKitWindowSnapshot",
+    ] {
+        ensure(
+            macos_lib.contains(needle),
+            format!("macOS adapter lib must export AppKit event-loop type `{needle}`"),
+        )?;
+    }
     let macos_appkit_path = root.join("crates/adapter-macos/src/appkit.rs");
     let macos_appkit = fs::read_to_string(&macos_appkit_path)
         .with_context(|| format!("read {}", macos_appkit_path.display()))?;
     let macos_cargo = fs::read_to_string(root.join("crates/adapter-macos/Cargo.toml"))?;
     for needle in [
         "pub struct AppKitWindowBackend",
+        "pub enum AppKitWindowNativeEvent",
+        "pub struct AppKitWindowEventState",
         "pub struct AppKitWindowPrototype",
         "pub struct AppKitWindowSession",
         "pub struct AppKitWindowSnapshot",
+        "pub fn handle_native_event(",
         "pub fn create_window(",
         "pub fn create_session(",
         "pub fn show_window(",

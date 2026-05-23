@@ -158,6 +158,10 @@ flowchart LR
     object owns the AppKit window, remembers the last native state, and only
     reports changes. That is the shape a real event loop needs before it starts
     receiving AppKit callbacks.
+38. The macOS adapter now has a callback-shaped native event path. In simple
+    terms, a future AppKit delegate can report "the window resized", "focus
+    changed", "scale changed", or "close was requested" through one tested Rust
+    object instead of scattering that logic across the adapter.
 
 ## Current Build Timeline
 
@@ -204,7 +208,7 @@ This is a simple status view for non technical readers.
 | UAPI freeze decision path | Working, with a draft packet and CI checker |
 | Outside walkthrough proof | Ready to collect, with a timing packet, checker, and local rehearsal |
 | Phase 3 handoff | Started at contract level, still waiting on Phase 2 outside review for formal phase close |
-| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, draft window model, explicit `WindowAdapter`, native window handle handoff, shared widget tree model, draft widget-tree dispatch, first Taffy-backed layout wrapper, 100 generated layout-shape tests, 1k/10k layout benchmark target, prepared repeated-layout path, first layout hit-test helper, draft window, pointer, key, text, FIFO polling, host window, theme, and scale event routes, shared UI adapter trait, runtime UI dispatcher, host adapter entry points, runtime host adapter discovery, planned native backend reporting, the widget lowering rule, an opt-in macOS AppKit window prototype, AppKit event bridge targets, and AppKit window session state are in place. Real AppKit delegate wiring, drawing, Linux windows, and Windows windows are still pending |
+| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, draft window model, explicit `WindowAdapter`, native window handle handoff, shared widget tree model, draft widget-tree dispatch, first Taffy-backed layout wrapper, 100 generated layout-shape tests, 1k/10k layout benchmark target, prepared repeated-layout path, first layout hit-test helper, draft window, pointer, key, text, FIFO polling, host window, theme, and scale event routes, shared UI adapter trait, runtime UI dispatcher, host adapter entry points, runtime host adapter discovery, planned native backend reporting, the widget lowering rule, an opt-in macOS AppKit window prototype, AppKit event bridge targets, AppKit window session state, and AppKit native event state are in place. Real AppKit delegate wiring, drawing, Linux windows, and Windows windows are still pending |
 | Mobile host path | Not started in implementation |
 | Packaging and app store style distribution | Not started in implementation |
 
@@ -252,6 +256,6 @@ The main Phase 2 work still open is:
 Phase 3 has started carefully with contracts, a shared draft window model, a
 runtime dispatcher path, and the native handle handoff needed by real OS
 windows. The first opt-in AppKit window prototype now exists on macOS, with
-bridge points and session state for the main window events. The next useful
-step is real AppKit delegate wiring and a simple drawn surface before expanding
-sideways.
+bridge points, session state, and a tested Rust callback path for the main
+window events. The next useful step is real AppKit delegate wiring and a simple
+drawn surface before expanding sideways.

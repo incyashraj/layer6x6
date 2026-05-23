@@ -20,7 +20,10 @@ use std::net::{SocketAddr, TcpStream};
 use std::path::Path;
 use std::time::Duration;
 
-pub use appkit::{AppKitWindowBackend, AppKitWindowPrototype};
+pub use appkit::{
+    AppKitWindowBackend, AppKitWindowEventState, AppKitWindowNativeEvent, AppKitWindowPrototype,
+    AppKitWindowSession, AppKitWindowSnapshot,
+};
 
 /// Host family handled by this adapter crate.
 pub const HOST_FAMILY: &str = "macos";

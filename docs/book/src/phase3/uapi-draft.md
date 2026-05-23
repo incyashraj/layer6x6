@@ -145,6 +145,12 @@ and refreshes only changed state into the shared event queue. That keeps the
 next delegate work small: callbacks can update the session instead of reaching
 into loose helper methods.
 
+The macOS adapter now exports `AppKitWindowNativeEvent` and
+`AppKitWindowEventState` too. These are not Objective-C delegates yet. They are
+the Rust shape those delegates will call: close request, resize, focus, display
+scale, or a full snapshot. This lets us test the event behavior before adding
+the unsafe AppKit callback object.
+
 ADR-0013 and RFC-0003 now define how widgets lower once a native backend exists.
 A widget should become a native control when the host has a semantic match. If
 it does not, Layer36 uses a drawn fallback with the same layout, input,
