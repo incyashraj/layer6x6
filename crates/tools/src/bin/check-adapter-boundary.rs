@@ -378,6 +378,8 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
         "pub fn report_resized_for_id(",
         "pub fn report_focused_for_id(",
         "pub fn report_scale_changed_for_id(",
+        "pub fn report_redraw_requested_for_id(",
+        "AppKitWindowNativeEvent::RedrawRequested",
         "MainThreadMarker",
         "NSWindow::initWithContentRect_styleMask_backing_defer",
         "backingScaleFactor",

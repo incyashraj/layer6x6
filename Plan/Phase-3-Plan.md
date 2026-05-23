@@ -2109,7 +2109,7 @@ Save as `docs/book/src/phase3/retro.md` at the end of Phase 3.
 > **Phase Status:** Started at contract layer
 > **Started:** 2026-05-19
 > **Completed:** —
-> **Last Updated:** 2026-05-22
+> **Last Updated:** 2026-05-23
 
 ### Progress Summary
 
@@ -2136,7 +2136,8 @@ window and remembers the last snapshot so the next AppKit delegate work has a
 small event-loop state object instead of loose helper calls. The macOS adapter
 now also exports `AppKitWindowNativeEvent` and `AppKitWindowEventState`, so
 delegate callbacks have a tested Rust event shape before we add the Objective-C
-delegate object itself.
+delegate object itself. Redraw requests are included in that path now, which is
+the handoff the first AppKit drawing surface will use.
 ADR-0013 and RFC-0003 record the widget lowering rule
 before native widget work depends on it. ADR-0014 records the layout engine
 choice. This is not a frozen API and not a working desktop GUI yet. It is the
@@ -2172,7 +2173,8 @@ input-routing proof, plus the handle mapping needed by the next host adapter wor
 | P3-UI-04H | Add opt-in AppKit window prototype | 2026-05-22 | macOS now has an `AppKitWindowBackend` that can create an owned `NSWindow` on the main thread, attach its handle to a Layer36 window id, and show it through the shared window path. The default adapter still stays headless draft. |
 | P3-UI-04I | Add AppKit event bridge targets | 2026-05-22 | The AppKit prototype now has explicit bridge methods for close, resize, focus, and display-scale events, plus a snapshot helper that reads content size, focus, visibility, and backing scale from the native window. |
 | P3-UI-04J | Add AppKit window session state | 2026-05-22 | `AppKitWindowSession` now owns the prototype window, remembers the last native snapshot, refreshes changed state into the shared queue, and gives future delegates one place to report close requests. |
-| P3-UI-04K | Add AppKit native event state | 2026-05-23 | `AppKitWindowNativeEvent` and `AppKitWindowEventState` now provide the tested Rust callback surface for resize, focus, scale, close, and full snapshot events before the Objective-C delegate lands. |
+| P3-UI-04K | Add AppKit native event state | 2026-05-23 | `AppKitWindowNativeEvent` and `AppKitWindowEventState` now provide the tested Rust callback surface for resize, focus, scale, close, redraw, and full snapshot events before the Objective-C delegate lands. |
+| P3-UI-04L | Add AppKit redraw bridge | 2026-05-23 | AppKit can now queue redraw requests through the same native event state and shared `WindowAdapter::request_redraw` path that the future drawing surface will use. |
 
 ---
 
@@ -2232,6 +2234,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P3-UI-04I | AppKit event bridge targets | 2026-05-22 | Added AppKit bridge methods that queue shared close, resize, focus, and scale events, plus a native snapshot helper for future delegate and event-loop wiring. |
 | P3-UI-04J | AppKit window session state | 2026-05-22 | Added an `AppKitWindowSession` wrapper that owns the AppKit prototype, caches the last snapshot, refreshes changed state, and includes ignored local smoke coverage for the session path. |
 | P3-UI-04K | AppKit native event state | 2026-05-23 | Added a delegate-shaped native event enum and event-state object, exported them from the macOS adapter crate, and covered changed-state caching and failed scale handling. |
+| P3-UI-04L | AppKit redraw bridge | 2026-05-23 | Added `RedrawRequested` to the AppKit native event path with bridge methods and coverage for queueing shared redraw events. |
 
 ---
 
@@ -2241,7 +2244,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 |---------|------|---------|----------|
 | P3-UI-01 | Widget protocol design RFC | 2026-05-19 | Draft written; needs review before the rule is treated as accepted. |
 | P3-UI-03 | Layout engine (Taffy integration) | 2026-05-21 | First wrapper, 100-shape tests, benchmark target, and prepared repeated-layout path exist; local prepared 10k layout is below the exit budget, but cold rebuild is not, so recorded cross-host benchmark results and wider style coverage are pending. |
-| P3-UI-04 | Window + event loop abstractions | 2026-05-19 | Explicit `WindowAdapter`, native handle handoff, shared `UiAdapter`, widget-tree dispatch, host entry points, runtime discovery, routed input events, FIFO event polling, host window events, theme/scale events, and an opt-in macOS AppKit window prototype exist. AppKit now has event bridge targets, a snapshot helper, session state, and a delegate-shaped native event state object. Next step is real AppKit delegate/callback wiring, a simple drawn surface, and Linux and Windows native windows. |
+| P3-UI-04 | Window + event loop abstractions | 2026-05-19 | Explicit `WindowAdapter`, native handle handoff, shared `UiAdapter`, widget-tree dispatch, host entry points, runtime discovery, routed input events, FIFO event polling, host window events, theme/scale events, and an opt-in macOS AppKit window prototype exist. AppKit now has event bridge targets, a snapshot helper, session state, a delegate-shaped native event state object, and redraw bridge. Next step is real AppKit delegate/callback wiring, a simple drawn surface, and Linux and Windows native windows. |
 | P3-INPUT-01 | Keyboard + mouse input | 2026-05-21 | First runtime-side pointer, key, and committed-text routes exist; real host pointer, hover, wheel, keyboard, shortcut, IME composition, and cross-host normalization are pending. |
 
 ---
@@ -2329,6 +2332,10 @@ _ADRs 0017–0020 to be determined during Phase 3 work._
   the Layer36 window id, and show it through the same shared window path. This
   is not the default runtime yet, because native event capture and drawing are
   still next.
+- 2026-05-23: Added the AppKit redraw bridge. Redraw requests now travel
+  through the delegate-shaped native event state and the shared
+  `WindowAdapter::request_redraw` queue, so the first drawing surface will not
+  need a separate paint path.
 
 ---
 

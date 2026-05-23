@@ -32,6 +32,7 @@ pub enum AppKitWindowNativeEvent {
     Resized(WindowSize),
     Focused(bool),
     ScaleChanged(f32),
+    RedrawRequested,
     Snapshot(AppKitWindowSnapshot),
 }
 
@@ -110,6 +111,10 @@ impl AppKitWindowEventState {
                 });
                 Ok(self.last_snapshot)
             }
+            AppKitWindowNativeEvent::RedrawRequested => {
+                backend.report_redraw_requested_for_id(adapter, self.id)?;
+                Ok(self.last_snapshot)
+            }
             AppKitWindowNativeEvent::Snapshot(snapshot) => {
                 self.sync_snapshot(backend, adapter, snapshot).map(Some)
             }
@@ -183,6 +188,16 @@ impl AppKitWindowSession {
         self.handle_native_event(backend, adapter, AppKitWindowNativeEvent::CloseRequested)
             .map(|_| ())
     }
+
+    /// Request a redraw for the native AppKit window.
+    pub fn request_redraw(
+        &mut self,
+        backend: &AppKitWindowBackend,
+        adapter: &MacosUiAdapter,
+    ) -> Result<(), UiAdapterError> {
+        self.handle_native_event(backend, adapter, AppKitWindowNativeEvent::RedrawRequested)
+            .map(|_| ())
+    }
 }
 
 impl AppKitWindowBackend {
@@ -249,6 +264,15 @@ impl AppKitWindowBackend {
         WindowAdapter::queue_scale_changed(adapter, id, scale)
     }
 
+    /// Queue a native redraw request for a Layer36 window id.
+    pub fn report_redraw_requested_for_id(
+        &self,
+        adapter: &MacosUiAdapter,
+        id: WindowId,
+    ) -> Result<(), UiAdapterError> {
+        WindowAdapter::request_redraw(adapter, id)
+    }
+
     /// Queue changed native state for a Layer36 window id.
     pub fn sync_snapshot_for_id(
         &self,
@@ -307,6 +331,15 @@ impl AppKitWindowBackend {
         scale: f32,
     ) -> Result<(), UiAdapterError> {
         self.report_scale_changed_for_id(adapter, window.id(), scale)
+    }
+
+    /// Queue a native redraw request for an owned AppKit window.
+    pub fn report_redraw_requested(
+        &self,
+        adapter: &MacosUiAdapter,
+        window: &AppKitWindowPrototype,
+    ) -> Result<(), UiAdapterError> {
+        self.report_redraw_requested_for_id(adapter, window.id())
     }
 
     /// Read an AppKit snapshot and queue changed state into the shared event stream.
@@ -764,6 +797,9 @@ mod tests {
             )
             .expect("scale callback");
         state
+            .handle_native_event(&backend, &adapter, AppKitWindowNativeEvent::RedrawRequested)
+            .expect("redraw callback");
+        state
             .handle_native_event(&backend, &adapter, AppKitWindowNativeEvent::CloseRequested)
             .expect("close callback");
 
@@ -776,6 +812,7 @@ mod tests {
                 },
                 UiEvent::WindowFocused { id, focused: true },
                 UiEvent::ScaleChanged { id, scale: 2.0 },
+                UiEvent::RedrawRequested(id),
                 UiEvent::WindowCloseRequested(id),
             ]
         );
@@ -825,5 +862,26 @@ mod tests {
             Err(UiAdapterError::InvalidScaleFactor(_))
         ));
         assert_eq!(state.last_snapshot(), Some(first));
+    }
+
+    #[test]
+    fn appkit_redraw_bridge_queues_shared_redraw_event() {
+        let adapter = MacosUiAdapter::new();
+        let backend = AppKitWindowBackend;
+        let id = WindowAdapter::create_window(
+            &adapter,
+            WindowOptions::new("Layer36 AppKit redraw", WindowSize::new(640, 480).unwrap())
+                .unwrap(),
+        )
+        .expect("create window");
+
+        backend
+            .report_redraw_requested_for_id(&adapter, id)
+            .expect("redraw by id");
+
+        assert_eq!(
+            WindowAdapter::drain_events(&adapter).expect("events"),
+            vec![UiEvent::WindowCreated(id), UiEvent::RedrawRequested(id)]
+        );
     }
 }

@@ -151,6 +151,11 @@ the Rust shape those delegates will call: close request, resize, focus, display
 scale, or a full snapshot. This lets us test the event behavior before adding
 the unsafe AppKit callback object.
 
+Redraw requests are part of that path now. In plain terms, when the future
+AppKit view needs to paint again, it can ask Layer36 for a redraw through the
+same shared window event queue. That keeps drawing requests beside resize,
+focus, scale, and close events instead of making a separate one-off path.
+
 ADR-0013 and RFC-0003 now define how widgets lower once a native backend exists.
 A widget should become a native control when the host has a semantic match. If
 it does not, Layer36 uses a drawn fallback with the same layout, input,
@@ -223,9 +228,9 @@ the app, runtime, SDKs, and host adapters.
 The next proof should be small and visible:
 
 1. Record prepared and cold layout benchmark numbers on the target hosts.
-2. Add a host adapter prototype that can create one real window.
-3. Add a simple native event loop that feeds host events into the queue.
-4. Connect real host input events to the draft pointer, key, and text routes.
-5. Add a tiny draw call that paints something visible.
+2. Connect the AppKit delegate object to the tested native event state.
+3. Add a tiny AppKit drawing surface that can request and paint one visible frame.
+4. Add the first Linux and Windows native window prototypes.
+5. Connect real host input events to the draft pointer, key, and text routes.
 6. Add a small notes app skeleton that uses the same path.
 7. Keep capability checks at the dispatcher boundary as native code is added.
