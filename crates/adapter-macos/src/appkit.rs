@@ -36,6 +36,59 @@ pub enum AppKitWindowNativeEvent {
     Snapshot(AppKitWindowSnapshot),
 }
 
+/// Delegate callback shape the real AppKit object will translate into Rust.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AppKitWindowDelegateCallback {
+    WindowShouldClose,
+    WindowDidResize(WindowSize),
+    WindowDidBecomeKey,
+    WindowDidResignKey,
+    WindowDidChangeBackingScale(f32),
+    ViewNeedsDisplay,
+    Snapshot(AppKitWindowSnapshot),
+}
+
+/// Small Rust bridge that keeps Objective-C delegate methods thin.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct AppKitWindowDelegateBridge;
+
+impl AppKitWindowDelegateBridge {
+    /// Queue one delegate callback into the tested native event state.
+    pub fn handle_callback(
+        &self,
+        backend: &AppKitWindowBackend,
+        adapter: &MacosUiAdapter,
+        state: &mut AppKitWindowEventState,
+        callback: AppKitWindowDelegateCallback,
+    ) -> Result<Option<AppKitWindowSnapshot>, UiAdapterError> {
+        let event = match callback {
+            AppKitWindowDelegateCallback::WindowShouldClose => {
+                AppKitWindowNativeEvent::CloseRequested
+            }
+            AppKitWindowDelegateCallback::WindowDidResize(size) => {
+                AppKitWindowNativeEvent::Resized(size)
+            }
+            AppKitWindowDelegateCallback::WindowDidBecomeKey => {
+                AppKitWindowNativeEvent::Focused(true)
+            }
+            AppKitWindowDelegateCallback::WindowDidResignKey => {
+                AppKitWindowNativeEvent::Focused(false)
+            }
+            AppKitWindowDelegateCallback::WindowDidChangeBackingScale(scale) => {
+                AppKitWindowNativeEvent::ScaleChanged(scale)
+            }
+            AppKitWindowDelegateCallback::ViewNeedsDisplay => {
+                AppKitWindowNativeEvent::RedrawRequested
+            }
+            AppKitWindowDelegateCallback::Snapshot(snapshot) => {
+                AppKitWindowNativeEvent::Snapshot(snapshot)
+            }
+        };
+
+        state.handle_native_event(backend, adapter, event)
+    }
+}
+
 /// Mutable native event-loop state for one AppKit-backed Layer36 window.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct AppKitWindowEventState {
@@ -177,6 +230,17 @@ impl AppKitWindowSession {
     ) -> Result<Option<AppKitWindowSnapshot>, UiAdapterError> {
         self.event_state
             .handle_native_event(backend, adapter, event)
+    }
+
+    /// Queue a native AppKit delegate callback into the shared event stream.
+    pub fn handle_delegate_callback(
+        &mut self,
+        bridge: &AppKitWindowDelegateBridge,
+        backend: &AppKitWindowBackend,
+        adapter: &MacosUiAdapter,
+        callback: AppKitWindowDelegateCallback,
+    ) -> Result<Option<AppKitWindowSnapshot>, UiAdapterError> {
+        bridge.handle_callback(backend, adapter, &mut self.event_state, callback)
     }
 
     /// Report a close request from native AppKit into the shared queue.
@@ -858,6 +922,156 @@ mod tests {
                 &backend,
                 &adapter,
                 AppKitWindowNativeEvent::ScaleChanged(0.0),
+            ),
+            Err(UiAdapterError::InvalidScaleFactor(_))
+        ));
+        assert_eq!(state.last_snapshot(), Some(first));
+    }
+
+    #[test]
+    fn appkit_delegate_bridge_translates_callbacks_to_native_event_state() {
+        let adapter = MacosUiAdapter::new();
+        let backend = AppKitWindowBackend;
+        let bridge = AppKitWindowDelegateBridge;
+        let id = WindowAdapter::create_window(
+            &adapter,
+            WindowOptions::new(
+                "Layer36 AppKit delegate bridge",
+                WindowSize::new(640, 480).unwrap(),
+            )
+            .unwrap(),
+        )
+        .expect("create window");
+        let mut state = AppKitWindowEventState::new(id);
+        let first = AppKitWindowSnapshot {
+            visible: true,
+            focused: false,
+            size: WindowSize::new(640, 480).unwrap(),
+            scale: 1.0,
+        };
+
+        bridge
+            .handle_callback(
+                &backend,
+                &adapter,
+                &mut state,
+                AppKitWindowDelegateCallback::Snapshot(first),
+            )
+            .expect("initial snapshot");
+        WindowAdapter::drain_events(&adapter).expect("drain initial snapshot");
+
+        bridge
+            .handle_callback(
+                &backend,
+                &adapter,
+                &mut state,
+                AppKitWindowDelegateCallback::WindowDidResize(WindowSize::new(900, 700).unwrap()),
+            )
+            .expect("resize callback");
+        bridge
+            .handle_callback(
+                &backend,
+                &adapter,
+                &mut state,
+                AppKitWindowDelegateCallback::WindowDidBecomeKey,
+            )
+            .expect("become key callback");
+        bridge
+            .handle_callback(
+                &backend,
+                &adapter,
+                &mut state,
+                AppKitWindowDelegateCallback::WindowDidResignKey,
+            )
+            .expect("resign key callback");
+        bridge
+            .handle_callback(
+                &backend,
+                &adapter,
+                &mut state,
+                AppKitWindowDelegateCallback::WindowDidChangeBackingScale(2.0),
+            )
+            .expect("scale callback");
+        bridge
+            .handle_callback(
+                &backend,
+                &adapter,
+                &mut state,
+                AppKitWindowDelegateCallback::ViewNeedsDisplay,
+            )
+            .expect("display callback");
+        bridge
+            .handle_callback(
+                &backend,
+                &adapter,
+                &mut state,
+                AppKitWindowDelegateCallback::WindowShouldClose,
+            )
+            .expect("close callback");
+
+        assert_eq!(
+            WindowAdapter::drain_events(&adapter).expect("events"),
+            vec![
+                UiEvent::Resized {
+                    id,
+                    size: WindowSize::new(900, 700).unwrap()
+                },
+                UiEvent::WindowFocused { id, focused: true },
+                UiEvent::WindowFocused { id, focused: false },
+                UiEvent::ScaleChanged { id, scale: 2.0 },
+                UiEvent::RedrawRequested(id),
+                UiEvent::WindowCloseRequested(id),
+            ]
+        );
+        assert_eq!(
+            state.last_snapshot(),
+            Some(AppKitWindowSnapshot {
+                visible: true,
+                focused: false,
+                size: WindowSize::new(900, 700).unwrap(),
+                scale: 2.0,
+            })
+        );
+    }
+
+    #[test]
+    fn appkit_delegate_bridge_reuses_failed_scale_validation() {
+        let adapter = MacosUiAdapter::new();
+        let backend = AppKitWindowBackend;
+        let bridge = AppKitWindowDelegateBridge;
+        let id = WindowAdapter::create_window(
+            &adapter,
+            WindowOptions::new(
+                "Layer36 AppKit bad delegate scale",
+                WindowSize::new(640, 480).unwrap(),
+            )
+            .unwrap(),
+        )
+        .expect("create window");
+        let mut state = AppKitWindowEventState::new(id);
+        let first = AppKitWindowSnapshot {
+            visible: true,
+            focused: false,
+            size: WindowSize::new(640, 480).unwrap(),
+            scale: 1.0,
+        };
+
+        bridge
+            .handle_callback(
+                &backend,
+                &adapter,
+                &mut state,
+                AppKitWindowDelegateCallback::Snapshot(first),
+            )
+            .expect("initial snapshot");
+        WindowAdapter::drain_events(&adapter).expect("drain initial snapshot");
+
+        assert!(matches!(
+            bridge.handle_callback(
+                &backend,
+                &adapter,
+                &mut state,
+                AppKitWindowDelegateCallback::WindowDidChangeBackingScale(0.0),
             ),
             Err(UiAdapterError::InvalidScaleFactor(_))
         ));

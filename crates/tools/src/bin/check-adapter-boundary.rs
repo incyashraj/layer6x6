@@ -345,6 +345,8 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
     )?;
     for needle in [
         "AppKitWindowBackend",
+        "AppKitWindowDelegateBridge",
+        "AppKitWindowDelegateCallback",
         "AppKitWindowEventState",
         "AppKitWindowNativeEvent",
         "AppKitWindowSession",
@@ -361,6 +363,8 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
     let macos_cargo = fs::read_to_string(root.join("crates/adapter-macos/Cargo.toml"))?;
     for needle in [
         "pub struct AppKitWindowBackend",
+        "pub struct AppKitWindowDelegateBridge",
+        "pub enum AppKitWindowDelegateCallback",
         "pub enum AppKitWindowNativeEvent",
         "pub struct AppKitWindowEventState",
         "pub struct AppKitWindowPrototype",
@@ -380,6 +384,7 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
         "pub fn report_scale_changed_for_id(",
         "pub fn report_redraw_requested_for_id(",
         "AppKitWindowNativeEvent::RedrawRequested",
+        "AppKitWindowDelegateCallback::ViewNeedsDisplay",
         "MainThreadMarker",
         "NSWindow::initWithContentRect_styleMask_backing_defer",
         "backingScaleFactor",

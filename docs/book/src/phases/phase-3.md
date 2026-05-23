@@ -59,6 +59,7 @@ The first Phase 3 slice is now in the repo:
 - `AppKitWindowSession`, a small state object that owns the native window, remembers the last snapshot, and refreshes changed native state into the shared event queue
 - `AppKitWindowNativeEvent` and `AppKitWindowEventState`, a tested Rust callback surface for the real AppKit delegate to call next
 - an AppKit redraw bridge, so the first native drawing surface can request paint through the shared window event queue
+- `AppKitWindowDelegateCallback` and `AppKitWindowDelegateBridge`, so the coming Objective-C delegate can stay thin and hand event translation to tested Rust code
 - `Phase3UiRuntime::with_host_adapter`, which selects the current host UI adapter and reports whether it is still headless or native
 - ADR-0013 and RFC-0003 now record the widget lowering strategy: native controls where the host has a semantic match, drawn fallback where it does not
 - ADR-0014 records the layout engine choice: Taffy, with a small flexbox-style subset first
@@ -67,8 +68,9 @@ This is a draft contract, not a frozen API. The macOS side can now create and
 show one AppKit window through an opt-in prototype, and it has checked bridge
 methods plus session state for the main host-window events. The callback-shaped
 Rust event state is now in place too, including redraw requests for the first
-paint path. The next work is to connect the real AppKit delegate object to that
-state, then draw a simple surface.
+paint path. AppKit-style delegate callbacks now have a tested Rust translator
+too. The next work is to connect the real Objective-C delegate object to that
+bridge, then draw a simple surface.
 
 See [Widget Protocol](../phase3/widget-protocol.md) for the plain-language
 version of this Phase 3 direction. See [Layout](../phase3/layout.md) for the

@@ -152,6 +152,9 @@ Done now:
   through the same shared path.
 - AppKit redraw requests now use that same path, so the first native drawing
   surface has a tested way to ask Layer36 for another paint.
+- AppKit delegate callbacks now have a Rust bridge. The future Objective-C
+  delegate can translate native method calls into a small enum, then the Rust
+  bridge handles resize, focus, scale, redraw, close, and snapshot routing.
 - The runtime has a UI dispatcher scaffold.
 - macOS, Linux, and Windows adapters expose headless draft window and UI entry
   points, plus the planned native backend for each host. macOS also exposes the
@@ -161,7 +164,7 @@ Done now:
 
 Pending:
 
-- real AppKit delegate object wired into the window session and native event state
+- real Objective-C AppKit delegate object wired into the Rust delegate bridge
 - a simple AppKit drawn surface that requests redraw and paints one visible frame
 - Linux and Windows native window prototypes
 - host event loop that feeds real close, resize, focus, theme, scale, pointer, key, and text events into the queue

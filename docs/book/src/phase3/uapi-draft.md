@@ -156,6 +156,12 @@ AppKit view needs to paint again, it can ask Layer36 for a redraw through the
 same shared window event queue. That keeps drawing requests beside resize,
 focus, scale, and close events instead of making a separate one-off path.
 
+There is also a small Rust delegate bridge now. It uses AppKit-style callback
+names such as resize, become key, resign key, backing-scale change, display
+needed, and should close. The bridge translates those callbacks into the tested
+native event state. That means the real Objective-C delegate can stay small:
+call into Rust and let Rust handle the event rules.
+
 ADR-0013 and RFC-0003 now define how widgets lower once a native backend exists.
 A widget should become a native control when the host has a semantic match. If
 it does not, Layer36 uses a drawn fallback with the same layout, input,
@@ -228,7 +234,7 @@ the app, runtime, SDKs, and host adapters.
 The next proof should be small and visible:
 
 1. Record prepared and cold layout benchmark numbers on the target hosts.
-2. Connect the AppKit delegate object to the tested native event state.
+2. Connect the real Objective-C delegate object to the tested Rust delegate bridge.
 3. Add a tiny AppKit drawing surface that can request and paint one visible frame.
 4. Add the first Linux and Windows native window prototypes.
 5. Connect real host input events to the draft pointer, key, and text routes.

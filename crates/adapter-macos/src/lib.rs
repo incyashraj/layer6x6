@@ -21,8 +21,9 @@ use std::path::Path;
 use std::time::Duration;
 
 pub use appkit::{
-    AppKitWindowBackend, AppKitWindowEventState, AppKitWindowNativeEvent, AppKitWindowPrototype,
-    AppKitWindowSession, AppKitWindowSnapshot,
+    AppKitWindowBackend, AppKitWindowDelegateBridge, AppKitWindowDelegateCallback,
+    AppKitWindowEventState, AppKitWindowNativeEvent, AppKitWindowPrototype, AppKitWindowSession,
+    AppKitWindowSnapshot,
 };
 
 /// Host family handled by this adapter crate.
