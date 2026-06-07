@@ -25,6 +25,163 @@ pub struct AppKitWindowSnapshot {
     pub scale: f32,
 }
 
+/// RGBA color used by the first AppKit draw-surface scaffold.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct AppKitColor {
+    pub red: f32,
+    pub green: f32,
+    pub blue: f32,
+    pub alpha: f32,
+}
+
+impl AppKitColor {
+    /// Default Layer36 blue used by early drawing-surface tests.
+    pub const LAYER36_BLUE: Self = Self {
+        red: 0.075,
+        green: 0.263,
+        blue: 0.859,
+        alpha: 1.0,
+    };
+
+    /// Create a validated color with channels from 0.0 to 1.0.
+    pub fn new(red: f32, green: f32, blue: f32, alpha: f32) -> Result<Self, UiAdapterError> {
+        validate_color_channel("red", red)?;
+        validate_color_channel("green", green)?;
+        validate_color_channel("blue", blue)?;
+        validate_color_channel("alpha", alpha)?;
+        Ok(Self {
+            red,
+            green,
+            blue,
+            alpha,
+        })
+    }
+}
+
+/// One frame described by the early AppKit drawing-surface state.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct AppKitDrawFrame {
+    pub window: WindowId,
+    pub size: WindowSize,
+    pub scale: f32,
+    pub clear_color: AppKitColor,
+    pub frame_index: u64,
+}
+
+/// Small AppKit drawing-surface state used before real pixels are painted.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct AppKitDrawSurfaceState {
+    window: WindowId,
+    size: WindowSize,
+    scale: f32,
+    clear_color: AppKitColor,
+    frame_index: u64,
+    redraws_requested: u64,
+}
+
+impl AppKitDrawSurfaceState {
+    /// Create drawing-surface state for one AppKit-backed Layer36 window.
+    pub fn new(
+        window: WindowId,
+        size: WindowSize,
+        scale: f32,
+        clear_color: AppKitColor,
+    ) -> Result<Self, UiAdapterError> {
+        validate_scale_factor(scale)?;
+        Ok(Self {
+            window,
+            size,
+            scale,
+            clear_color,
+            frame_index: 0,
+            redraws_requested: 0,
+        })
+    }
+
+    /// Create drawing-surface state from a native AppKit snapshot.
+    pub fn from_snapshot(
+        window: WindowId,
+        snapshot: AppKitWindowSnapshot,
+        clear_color: AppKitColor,
+    ) -> Result<Self, UiAdapterError> {
+        Self::new(window, snapshot.size, snapshot.scale, clear_color)
+    }
+
+    /// Return the Layer36 window this surface belongs to.
+    pub fn window(&self) -> WindowId {
+        self.window
+    }
+
+    /// Return the logical surface size.
+    pub fn size(&self) -> WindowSize {
+        self.size
+    }
+
+    /// Return the current display scale for this surface.
+    pub fn scale(&self) -> f32 {
+        self.scale
+    }
+
+    /// Return the clear color recorded for the next frame.
+    pub fn clear_color(&self) -> AppKitColor {
+        self.clear_color
+    }
+
+    /// Return the last recorded frame index.
+    pub fn frame_index(&self) -> u64 {
+        self.frame_index
+    }
+
+    /// Return how many redraw requests this surface has queued.
+    pub fn redraws_requested(&self) -> u64 {
+        self.redraws_requested
+    }
+
+    /// Update the logical surface size after a native resize event.
+    pub fn resize(&mut self, size: WindowSize) {
+        self.size = size;
+    }
+
+    /// Update the display scale after a native scale-change event.
+    pub fn scale_changed(&mut self, scale: f32) -> Result<(), UiAdapterError> {
+        validate_scale_factor(scale)?;
+        self.scale = scale;
+        Ok(())
+    }
+
+    /// Queue a redraw through the same AppKit delegate bridge used by native views.
+    pub fn request_redraw(
+        &mut self,
+        bridge: &AppKitWindowDelegateBridge,
+        backend: &AppKitWindowBackend,
+        adapter: &MacosUiAdapter,
+        event_state: &mut AppKitWindowEventState,
+    ) -> Result<(), UiAdapterError> {
+        bridge
+            .handle_callback(
+                backend,
+                adapter,
+                event_state,
+                AppKitWindowDelegateCallback::ViewNeedsDisplay,
+            )
+            .map(|_| ())?;
+        self.redraws_requested = self.redraws_requested.saturating_add(1);
+        Ok(())
+    }
+
+    /// Record one frame description for the future AppKit view painter.
+    pub fn record_frame(&mut self) -> AppKitDrawFrame {
+        self.frame_index = self.frame_index.saturating_add(1);
+        AppKitDrawFrame {
+            window: self.window,
+            size: self.size,
+            scale: self.scale,
+            clear_color: self.clear_color,
+            frame_index: self.frame_index,
+        }
+    }
+}
+
 /// Native AppKit event shape accepted by the first callback bridge.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AppKitWindowNativeEvent {
@@ -261,6 +418,19 @@ impl AppKitWindowSession {
     ) -> Result<(), UiAdapterError> {
         self.handle_native_event(backend, adapter, AppKitWindowNativeEvent::RedrawRequested)
             .map(|_| ())
+    }
+
+    /// Create early draw-surface state from the last native snapshot.
+    pub fn create_draw_surface_state(
+        &self,
+        clear_color: AppKitColor,
+    ) -> Result<AppKitDrawSurfaceState, UiAdapterError> {
+        let snapshot = self.last_snapshot().ok_or_else(|| {
+            UiAdapterError::Unsupported(
+                "AppKit draw surface state needs a native snapshot first".to_string(),
+            )
+        })?;
+        AppKitDrawSurfaceState::from_snapshot(self.id(), snapshot, clear_color)
     }
 }
 
@@ -690,6 +860,26 @@ mod platform {
 
 pub use platform::AppKitWindowPrototype;
 
+fn validate_color_channel(name: &str, value: f32) -> Result<(), UiAdapterError> {
+    if !value.is_finite() || !(0.0..=1.0).contains(&value) {
+        return Err(UiAdapterError::InvalidWidgetStyle(format!(
+            "AppKit color channel {name} must be finite and between 0 and 1"
+        )));
+    }
+
+    Ok(())
+}
+
+fn validate_scale_factor(value: f32) -> Result<(), UiAdapterError> {
+    if !value.is_finite() || value <= 0.0 || value > 8.0 {
+        return Err(UiAdapterError::InvalidScaleFactor(format!(
+            "{value} must be finite and between 0 and 8"
+        )));
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1097,5 +1287,119 @@ mod tests {
             WindowAdapter::drain_events(&adapter).expect("events"),
             vec![UiEvent::WindowCreated(id), UiEvent::RedrawRequested(id)]
         );
+    }
+
+    #[test]
+    fn appkit_draw_surface_records_frames() {
+        let adapter = MacosUiAdapter::new();
+        let id = WindowAdapter::create_window(
+            &adapter,
+            WindowOptions::new(
+                "Layer36 AppKit draw surface",
+                WindowSize::new(640, 480).unwrap(),
+            )
+            .unwrap(),
+        )
+        .expect("create window");
+        let mut surface = AppKitDrawSurfaceState::new(
+            id,
+            WindowSize::new(640, 480).unwrap(),
+            2.0,
+            AppKitColor::LAYER36_BLUE,
+        )
+        .expect("surface state");
+
+        let first = surface.record_frame();
+        let resized = WindowSize::new(800, 600).unwrap();
+        surface.resize(resized);
+        surface.scale_changed(1.5).expect("scale changed");
+        let second = surface.record_frame();
+
+        assert_eq!(
+            first,
+            AppKitDrawFrame {
+                window: id,
+                size: WindowSize::new(640, 480).unwrap(),
+                scale: 2.0,
+                clear_color: AppKitColor::LAYER36_BLUE,
+                frame_index: 1,
+            }
+        );
+        assert_eq!(
+            second,
+            AppKitDrawFrame {
+                window: id,
+                size: resized,
+                scale: 1.5,
+                clear_color: AppKitColor::LAYER36_BLUE,
+                frame_index: 2,
+            }
+        );
+        assert_eq!(surface.frame_index(), 2);
+        assert_eq!(surface.size(), resized);
+        assert_eq!(surface.scale(), 1.5);
+    }
+
+    #[test]
+    fn appkit_draw_surface_requests_redraw_through_delegate_bridge() {
+        let adapter = MacosUiAdapter::new();
+        let backend = AppKitWindowBackend;
+        let bridge = AppKitWindowDelegateBridge;
+        let id = WindowAdapter::create_window(
+            &adapter,
+            WindowOptions::new(
+                "Layer36 AppKit draw redraw",
+                WindowSize::new(640, 480).unwrap(),
+            )
+            .unwrap(),
+        )
+        .expect("create window");
+        let mut event_state = AppKitWindowEventState::new(id);
+        let mut surface = AppKitDrawSurfaceState::new(
+            id,
+            WindowSize::new(640, 480).unwrap(),
+            1.0,
+            AppKitColor::LAYER36_BLUE,
+        )
+        .expect("surface state");
+
+        surface
+            .request_redraw(&bridge, &backend, &adapter, &mut event_state)
+            .expect("request redraw");
+
+        assert_eq!(surface.redraws_requested(), 1);
+        assert_eq!(
+            WindowAdapter::drain_events(&adapter).expect("events"),
+            vec![UiEvent::WindowCreated(id), UiEvent::RedrawRequested(id)]
+        );
+    }
+
+    #[test]
+    fn appkit_draw_surface_validates_color_and_scale() {
+        assert!(AppKitColor::new(0.0, 0.5, 1.0, 1.0).is_ok());
+        assert!(matches!(
+            AppKitColor::new(0.0, f32::NAN, 1.0, 1.0),
+            Err(UiAdapterError::InvalidWidgetStyle(_))
+        ));
+
+        let adapter = MacosUiAdapter::new();
+        let id = WindowAdapter::create_window(
+            &adapter,
+            WindowOptions::new(
+                "Layer36 AppKit draw validation",
+                WindowSize::new(640, 480).unwrap(),
+            )
+            .unwrap(),
+        )
+        .expect("create window");
+        assert!(matches!(
+            AppKitDrawSurfaceState::new(
+                id,
+                WindowSize::new(640, 480).unwrap(),
+                0.0,
+                AppKitColor::LAYER36_BLUE,
+            ),
+            Err(UiAdapterError::InvalidScaleFactor(_))
+        ));
     }
 }

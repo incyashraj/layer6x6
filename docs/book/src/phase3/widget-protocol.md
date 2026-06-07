@@ -155,6 +155,9 @@ Done now:
 - AppKit delegate callbacks now have a Rust bridge. The future Objective-C
   delegate can translate native method calls into a small enum, then the Rust
   bridge handles resize, focus, scale, redraw, close, and snapshot routing.
+- AppKit now has draw-surface state. It tracks the window size, display scale,
+  clear color, redraw count, and frame number. It still does not paint pixels.
+  It gives the next `NSView` step a small state object to use.
 - The runtime has a UI dispatcher scaffold.
 - macOS, Linux, and Windows adapters expose headless draft window and UI entry
   points, plus the planned native backend for each host. macOS also exposes the
@@ -165,7 +168,7 @@ Done now:
 Pending:
 
 - real Objective-C AppKit delegate object wired into the Rust delegate bridge
-- a simple AppKit drawn surface that requests redraw and paints one visible frame
+- an AppKit `NSView` attached to the draw-surface state that paints one visible frame
 - Linux and Windows native window prototypes
 - host event loop that feeds real close, resize, focus, theme, scale, pointer, key, and text events into the queue
 - widget tree lowering

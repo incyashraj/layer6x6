@@ -162,6 +162,12 @@ needed, and should close. The bridge translates those callbacks into the tested
 native event state. That means the real Objective-C delegate can stay small:
 call into Rust and let Rust handle the event rules.
 
+AppKit now has draw-surface state too. It records the Layer36 window id, logical
+size, display scale, clear color, redraw count, and frame number. A redraw
+request from that surface goes through the same delegate bridge as a future
+native AppKit view. This still does not paint pixels. It is the small state
+object the next `NSView` painter will use.
+
 ADR-0013 and RFC-0003 now define how widgets lower once a native backend exists.
 A widget should become a native control when the host has a semantic match. If
 it does not, Layer36 uses a drawn fallback with the same layout, input,
@@ -221,9 +227,10 @@ closing the app window by itself. The app still decides how to respond.
 
 This is not a finished desktop UI layer.
 
-It does not open a real window yet. It does not draw a real frame yet. It does
-not mean the API is frozen. It is the first contract shape that lets us build
-the runtime and host adapter work in the right direction.
+There is an opt-in AppKit window prototype on macOS, but the default runtime is
+still headless. It does not draw a real frame yet. It does not mean the API is
+frozen. It is the first contract and adapter shape that lets us build the
+runtime and host work in the right direction.
 
 ## Why Start Here
 
@@ -235,7 +242,7 @@ The next proof should be small and visible:
 
 1. Record prepared and cold layout benchmark numbers on the target hosts.
 2. Connect the real Objective-C delegate object to the tested Rust delegate bridge.
-3. Add a tiny AppKit drawing surface that can request and paint one visible frame.
+3. Attach an AppKit `NSView` to the draw-surface state and paint one visible frame.
 4. Add the first Linux and Windows native window prototypes.
 5. Connect real host input events to the draft pointer, key, and text routes.
 6. Add a small notes app skeleton that uses the same path.

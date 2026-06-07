@@ -344,6 +344,9 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
         "macOS adapter must expose the first AppKit native-handle handoff point".to_string(),
     )?;
     for needle in [
+        "AppKitColor",
+        "AppKitDrawFrame",
+        "AppKitDrawSurfaceState",
         "AppKitWindowBackend",
         "AppKitWindowDelegateBridge",
         "AppKitWindowDelegateCallback",
@@ -363,6 +366,9 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
     let macos_cargo = fs::read_to_string(root.join("crates/adapter-macos/Cargo.toml"))?;
     for needle in [
         "pub struct AppKitWindowBackend",
+        "pub struct AppKitColor",
+        "pub struct AppKitDrawFrame",
+        "pub struct AppKitDrawSurfaceState",
         "pub struct AppKitWindowDelegateBridge",
         "pub enum AppKitWindowDelegateCallback",
         "pub enum AppKitWindowNativeEvent",
@@ -371,6 +377,9 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
         "pub struct AppKitWindowSession",
         "pub struct AppKitWindowSnapshot",
         "pub fn handle_native_event(",
+        "pub fn request_redraw(",
+        "pub fn record_frame(",
+        "pub fn create_draw_surface_state(",
         "pub fn create_window(",
         "pub fn create_session(",
         "pub fn show_window(",
