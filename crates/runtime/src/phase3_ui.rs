@@ -62,21 +62,64 @@ pub struct TextInputRouteRequest {
     pub text: String,
 }
 
+/// Host UI backend mode requested by the Phase 3 runtime.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Phase3HostUiMode {
+    /// Use the current safe host adapter. Today this is the headless draft path.
+    HeadlessDraft,
+    /// Use the first opt-in native prototype path when the host supports it.
+    NativePrototype,
+}
+
 /// Owns the Phase 3 UI guard and host adapter for one runtime session.
 pub struct Phase3UiRuntime {
     guard: UapiGuard,
     adapter: Box<dyn UiAdapter>,
+    host_mode: Phase3HostUiMode,
 }
 
 impl Phase3UiRuntime {
     /// Build a UI runtime with an explicit adapter, mainly for tests.
     pub fn new(guard: UapiGuard, adapter: Box<dyn UiAdapter>) -> Self {
-        Self { guard, adapter }
+        Self {
+            guard,
+            adapter,
+            host_mode: Phase3HostUiMode::HeadlessDraft,
+        }
+    }
+
+    /// Build a UI runtime with an explicit adapter and recorded host mode.
+    pub fn with_adapter_mode(
+        guard: UapiGuard,
+        adapter: Box<dyn UiAdapter>,
+        host_mode: Phase3HostUiMode,
+    ) -> Self {
+        Self {
+            guard,
+            adapter,
+            host_mode,
+        }
     }
 
     /// Build a UI runtime using the current host adapter entry point.
     pub fn with_host_adapter(guard: UapiGuard) -> Self {
-        Self::new(guard, discover_host_ui_adapter())
+        Self::with_adapter_mode(
+            guard,
+            discover_host_ui_adapter(),
+            Phase3HostUiMode::HeadlessDraft,
+        )
+    }
+
+    /// Build a UI runtime using an explicitly requested host adapter mode.
+    pub fn try_with_host_adapter_mode(
+        guard: UapiGuard,
+        host_mode: Phase3HostUiMode,
+    ) -> UiDispatchResult<Self> {
+        Ok(Self::with_adapter_mode(
+            guard,
+            discover_host_ui_adapter_for_mode(host_mode)?,
+            host_mode,
+        ))
     }
 
     /// Return a dispatcher that checks policy before each adapter call.
@@ -87,6 +130,11 @@ impl Phase3UiRuntime {
     /// Return the selected adapter information.
     pub fn adapter_info(&self) -> UiAdapterInfo {
         self.adapter.info()
+    }
+
+    /// Return the host UI mode requested for this runtime.
+    pub fn host_mode(&self) -> Phase3HostUiMode {
+        self.host_mode
     }
 }
 
@@ -332,6 +380,29 @@ fn discover_host_ui_adapter() -> Box<dyn UiAdapter> {
     }
 }
 
+fn discover_host_ui_adapter_for_mode(
+    host_mode: Phase3HostUiMode,
+) -> UiDispatchResult<Box<dyn UiAdapter>> {
+    match host_mode {
+        Phase3HostUiMode::HeadlessDraft => Ok(discover_host_ui_adapter()),
+        Phase3HostUiMode::NativePrototype => discover_native_prototype_ui_adapter(),
+    }
+}
+
+fn discover_native_prototype_ui_adapter() -> UiDispatchResult<Box<dyn UiAdapter>> {
+    #[cfg(target_os = "macos")]
+    {
+        Ok(Box::new(
+            layer36_adapter_macos::discover_appkit_prototype_ui_adapter()?,
+        ))
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        Err(UiDispatchError::Unsupported)
+    }
+}
+
 fn map_ui_policy(err: UapiError) -> UiDispatchError {
     if matches!(
         err,
@@ -482,6 +553,7 @@ mod tests {
         let dispatcher = runtime.dispatcher();
         let size = WindowSize::new(480, 320).expect("size");
 
+        assert_eq!(runtime.host_mode(), Phase3HostUiMode::HeadlessDraft);
         assert!(info.backend.ends_with("headless-draft"));
         assert_eq!(info.window_backend, WindowBackendKind::HeadlessDraft);
         assert_ne!(info.planned_window_backend, WindowBackendKind::Unknown);
@@ -499,6 +571,31 @@ mod tests {
             dispatcher.drain_events().expect("events"),
             vec![UiEvent::WindowCreated(id), UiEvent::WindowShown(id)]
         );
+    }
+
+    #[test]
+    fn runtime_native_prototype_mode_is_explicit() {
+        let guard = UapiGuard::new(SessionPolicy::default());
+        let runtime =
+            Phase3UiRuntime::try_with_host_adapter_mode(guard, Phase3HostUiMode::NativePrototype);
+
+        #[cfg(target_os = "macos")]
+        {
+            let runtime = runtime.expect("macOS native prototype runtime");
+            let info = runtime.adapter_info();
+
+            assert_eq!(runtime.host_mode(), Phase3HostUiMode::NativePrototype);
+            assert_eq!(info.host_family, "macos");
+            assert_eq!(info.backend, "macos-appkit-prototype");
+            assert_eq!(info.planned_window_backend, WindowBackendKind::AppKit);
+            assert!(info.native_windows);
+            assert!(info.native_event_loop);
+        }
+
+        #[cfg(not(target_os = "macos"))]
+        {
+            assert!(matches!(runtime, Err(UiDispatchError::Unsupported)));
+        }
     }
 
     #[test]

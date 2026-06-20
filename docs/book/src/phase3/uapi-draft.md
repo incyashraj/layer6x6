@@ -174,6 +174,12 @@ queue a redraw request. That is enough to prove the native path can feed the
 same event stream as the headless draft adapter. It is not yet the default
 runtime path.
 
+The runtime can select that prototype path explicitly now. The default
+`Phase3UiRuntime::with_host_adapter` path remains headless. A caller that is
+ready for native macOS rules can ask for `Phase3HostUiMode::NativePrototype`,
+which selects the AppKit prototype adapter and reports native window plus
+native event-loop support.
+
 AppKit now has draw-surface state too. It records the Layer36 window id, logical
 size, display scale, clear color, redraw count, and frame number. A redraw
 request from that surface goes through the same delegate bridge as a future
@@ -260,8 +266,7 @@ the app, runtime, SDKs, and host adapters.
 The next proof should be small and visible:
 
 1. Record prepared and cold layout benchmark numbers on the target hosts.
-2. Make the AppKit event-loop driver selectable from the runtime while keeping
-   the default headless path stable for CI.
+2. Add an ignored local smoke for the selectable AppKit runtime path.
 3. Add the first Linux and Windows native window prototypes.
 4. Connect real host input events to the draft pointer, key, and text routes.
 5. Add a small notes app skeleton that uses the same path.

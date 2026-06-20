@@ -204,6 +204,9 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
     let runtime_path = root.join("crates/runtime/src/lib.rs");
     let runtime = fs::read_to_string(&runtime_path)
         .with_context(|| format!("read {}", runtime_path.display()))?;
+    let phase3_runtime_path = root.join("crates/runtime/src/phase3_ui.rs");
+    let phase3_runtime = fs::read_to_string(&phase3_runtime_path)
+        .with_context(|| format!("read {}", phase3_runtime_path.display()))?;
     let adapter_common_path = root.join("crates/adapter-common/src/ui.rs");
     let adapter_common = fs::read_to_string(&adapter_common_path)
         .with_context(|| format!("read {}", adapter_common_path.display()))?;
@@ -230,6 +233,18 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
             && adapter_common.contains("fn detach_native_window("),
         "WindowAdapter must expose native handle attach, lookup, and detach methods".to_string(),
     )?;
+    for needle in [
+        "pub enum Phase3HostUiMode",
+        "NativePrototype",
+        "try_with_host_adapter_mode",
+        "discover_host_ui_adapter_for_mode",
+        "discover_native_prototype_ui_adapter",
+    ] {
+        ensure(
+            phase3_runtime.contains(needle),
+            format!("runtime Phase 3 UI selector must include `{needle}`"),
+        )?;
+    }
 
     for call in RUNTIME_BOUNDARY_CALLS {
         let body = function_body(&runtime, call.wrapper_fn)
@@ -343,6 +358,17 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
         macos_lib.contains("pub fn attach_appkit_window_handle("),
         "macOS adapter must expose the first AppKit native-handle handoff point".to_string(),
     )?;
+    for needle in [
+        "pub struct MacosAppKitPrototypeUiAdapter",
+        "pub fn discover_appkit_prototype_ui_adapter(",
+        "pub fn pump_event_loop_once(",
+        "macos-appkit-prototype",
+    ] {
+        ensure(
+            macos_lib.contains(needle),
+            format!("macOS adapter lib must expose AppKit prototype selector `{needle}`"),
+        )?;
+    }
     for needle in [
         "AppKitColor",
         "AppKitDrawFrame",

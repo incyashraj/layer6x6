@@ -14,6 +14,8 @@ use layer36_adapter_common::{
         WindowAdapter, WindowBackendKind, WindowId, WindowOptions, WindowRecord, WindowSize,
     },
 };
+use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::fs::OpenOptions;
 use std::net::ToSocketAddrs;
 use std::net::{SocketAddr, TcpStream};
@@ -31,6 +33,11 @@ pub use appkit::{
 
 /// Host family handled by this adapter crate.
 pub const HOST_FAMILY: &str = "macos";
+
+thread_local! {
+    static APPKIT_PROTOTYPE_SESSIONS: RefCell<BTreeMap<WindowId, AppKitWindowSession>> =
+        const { RefCell::new(BTreeMap::new()) };
+}
 
 /// macOS Phase 3 UI adapter entry point.
 ///
@@ -75,6 +82,61 @@ impl MacosUiAdapter {
         let handle = NativeWindowHandle::new(WindowBackendKind::AppKit, raw_handle)?;
         WindowAdapter::attach_native_window(self, id, handle)?;
         Ok(handle)
+    }
+}
+
+/// Opt-in macOS adapter that uses the AppKit prototype path.
+///
+/// The default macOS adapter remains headless. This adapter is selected only by
+/// runtime code that explicitly asks for the native prototype mode.
+#[derive(Debug, Default)]
+pub struct MacosAppKitPrototypeUiAdapter {
+    headless: MacosUiAdapter,
+    backend: AppKitWindowBackend,
+    driver: AppKitWindowEventLoopDriver,
+}
+
+impl MacosAppKitPrototypeUiAdapter {
+    /// Create the opt-in AppKit prototype adapter.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Name the backend used by this adapter build.
+    pub fn backend_name(&self) -> &'static str {
+        "macos-appkit-prototype"
+    }
+
+    /// Return whether this build can create AppKit windows.
+    pub fn native_windows_enabled(&self) -> bool {
+        self.backend.is_available()
+    }
+
+    /// Return whether this build has the first native event-loop driver.
+    pub fn native_event_loop_enabled(&self) -> bool {
+        self.backend.is_available()
+    }
+
+    /// Pump one native AppKit event-loop tick for a tracked prototype window.
+    pub fn pump_event_loop_once(
+        &self,
+        id: WindowId,
+    ) -> Result<Option<AppKitWindowEventLoopStepReport>, UiAdapterError> {
+        APPKIT_PROTOTYPE_SESSIONS.with(|sessions| {
+            let mut sessions = sessions.borrow_mut();
+            let Some(session) = sessions.get_mut(&id) else {
+                return Ok(None);
+            };
+            session
+                .pump_event_loop_once(&self.driver, &self.backend, &self.headless)
+                .map(Some)
+        })
+    }
+
+    fn remove_session(&self, id: WindowId) {
+        APPKIT_PROTOTYPE_SESSIONS.with(|sessions| {
+            sessions.borrow_mut().remove(&id);
+        });
     }
 }
 
@@ -163,6 +225,113 @@ impl WindowAdapter for MacosUiAdapter {
     }
 }
 
+impl WindowAdapter for MacosAppKitPrototypeUiAdapter {
+    fn info(&self) -> UiAdapterInfo {
+        let native = self.native_windows_enabled();
+        UiAdapterInfo::new(
+            HOST_FAMILY,
+            self.backend_name(),
+            if native {
+                WindowBackendKind::AppKit
+            } else {
+                WindowBackendKind::HeadlessDraft
+            },
+            WindowBackendKind::AppKit,
+            native,
+            self.native_event_loop_enabled(),
+        )
+    }
+
+    fn create_window(&self, options: WindowOptions) -> Result<WindowId, UiAdapterError> {
+        let mut session = self.backend.create_session(&self.headless, options)?;
+        session.install_native_delegate()?;
+        let id = session.id();
+        APPKIT_PROTOTYPE_SESSIONS.with(|sessions| {
+            sessions.borrow_mut().insert(id, session);
+        });
+        Ok(id)
+    }
+
+    fn show_window(&self, id: WindowId) -> Result<(), UiAdapterError> {
+        APPKIT_PROTOTYPE_SESSIONS.with(|sessions| {
+            let sessions = sessions.borrow();
+            if let Some(session) = sessions.get(&id) {
+                session.show(&self.backend, &self.headless)
+            } else {
+                WindowAdapter::show_window(&self.headless, id)
+            }
+        })
+    }
+
+    fn close_window(&self, id: WindowId) -> Result<(), UiAdapterError> {
+        self.remove_session(id);
+        WindowAdapter::close_window(&self.headless, id)
+    }
+
+    fn set_title(&self, id: WindowId, title: String) -> Result<(), UiAdapterError> {
+        WindowAdapter::set_title(&self.headless, id, title)
+    }
+
+    fn set_size(&self, id: WindowId, size: WindowSize) -> Result<(), UiAdapterError> {
+        WindowAdapter::set_size(&self.headless, id, size)
+    }
+
+    fn request_redraw(&self, id: WindowId) -> Result<(), UiAdapterError> {
+        WindowAdapter::request_redraw(&self.headless, id)
+    }
+
+    fn window(&self, id: WindowId) -> Result<Option<WindowRecord>, UiAdapterError> {
+        WindowAdapter::window(&self.headless, id)
+    }
+
+    fn attach_native_window(
+        &self,
+        id: WindowId,
+        handle: NativeWindowHandle,
+    ) -> Result<(), UiAdapterError> {
+        WindowAdapter::attach_native_window(&self.headless, id, handle)
+    }
+
+    fn native_window(&self, id: WindowId) -> Result<Option<NativeWindowHandle>, UiAdapterError> {
+        WindowAdapter::native_window(&self.headless, id)
+    }
+
+    fn detach_native_window(
+        &self,
+        id: WindowId,
+    ) -> Result<Option<NativeWindowHandle>, UiAdapterError> {
+        WindowAdapter::detach_native_window(&self.headless, id)
+    }
+
+    fn drain_events(&self) -> Result<Vec<UiEvent>, UiAdapterError> {
+        WindowAdapter::drain_events(&self.headless)
+    }
+
+    fn poll_event(&self) -> Result<Option<UiEvent>, UiAdapterError> {
+        WindowAdapter::poll_event(&self.headless)
+    }
+
+    fn queue_close_requested(&self, id: WindowId) -> Result<(), UiAdapterError> {
+        WindowAdapter::queue_close_requested(&self.headless, id)
+    }
+
+    fn queue_host_resize(&self, id: WindowId, size: WindowSize) -> Result<(), UiAdapterError> {
+        WindowAdapter::queue_host_resize(&self.headless, id, size)
+    }
+
+    fn queue_window_focused(&self, id: WindowId, focused: bool) -> Result<(), UiAdapterError> {
+        WindowAdapter::queue_window_focused(&self.headless, id, focused)
+    }
+
+    fn queue_theme_changed(&self, theme: Theme) -> Result<(), UiAdapterError> {
+        WindowAdapter::queue_theme_changed(&self.headless, theme)
+    }
+
+    fn queue_scale_changed(&self, id: WindowId, scale: f32) -> Result<(), UiAdapterError> {
+        WindowAdapter::queue_scale_changed(&self.headless, id, scale)
+    }
+}
+
 impl UiAdapter for MacosUiAdapter {
     fn set_root(&self, window: WindowId, root: WidgetNode) -> Result<(), UiAdapterError> {
         self.draft.set_root(window, root)
@@ -201,9 +370,67 @@ impl UiAdapter for MacosUiAdapter {
     }
 }
 
+impl UiAdapter for MacosAppKitPrototypeUiAdapter {
+    fn set_root(&self, window: WindowId, root: WidgetNode) -> Result<(), UiAdapterError> {
+        self.headless.set_root(window, root)
+    }
+
+    fn upsert_node(&self, window: WindowId, node: WidgetNode) -> Result<(), UiAdapterError> {
+        self.headless.upsert_node(window, node)
+    }
+
+    fn remove_node(&self, window: WindowId, widget: WidgetId) -> Result<(), UiAdapterError> {
+        self.headless.remove_node(window, widget)
+    }
+
+    fn focus_node(&self, window: WindowId, widget: WidgetId) -> Result<(), UiAdapterError> {
+        self.headless.focus_node(window, widget)
+    }
+
+    fn widget_tree(&self, window: WindowId) -> Result<Option<WidgetTree>, UiAdapterError> {
+        self.headless.widget_tree(window)
+    }
+
+    fn focused_widget(&self, window: WindowId) -> Result<Option<WidgetId>, UiAdapterError> {
+        self.headless.focused_widget(window)
+    }
+
+    fn queue_pointer_event(&self, event: PointerEvent) -> Result<(), UiAdapterError> {
+        self.headless.queue_pointer_event(event)
+    }
+
+    fn queue_key_event(&self, event: KeyEvent) -> Result<(), UiAdapterError> {
+        self.headless.queue_key_event(event)
+    }
+
+    fn queue_text_input(&self, event: TextInputEvent) -> Result<(), UiAdapterError> {
+        self.headless.queue_text_input(event)
+    }
+
+    fn read_clipboard_text(&self) -> Result<String, UiAdapterError> {
+        self.headless.read_clipboard_text()
+    }
+
+    fn write_clipboard_text(&self, text: &str) -> Result<(), UiAdapterError> {
+        self.headless.write_clipboard_text(text)
+    }
+}
+
 /// Build the current macOS UI adapter.
 pub fn discover_ui_adapter() -> MacosUiAdapter {
     MacosUiAdapter::new()
+}
+
+/// Build the opt-in AppKit prototype UI adapter.
+pub fn discover_appkit_prototype_ui_adapter(
+) -> Result<MacosAppKitPrototypeUiAdapter, UiAdapterError> {
+    let adapter = MacosAppKitPrototypeUiAdapter::new();
+    if !adapter.native_windows_enabled() {
+        return Err(UiAdapterError::Unsupported(
+            "AppKit prototype UI adapter is only available on macOS".to_string(),
+        ));
+    }
+    Ok(adapter)
 }
 
 /// Resolve locale and timezone for macOS host runs.
@@ -503,6 +730,40 @@ mod tests {
         );
         assert_eq!(backend.is_available(), cfg!(target_os = "macos"));
         assert!(!adapter.native_windows_enabled());
+    }
+
+    #[test]
+    fn appkit_prototype_adapter_is_separate_from_default_adapter() {
+        let default_adapter = discover_ui_adapter();
+        let prototype_adapter = MacosAppKitPrototypeUiAdapter::new();
+        let default_info = default_adapter.info();
+        let prototype_info = prototype_adapter.info();
+
+        assert_eq!(default_info.backend, "macos-headless-draft");
+        assert_eq!(
+            default_info.window_backend,
+            WindowBackendKind::HeadlessDraft
+        );
+        assert!(!default_info.native_windows);
+        assert!(!default_info.native_event_loop);
+
+        assert_eq!(prototype_info.backend, "macos-appkit-prototype");
+        assert_eq!(
+            prototype_info.planned_window_backend,
+            WindowBackendKind::AppKit
+        );
+        if cfg!(target_os = "macos") {
+            assert_eq!(prototype_info.window_backend, WindowBackendKind::AppKit);
+            assert!(prototype_info.native_windows);
+            assert!(prototype_info.native_event_loop);
+        } else {
+            assert_eq!(
+                prototype_info.window_backend,
+                WindowBackendKind::HeadlessDraft
+            );
+            assert!(!prototype_info.native_windows);
+            assert!(!prototype_info.native_event_loop);
+        }
     }
 
     #[test]

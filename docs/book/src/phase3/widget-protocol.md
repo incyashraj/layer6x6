@@ -169,6 +169,8 @@ Done now:
 - AppKit now has a first event-loop step driver. It can refresh native state,
   drain delegate callbacks, and queue a redraw request without blocking the
   process.
+- The runtime can now select the AppKit prototype mode explicitly on macOS.
+  The default runtime path still stays headless.
 - The runtime has a UI dispatcher scaffold.
 - macOS, Linux, and Windows adapters expose headless draft window and UI entry
   points, plus the planned native backend for each host. macOS also exposes the
@@ -178,7 +180,7 @@ Done now:
 
 Pending:
 
-- selectable runtime wiring for the AppKit event-loop driver
+- ignored local smoke for the selectable AppKit runtime path
 - Linux and Windows native window prototypes
 - host event loop that feeds real close, resize, focus, theme, scale, pointer, key, and text events into the queue
 - widget tree lowering
