@@ -67,6 +67,7 @@ The first Phase 3 slice is now in the repo:
 - `Phase3UiRuntime::with_host_adapter`, which selects the current host UI adapter and reports whether it is still headless or native
 - `Phase3UiRuntime::try_with_host_adapter_mode`, which keeps the default headless path stable while allowing macOS to explicitly request the AppKit prototype adapter
 - `UiEventLoopTick` and `Phase3UiDispatcher::pump_event_loop_once`, so every host adapter has the same non-blocking event-loop pump shape
+- a local runtime smoke command that asks for the AppKit prototype path, opens the native window, pumps one shared tick, checks the report, and closes the window
 - ADR-0013 and RFC-0003 now record the widget lowering strategy: native controls where the host has a semantic match, drawn fallback where it does not
 - ADR-0014 records the layout engine choice: Taffy, with a small flexbox-style subset first
 
@@ -84,7 +85,10 @@ event-loop driver that can process one native tick without blocking. The next
 runtime work has started too: the AppKit prototype can be selected explicitly,
 while the normal runtime path still stays headless for CI. The runtime can now
 ask any adapter to process one non-blocking UI tick. Headless adapters return
-no native work; AppKit maps its prototype tick into the shared report.
+no native work; AppKit maps its prototype tick into the shared report. There is
+also a local smoke command for that full runtime path, so a macOS developer can
+prove create, show, pump, inspect, and close on the main process thread without
+making normal CI open a window.
 
 See [Widget Protocol](../phase3/widget-protocol.md) for the plain-language
 version of this Phase 3 direction. See [Layout](../phase3/layout.md) for the

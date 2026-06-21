@@ -273,6 +273,8 @@ The value of this step is that the boundary is testable:
 - `Phase3UiDispatcher::pump_event_loop_once` gives native adapters one shared
   non-blocking event-loop pump. Headless adapters return no native tick, and
   the AppKit prototype maps its native step into the common report.
+- a local runtime smoke command now proves the selectable AppKit prototype can
+  create, show, pump, inspect, and close through that dispatcher path
 - draft widget-tree calls now pass through the same dispatcher and adapter
   boundary for set root, upsert node, remove node, and focus node
 - draft layout calls can now turn the stored widget tree into a

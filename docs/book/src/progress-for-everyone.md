@@ -192,6 +192,10 @@ flowchart LR
     the runtime can ask any UI adapter for one small non-blocking event-loop
     step. Headless adapters say "nothing native happened"; the AppKit prototype
     returns a small report with callback, snapshot, and redraw information.
+47. The selectable macOS prototype path now has a local smoke command. In simple
+    terms, a developer can run one script that asks the runtime for the AppKit
+    path, opens the native window, pumps one event-loop step, checks the result,
+    and closes the window.
 
 ## Current Build Timeline
 
@@ -238,7 +242,7 @@ This is a simple status view for non technical readers.
 | UAPI freeze decision path | Working, with a draft packet and CI checker |
 | Outside walkthrough proof | Ready to collect, with a timing packet, checker, and local rehearsal |
 | Phase 3 handoff | Started at contract level, still waiting on Phase 2 outside review for formal phase close |
-| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, draft window model, explicit `WindowAdapter`, native window handle handoff, shared widget tree model, draft widget-tree dispatch, first Taffy-backed layout wrapper, 100 generated layout-shape tests, 1k/10k layout benchmark target, prepared repeated-layout path, first layout hit-test helper, draft window, pointer, key, text, FIFO polling, host window, theme, and scale event routes, shared UI adapter trait, runtime UI dispatcher, host adapter entry points, runtime host adapter discovery, planned native backend reporting, the widget lowering rule, an opt-in macOS AppKit window prototype, AppKit event bridge targets, AppKit window session state, AppKit native event state, AppKit redraw bridge, AppKit delegate callback bridge, AppKit draw-surface state, AppKit draw view surface, AppKit native window delegate, AppKit event-loop step driver, selectable AppKit runtime mode, and shared runtime event-loop pump are in place. Local runtime smoke, Linux windows, and Windows windows are still pending |
+| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, draft window model, explicit `WindowAdapter`, native window handle handoff, shared widget tree model, draft widget-tree dispatch, first Taffy-backed layout wrapper, 100 generated layout-shape tests, 1k/10k layout benchmark target, prepared repeated-layout path, first layout hit-test helper, draft window, pointer, key, text, FIFO polling, host window, theme, and scale event routes, shared UI adapter trait, runtime UI dispatcher, host adapter entry points, runtime host adapter discovery, planned native backend reporting, the widget lowering rule, an opt-in macOS AppKit window prototype, AppKit event bridge targets, AppKit window session state, AppKit native event state, AppKit redraw bridge, AppKit delegate callback bridge, AppKit draw-surface state, AppKit draw view surface, AppKit native window delegate, AppKit event-loop step driver, selectable AppKit runtime mode, shared runtime event-loop pump, and a local runtime smoke command for the AppKit path are in place. Linux windows and Windows windows are still pending |
 | Mobile host path | Not started in implementation |
 | Packaging and app store style distribution | Not started in implementation |
 
@@ -293,5 +297,7 @@ for the Rust session to drain. A small AppKit event-loop driver can now process
 one native tick without blocking. The runtime can now select that AppKit
 prototype path explicitly while keeping the default path headless. That native
 tick now has a common runtime report, so Linux and Windows can plug into the
-same pump method later. The next useful step is a local runtime smoke before
-expanding sideways.
+same pump method later. The selectable AppKit runtime path now also has a local
+smoke command that proves create, show, pump, inspect, and close through the
+runtime dispatcher. The next useful step is expanding sideways to the first
+Linux and Windows native window prototypes.

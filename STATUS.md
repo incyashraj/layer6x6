@@ -1,25 +1,25 @@
 # Layer36 Status
 
-Last updated: 2026-06-20
+Last updated: 2026-06-21
 Repo: `incyashraj/layer6x6`
 Branch: `main`
-Latest checked completed push before this slice: `255e0c2`
-Working tree at this status update: Phase 3 shared event-loop pump boundary slice in progress
+Latest checked completed push before this slice: `a1cb482`
+Working tree at this status update: Phase 3 selectable AppKit runtime smoke slice in progress
 
 ## 1) Project size today
 
-- Commits after this slice lands: about 346
+- Commits after this slice lands: about 347
 - Tracked files after this slice lands: about 332
-- Total tracked lines after this slice lands: about 96,297
-- Rust lines (`.rs`) after this slice lands: about 48,445
-- Docs lines (`.md`) after this slice lands: about 30,516
+- Total tracked lines after this slice lands: about 96,378
+- Rust lines (`.rs`) after this slice lands: about 48,496
+- Docs lines (`.md`) after this slice lands: about 30,546
 
 ## 2) Latest CI and Pages state
 
-Latest completed push (`255e0c2`) checks:
+Latest completed push (`a1cb482`) checks:
 
-- CI: success (run `27877575877`)
-- Deploy docs to GitHub Pages: success (run `27877575884`)
+- CI: success (run `27878054443`)
+- Deploy docs to GitHub Pages: success (run `27878054446`)
 
 Manual hosted full CI run `26069665276` passed on commit `3f1a219`.
 Linux, macOS, and Windows full-test lanes all passed. The language-variant,
@@ -183,6 +183,11 @@ Current Phase 3 slice:
 - The runtime and shared UI adapter now have one host-neutral event-loop pump.
   Headless adapters return no native tick, while the AppKit prototype maps its
   native event-loop step report into a common `UiEventLoopTick` shape.
+- The selectable AppKit prototype runtime path now has a local smoke command.
+  It asks for `Phase3HostUiMode::NativePrototype`, creates and shows a real
+  AppKit window, pumps one shared event-loop tick, checks the native report,
+  and closes the window through the runtime dispatcher on the main process
+  thread.
 
 This does not mean desktop UI is implemented yet. It means the first public
 contract for desktop UI work is now in the repo and checked locally. The window
@@ -254,6 +259,9 @@ Top pending items:
   native prototype by name while preserving the default headless path.
 - Added the shared event-loop pump boundary so any host adapter can expose one
   non-blocking native UI tick through the runtime dispatcher.
+- Added the selectable AppKit runtime smoke command so the full opt-in macOS
+  native prototype path can be checked locally without making normal CI open a
+  desktop window.
 - Added a UCap enforcement evidence recorder and cross-host comparator (`record-phase2-ucap-evidence` + `compare-phase2-ucap-evidence`)
 - Wired hosted full CI to upload per-OS UCap evidence artifacts and run a dedicated cross-host compare gate
 - Added a benchmark evidence recorder and comparator (`record-phase2-benchmark-evidence` + `compare-phase2-benchmark-evidence`) to track startup and dispatch performance evidence in one per-host report
@@ -344,4 +352,4 @@ Top pending items:
 
 Use this exact prompt in a new session:
 
-`Continue Layer36 on main. Start with STATUS.md, Plan/Phase-2-Plan.md, and Plan/Phase-3-Plan.md. Phase 3 has started with WIT, GUI manifest recognition, Phase 3 capability names, an adapter-common draft window registry, explicit WindowAdapter boundary, native window handle handoff, shared widget tree model, shared UiAdapter trait, runtime::phase3_ui dispatcher scaffolding, draft widget-tree dispatch, a first Taffy-backed layer36-layout crate, runtime layout snapshots, generated 100-shape layout tests, a 1k/10k-node layout benchmark target, PreparedLayoutTree for repeated layout passes, layout absolute-rectangle helpers, a first layout hit-test helper, headless UI adapter entry points in the macOS, Linux, and Windows crates, runtime host UI adapter discovery, active/planned window backend reporting, draft pointer, key, text, FIFO polling, host window, theme, and scale event routes, an opt-in macOS AppKit window prototype, AppKit event bridge targets, AppKit window session state, AppKit native event state, AppKit redraw bridge, AppKit delegate callback bridge, AppKit draw-surface state, AppKit draw view surface, AppKit native window delegate object, AppKit event-loop step driver, selectable AppKit prototype runtime mode, shared runtime event-loop pump boundary, and ADR/RFC/docs for the native-widget plus drawn-fallback widget lowering rule. Prepared 10k layout is locally under budget, but cold rebuild and formal cross-host evidence remain pending. Keep Phase 2 closeout evidence separate, keep Phase 3 narrow, update plan/docs after each chunk, keep GitHub Pages in sync, and check CI after every push.`
+`Continue Layer36 on main. Start with STATUS.md, Plan/Phase-2-Plan.md, and Plan/Phase-3-Plan.md. Phase 3 has started with WIT, GUI manifest recognition, Phase 3 capability names, an adapter-common draft window registry, explicit WindowAdapter boundary, native window handle handoff, shared widget tree model, shared UiAdapter trait, runtime::phase3_ui dispatcher scaffolding, draft widget-tree dispatch, a first Taffy-backed layer36-layout crate, runtime layout snapshots, generated 100-shape layout tests, a 1k/10k-node layout benchmark target, PreparedLayoutTree for repeated layout passes, layout absolute-rectangle helpers, a first layout hit-test helper, headless UI adapter entry points in the macOS, Linux, and Windows crates, runtime host UI adapter discovery, active/planned window backend reporting, draft pointer, key, text, FIFO polling, host window, theme, and scale event routes, an opt-in macOS AppKit window prototype, AppKit event bridge targets, AppKit window session state, AppKit native event state, AppKit redraw bridge, AppKit delegate callback bridge, AppKit draw-surface state, AppKit draw view surface, AppKit native window delegate object, AppKit event-loop step driver, selectable AppKit prototype runtime mode, shared runtime event-loop pump boundary, selectable AppKit runtime smoke command, and ADR/RFC/docs for the native-widget plus drawn-fallback widget lowering rule. Prepared 10k layout is locally under budget, but cold rebuild and formal cross-host evidence remain pending. Keep Phase 2 closeout evidence separate, keep Phase 3 narrow, update plan/docs after each chunk, keep GitHub Pages in sync, and check CI after every push.`

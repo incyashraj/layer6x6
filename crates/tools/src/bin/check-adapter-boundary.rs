@@ -254,6 +254,15 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
             format!("runtime Phase 3 UI selector must include `{needle}`"),
         )?;
     }
+    ensure(
+        root.join("crates/runtime/examples/phase3_appkit_runtime_smoke.rs")
+            .exists(),
+        "runtime must include the local AppKit runtime smoke example".to_string(),
+    )?;
+    ensure(
+        root.join("scripts/smoke-phase3-appkit-runtime.sh").exists(),
+        "scripts must include the local AppKit runtime smoke wrapper".to_string(),
+    )?;
 
     for call in RUNTIME_BOUNDARY_CALLS {
         let body = function_body(&runtime, call.wrapper_fn)

@@ -187,6 +187,13 @@ AppKit prototype maps its native step report into a small common
 `UiEventLoopTick` report. This keeps the next Linux and Windows window work on
 the same shape instead of making macOS a one-off path.
 
+There is also a local smoke command for the full selectable AppKit runtime
+path. On macOS, a developer can run it to ask the runtime for
+`Phase3HostUiMode::NativePrototype`, create and show the AppKit window, pump
+one shared event-loop tick, inspect the tick report, and close the window. It
+runs as a command rather than a unit test because AppKit needs the main process
+thread. Normal CI should not open native desktop windows.
+
 AppKit now has draw-surface state too. It records the Layer36 window id, logical
 size, display scale, clear color, redraw count, and frame number. A redraw
 request from that surface goes through the same delegate bridge as a future
@@ -271,12 +278,10 @@ For Layer36, the contract is the platform boundary. If the contract is vague,
 each host adapter will drift. Starting with WIT gives us one shared language for
 the app, runtime, SDKs, and host adapters.
 
-The next proof should be small and visible:
+The next proof should stay small and visible:
 
 1. Record prepared and cold layout benchmark numbers on the target hosts.
-2. Add an ignored local smoke for the selectable AppKit runtime path and its
-   shared event-loop pump.
-3. Add the first Linux and Windows native window prototypes.
-4. Connect real host input events to the draft pointer, key, and text routes.
-5. Add a small notes app skeleton that uses the same path.
-6. Keep capability checks at the dispatcher boundary as native code is added.
+2. Add the first Linux and Windows native window prototypes.
+3. Connect real host input events to the draft pointer, key, and text routes.
+4. Add a small notes app skeleton that uses the same path.
+5. Keep capability checks at the dispatcher boundary as native code is added.

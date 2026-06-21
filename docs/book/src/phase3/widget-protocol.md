@@ -174,6 +174,9 @@ Done now:
 - The runtime and shared `UiAdapter` now have one common event-loop pump method.
   Headless adapters return no native tick, and the AppKit prototype maps its
   native step into the shared `UiEventLoopTick` report.
+- There is now a local smoke command for the selectable AppKit runtime path.
+  It creates, shows, pumps, inspects, and closes the native prototype through
+  the runtime dispatcher on the main process thread.
 - The runtime has a UI dispatcher scaffold.
 - macOS, Linux, and Windows adapters expose headless draft window and UI entry
   points, plus the planned native backend for each host. macOS also exposes the
@@ -183,7 +186,6 @@ Done now:
 
 Pending:
 
-- ignored local smoke for the selectable AppKit runtime path and shared pump
 - Linux and Windows native window prototypes
 - host event loop that feeds real close, resize, focus, theme, scale, pointer, key, and text events into the queue
 - widget tree lowering
