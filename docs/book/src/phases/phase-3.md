@@ -69,6 +69,7 @@ The first Phase 3 slice is now in the repo:
 - `UiEventLoopTick` and `Phase3UiDispatcher::pump_event_loop_once`, so every host adapter has the same non-blocking event-loop pump shape
 - a local runtime smoke command that asks for the AppKit prototype path, opens the native window, pumps one shared tick, checks the report, and closes the window
 - Linux and Windows Winit prototype boundaries, with tested native-handle handoff helpers and guarded discovery paths that stay off until real native windows land
+- a shared Winit session owner scaffold, so Linux and Windows can track a native session, refresh snapshot state, pump prepared native events, and remove that session on close before real OS windows are connected
 - ADR-0013 and RFC-0003 now record the widget lowering strategy: native controls where the host has a semantic match, drawn fallback where it does not
 - ADR-0014 records the layout engine choice: Taffy, with a small flexbox-style subset first
 

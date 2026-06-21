@@ -199,6 +199,10 @@ flowchart LR
 48. Linux and Windows now have named Winit prototype boundaries. In simple
     terms, the code now has the right entry points and handle handoff checks for
     those hosts, but it still does not open real Linux or Windows windows yet.
+49. Linux and Windows now have a first Winit session owner scaffold. In simple
+    terms, Layer36 can track a future native window session and route prepared
+    resize, focus, scale, redraw, and close events through the same UI queue.
+    The missing piece is connecting this to real Winit OS windows.
 
 ## Current Build Timeline
 
@@ -245,7 +249,7 @@ This is a simple status view for non technical readers.
 | UAPI freeze decision path | Working, with a draft packet and CI checker |
 | Outside walkthrough proof | Ready to collect, with a timing packet, checker, and local rehearsal |
 | Phase 3 handoff | Started at contract level, still waiting on Phase 2 outside review for formal phase close |
-| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, draft window model, explicit `WindowAdapter`, native window handle handoff, shared widget tree model, draft widget-tree dispatch, first Taffy-backed layout wrapper, 100 generated layout-shape tests, 1k/10k layout benchmark target, prepared repeated-layout path, first layout hit-test helper, draft window, pointer, key, text, FIFO polling, host window, theme, and scale event routes, shared UI adapter trait, runtime UI dispatcher, host adapter entry points, runtime host adapter discovery, planned native backend reporting, the widget lowering rule, an opt-in macOS AppKit window prototype, AppKit event bridge targets, AppKit window session state, AppKit native event state, AppKit redraw bridge, AppKit delegate callback bridge, AppKit draw-surface state, AppKit draw view surface, AppKit native window delegate, AppKit event-loop step driver, selectable AppKit runtime mode, shared runtime event-loop pump, a local runtime smoke command for the AppKit path, and guarded Linux/Windows Winit prototype boundaries are in place. Real Linux and Windows native window sessions are still pending |
+| Desktop GUI path | WIT draft, GUI manifest recognition, first capability names, draft window model, explicit `WindowAdapter`, native window handle handoff, shared widget tree model, draft widget-tree dispatch, first Taffy-backed layout wrapper, 100 generated layout-shape tests, 1k/10k layout benchmark target, prepared repeated-layout path, first layout hit-test helper, draft window, pointer, key, text, FIFO polling, host window, theme, and scale event routes, shared UI adapter trait, runtime UI dispatcher, host adapter entry points, runtime host adapter discovery, planned native backend reporting, the widget lowering rule, an opt-in macOS AppKit window prototype, AppKit event bridge targets, AppKit window session state, AppKit native event state, AppKit redraw bridge, AppKit delegate callback bridge, AppKit draw-surface state, AppKit draw view surface, AppKit native window delegate, AppKit event-loop step driver, selectable AppKit runtime mode, shared runtime event-loop pump, a local runtime smoke command for the AppKit path, guarded Linux/Windows Winit prototype boundaries, and a shared Winit session owner scaffold are in place. Real Winit OS window creation is still pending |
 | Mobile host path | Not started in implementation |
 | Packaging and app store style distribution | Not started in implementation |
 
@@ -303,5 +307,6 @@ tick now has a common runtime report, so Linux and Windows can plug into the
 same pump method later. The selectable AppKit runtime path now also has a local
 smoke command that proves create, show, pump, inspect, and close through the
 runtime dispatcher. Linux and Windows now have guarded Winit prototype
-boundaries too, so the next useful step is turning those boundaries into real
-native window sessions.
+boundaries and a first shared Winit session owner scaffold too. The next useful
+step is connecting that scaffold to real Winit OS window creation and event
+collection.

@@ -517,6 +517,234 @@ pub struct UiEventLoopTick {
     pub redraw_requested: bool,
 }
 
+/// Current state read from a future winit-backed native window.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct WinitWindowSnapshot {
+    pub window: WindowId,
+    pub size: WindowSize,
+    pub visible: bool,
+    pub focused: bool,
+    pub scale: f32,
+}
+
+impl WinitWindowSnapshot {
+    /// Create a validated winit snapshot.
+    pub fn new(
+        window: WindowId,
+        size: WindowSize,
+        visible: bool,
+        focused: bool,
+        scale: f32,
+    ) -> Result<Self, UiAdapterError> {
+        validate_scale_factor(scale)?;
+        Ok(Self {
+            window,
+            size,
+            visible,
+            focused,
+            scale,
+        })
+    }
+}
+
+/// Native event shape accepted by the first Linux and Windows winit session owner.
+#[derive(Debug, Clone, PartialEq)]
+pub enum WinitWindowNativeEvent {
+    CloseRequested,
+    Resized(WindowSize),
+    Focused(bool),
+    ScaleChanged(f32),
+    RedrawRequested,
+    Snapshot(WinitWindowSnapshot),
+}
+
+/// One non-blocking unit of future winit event-loop work.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct WinitWindowEventLoopStep {
+    callbacks: Vec<WinitWindowNativeEvent>,
+}
+
+impl WinitWindowEventLoopStep {
+    /// Create an empty winit event-loop step.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Include native callbacks collected from winit.
+    pub fn with_callbacks(
+        mut self,
+        callbacks: impl IntoIterator<Item = WinitWindowNativeEvent>,
+    ) -> Self {
+        self.callbacks.extend(callbacks);
+        self
+    }
+
+    /// Return queued native callbacks.
+    pub fn callbacks(&self) -> &[WinitWindowNativeEvent] {
+        &self.callbacks
+    }
+}
+
+/// Result from one non-blocking winit event-loop step.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WinitWindowEventLoopStepReport {
+    pub callbacks_handled: usize,
+    pub snapshot: Option<WinitWindowSnapshot>,
+    pub redraw_requested: bool,
+}
+
+/// State owned by a future winit-backed host window session.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WinitWindowSession {
+    id: WindowId,
+    handle: NativeWindowHandle,
+    last_snapshot: WinitWindowSnapshot,
+}
+
+impl WinitWindowSession {
+    /// Create session state for a winit-backed Layer36 window.
+    pub fn new(
+        id: WindowId,
+        handle: NativeWindowHandle,
+        initial_snapshot: WinitWindowSnapshot,
+    ) -> Result<Self, UiAdapterError> {
+        if handle.backend != WindowBackendKind::Winit {
+            return Err(UiAdapterError::InvalidNativeWindowHandle {
+                backend: format!("{:?}", handle.backend),
+                raw_handle: handle.raw_handle,
+            });
+        }
+        if initial_snapshot.window != id {
+            return Err(UiAdapterError::InvalidWindow {
+                id: initial_snapshot.window.get(),
+            });
+        }
+
+        Ok(Self {
+            id,
+            handle,
+            last_snapshot: initial_snapshot,
+        })
+    }
+
+    /// Return the stable Layer36 window id.
+    pub fn id(&self) -> WindowId {
+        self.id
+    }
+
+    /// Return the opaque winit handle token attached to this session.
+    pub fn native_handle(&self) -> NativeWindowHandle {
+        self.handle
+    }
+
+    /// Return the latest native snapshot seen by Layer36.
+    pub fn last_snapshot(&self) -> WinitWindowSnapshot {
+        self.last_snapshot
+    }
+
+    /// Refresh this session from a full native winit snapshot.
+    pub fn sync_snapshot(
+        &mut self,
+        adapter: &dyn WindowAdapter,
+        snapshot: WinitWindowSnapshot,
+    ) -> Result<WinitWindowSnapshot, UiAdapterError> {
+        if snapshot.window != self.id {
+            return Err(UiAdapterError::InvalidWindow {
+                id: snapshot.window.get(),
+            });
+        }
+
+        if snapshot.size != self.last_snapshot.size {
+            adapter.queue_host_resize(self.id, snapshot.size)?;
+        }
+        if snapshot.focused != self.last_snapshot.focused {
+            adapter.queue_window_focused(self.id, snapshot.focused)?;
+        }
+        if (snapshot.scale - self.last_snapshot.scale).abs() > f32::EPSILON {
+            adapter.queue_scale_changed(self.id, snapshot.scale)?;
+        }
+
+        self.last_snapshot = snapshot;
+        Ok(snapshot)
+    }
+
+    /// Queue one native winit event through the shared window adapter path.
+    pub fn handle_native_event(
+        &mut self,
+        adapter: &dyn WindowAdapter,
+        event: WinitWindowNativeEvent,
+    ) -> Result<Option<WinitWindowSnapshot>, UiAdapterError> {
+        match event {
+            WinitWindowNativeEvent::CloseRequested => {
+                adapter.queue_close_requested(self.id)?;
+                Ok(None)
+            }
+            WinitWindowNativeEvent::Resized(size) => {
+                let snapshot = WinitWindowSnapshot::new(
+                    self.id,
+                    size,
+                    self.last_snapshot.visible,
+                    self.last_snapshot.focused,
+                    self.last_snapshot.scale,
+                )?;
+                self.sync_snapshot(adapter, snapshot).map(Some)
+            }
+            WinitWindowNativeEvent::Focused(focused) => {
+                let snapshot = WinitWindowSnapshot::new(
+                    self.id,
+                    self.last_snapshot.size,
+                    self.last_snapshot.visible,
+                    focused,
+                    self.last_snapshot.scale,
+                )?;
+                self.sync_snapshot(adapter, snapshot).map(Some)
+            }
+            WinitWindowNativeEvent::ScaleChanged(scale) => {
+                let snapshot = WinitWindowSnapshot::new(
+                    self.id,
+                    self.last_snapshot.size,
+                    self.last_snapshot.visible,
+                    self.last_snapshot.focused,
+                    scale,
+                )?;
+                self.sync_snapshot(adapter, snapshot).map(Some)
+            }
+            WinitWindowNativeEvent::RedrawRequested => {
+                adapter.request_redraw(self.id)?;
+                Ok(None)
+            }
+            WinitWindowNativeEvent::Snapshot(snapshot) => {
+                self.sync_snapshot(adapter, snapshot).map(Some)
+            }
+        }
+    }
+
+    /// Apply one non-blocking winit event-loop step to this session.
+    pub fn pump_event_loop_once(
+        &mut self,
+        adapter: &dyn WindowAdapter,
+        step: &WinitWindowEventLoopStep,
+    ) -> Result<WinitWindowEventLoopStepReport, UiAdapterError> {
+        let mut snapshot = None;
+        let mut redraw_requested = false;
+
+        for callback in step.callbacks() {
+            if matches!(callback, WinitWindowNativeEvent::RedrawRequested) {
+                redraw_requested = true;
+            }
+            if let Some(updated) = self.handle_native_event(adapter, callback.clone())? {
+                snapshot = Some(updated);
+            }
+        }
+
+        Ok(WinitWindowEventLoopStepReport {
+            callbacks_handled: step.callbacks().len(),
+            snapshot,
+            redraw_requested,
+        })
+    }
+}
+
 /// Static capability summary for one UI adapter build.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UiAdapterInfo {
@@ -1870,6 +2098,95 @@ mod tests {
             .expect("create");
 
         assert_eq!(adapter.pump_event_loop_once(id).expect("pump"), None);
+    }
+
+    #[test]
+    fn winit_session_syncs_snapshot_changes_through_window_adapter() {
+        let adapter = DraftUiAdapter::new();
+        let size = WindowSize::new(640, 480).expect("size");
+        let id = adapter
+            .create_window(WindowOptions::new("Layer36 winit", size).expect("options"))
+            .expect("create");
+        let handle = NativeWindowHandle::new(WindowBackendKind::Winit, 0xD06).expect("handle");
+        adapter
+            .attach_native_window(id, handle)
+            .expect("attach native");
+        let initial =
+            WinitWindowSnapshot::new(id, size, false, false, 1.0).expect("initial snapshot");
+        let mut session = WinitWindowSession::new(id, handle, initial).expect("session");
+        let resized = WindowSize::new(800, 600).expect("resized");
+        let updated = WinitWindowSnapshot::new(id, resized, true, true, 2.0).expect("updated");
+
+        assert_eq!(
+            session
+                .sync_snapshot(&adapter, updated)
+                .expect("sync snapshot"),
+            updated
+        );
+        assert_eq!(session.id(), id);
+        assert_eq!(session.native_handle(), handle);
+        assert_eq!(session.last_snapshot(), updated);
+        assert_eq!(
+            adapter.drain_events().expect("events"),
+            vec![
+                UiEvent::WindowCreated(id),
+                UiEvent::NativeWindowAttached {
+                    id,
+                    backend: WindowBackendKind::Winit,
+                },
+                UiEvent::Resized { id, size: resized },
+                UiEvent::WindowFocused { id, focused: true },
+                UiEvent::ScaleChanged { id, scale: 2.0 },
+            ]
+        );
+    }
+
+    #[test]
+    fn winit_event_loop_step_routes_native_callbacks() {
+        let adapter = DraftUiAdapter::new();
+        let size = WindowSize::new(640, 480).expect("size");
+        let id = adapter
+            .create_window(WindowOptions::new("Layer36 winit", size).expect("options"))
+            .expect("create");
+        let handle = NativeWindowHandle::new(WindowBackendKind::Winit, 0xD06).expect("handle");
+        adapter
+            .attach_native_window(id, handle)
+            .expect("attach native");
+        let initial =
+            WinitWindowSnapshot::new(id, size, false, false, 1.0).expect("initial snapshot");
+        let mut session = WinitWindowSession::new(id, handle, initial).expect("session");
+        let resized = WindowSize::new(900, 700).expect("resized");
+        let step = WinitWindowEventLoopStep::new().with_callbacks([
+            WinitWindowNativeEvent::Focused(true),
+            WinitWindowNativeEvent::Resized(resized),
+            WinitWindowNativeEvent::RedrawRequested,
+            WinitWindowNativeEvent::CloseRequested,
+        ]);
+
+        let report = session
+            .pump_event_loop_once(&adapter, &step)
+            .expect("pump event loop");
+
+        assert_eq!(report.callbacks_handled, 4);
+        assert_eq!(
+            report.snapshot,
+            Some(WinitWindowSnapshot::new(id, resized, false, true, 1.0).expect("snapshot"))
+        );
+        assert!(report.redraw_requested);
+        assert_eq!(
+            adapter.drain_events().expect("events"),
+            vec![
+                UiEvent::WindowCreated(id),
+                UiEvent::NativeWindowAttached {
+                    id,
+                    backend: WindowBackendKind::Winit,
+                },
+                UiEvent::WindowFocused { id, focused: true },
+                UiEvent::Resized { id, size: resized },
+                UiEvent::RedrawRequested(id),
+                UiEvent::WindowCloseRequested(id),
+            ]
+        );
     }
 
     #[test]

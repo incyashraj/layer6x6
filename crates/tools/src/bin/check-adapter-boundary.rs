@@ -231,6 +231,18 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
         adapter_common.contains("pub struct UiEventLoopTick"),
         "adapter-common must expose a host-neutral event-loop tick report".to_string(),
     )?;
+    for needle in [
+        "pub struct WinitWindowSnapshot",
+        "pub enum WinitWindowNativeEvent",
+        "pub struct WinitWindowEventLoopStep",
+        "pub struct WinitWindowEventLoopStepReport",
+        "pub struct WinitWindowSession",
+    ] {
+        ensure(
+            adapter_common.contains(needle),
+            format!("adapter-common must expose shared Winit session type `{needle}`"),
+        )?;
+    }
     ensure(
         adapter_common.contains("fn pump_event_loop_once("),
         "UiAdapter must expose a host-neutral event-loop pump method".to_string(),
@@ -374,6 +386,8 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
     let linux_lib = fs::read_to_string(root.join("crates/adapter-linux/src/lib.rs"))?;
     for needle in [
         "pub fn attach_winit_window_handle(",
+        "pub fn attach_winit_session(",
+        "pub fn pump_winit_event_loop_step(",
         "pub struct LinuxWinitPrototypeUiAdapter",
         "pub fn discover_winit_prototype_ui_adapter(",
         "linux-winit-prototype",
@@ -386,6 +400,8 @@ fn check_adapter_boundary() -> Result<BoundaryReport> {
     let windows_lib = fs::read_to_string(root.join("crates/adapter-windows/src/lib.rs"))?;
     for needle in [
         "pub fn attach_winit_window_handle(",
+        "pub fn attach_winit_session(",
+        "pub fn pump_winit_event_loop_step(",
         "pub struct WindowsWinitPrototypeUiAdapter",
         "pub fn discover_winit_prototype_ui_adapter(",
         "windows-winit-prototype",

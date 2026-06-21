@@ -184,12 +184,15 @@ Done now:
 - Linux and Windows now expose explicit Winit prototype adapter boundaries and
   tested handle handoff helpers. They are still guarded because they do not own
   real native windows yet.
+- Linux and Windows also have a shared Winit session owner scaffold. It can
+  hold a tracked session, apply prepared resize, focus, scale, redraw, and close
+  events, and remove the session on close.
 - The runtime can choose the current host adapter.
 - ADR-0013 and RFC-0003 now describe the widget lowering rule.
 
 Pending:
 
-- real Linux and Windows native window sessions
+- real Linux and Windows `winit` window creation and event collection
 - host event loop that feeds real close, resize, focus, theme, scale, pointer, key, and text events into the queue
 - widget tree lowering
 - larger layout style coverage and recorded large-tree benchmark results on all target hosts

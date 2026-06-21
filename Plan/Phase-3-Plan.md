@@ -2193,7 +2193,8 @@ input-routing proof, plus the handle mapping needed by the next host adapter wor
 | P3-RUNTIME-03 | Add selectable AppKit prototype runtime mode | 2026-06-20 | `Phase3UiRuntime` can now explicitly request a native prototype host mode. The normal runtime remains headless, while macOS can select the AppKit prototype adapter and report native window plus event-loop capability. |
 | P3-RUNTIME-04 | Add shared event-loop pump boundary | 2026-06-20 | `UiAdapter` and `Phase3UiDispatcher` now expose a host-neutral non-blocking event-loop pump. Headless adapters return no native tick, while the AppKit prototype maps its native tick report into the shared shape. |
 | P3-RUNTIME-05 | Add selectable AppKit runtime smoke | 2026-06-21 | Added a macOS local smoke command that requests `Phase3HostUiMode::NativePrototype`, creates and shows an AppKit window, pumps one shared event-loop tick, checks the native adapter report, and closes the window. |
-| P3-UI-04R | Add Linux and Windows Winit prototype boundaries | 2026-06-21 | Linux and Windows now expose explicit Winit prototype adapter boundaries, tested native-handle handoff methods, and guarded discovery paths. They do not claim real native windows yet; the next step is the real winit session owner. |
+| P3-UI-04R | Add Linux and Windows Winit prototype boundaries | 2026-06-21 | Linux and Windows now expose explicit Winit prototype adapter boundaries, tested native-handle handoff methods, and guarded discovery paths. They do not claim real native windows yet; this was the step before the shared session owner scaffold. |
+| P3-UI-04S | Add shared Winit session owner scaffold | 2026-06-21 | Added shared Winit snapshot, native-event, event-loop-step, report, and session types. Linux and Windows prototype adapters now own tracked Winit sessions, can attach a handle, pump a prepared event step, and remove the session on close. |
 
 ---
 
@@ -2263,6 +2264,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 | P3-RUNTIME-04 | Shared event-loop pump boundary | 2026-06-20 | Added `UiEventLoopTick`, `UiAdapter::pump_event_loop_once`, and `Phase3UiDispatcher::pump_event_loop_once`, with tests proving the headless path is a no-op and AppKit maps native ticks into the common report. |
 | P3-RUNTIME-05 | Selectable AppKit runtime smoke | 2026-06-21 | Added `scripts/smoke-phase3-appkit-runtime.sh` and `phase3_appkit_runtime_smoke`, a main-thread local proof for the full native prototype selector path: create, show, pump, inspect, and close through `Phase3UiDispatcher`. |
 | P3-UI-04R | Linux and Windows Winit prototype boundaries | 2026-06-21 | Added `LinuxWinitPrototypeUiAdapter`, `WindowsWinitPrototypeUiAdapter`, `attach_winit_window_handle`, guarded `discover_winit_prototype_ui_adapter` entry points, runtime selector wiring, and adapter-boundary checks. |
+| P3-UI-04S | Shared Winit session owner scaffold | 2026-06-21 | Added `WinitWindowSession`, `WinitWindowSnapshot`, `WinitWindowNativeEvent`, `WinitWindowEventLoopStep`, and `WinitWindowEventLoopStepReport`, then wired Linux and Windows prototype adapters to track sessions and pump prepared native events through the shared queue. |
 
 ---
 
@@ -2272,7 +2274,7 @@ Full criteria in [§3 Success Criteria](#3-success-criteria). Check off as each 
 |---------|------|---------|----------|
 | P3-UI-01 | Widget protocol design RFC | 2026-05-19 | Draft written; needs review before the rule is treated as accepted. |
 | P3-UI-03 | Layout engine (Taffy integration) | 2026-05-21 | First wrapper, 100-shape tests, benchmark target, and prepared repeated-layout path exist; local prepared 10k layout is below the exit budget, but cold rebuild is not, so recorded cross-host benchmark results and wider style coverage are pending. |
-| P3-UI-04 | Window + event loop abstractions | 2026-05-19 | Explicit `WindowAdapter`, native handle handoff, shared `UiAdapter`, widget-tree dispatch, host entry points, runtime discovery, routed input events, FIFO event polling, host window events, theme/scale events, and an opt-in macOS AppKit window prototype exist. AppKit now has event bridge targets, a snapshot helper, session state, a delegate-shaped native event state object, redraw bridge, delegate callback bridge, draw-surface state, an opt-in draw view surface, a retained native window delegate, a non-blocking event-loop step driver, an explicit native prototype runtime selector, a shared runtime event-loop pump boundary, and a local smoke command for that runtime path. Linux and Windows now have Winit prototype boundaries and handle handoff tests. Next step is the real Linux and Windows winit session owner. |
+| P3-UI-04 | Window + event loop abstractions | 2026-05-19 | Explicit `WindowAdapter`, native handle handoff, shared `UiAdapter`, widget-tree dispatch, host entry points, runtime discovery, routed input events, FIFO event polling, host window events, theme/scale events, and an opt-in macOS AppKit window prototype exist. AppKit now has event bridge targets, a snapshot helper, session state, a delegate-shaped native event state object, redraw bridge, delegate callback bridge, draw-surface state, an opt-in draw view surface, a retained native window delegate, a non-blocking event-loop step driver, an explicit native prototype runtime selector, a shared runtime event-loop pump boundary, and a local smoke command for that runtime path. Linux and Windows now have Winit prototype boundaries, handle handoff tests, and a shared session owner scaffold that can pump prepared native events. Next step is replacing the prepared steps with real `winit` window creation and event collection. |
 | P3-INPUT-01 | Keyboard + mouse input | 2026-05-21 | First runtime-side pointer, key, and committed-text routes exist; real host pointer, hover, wheel, keyboard, shortcut, IME composition, and cross-host normalization are pending. |
 
 ---
@@ -2403,6 +2405,11 @@ _ADRs 0017–0020 to be determined during Phase 3 work._
   handoff helpers, guarded discovery functions, runtime selector wiring, and
   boundary checks. They still do not create real native windows; that is the
   next step.
+- 2026-06-21: Added the shared Winit session owner scaffold. Linux and Windows
+  prototype adapters can now track Winit sessions, attach the handle token,
+  apply prepared native event-loop steps, route resize/focus/scale/redraw/close
+  events through the shared queue, and remove the session on close. Real winit
+  OS window creation is still pending.
 
 ---
 

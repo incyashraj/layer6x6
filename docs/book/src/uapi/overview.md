@@ -276,8 +276,10 @@ The value of this step is that the boundary is testable:
 - a local runtime smoke command now proves the selectable AppKit prototype can
   create, show, pump, inspect, and close through that dispatcher path
 - Linux and Windows now expose guarded Winit prototype boundaries with tested
-  native-handle handoff helpers. They are ready for the real session owner, but
-  they do not open native windows yet.
+  native-handle handoff helpers. They do not open native windows yet.
+- Linux and Windows now have that first shared session owner scaffold too. It
+  can track a Winit session and route prepared native events through the shared
+  UI queue. Real `winit` window creation is still pending.
 - draft widget-tree calls now pass through the same dispatcher and adapter
   boundary for set root, upsert node, remove node, and focus node
 - draft layout calls can now turn the stored widget tree into a
